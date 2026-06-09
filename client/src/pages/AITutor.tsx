@@ -3,9 +3,10 @@ import { useStore } from "../store/store";
 import { CHAT_SCENARIOS } from "../resources/seedData";
 import type { ChatScenario } from "../resources/seedData";
 import { ArrowLeft, Send, Sparkles, Volume2, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AITutorProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 interface ChatMessage {
@@ -22,6 +23,8 @@ interface ChatMessage {
 }
 
 export default function AITutor({ onClose }: AITutorProps) {
+  const navigate = useNavigate();
+  const handleClose = onClose || (() => navigate("/home"));
   const store = useStore();
   const [selectedScenario, setSelectedScenario] = useState<ChatScenario | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -182,7 +185,7 @@ export default function AITutor({ onClose }: AITutorProps) {
         borderBottom: "1px solid var(--border-color)",
         gap: "16px"
       }}>
-        <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+        <button onClick={handleClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
           <ArrowLeft size={20} />
         </button>
         <div>

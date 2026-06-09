@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../store/store";
 import type { SkillLevel, LearningGoal } from "../store/store";
 import { ArrowRight, Sparkles, BookOpen, Target } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Onboarding() {
   const store = useStore();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel>("beginner");
   const [selectedGoal, setSelectedGoal] = useState<LearningGoal>("travel");
   const [selectedAvatar, setSelectedAvatar] = useState("🐼");
+
+  useEffect(() => {
+    if (store.profile.hasCompletedOnboarding) {
+      navigate("/", { replace: true });
+    }
+  }, [store.profile.hasCompletedOnboarding, navigate]);
 
   const avatars = ["🐼", "🐯", "🐉", "🦊", "🐒", "🦁", "🐱", "🐶", "🦉", "🐨"];
 

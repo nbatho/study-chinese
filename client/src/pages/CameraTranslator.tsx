@@ -3,9 +3,10 @@ import { useStore } from "../store/store";
 import { VOCAB } from "../resources/vocab";
 import type { Word } from "../resources/vocab";
 import { ArrowLeft, Camera, Upload, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface CameraTranslatorProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 interface BoundingBox {
@@ -21,6 +22,8 @@ interface BoundingBox {
 }
 
 export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
+  const navigate = useNavigate();
+  const handleClose = onClose || (() => navigate("/home"));
   const store = useStore();
   const [cameraActive, setCameraActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -168,7 +171,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
         borderBottom: "1px solid var(--border-color)",
         gap: "16px"
       }}>
-        <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+        <button onClick={handleClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
           <ArrowLeft size={20} />
         </button>
         <div>

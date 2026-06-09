@@ -5,13 +5,13 @@ import type { Lesson, Exercise } from "../resources/lessons";
 import { VOCAB } from "../resources/vocab";
 import { GRAMMAR_LIBRARY } from "../resources/seedData";
 import { BookOpen, Award, ArrowLeft, Volume2, CheckCircle2, XCircle, Search, ToggleLeft, ToggleRight } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 
-interface LearnProps {
-  selectedLesson: Lesson | null;
-  onSelectLesson: (lesson: Lesson | null) => void;
-}
-
-export default function Learn({ selectedLesson, onSelectLesson }: LearnProps) {
+export default function Learn() {
+  const { selectedLesson, setSelectedLesson } = useOutletContext<{
+    selectedLesson: Lesson | null;
+    setSelectedLesson: (lesson: Lesson | null) => void;
+  }>();
   const store = useStore();
   const [activeTab, setActiveTab] = useState<"curriculum" | "grammar">("curriculum");
   const [selectedHSK, setSelectedHSK] = useState<number>(1);
@@ -29,7 +29,7 @@ export default function Learn({ selectedLesson, onSelectLesson }: LearnProps) {
   return (
     <div className="anim-slide">
       {selectedLesson ? (
-        <LessonPlayer lesson={selectedLesson} onClose={() => onSelectLesson(null)} />
+        <LessonPlayer lesson={selectedLesson} onClose={() => setSelectedLesson(null)} />
       ) : (
         <>
           {/* Tabs */}
@@ -120,7 +120,7 @@ export default function Learn({ selectedLesson, onSelectLesson }: LearnProps) {
                   return (
                     <div
                       key={lesson.id}
-                      onClick={() => onSelectLesson(lesson)}
+                      onClick={() => setSelectedLesson(lesson)}
                       className="card"
                       style={{
                         display: "flex",

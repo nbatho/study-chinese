@@ -1,13 +1,11 @@
 import { Home, BookOpen, Dumbbell, RefreshCw, User, Sun, Moon } from "lucide-react";
 import { useStore } from "../store/store";
+import { useLocation, useNavigate } from "react-router-dom";
 
-interface NavigationProps {
-  activeTab: string;
-  onTabChange: (tab: "home" | "learn" | "practice" | "review" | "profile") => void;
-}
-
-export default function Navigation({ activeTab, onTabChange }: NavigationProps) {
+export default function Navigation() {
   const store = useStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   const theme = store.profile.appAppearance;
 
   const toggleTheme = () => {
@@ -19,6 +17,13 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
       document.body.classList.remove("dark");
     }
   };
+
+  const path = location.pathname;
+  let activeTab = "home";
+  if (path.startsWith("/learn")) activeTab = "learn";
+  else if (path.startsWith("/practice")) activeTab = "practice";
+  else if (path.startsWith("/review")) activeTab = "review";
+  else if (path.startsWith("/profile")) activeTab = "profile";
 
   const tabs = [
     { id: "home", label: "Home", icon: Home },
@@ -49,7 +54,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
         return (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id as any)}
+            onClick={() => navigate(`/${tab.id}`)}
             style={{
               display: "flex",
               flexDirection: "column",

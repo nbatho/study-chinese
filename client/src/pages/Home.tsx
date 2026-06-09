@@ -3,15 +3,11 @@ import { useStore, ACHIEVEMENTS } from "../store/store";
 import { DAILY_PHRASES } from "../resources/seedData";
 import { Flame, Star, BookOpen, Brain, Sparkles, Camera, Activity, PencilLine, ArrowRight, PlayCircle, RefreshCw, Volume2, Trophy } from "lucide-react";
 import type { Lesson } from "../resources/lessons";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
-interface HomeProps {
-  onLaunchAITutor: () => void;
-  onLaunchCamera: () => void;
-  onSelectLesson: (lesson: Lesson) => void;
-  onTabChange: (tab: "home" | "learn" | "practice" | "review" | "profile") => void;
-}
-
-export default function Home({ onLaunchAITutor, onLaunchCamera, onSelectLesson, onTabChange }: HomeProps) {
+export default function Home() {
+  const navigate = useNavigate();
+  const { setSelectedLesson } = useOutletContext<{ setSelectedLesson: (l: Lesson | null) => void }>();
   const store = useStore();
   const profile = store.profile;
   const todayStat = store.getTodayStat();
@@ -144,11 +140,11 @@ export default function Home({ onLaunchAITutor, onLaunchCamera, onSelectLesson, 
       <section style={{ marginBottom: "24px", overflowX: "auto", paddingBottom: "8px" }}>
         <div style={{ display: "flex", gap: "16px", width: "max-content" }}>
           {[
-            { label: "AI Tutor", icon: Sparkles, color: "var(--tone-3)", action: onLaunchAITutor },
-            { label: "Scan OCR", icon: Camera, color: "var(--jade)", action: onLaunchCamera },
-            { label: "Tone Drill", icon: Activity, color: "var(--tone-1)", action: () => onTabChange("practice") },
-            { label: "SRS Cards", icon: RefreshCw, color: "var(--primary-red)", action: () => onTabChange("review") },
-            { label: "Write Hanzi", icon: PencilLine, color: "var(--gold)", action: () => onTabChange("practice") }
+            { label: "AI Tutor", icon: Sparkles, color: "var(--tone-3)", action: () => navigate("/ai-tutor") },
+            { label: "Scan OCR", icon: Camera, color: "var(--jade)", action: () => navigate("/camera-translator") },
+            { label: "Tone Drill", icon: Activity, color: "var(--tone-1)", action: () => navigate("/practice") },
+            { label: "SRS Cards", icon: RefreshCw, color: "var(--primary-red)", action: () => navigate("/review") },
+            { label: "Write Hanzi", icon: PencilLine, color: "var(--gold)", action: () => navigate("/practice") }
           ].map((act, i) => {
             const Icon = act.icon;
             return (
@@ -194,7 +190,7 @@ export default function Home({ onLaunchAITutor, onLaunchCamera, onSelectLesson, 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
           <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Continue Learning</h3>
           <button
-            onClick={() => onTabChange("learn")}
+            onClick={() => navigate("learn")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -213,7 +209,10 @@ export default function Home({ onLaunchAITutor, onLaunchCamera, onSelectLesson, 
 
         {nextLesson ? (
           <div
-            onClick={() => onSelectLesson(nextLesson)}
+            onClick={() => {
+              setSelectedLesson(nextLesson);
+              navigate("/learn");
+            }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -305,7 +304,7 @@ export default function Home({ onLaunchAITutor, onLaunchCamera, onSelectLesson, 
           </div>
           <button
             className="btn btn-primary"
-            onClick={() => onTabChange("review")}
+            onClick={() => navigate("/review")}
             style={{
               padding: "10px 18px",
               fontSize: "0.85rem"

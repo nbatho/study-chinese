@@ -60,6 +60,12 @@ export default function Profile() {
       const totalGapsWidth = barGap * (stats.length - 1);
       const barWidth = (graphWidth - totalGapsWidth) / stats.length;
 
+      const compStyle = window.getComputedStyle(canvas);
+      const primaryRed = compStyle.getPropertyValue('--primary-red').trim() || "rgb(217, 63, 71)";
+      const accentRed = compStyle.getPropertyValue('--accent-red').trim() || "rgb(240, 75, 66)";
+      const textMain = compStyle.getPropertyValue('--text-main').trim() || "#2c2c35";
+      const textMuted = compStyle.getPropertyValue('--text-muted').trim() || "#6e6e82";
+
       stats.forEach((s, idx) => {
         const barHeight = (s.xp / maxXp) * graphHeight;
         const x = padding + idx * (barWidth + barGap);
@@ -67,13 +73,13 @@ export default function Profile() {
 
         // Fill bar gradient
         const grad = ctx.createLinearGradient(x, y, x, canvas.height - padding);
-        grad.addColorStop(0, "var(--primary-red)");
-        grad.addColorStop(1, "var(--accent-red)");
+        grad.addColorStop(0, primaryRed);
+        grad.addColorStop(1, accentRed);
         ctx.fillStyle = grad;
         ctx.fillRect(x, y, barWidth, barHeight);
 
         // Value text
-        ctx.fillStyle = "var(--text-main)";
+        ctx.fillStyle = textMain;
         ctx.font = "bold 9px sans-serif";
         ctx.textAlign = "center";
         if (s.xp > 0) {
@@ -81,7 +87,7 @@ export default function Profile() {
         }
 
         // Label day text
-        ctx.fillStyle = "var(--text-muted)";
+        ctx.fillStyle = textMuted;
         ctx.font = "8px sans-serif";
         const dateStr = s.dateKey.split("-").slice(1).join("/");
         ctx.fillText(dateStr, x + barWidth / 2, canvas.height - padding + 14);

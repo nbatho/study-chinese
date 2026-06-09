@@ -1,21 +1,12 @@
 import { useState, useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useStore } from "./store/store";
 import Navigation from "./components/Navigation";
-import Onboarding from "./pages/Onboarding";
-import Home from "./pages/Home";
-import Learn from "./pages/Learn";
-import Practice from "./pages/Practice";
-import Review from "./pages/Review";
-import Profile from "./pages/Profile";
-import AITutor from "./pages/AITutor";
-import CameraTranslator from "./pages/CameraTranslator";
 import type { Lesson } from "./resources/lessons";
 
 export default function App() {
   const store = useStore();
-  const [activeTab, setActiveTab] = useState<"home" | "learn" | "practice" | "review" | "profile">("home");
-  const [showAITutor, setShowAITutor] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
+  const navigate = useNavigate();
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   // Sync dark appearance on mount
@@ -27,15 +18,16 @@ export default function App() {
     }
   }, [store.profile.appAppearance]);
 
-  // If user hasn't finished Onboarding, force onboarding wizard
-  if (!store.profile.hasCompletedOnboarding) {
-    return <Onboarding />;
-  }
+  // If user hasn't finished Onboarding, force onboarding page
+  useEffect(() => {
+    if (!store.profile.hasCompletedOnboarding) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [store.profile.hasCompletedOnboarding, navigate]);
 
-  const handleSelectLessonFromHome = (lesson: Lesson) => {
-    setSelectedLesson(lesson);
-    setActiveTab("learn");
-  };
+  if (!store.profile.hasCompletedOnboarding) {
+    return null;
+  }
 
   return (
     <div className="app-container">
@@ -59,40 +51,11 @@ export default function App() {
 
       {/* Main Screen Body View Router */}
       <main className="main-content">
-        {activeTab === "home" && (
-          <Home
-            onLaunchAITutor={() => setShowAITutor(true)}
-            onLaunchCamera={() => setShowCamera(true)}
-            onSelectLesson={handleSelectLessonFromHome}
-            onTabChange={setActiveTab}
-          />
-        )}
-
-        {activeTab === "learn" && (
-          <Learn
-            selectedLesson={selectedLesson}
-            onSelectLesson={setSelectedLesson}
-          />
-        )}
-
-        {activeTab === "practice" && <Practice />}
-
-        {activeTab === "review" && <Review />}
-
-        {activeTab === "profile" && <Profile />}
+        <Outlet context={{ selectedLesson, setSelectedLesson }} />
       </main>
 
-      {/* Fullscreen Overlay Sheets / covers */}
-      {showAITutor && (
-        <AITutor onClose={() => setShowAITutor(false)} />
-      )}
-
-      {showCamera && (
-        <CameraTranslator onClose={() => setShowCamera(false)} />
-      )}
-
       {/* Global Tab Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation />
     </div>
   );
 }
