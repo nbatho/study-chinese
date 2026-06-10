@@ -35,4 +35,10 @@ export const queryKeys = {
     dashboard: {
         dailyContent: ['dashboard', 'daily-content'] as const,
     },
+    practice: {
+        catalog: ['practice'] as const,
+        minimalPairs: ['practice', 'minimal-pairs'] as const,
+        shadowingPrompts: ['practice', 'shadowing-prompts'] as const,
+        hanziStrokes: ['practice', 'hanzi-strokes'] as const,
+    },
 };

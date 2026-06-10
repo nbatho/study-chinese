@@ -25,3 +25,5 @@ export * from './achievements';
 export * from './achievements/queries';
 export * from './dashboard';
 export * from './dashboard/queries';
+export * from './practice';
+export * from './practice/queries';

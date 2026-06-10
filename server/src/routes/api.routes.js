@@ -7,6 +7,7 @@ import srsRoutes from './srs.routes.js';
 import favoriteRoutes from './favorite.routes.js';
 import listRoutes from './list.routes.js';
 import aiRoutes from './ai.routes.js';
+import practiceRoutes from './practice.routes.js';
 import utilityRoutes from './utility.routes.js';
 import docsRoutes from './docs.routes.js';
 import { healthCheck } from '../controllers/health.controller.js';
@@ -23,6 +24,7 @@ router.use('/srs', srsRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/lists', listRoutes);
 router.use('/ai-tutor', aiRoutes);
+router.use('/practice', practiceRoutes);
 router.use('/', utilityRoutes);
 
 export default router;
