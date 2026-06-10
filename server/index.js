@@ -1,9 +1,37 @@
 import 'dotenv/config';
-import app from './src/app.js';
+import express from 'express';
+import cors from 'cors';
 import { env } from './src/config/env.config.js';
 import { connectDB } from './src/config/db.config.js';
+import apiRoutes from './src/routes/api.routes.js';
+import { healthCheck } from './src/controllers/health.controller.js';
+import { requestLogger } from './src/middlewares/logger.middleware.js';
+import { errorHandler, notFoundHandler } from './src/middlewares/error.middleware.js';
 
 const PORT = env.PORT;
+const app = express();
+
+app.use(
+  cors({
+    origin: env.CLIENT_URL,
+    credentials: true
+  })
+);
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger);
+
+app.use('/api/v1', apiRoutes);
+
+// Backward-compatible aliases for earlier local development routes.
+app.get('/api/health', healthCheck);
+app.use('/api/words', (req, res) => res.redirect(308, '/api/v1/vocab'));
+app.use('/api/profile', (req, res) => res.redirect(308, '/api/v1/users/profile'));
+app.use('/api-docs', (req, res) => res.redirect(308, '/api/v1/docs'));
+
+app.use('/api', notFoundHandler);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 await connectDB();
 
@@ -13,6 +41,7 @@ const server = app.listen(PORT, () => {
   console.log(`  Environment: ${env.NODE_ENV}`);
   console.log(`  URL: http://localhost:${PORT}`);
   console.log(`  API: http://localhost:${PORT}/api/v1`);
+  console.log(`  Docs: http://localhost:${PORT}/api/v1/docs`);
   console.log(`=================================`);
 });
 
