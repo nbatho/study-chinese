@@ -1,13 +1,28 @@
 import { Router } from 'express';
-import { getWordsList, getUserProfile } from '../controllers/api.controller.js';
-import { checkAuth } from '../middlewares/auth.middleware.js';
+import authRoutes from './auth.routes.js';
+import userRoutes from './user.routes.js';
+import lessonRoutes from './lesson.routes.js';
+import vocabRoutes from './vocab.routes.js';
+import srsRoutes from './srs.routes.js';
+import favoriteRoutes from './favorite.routes.js';
+import listRoutes from './list.routes.js';
+import aiRoutes from './ai.routes.js';
+import utilityRoutes from './utility.routes.js';
+import docsRoutes from './docs.routes.js';
+import { healthCheck } from '../controllers/health.controller.js';
 
 const router = Router();
 
-// Public route to get vocabulary list
-router.get('/words', getWordsList);
-
-// Protected route to get user profile
-router.get('/profile', checkAuth, getUserProfile);
+router.get('/health', healthCheck);
+router.use('/docs', docsRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/lessons', lessonRoutes);
+router.use('/vocab', vocabRoutes);
+router.use('/srs', srsRoutes);
+router.use('/favorites', favoriteRoutes);
+router.use('/lists', listRoutes);
+router.use('/ai-tutor', aiRoutes);
+router.use('/', utilityRoutes);
 
 export default router;

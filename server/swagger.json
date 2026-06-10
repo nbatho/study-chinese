@@ -1,0 +1,664 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Study Chinese API",
+    "version": "1.0.0",
+    "description": "REST API for Study Chinese backend."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1"
+    }
+  ],
+  "tags": [
+    { "name": "Health" },
+    { "name": "Auth" },
+    { "name": "Users" },
+    { "name": "Lessons" },
+    { "name": "Vocabulary" },
+    { "name": "SRS" },
+    { "name": "Favorites" },
+    { "name": "Lists" },
+    { "name": "AI Tutor" },
+    { "name": "OCR" },
+    { "name": "Achievements" },
+    { "name": "Dashboard" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "data": { "type": "object", "nullable": true }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "fail" },
+          "errorCode": { "type": "string", "example": "INVALID_INPUT" },
+          "message": { "type": "string" },
+          "details": { "type": "object", "nullable": true }
+        }
+      },
+      "Word": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "wd_hello" },
+          "simplified": { "type": "string", "example": "你好" },
+          "traditional": { "type": "string", "example": "你好" },
+          "pinyin": { "type": "string", "example": "nǐ hǎo" },
+          "tones": { "type": "array", "items": { "type": "integer" } },
+          "english": { "type": "string", "example": "hello" },
+          "partOfSpeech": { "type": "string", "example": "phrase" },
+          "hskLevel": { "type": "integer", "example": 1 },
+          "category": { "type": "string", "example": "Greetings" }
+        }
+      },
+      "AuthPayload": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" },
+          "name": { "type": "string" }
+        }
+      },
+      "ActivityPayload": {
+        "type": "object",
+        "properties": {
+          "xp": { "type": "integer", "example": 10 },
+          "minutes": { "type": "integer", "example": 2 },
+          "exercisesCorrect": { "type": "integer", "example": 3 },
+          "exercisesTotal": { "type": "integer", "example": 3 }
+        }
+      },
+      "LessonCompletePayload": {
+        "type": "object",
+        "required": ["accuracy"],
+        "properties": {
+          "accuracy": { "type": "number", "example": 85.5 },
+          "minutes": { "type": "integer", "example": 7 }
+        }
+      },
+      "SrsReviewPayload": {
+        "type": "object",
+        "required": ["wordId", "quality"],
+        "properties": {
+          "wordId": { "type": "string", "example": "wd_hello" },
+          "quality": {
+            "type": "string",
+            "enum": ["again", "hard", "good", "easy"],
+            "example": "good"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid bearer token",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid input",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Check API and database health",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs/swagger.json": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Return this OpenAPI document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI JSON"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a learner account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthPayload" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered user and access token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login and receive an access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthPayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged-in user and access token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Client-side logout acknowledgement",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logged out" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get learner profile and streak",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile data" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update learner profile and settings",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "avatar": { "type": "string" },
+                  "startLevel": { "type": "string" },
+                  "goalPurpose": { "type": "string" },
+                  "dailyMinutes": { "type": "integer" },
+                  "showPinyin": { "type": "boolean" },
+                  "audioAutoPlay": { "type": "boolean" },
+                  "appAppearance": { "type": "string" },
+                  "hasCompletedOnboarding": { "type": "boolean" },
+                  "timezone": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated profile" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/stats": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get recent daily stats",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": { "type": "integer", "default": 7 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daily stats" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/activity": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Record XP, study minutes and exercise stats",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ActivityPayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated activity and streak" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/lessons": {
+      "get": {
+        "tags": ["Lessons"],
+        "summary": "List lessons with learner progress",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lesson summaries" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/lessons/{id}": {
+      "get": {
+        "tags": ["Lessons"],
+        "summary": "Get lesson detail",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "l1_3" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Lesson detail" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/lessons/{id}/complete": {
+      "post": {
+        "tags": ["Lessons"],
+        "summary": "Submit lesson completion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "l1_3" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LessonCompletePayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated lesson progress" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/vocab": {
+      "get": {
+        "tags": ["Vocabulary"],
+        "summary": "Search vocabulary",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "hsk", "in": "query", "schema": { "type": "integer" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vocabulary results",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/srs/due": {
+      "get": {
+        "tags": ["SRS"],
+        "summary": "List due SRS cards",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Due cards" }
+        }
+      }
+    },
+    "/srs/review": {
+      "post": {
+        "tags": ["SRS"],
+        "summary": "Review a SRS card",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SrsReviewPayload" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated SRS card" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/srs/enroll": {
+      "post": {
+        "tags": ["SRS"],
+        "summary": "Enroll a word into SRS",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["wordId"],
+                "properties": {
+                  "wordId": { "type": "string", "example": "wd_hello" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Enrollment state" }
+        }
+      }
+    },
+    "/favorites/toggle": {
+      "post": {
+        "tags": ["Favorites"],
+        "summary": "Toggle favorite state for a word",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["wordId"],
+                "properties": {
+                  "wordId": { "type": "string", "example": "wd_hello" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Favorite state" }
+        }
+      }
+    },
+    "/lists": {
+      "get": {
+        "tags": ["Lists"],
+        "summary": "List custom vocabulary lists",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Custom lists" }
+        }
+      },
+      "post": {
+        "tags": ["Lists"],
+        "summary": "Create a custom vocabulary list",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "emoji": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created list" }
+        }
+      }
+    },
+    "/lists/{id}": {
+      "delete": {
+        "tags": ["Lists"],
+        "summary": "Delete a custom list",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted list" }
+        }
+      }
+    },
+    "/lists/{id}/words": {
+      "post": {
+        "tags": ["Lists"],
+        "summary": "Add a word to a custom list",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["wordId"],
+                "properties": {
+                  "wordId": { "type": "string", "example": "wd_hello" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated list words" }
+        }
+      }
+    },
+    "/lists/{id}/words/{wordId}": {
+      "delete": {
+        "tags": ["Lists"],
+        "summary": "Remove a word from a custom list",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "wordId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Updated list words" }
+        }
+      }
+    },
+    "/ai-tutor/scenarios": {
+      "get": {
+        "tags": ["AI Tutor"],
+        "summary": "List chat scenarios",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Chat scenarios" }
+        }
+      }
+    },
+    "/ai-tutor/sessions": {
+      "post": {
+        "tags": ["AI Tutor"],
+        "summary": "Start a chat session",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scenarioId": { "type": "string", "nullable": true, "example": "cafe" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created chat session" }
+        }
+      }
+    },
+    "/ai-tutor/sessions/{id}/messages": {
+      "post": {
+        "tags": ["AI Tutor"],
+        "summary": "Send a message to the AI tutor",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string", "example": "wo xiang yao ni hao" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tutor response and correction" }
+        }
+      }
+    },
+    "/ocr/scan": {
+      "post": {
+        "tags": ["OCR"],
+        "summary": "Scan image/base64 or detected text and map Chinese words",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": { "type": "string" },
+                  "text": { "type": "string", "example": "中国站" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Matched OCR boxes" }
+        }
+      }
+    },
+    "/achievements": {
+      "get": {
+        "tags": ["Achievements"],
+        "summary": "List achievements and unlock state",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Achievements" }
+        }
+      }
+    },
+    "/achievements/{id}/unlock": {
+      "post": {
+        "tags": ["Achievements"],
+        "summary": "Unlock a special achievement",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "example": "tone_master" } }
+        ],
+        "responses": {
+          "200": { "description": "Unlock result" }
+        }
+      }
+    },
+    "/dashboard/daily-content": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get daily phrase and grammar library",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Dashboard content" }
+        }
+      }
+    }
+  }
+}

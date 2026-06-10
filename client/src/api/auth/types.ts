@@ -1,0 +1,22 @@
+export interface AuthUser {
+    id: string;
+    email: string;
+    name: string;
+    avatar?: string;
+}
+
+export interface AuthResponse {
+    accessToken: string;
+    user: AuthUser;
+}
+
+export interface RegisterPayload {
+    email: string;
+    password: string;
+    name?: string;
+}
+
+export interface LoginPayload {
+    email: string;
+    password: string;
+}
