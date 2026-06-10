@@ -1,79 +1,41 @@
-import { useState, useRef, useEffect } from "react";
-import { useStore } from "../store/store";
-import { VOCAB } from "../resources/vocab";
-import type { Word } from "../resources/vocab";
-import { ArrowLeft, Camera, Upload, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useOcrSamplesQuery, useOcrScanMutation } from "../api/ocr/queries";
+import { useEnrollWordMutation } from "../api/srs/queries";
+import type { OcrBox, OcrSample, OcrScanPayload } from "../api/ocr";
+import { ArrowLeft, Camera, RefreshCw, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface CameraTranslatorProps {
   onClose?: () => void;
 }
 
-interface BoundingBox {
-  id: string;
-  wordId: string;
-  text: string;
-  pinyin: string;
-  english: string;
-  top: number; // percent
-  left: number; // percent
-  width: number; // percent
-  height: number; // percent
-}
-
 export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));
-  const store = useStore();
+  const scanMutation = useOcrScanMutation();
+  const samplesQuery = useOcrSamplesQuery();
+  const enrollWordMutation = useEnrollWordMutation();
   const [cameraActive, setCameraActive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [selectedWord, setSelectedWord] = useState<Word | null>(null);
-  const [boxes, setBoxes] = useState<BoundingBox[]>([]);
+  const [selectedBox, setSelectedBox] = useState<OcrBox | null>(null);
+  const [boxes, setBoxes] = useState<OcrBox[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  
+  const loading = scanMutation.isPending;
+  const samples = samplesQuery.data?.samples ?? [];
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const samples = [
-    {
-      id: "sign",
-      label: "Street Sign",
-      emoji: "🧭",
-      image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80",
-      boxes: [
-        { id: "b1", wordId: "wd_china", text: "中国", pinyin: "zhōng guó", english: "China", top: 35, left: 30, width: 20, height: 12 },
-        { id: "b2", wordId: "wd_station", text: "站", pinyin: "zhàn", english: "Station / Stop", top: 35, left: 52, width: 12, height: 12 }
-      ]
-    },
-    {
-      id: "menu",
-      label: "Restaurant Menu",
-      emoji: "🍜",
-      image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
-      boxes: [
-        { id: "b3", wordId: "wd_beef", text: "牛肉", pinyin: "niú ròu", english: "Beef", top: 20, left: 25, width: 18, height: 8 },
-        { id: "b4", wordId: "wd_tea", text: "茶", pinyin: "chá", english: "Tea", top: 45, left: 25, width: 10, height: 8 }
-      ]
-    },
-    {
-      id: "book",
-      label: "Library Book",
-      emoji: "📚",
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80",
-      boxes: [
-        { id: "b5", wordId: "wd_book", text: "书", pinyin: "shū", english: "Book", top: 30, left: 40, width: 12, height: 10 },
-        { id: "b6", wordId: "wd_learn", text: "学习", pinyin: "xué xí", english: "To study / Learn", top: 55, left: 35, width: 20, height: 10 }
-      ]
-    }
-  ];
+  const runScan = async (payload: OcrScanPayload) => {
+    setSelectedBox(null);
+    const response = await scanMutation.mutateAsync(payload);
+    setBoxes(response.boxes);
+  };
 
-  // Camera stream activation
   const startCamera = async () => {
     try {
       setUploadedImage(null);
       setBoxes([]);
-      setSelectedWord(null);
-      setLoading(true);
+      setSelectedBox(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }
       });
@@ -82,24 +44,16 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
         videoRef.current.srcObject = stream;
       }
       setCameraActive(true);
-      setLoading(false);
-      
-      // Simulate real-time scanning overlay boxes showing up after 1.5 seconds
-      setTimeout(() => {
-        setBoxes([
-          { id: "c1", wordId: "wd_hello", text: "你好", pinyin: "nǐ hǎo", english: "hello", top: 40, left: 35, width: 30, height: 15 }
-        ]);
-      }, 1500);
-
-    } catch (e) {
+      await runScan({});
+    } catch {
       alert("Could not access camera. Please try a sample sign below or upload an image instead.");
-      setLoading(false);
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
     setCameraActive(false);
   };
@@ -108,17 +62,11 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
     return () => stopCamera();
   }, []);
 
-  const selectSample = (sample: typeof samples[0]) => {
+  const selectSample = async (sample: OcrSample) => {
     stopCamera();
     setUploadedImage(sample.image);
-    setLoading(true);
-    setSelectedWord(null);
-    
-    // Simulate OCR delay
-    setTimeout(() => {
-      setBoxes(sample.boxes);
-      setLoading(false);
-    }, 600);
+    setBoxes([]);
+    await runScan({ sampleId: sample.id });
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,27 +74,20 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
     if (!file) return;
 
     stopCamera();
-    setSelectedWord(null);
-    setLoading(true);
+    setBoxes([]);
+    setSelectedBox(null);
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
-      
-      // Simulate reading image, matching words in local vocab dictionary
-      setTimeout(() => {
-        setBoxes([
-          { id: "u1", wordId: "wd_water", text: "水", pinyin: "shuǐ", english: "water", top: 30, left: 20, width: 15, height: 12 },
-          { id: "u2", wordId: "wd_delicious", text: "好吃", pinyin: "hǎo chī", english: "delicious", top: 60, left: 50, width: 20, height: 12 }
-        ]);
-        setLoading(false);
-      }, 1000);
+    reader.onload = async (event) => {
+      const image = event.target?.result as string;
+      setUploadedImage(image);
+      await runScan({ image });
     };
     reader.readAsDataURL(file);
   };
 
-  const enrollSRS = (wordId: string) => {
-    store.enrollSRS(wordId);
+  const enrollSRS = async (wordId: string) => {
+    await enrollWordMutation.mutateAsync({ wordId });
     alert("Word enrolled in SRS review list!");
   };
 
@@ -163,7 +104,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
       flexDirection: "column",
       overflowY: "auto"
     }}>
-      {/* Top Header */}
       <header className="glass-panel" style={{
         padding: "16px",
         display: "flex",
@@ -177,15 +117,12 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
         <div>
           <h3 style={{ fontSize: "1.1rem", fontWeight: 800 }}>Camera Scan OCR Translator</h3>
           <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            Scan Hanzi characters on items to check standard pinyin meanings
+            OCR boxes come from the backend mock scanner.
           </p>
         </div>
       </header>
 
-      {/* Interactive Scan Frame */}
       <div style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        
-        {/* Main Scanner Container */}
         <div style={{
           position: "relative",
           width: "100%",
@@ -234,7 +171,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
             </div>
           )}
 
-          {/* Scanner Grid Lines overlay */}
           {(cameraActive || uploadedImage) && !loading && (
             <div style={{
               position: "absolute",
@@ -247,14 +183,10 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
             }} />
           )}
 
-          {/* Render OCR bounding boxes overlay */}
           {!loading && boxes.map((box) => (
             <button
               key={box.id}
-              onClick={() => {
-                const wObj = VOCAB.find(w => w.id === box.wordId);
-                if (wObj) setSelectedWord(wObj);
-              }}
+              onClick={() => setSelectedBox(box)}
               style={{
                 position: "absolute",
                 top: `${box.top}%`,
@@ -273,10 +205,9 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
           ))}
         </div>
 
-        {/* Action Controls */}
         <div style={{ display: "flex", gap: "12px", marginBottom: "32px", width: "100%", maxWidth: "400px" }}>
           {!cameraActive ? (
-            <button className="btn btn-primary" onClick={startCamera} style={{ flex: 1 }}>
+            <button className="btn btn-primary" onClick={startCamera} style={{ flex: 1 }} disabled={loading}>
               <Camera size={18} /> Use Live Camera
             </button>
           ) : (
@@ -291,44 +222,44 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
           </label>
         </div>
 
-        {/* Vocabulary Detail Display Card */}
-        {selectedWord && (
+        {selectedBox && (
           <div className="card anim-pop" style={{ width: "100%", maxWidth: "400px", textAlign: "left", marginBottom: "32px", border: "2px solid var(--jade)" }}>
             <h4 style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--jade)", fontWeight: 700, marginBottom: "4px" }}>
               Matched Chinese Term
             </h4>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 className="hanzi-text" style={{ fontSize: "2.2rem", fontWeight: 800 }}>
-                {selectedWord.simplified}
+                {selectedBox.text}
               </h2>
               <button
                 className="btn btn-secondary"
-                onClick={() => enrollSRS(selectedWord.id)}
+                onClick={() => enrollSRS(selectedBox.wordId)}
+                disabled={enrollWordMutation.isPending}
                 style={{ padding: "6px 12px", fontSize: "0.75rem" }}
               >
                 + Study Word (SRS)
               </button>
             </div>
             <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--primary-red)", marginTop: "4px" }}>
-              {selectedWord.pinyin}
+              {selectedBox.pinyin}
             </div>
             <p style={{ fontSize: "0.95rem", color: "var(--text-main)", fontWeight: 500, marginTop: "8px" }}>
-              Meaning: <strong>{selectedWord.english}</strong>
+              Meaning: <strong>{selectedBox.english}</strong>
             </p>
           </div>
         )}
 
-        {/* Samples library selector */}
         <div style={{ width: "100%", maxWidth: "400px", textAlign: "left" }}>
           <h4 style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700, marginBottom: "12px" }}>
             Or Select Demo Samples
           </h4>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-            {samples.map((samp) => (
+            {samples.map((sample) => (
               <button
-                key={samp.id}
-                onClick={() => selectSample(samp)}
+                key={sample.id}
+                onClick={() => selectSample(sample)}
                 className="btn btn-secondary"
+                disabled={loading}
                 style={{
                   display: "flex",
                   flexDirection: "column",
@@ -340,13 +271,12 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
                   alignItems: "center"
                 }}
               >
-                <span style={{ fontSize: "1.8rem" }}>{samp.emoji}</span>
-                <span>{samp.label}</span>
+                <span style={{ fontSize: "1.8rem" }}>{sample.marker}</span>
+                <span>{sample.label}</span>
               </button>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

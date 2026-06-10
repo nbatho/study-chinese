@@ -1,6 +1,3 @@
-import { LESSONS } from "../resources/lessons";
-import type { Lesson } from "../resources/lessons";
-
 export type SkillLevel = "beginner" | "elementary" | "intermediate" | "advanced";
 export type LearningGoal = "travel" | "business" | "hskExam" | "culture" | "family" | "casual";
 
@@ -217,13 +214,6 @@ export class AppStore {
       today.lessonsCompleted += 1;
     }
     
-    // Auto-enroll new words from lesson into SRS review system
-    const lesson = LESSONS.find(l => l.id === lessonId);
-    if (lesson) {
-      this.addXP(lesson.xpReward);
-      lesson.newWords.forEach(wordId => this.enrollSRS(wordId));
-    }
-
     this.addMinutes(minutes);
     this.saveItem("lesson_progress", this.lessonProgress);
     this.saveItem("daily_stats", this.dailyStats);
@@ -489,14 +479,8 @@ export class AppStore {
   }
 
   // Get next recommended lesson
-  getNextLesson(): Lesson | null {
-    let level = 1;
-    if (this.profile.startLevel === "elementary") level = 2;
-    if (this.profile.startLevel === "intermediate") level = 3;
-    if (this.profile.startLevel === "advanced") level = 3; // Cap seed levels to HSK3
-
-    const list = LESSONS.filter(l => l.hskLevel === level).sort((a, b) => a.order - b.order);
-    return list.find(l => !this.getLessonProgress(l.id).completedAt) || list[0] || null;
+  getNextLesson(): null {
+    return null;
   }
 
   // History for charts

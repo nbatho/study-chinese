@@ -1,273 +1,204 @@
-import { useState, useEffect, useRef } from "react";
-import { useStore } from "../store/store";
-import { ShieldCheck, ToggleLeft, ToggleRight, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLogoutMutation } from "../api/auth/queries";
+import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../api/users/queries";
+import { LogOut, ToggleLeft, ToggleRight } from "lucide-react";
 
 export default function Profile() {
-  const store = useStore();
-  const profile = store.profile;
-  const stats = store.getRecentStats(7);
+  const navigate = useNavigate();
+  const profileQuery = useUserProfileQuery();
+  const statsQuery = useUserStatsQuery(7);
+  const updateProfileMutation = useUpdateProfileMutation();
+  const logoutMutation = useLogoutMutation();
+  const profile = profileQuery.data?.profile;
+  const streak = profileQuery.data?.streak;
+  const stats = statsQuery.data?.stats ?? [];
 
-  const [name, setName] = useState(profile.name);
-  const [dailyMinutes, setDailyMinutes] = useState(profile.dailyMinutes);
-  const [showPinyin, setShowPinyin] = useState(profile.showPinyin);
-  const [audioAutoPlay, setAudioAutoPlay] = useState(profile.audioAutoPlay);
-  const [isUpgraded, setIsUpgraded] = useState(false);
-
+  const [name, setName] = useState("");
+  const [dailyMinutes, setDailyMinutes] = useState(15);
+  const [showPinyin, setShowPinyin] = useState(true);
+  const [audioAutoPlay, setAudioAutoPlay] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Trigger profile save updates
-  const saveProfileSettings = () => {
-    store.updateProfile({
+  useEffect(() => {
+    if (!profile) return;
+    setName(profile.name);
+    setDailyMinutes(profile.dailyMinutes);
+    setShowPinyin(profile.showPinyin);
+    setAudioAutoPlay(profile.audioAutoPlay);
+  }, [profile]);
+
+  const saveProfileSettings = async () => {
+    await updateProfileMutation.mutateAsync({
       name: name.trim() || "Learner",
       dailyMinutes: Number(dailyMinutes) || 15,
       showPinyin,
-      audioAutoPlay
+      audioAutoPlay,
     });
     alert("Profile settings saved successfully!");
   };
 
-  // Render SVG/Canvas XP Chart
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/auth", { replace: true });
+  };
+
   useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d")!;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const padding = 30;
-      const graphWidth = canvas.width - padding * 2;
-      const graphHeight = canvas.height - padding * 2;
-
-      // Draw grid
-      ctx.strokeStyle = "rgba(0,0,0,0.05)";
-      if (document.body.classList.contains("dark")) {
-        ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      }
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = padding + (graphHeight * i) / 4;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(canvas.width - padding, y);
-        ctx.stroke();
-      }
-
-      // Extract values
-      const xps = stats.map(s => s.xp);
-      const maxXp = Math.max(...xps, 50);
-
-      // Plot bars
-      const barGap = 10;
-      const totalGapsWidth = barGap * (stats.length - 1);
-      const barWidth = (graphWidth - totalGapsWidth) / stats.length;
-
-      const compStyle = window.getComputedStyle(canvas);
-      const primaryRed = compStyle.getPropertyValue('--primary-red').trim() || "rgb(217, 63, 71)";
-      const accentRed = compStyle.getPropertyValue('--accent-red').trim() || "rgb(240, 75, 66)";
-      const textMain = compStyle.getPropertyValue('--text-main').trim() || "#2c2c35";
-      const textMuted = compStyle.getPropertyValue('--text-muted').trim() || "#6e6e82";
-
-      stats.forEach((s, idx) => {
-        const barHeight = (s.xp / maxXp) * graphHeight;
-        const x = padding + idx * (barWidth + barGap);
-        const y = canvas.height - padding - barHeight;
-
-        // Fill bar gradient
-        const grad = ctx.createLinearGradient(x, y, x, canvas.height - padding);
-        grad.addColorStop(0, primaryRed);
-        grad.addColorStop(1, accentRed);
-        ctx.fillStyle = grad;
-        ctx.fillRect(x, y, barWidth, barHeight);
-
-        // Value text
-        ctx.fillStyle = textMain;
-        ctx.font = "bold 9px sans-serif";
-        ctx.textAlign = "center";
-        if (s.xp > 0) {
-          ctx.fillText(String(s.xp), x + barWidth / 2, y - 4);
-        }
-
-        // Label day text
-        ctx.fillStyle = textMuted;
-        ctx.font = "8px sans-serif";
-        const dateStr = s.dateKey.split("-").slice(1).join("/");
-        ctx.fillText(dateStr, x + barWidth / 2, canvas.height - padding + 14);
-      });
+    const padding = 30;
+    const graphWidth = canvas.width - padding * 2;
+    const graphHeight = canvas.height - padding * 2;
+    ctx.strokeStyle = document.body.classList.contains("dark") ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i += 1) {
+      const y = padding + (graphHeight * i) / 4;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(canvas.width - padding, y);
+      ctx.stroke();
     }
+
+    const xps = stats.map((stat) => stat.xp);
+    const maxXp = Math.max(...xps, 50);
+    const barGap = 10;
+    const totalGapsWidth = barGap * Math.max(stats.length - 1, 0);
+    const barWidth = stats.length ? (graphWidth - totalGapsWidth) / stats.length : graphWidth;
+    const compStyle = window.getComputedStyle(canvas);
+    const primaryRed = compStyle.getPropertyValue("--primary-red").trim() || "rgb(217, 63, 71)";
+    const accentRed = compStyle.getPropertyValue("--accent-red").trim() || "rgb(240, 75, 66)";
+    const textMain = compStyle.getPropertyValue("--text-main").trim() || "#2c2c35";
+    const textMuted = compStyle.getPropertyValue("--text-muted").trim() || "#6e6e82";
+
+    stats.forEach((stat, idx) => {
+      const barHeight = (stat.xp / maxXp) * graphHeight;
+      const x = padding + idx * (barWidth + barGap);
+      const y = canvas.height - padding - barHeight;
+      const grad = ctx.createLinearGradient(x, y, x, canvas.height - padding);
+      grad.addColorStop(0, primaryRed);
+      grad.addColorStop(1, accentRed);
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barWidth, barHeight);
+      ctx.fillStyle = textMain;
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      if (stat.xp > 0) ctx.fillText(String(stat.xp), x + barWidth / 2, y - 4);
+      ctx.fillStyle = textMuted;
+      ctx.font = "8px sans-serif";
+      ctx.fillText(stat.dateKey.split("-").slice(1).join("/"), x + barWidth / 2, canvas.height - padding + 14);
+    });
   }, [stats]);
 
-  const handleUpgrade = () => {
-    setIsUpgraded(true);
-    store.addXP(100);
-    alert("Congratulations! You are now a StudyChinese Pro Member. Enjoy offline features, camera translator, and AI tutors!");
+  const today = stats[stats.length - 1] ?? {
+    xp: 0,
+    minutesStudied: 0,
+    wordsReviewed: 0,
+    exercisesCorrect: 0,
+    exercisesTotal: 0,
   };
+  const accuracy = today.exercisesTotal
+    ? Math.round((today.exercisesCorrect / today.exercisesTotal) * 100)
+    : 0;
 
   return (
     <div className="anim-slide" style={{ paddingBottom: "40px" }}>
-      {/* Profile summary header */}
       <section className="card" style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px", textAlign: "left" }}>
-        <div style={{ fontSize: "3.2rem" }}>{profile.avatar}</div>
+        <div style={{ fontSize: "3.2rem" }}>{profile?.avatar || "学"}</div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: "1.35rem", fontWeight: 800 }}>{profile.name}</h2>
+          <h2 style={{ fontSize: "1.35rem", fontWeight: 800 }}>{profile?.name || "Learner"}</h2>
           <span style={{ fontSize: "0.8rem", color: "var(--primary-red)", fontWeight: 700 }}>
-            Member since {new Date(profile.joinDate).toLocaleDateString()}
+            Member since {profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString() : "today"}
           </span>
           <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
             <span style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-card-hover)", padding: "4px 8px", borderRadius: "6px", fontWeight: 700, color: "var(--text-muted)" }}>
-              Streak: {store.getCurrentStreak()} days
+              Streak: {streak?.current ?? 0} days
             </span>
             <span style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-card-hover)", padding: "4px 8px", borderRadius: "6px", fontWeight: 700, color: "var(--text-muted)" }}>
-              Level: {profile.startLevel.toUpperCase()}
+              Level: {(profile?.startLevel || "beginner").toUpperCase()}
             </span>
           </div>
         </div>
       </section>
 
-      {/* Analytics Chart dashboard */}
       <section className="card" style={{ marginBottom: "20px", textAlign: "left" }}>
         <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>Weekly XP Analytics</h3>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "16px" }}>XP points earned over the last 7 study days.</p>
-        
+        <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "16px" }}>XP points returned by the server for the last 7 days.</p>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <canvas ref={canvasRef} width={340} height={180} style={{ width: "100%", maxWidth: "340px", height: "180px" }} />
         </div>
-        
-        {/* General Stats summary */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "10px",
-          textAlign: "center",
-          marginTop: "16px",
-          borderTop: "1px dashed var(--border-color)",
-          paddingTop: "16px"
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", textAlign: "center", marginTop: "16px", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
           <div>
             <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>STUDY TIME</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--primary-red)" }}>{store.getTodayStat().minutesStudied} min</strong>
+            <strong style={{ fontSize: "1.1rem", color: "var(--primary-red)" }}>{today.minutesStudied} min</strong>
           </div>
           <div>
             <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>ACCURACY</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--jade)" }}>92%</strong>
+            <strong style={{ fontSize: "1.1rem", color: "var(--jade)" }}>{accuracy}%</strong>
           </div>
           <div>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>WORDS</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--tone-3)" }}>{store.getTotalStudiedWordsCount()} learned</strong>
+            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>REVIEWS</span>
+            <strong style={{ fontSize: "1.1rem", color: "var(--tone-3)" }}>{today.wordsReviewed}</strong>
           </div>
         </div>
       </section>
 
-      {/* Upgrade Premium billing simulator */}
-      <section className="card card-gradient-gold" style={{ marginBottom: "20px", textAlign: "left" }}>
-        <h3 style={{ fontSize: "1.05rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "8px" }}>
-          <Sparkles size={18} style={{ color: "var(--gold)" }} />
-          Upgrade to Premium Pro
-        </h3>
-        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-          Unlock unlimited AI Tutor scenarios, real-time Camera Scanners, detailed analytics, and tone contours review feedback.
-        </p>
-
-        {isUpgraded ? (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            color: "var(--jade)",
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            marginTop: "12px",
-            backgroundColor: "rgba(16, 185, 129, 0.08)",
-            padding: "8px 12px",
-            borderRadius: "8px"
-          }}>
-            <ShieldCheck size={18} /> Pro Account Active
-          </div>
-        ) : (
-          <button className="btn btn-primary" onClick={handleUpgrade} style={{ marginTop: "14px", padding: "10px 18px", fontSize: "0.85rem" }}>
-            Unlock Pro Access ($9.99/mo)
-          </button>
-        )}
-      </section>
-
-      {/* General Settings */}
       <section className="card" style={{ textAlign: "left", marginBottom: "20px" }}>
         <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "16px" }}>App Settings</h3>
-        
         <div style={{ display: "grid", gap: "16px" }}>
-          
-          {/* Edit name */}
           <div>
             <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>Display Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-color)",
-                backgroundColor: "var(--bg-app)",
-                color: "var(--text-main)",
-                outline: "none"
-              }}
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }} />
           </div>
-
-          {/* Daily study goal */}
           <div>
             <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>Daily Goal Minutes</label>
-            <select
-              value={dailyMinutes}
-              onChange={(e) => setDailyMinutes(Number(e.target.value))}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-color)",
-                backgroundColor: "var(--bg-app)",
-                color: "var(--text-main)",
-                outline: "none"
-              }}
-            >
+            <select value={dailyMinutes} onChange={(e) => setDailyMinutes(Number(e.target.value))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }}>
               <option value="5">5 Minutes (Casual)</option>
               <option value="15">15 Minutes (Regular)</option>
               <option value="30">30 Minutes (Scholar)</option>
               <option value="60">60 Minutes (Intensive)</option>
             </select>
           </div>
-
-          {/* Pinyin Toggle */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px" }}>
             <div>
               <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Show Pinyin by Default</span>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Display pinyin above characters during lessons</p>
             </div>
-            <button
-              onClick={() => setShowPinyin(!showPinyin)}
-              style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}
-            >
+            <button onClick={() => setShowPinyin(!showPinyin)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
               {showPinyin ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>
-
-          {/* Audio Autoplay Toggle */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px" }}>
             <div>
               <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Audio Autoplay</span>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Automatically read characters aloud during reviews</p>
             </div>
-            <button
-              onClick={() => setAudioAutoPlay(!audioAutoPlay)}
-              style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}
-            >
+            <button onClick={() => setAudioAutoPlay(!audioAutoPlay)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
               {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>
-
         </div>
+        <button className="btn btn-primary" onClick={saveProfileSettings} disabled={updateProfileMutation.isPending} style={{ width: "100%", marginTop: "24px" }}>
+          {updateProfileMutation.isPending ? "Saving..." : "Save Preferences"}
+        </button>
+      </section>
 
-        <button className="btn btn-primary" onClick={saveProfileSettings} style={{ width: "100%", marginTop: "24px" }}>
-          Save Preferences
+      <section className="card" style={{ textAlign: "left" }}>
+        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "6px" }}>Account</h3>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "16px" }}>
+          Sign out on this device. Your learning data remains saved on the server.
+        </p>
+        <button
+          className="btn btn-secondary"
+          onClick={handleLogout}
+          disabled={logoutMutation.isPending}
+          style={{ width: "100%", color: "var(--tone-4)" }}
+        >
+          <LogOut size={18} />
+          {logoutMutation.isPending ? "Signing out..." : "Logout"}
         </button>
       </section>
     </div>

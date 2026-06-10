@@ -1,159 +1,68 @@
-import { useState, useEffect, useRef } from "react";
-import { useStore } from "../store/store";
-import { CHAT_SCENARIOS } from "../resources/seedData";
-import type { ChatScenario } from "../resources/seedData";
-import { ArrowLeft, Send, Sparkles, Volume2, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  useChatScenariosQuery,
+  useSendChatMessageMutation,
+  useStartChatSessionMutation,
+} from "../api/aiTutor/queries";
+import type { ChatMessage, ChatScenario } from "../api/aiTutor";
+import { ArrowLeft, AlertTriangle, Send, Sparkles, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AITutorProps {
   onClose?: () => void;
 }
 
-interface ChatMessage {
-  id: string;
-  role: "user" | "tutor";
-  simplified: string;
-  pinyin: string;
-  english: string;
-  correction?: {
-    original: string;
-    improved: string;
-    explanation: string;
-  };
-}
-
 export default function AITutor({ onClose }: AITutorProps) {
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));
-  const store = useStore();
+  const scenariosQuery = useChatScenariosQuery();
+  const startSessionMutation = useStartChatSessionMutation();
   const [selectedScenario, setSelectedScenario] = useState<ChatScenario | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState("");
-  const [isThinking, setIsThinking] = useState(false);
-  
+  const sendMessageMutation = useSendChatMessageMutation(sessionId ?? "");
+  const isThinking = startSessionMutation.isPending || sendMessageMutation.isPending;
+  const scenarios = scenariosQuery.data?.scenarios ?? [];
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking]);
 
-  const selectScenario = (scenario: ChatScenario) => {
+  const selectScenario = async (scenario: ChatScenario) => {
+    const response = await startSessionMutation.mutateAsync({ scenarioId: scenario.id });
     setSelectedScenario(scenario);
-    setMessages([
-      {
-        id: `msg_init_${Date.now()}`,
-        role: "tutor",
-        simplified: scenario.initialMessage.simplified,
-        pinyin: scenario.initialMessage.pinyin,
-        english: scenario.initialMessage.english
-      }
-    ]);
+    setSessionId(response.session.id);
+    setMessages(response.session.messages);
   };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInput.trim() || isThinking || !selectedScenario) return;
+
+    if (!userInput.trim() || isThinking || !selectedScenario || !sessionId) {
+      return;
+    }
 
     const input = userInput.trim();
     setUserInput("");
 
-    // Add user message
-    const userMsg: ChatMessage = {
-      id: `msg_user_${Date.now()}`,
+    const pendingMessage: ChatMessage = {
+      id: `pending_${Date.now()}`,
       role: "user",
       simplified: input,
       pinyin: "",
-      english: ""
+      english: "",
+      correction: null,
     };
 
-    setMessages(prev => [...prev, userMsg]);
-    setIsThinking(true);
-
-    // Simulate thinking delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Generate response matching swift service logic
-    const lower = input.toLowerCase();
-    let reply = "有意思！请再说一下。";
-    let pinyin = "Yǒu yìsi! Qǐng zài shuō yīxià.";
-    let english = "Interesting! Please say more.";
-    let correction: ChatMessage["correction"] = undefined;
-
-    if (lower.includes("你好") || lower.includes("ni hao") || lower.includes("hello")) {
-      reply = "你好！很高兴认识你。你今天怎么样？";
-      pinyin = "Nǐ hǎo! Hěn gāoxìng rènshí nǐ. Nǐ jīntiān zěnmeyàng?";
-      english = "Hello! Nice to meet you. How are you today?";
-    } else if (lower.includes("谢谢") || lower.includes("xie xie") || lower.includes("thank")) {
-      reply = "不客气！还有什么想聊的吗？";
-      pinyin = "Bú kèqì! Hái yǒu shénme xiǎng liáo de ma?";
-      english = "You're welcome! Is there anything else you'd like to chat about?";
-    } else if (lower.includes("名字") || lower.includes("name")) {
-      reply = "我叫小红。你呢？";
-      pinyin = "Wǒ jiào Xiǎo Hóng. Nǐ ne?";
-      english = "My name is Xiao Hong. And you?";
-    } else {
-      switch (selectedScenario.id) {
-        case "cafe":
-          reply = "我们有咖啡、茶和果汁。你要什么？";
-          pinyin = "Wǒmen yǒu kāfēi, chá hé guǒzhī. Nǐ yào shénme?";
-          english = "We have coffee, tea and juice. What would you like?";
-          break;
-        case "restaurant":
-          reply = "今天的招牌菜是宫保鸡丁，非常好吃！";
-          pinyin = "Jīntiān de zhāopái cài shì gōngbǎo jīdīng, fēicháng hǎochī!";
-          english = "Today's special is Kung Pao Chicken, very delicious!";
-          break;
-        case "directions":
-          reply = "一直走，然后在第二个路口左转。";
-          pinyin = "Yīzhí zǒu, ránhòu zài dì èr gè lùkǒu zuǒ zhuǎn.";
-          english = "Go straight, then turn left at the second intersection.";
-          break;
-        case "shopping":
-          reply = "这件衣服三百元。你要几件？";
-          pinyin = "Zhè jiàn yīfu sānbǎi yuán. Nǐ yào jǐ jiàn?";
-          english = "This piece of clothing is 300 yuan. How many would you like?";
-          break;
-        case "hotel":
-          reply = "请给我您的护照，房间号是808。";
-          pinyin = "Qǐng gěi wǒ nín de hùzhào, fángjiān hào shì 808.";
-          english = "Please give me your passport, your room number is 808.";
-          break;
-        case "taxi":
-          reply = "没问题，大概二十分钟就到。";
-          pinyin = "Méi wèntí, dàgài èrshí fēnzhōng jiù dào.";
-          english = "No problem, it'll take about twenty minutes.";
-          break;
-        case "business":
-          reply = "谢谢您的邀请。我们先讨论项目计划好吗？";
-          pinyin = "Xièxiè nín de yāoqǐng. Wǒmen xiān tǎolùn xiàngmù jìhuà hǎo ma?";
-          english = "Thank you for the invitation. Shall we discuss the project plan first?";
-          break;
-      }
-    }
-
-    // Flag grammar feedback correction if input lacks tone accents
-    if (lower.includes("ni hao")) {
-      correction = {
-        original: input,
-        improved: input.replace(/ni hao/gi, "nǐ hǎo"),
-        explanation: "Grammar Tip: Use proper tone marks: nǐ (3rd tone) hǎo (3rd tone). Good job!"
-      };
-    }
-
-    const tutorMsg: ChatMessage = {
-      id: `msg_tutor_${Date.now()}`,
-      role: "tutor",
-      simplified: reply,
-      pinyin,
-      english,
-      correction
-    };
-
-    setMessages(prev => [...prev, tutorMsg]);
-    setIsThinking(false);
-    store.addXP(10); // +10 XP for tutoring message
+    setMessages((prev) => [...prev, pendingMessage]);
+    const response = await sendMessageMutation.mutateAsync({ text: input });
+    setMessages((prev) => [
+      ...prev.filter((message) => message.id !== pendingMessage.id),
+      response.userMessage,
+      response.tutorMessage,
+    ]);
   };
 
   const playTTS = (text: string) => {
@@ -177,7 +86,6 @@ export default function AITutor({ onClose }: AITutorProps) {
       display: "flex",
       flexDirection: "column"
     }}>
-      {/* Header bar */}
       <header className="glass-panel" style={{
         padding: "16px",
         display: "flex",
@@ -190,54 +98,69 @@ export default function AITutor({ onClose }: AITutorProps) {
         </button>
         <div>
           <h3 style={{ fontSize: "1.1rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px" }}>
-            <Sparkles size={18} className="tone-t3" /> 
+            <Sparkles size={18} className="tone-t3" />
             {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : "AI Tutor Conversations"}
           </h3>
           <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            {selectedScenario ? `Active Scenario: ${selectedScenario.description}` : "Chat with Xiao Hong in scenarios"}
+            {selectedScenario ? selectedScenario.description : "Chat with backend mock tutor responses"}
           </p>
         </div>
       </header>
 
-      {/* Main View Area */}
       {!selectedScenario ? (
         <div className="anim-slide" style={{ flex: 1, padding: "24px", overflowY: "auto", maxWidth: "600px", margin: "0 auto", width: "100%" }}>
           <h4 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "16px", textAlign: "left" }}>
             Select Dialogue Scenario
           </h4>
           <div style={{ display: "grid", gap: "12px" }}>
-            {CHAT_SCENARIOS.map((scen) => (
-              <div
-                key={scen.id}
-                onClick={() => selectScenario(scen)}
+            {scenariosQuery.isLoading && (
+              <div className="card" style={{ padding: "16px", color: "var(--text-muted)" }}>
+                Loading scenarios...
+              </div>
+            )}
+            {scenariosQuery.isError && (
+              <div className="card" style={{ padding: "16px", color: "var(--primary-red)" }}>
+                Cannot load scenarios from backend.
+              </div>
+            )}
+            {scenarios.map((scenario) => (
+              <button
+                key={scenario.id}
+                type="button"
+                onClick={() => selectScenario(scenario)}
                 className="card"
+                disabled={startSessionMutation.isPending}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "16px",
                   padding: "16px",
-                  cursor: "pointer",
-                  textAlign: "left"
+                  cursor: startSessionMutation.isPending ? "wait" : "pointer",
+                  textAlign: "left",
+                  border: "1px solid var(--border-color)",
+                  backgroundColor: "var(--bg-card)",
+                  color: "var(--text-main)"
                 }}
               >
-                <span style={{ fontSize: "2.2rem" }}>{scen.emoji}</span>
-                <div>
-                  <h4 style={{ fontWeight: 800, fontSize: "1.05rem" }}>{scen.title}</h4>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>{scen.description}</p>
-                </div>
-              </div>
+                <span style={{ fontSize: "2.2rem" }}>{scenario.emoji}</span>
+                <span>
+                  <strong style={{ display: "block", fontSize: "1.05rem" }}>{scenario.title}</strong>
+                  <span style={{ display: "block", fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                    {scenario.description}
+                  </span>
+                </span>
+              </button>
             ))}
           </div>
         </div>
       ) : (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100% - 65px)" }}>
-          {/* Messages body */}
           <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
-            {messages.map((msg) => (
+            {messages.map((message) => (
               <div
-                key={msg.id}
+                key={message.id}
                 style={{
-                  alignSelf: msg.role === "tutor" ? "flex-start" : "flex-end",
+                  alignSelf: message.role === "tutor" ? "flex-start" : "flex-end",
                   maxWidth: "80%",
                   textAlign: "left"
                 }}
@@ -245,43 +168,42 @@ export default function AITutor({ onClose }: AITutorProps) {
                 <div style={{
                   padding: "14px 18px",
                   borderRadius: "16px",
-                  borderTopLeftRadius: msg.role === "tutor" ? "4px" : "16px",
-                  borderTopRightRadius: msg.role === "tutor" ? "16px" : "4px",
-                  backgroundColor: msg.role === "tutor" ? "var(--bg-card)" : "var(--primary-red)",
-                  color: msg.role === "tutor" ? "var(--text-main)" : "white",
-                  border: msg.role === "tutor" ? "1px solid var(--border-color)" : "none",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.01)"
+                  borderTopLeftRadius: message.role === "tutor" ? "4px" : "16px",
+                  borderTopRightRadius: message.role === "tutor" ? "16px" : "4px",
+                  backgroundColor: message.role === "tutor" ? "var(--bg-card)" : "var(--primary-red)",
+                  color: message.role === "tutor" ? "var(--text-main)" : "white",
+                  border: message.role === "tutor" ? "1px solid var(--border-color)" : "none",
                 }}>
-                  {msg.role === "tutor" ? (
+                  {message.role === "tutor" ? (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)" }}>👩‍🏫 Tutor Xiao Hong</span>
+                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)" }}>Tutor Xiao Hong</span>
                         <button
-                          onClick={() => playTTS(msg.simplified)}
+                          type="button"
+                          onClick={() => playTTS(message.simplified)}
                           style={{ border: "none", background: "none", color: "var(--primary-red)", cursor: "pointer" }}
                         >
                           <Volume2 size={16} />
                         </button>
                       </div>
                       <h3 className="hanzi-text" style={{ fontSize: "1.35rem", fontWeight: 700 }}>
-                        {msg.simplified}
+                        {message.simplified}
                       </h3>
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>{msg.pinyin}</div>
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                        {message.pinyin ?? ""}
+                      </div>
                       <div style={{ fontSize: "0.85rem", color: "var(--text-main)", borderTop: "1px solid rgba(0,0,0,0.04)", paddingTop: "4px", marginTop: "6px" }}>
-                        {msg.english}
+                        {message.english ?? ""}
                       </div>
                     </div>
                   ) : (
-                    <div>
-                      <h3 className="hanzi-text" style={{ fontSize: "1.35rem", fontWeight: 700 }}>
-                        {msg.simplified}
-                      </h3>
-                    </div>
+                    <h3 className="hanzi-text" style={{ fontSize: "1.35rem", fontWeight: 700 }}>
+                      {message.simplified}
+                    </h3>
                   )}
                 </div>
 
-                {/* Correction Tips Box */}
-                {msg.correction && (
+                {message.correction && (
                   <div className="anim-pop" style={{
                     marginTop: "8px",
                     padding: "10px 14px",
@@ -296,8 +218,8 @@ export default function AITutor({ onClose }: AITutorProps) {
                   }}>
                     <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
                     <div>
-                      <strong>Did you mean:</strong> <em>"{msg.correction.improved}"</em>
-                      <p style={{ marginTop: "2px", color: "var(--text-muted)" }}>{msg.correction.explanation}</p>
+                      <strong>Did you mean:</strong> <em>"{message.correction.improved}"</em>
+                      <p style={{ marginTop: "2px", color: "var(--text-muted)" }}>{message.correction.explanation}</p>
                     </div>
                   </div>
                 )}
@@ -315,13 +237,12 @@ export default function AITutor({ onClose }: AITutorProps) {
                 fontSize: "0.85rem",
                 fontWeight: 600
               }}>
-                Xiao Hong is writing a response... ✏️
+                Xiao Hong is writing a response...
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          {/* Typing Form box */}
           <form
             onSubmit={handleSend}
             className="glass-panel"
@@ -334,7 +255,7 @@ export default function AITutor({ onClose }: AITutorProps) {
           >
             <input
               type="text"
-              placeholder={`Chat with Tutor in Chinese (e.g. 你好)...`}
+              placeholder="Chat with Tutor in Chinese..."
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               disabled={isThinking}

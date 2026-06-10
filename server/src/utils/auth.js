@@ -21,14 +21,14 @@ const safeEqual = (left, right) => {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 };
 
-export const signAccessToken = (payload) => {
+const signToken = (payload, expiresInSeconds) => {
   const now = Math.floor(Date.now() / 1000);
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(
     JSON.stringify({
       ...payload,
       iat: now,
-      exp: now + env.JWT_EXPIRES_IN_SECONDS
+      exp: now + expiresInSeconds
     })
   ).toString('base64url');
   const signature = createSignature(`${header}.${body}`);
@@ -36,26 +36,26 @@ export const signAccessToken = (payload) => {
   return `${header}.${body}.${signature}`;
 };
 
-export const verifyAccessToken = (token) => {
+const verifyToken = (token, tokenName) => {
   try {
     const parts = token?.split('.');
 
     if (!parts || parts.length !== 3) {
-      throw unauthorized('Access token không hợp lệ.');
+      throw unauthorized(`${tokenName} token khong hop le.`);
     }
 
     const [header, body, signature] = parts;
     const expectedSignature = createSignature(`${header}.${body}`);
 
     if (!safeEqual(signature, expectedSignature)) {
-      throw unauthorized('Access token không hợp lệ.');
+      throw unauthorized(`${tokenName} token khong hop le.`);
     }
 
     const payload = parseJson(body);
     const now = Math.floor(Date.now() / 1000);
 
     if (payload.exp && payload.exp < now) {
-      throw unauthorized('Access token đã hết hạn.');
+      throw unauthorized(`${tokenName} token da het han.`);
     }
 
     return payload;
@@ -64,9 +64,18 @@ export const verifyAccessToken = (token) => {
       throw error;
     }
 
-    throw unauthorized('Access token không hợp lệ.');
+    throw unauthorized(`${tokenName} token khong hop le.`);
   }
 };
+
+export const signAccessToken = (payload) => signToken(payload, env.JWT_EXPIRES_IN_SECONDS);
+
+export const signRefreshToken = (payload) =>
+  signToken(payload, env.REFRESH_TOKEN_EXPIRES_IN_SECONDS);
+
+export const verifyAccessToken = (token) => verifyToken(token, 'Access');
+
+export const verifyRefreshToken = (token) => verifyToken(token, 'Refresh');
 
 export const hashPassword = async (password) => {
   const salt = crypto.randomBytes(16).toString('base64url');

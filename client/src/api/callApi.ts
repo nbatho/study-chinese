@@ -5,8 +5,19 @@ import type {
     AxiosResponse,
 } from 'axios';
 import { toast } from 'sonner';
-import { getAccessToken, removeAccessToken } from '../utils/localStorage';
+import { getAccessToken, removeAccessToken, setAccessToken } from '../utils/localStorage';
 import { ApiError, type ApiErrorPayload } from '../utils/errorUtils';
+
+interface RefreshResponse {
+    status: 'success';
+    data: {
+        accessToken: string;
+    };
+}
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+    _retry?: boolean;
+};
 
 const STATUS_TOAST_MAP: Record<number, string> = {
     401: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
@@ -28,6 +39,30 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
             'Content-Type': 'application/json',
         },
     });
+    const refreshClient = axios.create({
+        baseURL,
+        withCredentials: true,
+        timeout: 15000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+    let refreshRequest: Promise<string> | null = null;
+
+    const refreshAccessToken = async () => {
+        refreshRequest ??= refreshClient
+            .post<RefreshResponse>('auth/refresh')
+            .then((response) => {
+                const token = response.data.data.accessToken;
+                setAccessToken(token);
+                return token;
+            })
+            .finally(() => {
+                refreshRequest = null;
+            });
+
+        return refreshRequest;
+    };
 
     instance.interceptors.request.use(
         (config: InternalAxiosRequestConfig) => {
@@ -58,6 +93,32 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
             }
 
             const { status, data } = error.response;
+            const originalRequest = error.config as RetryableRequestConfig | undefined;
+            const isRefreshRequest = originalRequest?.url?.includes('auth/refresh');
+
+            if (
+                status === 401 &&
+                originalRequest &&
+                !originalRequest._retry &&
+                !isRefreshRequest &&
+                !originalRequest.url?.includes('auth/logout')
+            ) {
+                originalRequest._retry = true;
+
+                try {
+                    const token = await refreshAccessToken();
+
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                    }
+
+                    return instance(originalRequest);
+                } catch {
+                    removeAccessToken();
+                    toast.error(STATUS_TOAST_MAP[401], { id: 'unauthorized' });
+                    return Promise.reject(new Error('Unauthorized'));
+                }
+            }
 
             const payload: ApiErrorPayload = {
                 status: status >= 500 ? 'error' : 'fail',
@@ -71,10 +132,14 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
             };
             const apiError = new ApiError(payload, status);
 
+            if (status === 401 && isRefreshRequest) {
+                removeAccessToken();
+                return Promise.reject(apiError);
+            }
+
             if (status === 401) {
                 removeAccessToken();
                 toast.error(STATUS_TOAST_MAP[401], { id: 'unauthorized' });
-                window.location.href = '/login';
             } else {
                 const toastMessage = STATUS_TOAST_MAP[status] ?? payload.message;
                 toast.error(toastMessage, { id: `err-${status}` });

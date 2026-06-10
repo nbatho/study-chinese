@@ -3,6 +3,7 @@ import { success } from '../utils/response.js';
 import {
   getAchievements,
   getDailyContent,
+  getOcrSamples,
   scanOcr,
   unlockAchievement
 } from '../services/utility.service.js';
@@ -24,5 +25,10 @@ export const showDailyContent = asyncHandler(async (req, res) => {
 
 export const scanImage = asyncHandler(async (req, res) => {
   const data = await scanOcr(req.user.id, req.body);
+  success(res, data);
+});
+
+export const listOcrSamples = asyncHandler(async (req, res) => {
+  const data = await getOcrSamples();
   success(res, data);
 });

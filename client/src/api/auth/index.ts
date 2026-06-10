@@ -7,6 +7,8 @@ export const authApi = {
 
     login: (payload: LoginPayload) => apiRequest<AuthResponse>(beApi.post('auth/login', payload)),
 
+    refresh: () => apiRequest<AuthResponse>(beApi.post('auth/refresh')),
+
     logout: () => emptyRequest(beApi.post('auth/logout')),
 };
 

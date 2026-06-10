@@ -17,6 +17,9 @@ export const env = {
 
   JWT_SECRET: process.env.JWT_SECRET || 'change-this-dev-secret',
   JWT_EXPIRES_IN_SECONDS: Number(process.env.JWT_EXPIRES_IN_SECONDS || 604800),
+  REFRESH_TOKEN_EXPIRES_IN_SECONDS: Number(
+    process.env.REFRESH_TOKEN_EXPIRES_IN_SECONDS || 2592000
+  ),
 
   AI_PROVIDER: process.env.AI_PROVIDER || 'mock',
   OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock'

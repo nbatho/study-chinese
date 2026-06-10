@@ -1,0 +1,38 @@
+export const queryKeys = {
+    auth: {
+        refresh: ['auth', 'refresh'] as const,
+    },
+    users: {
+        profile: ['users', 'profile'] as const,
+        stats: (days?: number) => ['users', 'stats', days ?? 7] as const,
+    },
+    lessons: {
+        list: ['lessons'] as const,
+        detail: (lessonId: string) => ['lessons', lessonId] as const,
+    },
+    vocabulary: {
+        search: (params?: unknown) => ['vocabulary', params ?? {}] as const,
+    },
+    srs: {
+        due: (limit?: number) => ['srs', 'due', limit ?? 20] as const,
+    },
+    favorites: {
+        all: ['favorites'] as const,
+    },
+    lists: {
+        all: ['lists'] as const,
+    },
+    aiTutor: {
+        scenarios: ['ai-tutor', 'scenarios'] as const,
+    },
+    ocr: {
+        samples: ['ocr', 'samples'] as const,
+        scan: ['ocr', 'scan'] as const,
+    },
+    achievements: {
+        all: ['achievements'] as const,
+    },
+    dashboard: {
+        dailyContent: ['dashboard', 'daily-content'] as const,
+    },
+};

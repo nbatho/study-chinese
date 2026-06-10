@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useStore } from "../store/store";
 import type { SkillLevel, LearningGoal } from "../store/store";
+import { useUpdateProfileMutation } from "../api/users/queries";
 import { ArrowRight, Sparkles, BookOpen, Target } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Onboarding() {
   const store = useStore();
+  const updateProfileMutation = useUpdateProfileMutation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel>("beginner");
@@ -14,25 +17,28 @@ export default function Onboarding() {
   const [selectedAvatar, setSelectedAvatar] = useState("🐼");
 
   useEffect(() => {
-    if (store.profile.hasCompletedOnboarding) {
-      navigate("/", { replace: true });
+    if (store.profile.hasCompletedOnboarding && location.pathname === "/onboarding") {
+      navigate("/home", { replace: true });
     }
-  }, [store.profile.hasCompletedOnboarding, navigate]);
+  }, [location.pathname, store.profile.hasCompletedOnboarding, navigate]);
 
   const avatars = ["🐼", "🐯", "🐉", "🦊", "🐒", "🦁", "🐱", "🐶", "🦉", "🐨"];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 4) {
       setStep(step + 1);
     } else {
-      store.updateProfile({
+      const profileUpdates = {
         name: name.trim() || "Learner",
         avatar: selectedAvatar,
         startLevel: selectedLevel,
         goalPurpose: selectedGoal,
         hasCompletedOnboarding: true,
         joinDate: new Date().toISOString()
-      });
+      };
+
+      await updateProfileMutation.mutateAsync(profileUpdates);
+      store.updateProfile(profileUpdates);
       store.recordActivityXP();
     }
   };
@@ -237,8 +243,8 @@ export default function Onboarding() {
               Back
             </button>
           )}
-          <button className="btn btn-primary" onClick={handleNext} style={{ flex: step > 1 ? 1 : 0 }}>
-            {step === 4 ? "Let's Go!" : "Continue"}
+          <button className="btn btn-primary" onClick={handleNext} disabled={updateProfileMutation.isPending} style={{ flex: step > 1 ? 1 : 0 }}>
+            {updateProfileMutation.isPending ? "Saving..." : step === 4 ? "Let's Go!" : "Continue"}
             {step < 4 && <ArrowRight size={18} />}
           </button>
         </div>

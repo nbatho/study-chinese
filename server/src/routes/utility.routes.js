@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  listOcrSamples,
   listAchievements,
   scanImage,
   showDailyContent,
@@ -14,6 +15,7 @@ router.use(requireAuth);
 router.get('/achievements', listAchievements);
 router.post('/achievements/:id/unlock', unlockSpecialAchievement);
 router.get('/dashboard/daily-content', showDailyContent);
+router.get('/ocr/samples', listOcrSamples);
 router.post('/ocr/scan', scanImage);
 
 export default router;

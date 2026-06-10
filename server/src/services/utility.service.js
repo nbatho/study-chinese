@@ -27,6 +27,30 @@ const mapGrammarLibrary = (row) => ({
   examples: row.examples || []
 });
 
+const ocrSamples = [
+  {
+    id: 'sign',
+    label: 'Street Sign',
+    marker: 'S',
+    image: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80',
+    detectedText: '中国站'
+  },
+  {
+    id: 'menu',
+    label: 'Restaurant Menu',
+    marker: 'M',
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
+    detectedText: '牛肉 茶'
+  },
+  {
+    id: 'book',
+    label: 'Library Book',
+    marker: 'B',
+    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80',
+    detectedText: '书 学习'
+  }
+];
+
 export const getAchievements = async (userId) => {
   const result = await query(
     `
@@ -57,7 +81,7 @@ export const unlockAchievement = async (userId, achievementId) =>
     );
 
     if (achievementResult.rowCount === 0) {
-      throw notFound('Không tìm thấy thành tựu.');
+      throw notFound('Khong tim thay thanh tuu.');
     }
 
     await client.query(
@@ -114,8 +138,13 @@ export const getDailyContent = async () => {
   };
 };
 
+export const getOcrSamples = async () => ({
+  samples: ocrSamples.map(({ detectedText, ...sample }) => sample)
+});
+
 export const scanOcr = async (userId, payload) => {
-  const detectedText = String(payload.text || payload.detectedText || '中国站');
+  const sample = ocrSamples.find((item) => item.id === payload.sampleId);
+  const detectedText = String(payload.text || payload.detectedText || sample?.detectedText || '中国站');
 
   const result = await query(
     `

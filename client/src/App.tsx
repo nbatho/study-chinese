@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useStore } from "./store/store";
 import Navigation from "./components/Navigation";
-import type { Lesson } from "./resources/lessons";
 
 export default function App() {
   const store = useStore();
   const navigate = useNavigate();
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const location = useLocation();
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 
   // Sync dark appearance on mount
   useEffect(() => {
@@ -20,10 +20,10 @@ export default function App() {
 
   // If user hasn't finished Onboarding, force onboarding page
   useEffect(() => {
-    if (!store.profile.hasCompletedOnboarding) {
+    if (!store.profile.hasCompletedOnboarding && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [store.profile.hasCompletedOnboarding, navigate]);
+  }, [location.pathname, store.profile.hasCompletedOnboarding, navigate]);
 
   if (!store.profile.hasCompletedOnboarding) {
     return null;
@@ -51,7 +51,7 @@ export default function App() {
 
       {/* Main Screen Body View Router */}
       <main className="main-content">
-        <Outlet context={{ selectedLesson, setSelectedLesson }} />
+        <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
       </main>
 
       {/* Global Tab Navigation */}
