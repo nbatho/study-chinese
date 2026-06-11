@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
-import { useStore } from "../store/store";
-import type { SkillLevel, LearningGoal } from "../store/store";
-import { useUpdateProfileMutation } from "../api/users/queries";
+import type { LearningGoal, SkillLevel } from "../api/users";
+import { useAddActivityMutation, useUpdateProfileMutation, useUserProfileQuery } from "../api/users/queries";
 import { ArrowRight, Sparkles, BookOpen, Target } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice";
 
 export default function Onboarding() {
-  const store = useStore();
+  const dispatch = useAppDispatch();
+  const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const profileQuery = useUserProfileQuery(isAuthenticated);
   const updateProfileMutation = useUpdateProfileMutation();
+  const addActivityMutation = useAddActivityMutation();
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState(1);
@@ -17,10 +22,11 @@ export default function Onboarding() {
   const [selectedAvatar, setSelectedAvatar] = useState("🐼");
 
   useEffect(() => {
-    if (store.profile.hasCompletedOnboarding && location.pathname === "/onboarding") {
+    const serverCompleted = profileQuery.data?.profile.hasCompletedOnboarding;
+    if ((hasCompletedOnboarding || serverCompleted) && location.pathname === "/onboarding") {
       navigate("/home", { replace: true });
     }
-  }, [location.pathname, store.profile.hasCompletedOnboarding, navigate]);
+  }, [hasCompletedOnboarding, location.pathname, navigate, profileQuery.data]);
 
   const avatars = ["🐼", "🐯", "🐉", "🦊", "🐒", "🦁", "🐱", "🐶", "🦉", "🐨"];
 
@@ -38,8 +44,10 @@ export default function Onboarding() {
       };
 
       await updateProfileMutation.mutateAsync(profileUpdates);
-      store.updateProfile(profileUpdates);
-      store.recordActivityXP();
+      dispatch(setOnboardingCompleted(true));
+      dispatch(setAppearance(profileQuery.data?.profile.appAppearance ?? "light"));
+      await addActivityMutation.mutateAsync({ xp: 5 });
+      navigate("/home", { replace: true });
     }
   };
 
@@ -243,8 +251,8 @@ export default function Onboarding() {
               Back
             </button>
           )}
-          <button className="btn btn-primary" onClick={handleNext} disabled={updateProfileMutation.isPending} style={{ flex: step > 1 ? 1 : 0 }}>
-            {updateProfileMutation.isPending ? "Saving..." : step === 4 ? "Let's Go!" : "Continue"}
+          <button className="btn btn-primary" onClick={handleNext} disabled={updateProfileMutation.isPending || addActivityMutation.isPending} style={{ flex: step > 1 ? 1 : 0 }}>
+            {updateProfileMutation.isPending || addActivityMutation.isPending ? "Saving..." : step === 4 ? "Let's Go!" : "Continue"}
             {step < 4 && <ArrowRight size={18} />}
           </button>
         </div>

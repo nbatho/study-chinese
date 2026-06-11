@@ -2,7 +2,7 @@ export interface ApiErrorPayload {
   status: 'error' | 'fail';
   errorCode: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 /**
@@ -12,7 +12,7 @@ export class ApiError extends Error {
   status: 'error' | 'fail';
   errorCode: string;
   statusCode: number;
-  details?: any;
+  details?: unknown;
 
   constructor(payload: ApiErrorPayload, statusCode: number) {
     super(payload.message);

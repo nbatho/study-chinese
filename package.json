@@ -1,0 +1,19 @@
+{
+  "name": "study-chinese-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "client:dev": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "client:lint": "npm --prefix client run lint",
+    "server:dev": "npm --prefix server run dev",
+    "server:start": "npm --prefix server start",
+    "server:lint": "npm --prefix server run lint",
+    "server:test": "npm --prefix server test",
+    "server:test:integration": "npm --prefix server run test:integration",
+    "db:init": "npm --prefix server run db:init",
+    "build": "npm --prefix client run build",
+    "lint": "npm --prefix client run lint && npm --prefix server run lint",
+    "test": "npm --prefix server test"
+  }
+}

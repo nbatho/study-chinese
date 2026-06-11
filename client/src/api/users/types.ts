@@ -1,12 +1,16 @@
+export type SkillLevel = 'beginner' | 'elementary' | 'intermediate' | 'advanced';
+export type LearningGoal = 'travel' | 'business' | 'hskExam' | 'culture' | 'family' | 'casual';
+export type AppAppearance = 'light' | 'dark' | 'system';
+
 export interface UserProfile {
     name: string;
     avatar: string;
-    startLevel: 'beginner' | 'elementary' | 'intermediate' | 'advanced';
-    goalPurpose: 'travel' | 'business' | 'hskExam' | 'culture' | 'family' | 'casual';
+    startLevel: SkillLevel;
+    goalPurpose: LearningGoal;
     dailyMinutes: number;
     showPinyin: boolean;
     audioAutoPlay: boolean;
-    appAppearance: 'light' | 'dark' | 'system';
+    appAppearance: AppAppearance;
     hasCompletedOnboarding: boolean;
     timezone?: string;
     joinDate: string;

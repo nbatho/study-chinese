@@ -7,10 +7,15 @@ import apiRoutes from './src/routes/api.routes.js';
 import { healthCheck } from './src/controllers/health.controller.js';
 import { requestLogger } from './src/middlewares/logger.middleware.js';
 import { errorHandler, notFoundHandler } from './src/middlewares/error.middleware.js';
+import { generalRateLimit, requestId, securityHeaders } from './src/middlewares/security.middleware.js';
+import { closeDB } from './src/config/db.config.js';
 
 const PORT = env.PORT;
 const app = express();
 
+app.disable('x-powered-by');
+app.use(requestId);
+app.use(securityHeaders);
 app.use(
   cors({
     origin: env.CLIENT_URL,
@@ -20,6 +25,7 @@ app.use(
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
+app.use(generalRateLimit);
 
 app.use('/api/v1', apiRoutes);
 
@@ -49,3 +55,14 @@ process.on('unhandledRejection', (err) => {
   console.error(`Unhandled Rejection Error: ${err.message}`);
   server.close(() => process.exit(1));
 });
+
+const gracefulShutdown = async (signal) => {
+  console.log(`${signal} received. Closing HTTP server and database pool...`);
+  server.close(async () => {
+    await closeDB();
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

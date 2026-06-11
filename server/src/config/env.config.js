@@ -27,6 +27,15 @@ export const env = {
 
 export const isProduction = env.NODE_ENV === 'production';
 
+const isUnsafeJwtSecret =
+  !env.JWT_SECRET ||
+  env.JWT_SECRET === 'change-this-dev-secret' ||
+  env.JWT_SECRET.length < 32;
+
+if (isProduction && isUnsafeJwtSecret) {
+  throw new Error('JWT_SECRET must be set to a strong value with at least 32 characters in production.');
+}
+
 export const hasDatabaseConfig = () => {
   if (env.DATABASE_URL) {
     return true;

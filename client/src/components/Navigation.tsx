@@ -1,16 +1,22 @@
 import { Home, BookOpen, Dumbbell, RefreshCw, User, Sun, Moon } from "lucide-react";
-import { useStore } from "../store/store";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDueSrsCardsQuery } from "../api/srs/queries";
+import { useUpdateProfileMutation } from "../api/users/queries";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setAppearance } from "../store/modules/appSlice";
 
 export default function Navigation() {
-  const store = useStore();
+  const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = store.profile.appAppearance;
+  const theme = useAppSelector((state) => state.app.appAppearance);
+  const dueCardsQuery = useDueSrsCardsQuery(99);
+  const updateProfileMutation = useUpdateProfileMutation();
 
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    store.updateProfile({ appAppearance: nextTheme });
+    dispatch(setAppearance(nextTheme));
+    updateProfileMutation.mutate({ appAppearance: nextTheme });
     if (nextTheme === "dark") {
       document.body.classList.add("dark");
     } else {
@@ -29,7 +35,7 @@ export default function Navigation() {
     { id: "home", label: "Home", icon: Home },
     { id: "learn", label: "Learn", icon: BookOpen },
     { id: "practice", label: "Practice", icon: Dumbbell },
-    { id: "review", label: "Review", icon: RefreshCw, badge: store.getDueSRSCardsCount() },
+    { id: "review", label: "Review", icon: RefreshCw, badge: dueCardsQuery.data?.cards.length ?? 0 },
     { id: "profile", label: "Profile", icon: User }
   ];
 

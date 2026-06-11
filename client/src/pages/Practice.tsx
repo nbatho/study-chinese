@@ -142,17 +142,11 @@ function MinimalPairsTool() {
   const addActivity = useAddActivityMutation();
   const pairs = pairsQuery.data?.pairs ?? [];
   const [pairIdx, setPairIdx] = useState(0);
-  const [playedA, setPlayedA] = useState(false);
   const [userSelection, setUserSelection] = useState<"A" | "B" | null>(null);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const activePair = pairs[pairIdx % Math.max(pairs.length, 1)];
-
-  useEffect(() => {
-    setPlayedA((pairIdx + activePair?.id.length) % 2 === 0);
-    setUserSelection(null);
-    setIsAnswerChecked(false);
-  }, [activePair?.id.length, pairIdx]);
+  const playedA = (pairIdx + (activePair?.id.length ?? 0)) % 2 === 0;
 
   if (pairsQuery.isLoading || !activePair) return <LoadingCard label="Loading minimal pairs from server..." />;
 
@@ -165,6 +159,12 @@ function MinimalPairsTool() {
     if (isCorrect) setCorrectCount((prev) => prev + 1);
     setIsAnswerChecked(true);
     await addActivity.mutateAsync({ xp: isCorrect ? 5 : 0, exercisesCorrect: isCorrect ? 1 : 0, exercisesTotal: 1 });
+  };
+
+  const goToNextPair = () => {
+    setPairIdx((value) => value + 1);
+    setUserSelection(null);
+    setIsAnswerChecked(false);
   };
 
   return (
@@ -195,7 +195,7 @@ function MinimalPairsTool() {
           );
         })}
       </div>
-      {isAnswerChecked && <button className="btn btn-primary" onClick={() => setPairIdx((value) => value + 1)} style={{ width: "100%" }}>Next Pair</button>}
+      {isAnswerChecked && <button className="btn btn-primary" onClick={goToNextPair} style={{ width: "100%" }}>Next Pair</button>}
     </div>
   );
 }

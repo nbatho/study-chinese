@@ -1,90 +1,142 @@
-# Study Chinese Application (Học Tiếng Trung)
+# Study Chinese
 
-Dự án học tiếng Trung đa nền tảng, được tổ chức theo cấu trúc song song gồm Client (Giao diện người dùng) và Server (Backend quản lý dữ liệu học tập và API).
+Ứng dụng học tiếng Trung gồm React client và Express API server. Backend dùng PostgreSQL, JWT auth, SRS, lesson progress, AI/OCR/practice endpoints ở dạng mock/demo để phát triển nhanh.
 
----
+## Cấu Trúc
 
-## 📂 Cấu trúc dự án
+- `client/`: React 19, TypeScript, Vite, React Query, Redux Toolkit.
+- `server/`: Node.js, Express, PostgreSQL `pg`, ES Modules.
+- `docs/`: tài liệu API, backend, database và backlog.
 
-Dự án được phân chia rõ ràng thành hai thư mục chính:
+## Yêu Cầu
 
-*   **[client/](file:///d:/Project/study-chinese/client)**: Giao diện Front-end (React + TypeScript + Vite).
-*   **[server/](file:///d:/Project/study-chinese/server)**: Mã nguồn Back-end (Node.js + ExpressJS + ES Modules).
+- Node.js 22 hoặc mới hơn.
+- PostgreSQL 16 nếu chạy ngoài Docker.
+- Windows PowerShell có thể chặn `npm.ps1`; dùng `npm.cmd ...` nếu gặp lỗi execution policy.
 
----
+## Cài Đặt
 
-## 🚀 Hướng dẫn khởi chạy dự án
-
-### 1. Cài đặt các thư viện cần thiết
-
-Trước khi khởi chạy, bạn cần cài đặt các dependency cho cả Client và Server.
-
-Mở terminal tại thư mục gốc của dự án và chạy các lệnh tương ứng:
-
-**Dành cho Frontend (Client):**
 ```bash
-cd client
-npm install
+npm install --prefix client
+npm install --prefix server
 ```
 
-**Dành cho Backend (Server):**
+Tạo file môi trường:
+
 ```bash
-cd server
-npm install
+copy server\.env.example server\.env
+copy client\.env.example client\.env
 ```
 
----
+Trên macOS/Linux:
 
-### 2. Thiết lập Biến Môi Trường (Environment Variables)
-
-*   Tại thư mục `/server`, sao chép file `.env.example` thành `.env`:
-    ```bash
-    cp .env.example .env
-    ```
-*   Mở file `.env` và tùy chỉnh các tham số kết nối hoặc cổng kết nối nếu cần (mặc định là cổng `5000` và kết nối tới `http://localhost:5173`).
-
----
-
-### 3. Chạy Dự Án trong Môi trường Development
-
-#### Khởi động Server (Backend)
 ```bash
-cd server
-npm run dev
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
-> Server sẽ tự động chạy tại [http://localhost:5000](http://localhost:5000). Chế độ chạy qua `nodemon` sẽ giúp server tự động cập nhật khi bạn chỉnh sửa code.
 
-#### Khởi động Client (Frontend)
+## Database
+
+Mặc định `server/.env.example` trỏ tới PostgreSQL local:
+
+```text
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/study_chinese
+```
+
+Khởi tạo schema và seed từ `server/prod.sql`:
+
 ```bash
-cd client
-npm run dev
+npm run db:init
 ```
-> Client sẽ chạy tại [http://localhost:5173](http://localhost:5173).
 
----
+Hoặc chạy trực tiếp:
 
-## 🌐 Các Endpoint API Hiện Có (Backend)
+```bash
+npm --prefix server run db:init
+```
 
-Backend cung cấp các API endpoint mặc định dưới tiền tố `/api`:
+## Chạy Development
 
-| Phương thức | Endpoint | Yêu cầu xác thực | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Không | Kiểm tra trạng thái hoạt động của server |
-| `GET` | `/api/words` | Không | Lấy danh sách từ vựng tiếng Trung mẫu (Hán tự, Pinyin, dịch nghĩa) |
-| `GET` | `/api/profile` | Có (Bearer Token) | Lấy thông tin tài khoản đang đăng nhập (mock auth) |
+Chạy server:
 
----
+```bash
+npm run server:dev
+```
 
-## 🛠️ Công nghệ sử dụng
+Chạy client:
 
-### Client (Frontend)
-*   **React 19**
-*   **TypeScript**
-*   **Vite** (Công cụ build nhanh chóng)
-*   **Lucide React** (Bộ icon hiện đại)
+```bash
+npm run client:dev
+```
 
-### Server (Backend)
-*   **Node.js (ES Modules)**
-*   **ExpressJS** (Web Framework)
-*   **Cors** (Xử lý chia sẻ tài nguyên nguồn gốc chéo)
-*   **Dotenv** (Quản lý biến môi trường)
+URL mặc định:
+
+- Client: `http://localhost:5173`
+- Server: `http://localhost:5000`
+- API: `http://localhost:5000/api/v1`
+- OpenAPI JSON: `http://localhost:5000/api/v1/docs/swagger.json`
+
+## Docker Compose
+
+Docker Compose dựng PostgreSQL, server và client:
+
+```bash
+docker compose up --build
+```
+
+Sau khi PostgreSQL sẵn sàng, import schema/seed nếu container DB còn trống:
+
+```bash
+npm run db:init
+```
+
+## Scripts
+
+Root scripts:
+
+- `npm run client:dev`
+- `npm run server:dev`
+- `npm run build`
+- `npm run lint`
+- `npm run test`
+- `npm run db:init`
+
+Client scripts:
+
+- `npm --prefix client run dev`
+- `npm --prefix client run build`
+- `npm --prefix client run lint`
+
+Server scripts:
+
+- `npm --prefix server run dev`
+- `npm --prefix server run lint`
+- `npm --prefix server test`
+- `npm --prefix server run test:integration`
+- `npm --prefix server run db:init`
+
+## API Chính
+
+Tất cả endpoint chính nằm dưới `/api/v1`.
+
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `GET` | `/api/v1/health` | Kiểm tra trạng thái server/database |
+| `POST` | `/api/v1/auth/register` | Đăng ký |
+| `POST` | `/api/v1/auth/login` | Đăng nhập |
+| `POST` | `/api/v1/auth/refresh` | Refresh access token bằng httpOnly cookie |
+| `GET/PUT` | `/api/v1/users/profile` | Hồ sơ và cài đặt người học |
+| `GET` | `/api/v1/lessons` | Danh sách bài học |
+| `GET` | `/api/v1/vocab` | Tìm kiếm từ vựng |
+| `GET/POST` | `/api/v1/srs/*` | Ôn tập SRS |
+| `GET/POST` | `/api/v1/practice/*` | Bộ công cụ luyện tập |
+| `POST` | `/api/v1/ocr/scan` | OCR demo/mapping từ |
+| `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor mock/demo |
+
+Các alias cũ `/api/health`, `/api/words`, `/api/profile`, `/api-docs` vẫn còn redirect để tương thích local cũ.
+
+## Bảo Mật Và Secrets
+
+- Không commit `.env`.
+- `JWT_SECRET` production phải dài ít nhất 32 ký tự và không dùng giá trị mặc định.
+- Nếu secret từng bị lộ trong report hoặc commit cũ, hãy rotate DB password/JWT secret trên provider.

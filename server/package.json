@@ -6,7 +6,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "lint": "node scripts/check-syntax.js",
+    "db:init": "node scripts/init-db.js",
+    "test": "node --test",
+    "test:integration": "node --test test/integration/*.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

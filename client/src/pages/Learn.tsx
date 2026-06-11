@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useDailyContentQuery, useLessonDetailQuery, useLessonsQuery } from "../api";
 import { useCompleteLessonMutation } from "../api/lessons/queries";
@@ -125,10 +125,8 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
   const [arrangedWords, setArrangedWords] = useState<string[]>([]);
 
   const currentExercise = lesson?.exercises[exerciseIdx];
-  const finalAccuracy = useMemo(() => {
-    if (!lesson?.exercises.length) return 0;
-    return Math.round((correctAnswersCount / lesson.exercises.length) * 100);
-  }, [correctAnswersCount, lesson?.exercises.length]);
+  const exerciseCount = lesson?.exercises.length ?? 0;
+  const finalAccuracy = exerciseCount ? Math.round((correctAnswersCount / exerciseCount) * 100) : 0;
 
   const playLineAudio = (text: string) => {
     if ("speechSynthesis" in window) {

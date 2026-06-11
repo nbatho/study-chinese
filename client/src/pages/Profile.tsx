@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../api/users/queries";
@@ -12,21 +12,19 @@ export default function Profile() {
   const logoutMutation = useLogoutMutation();
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
-  const stats = statsQuery.data?.stats ?? [];
+  const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
 
-  const [name, setName] = useState("");
-  const [dailyMinutes, setDailyMinutes] = useState(15);
-  const [showPinyin, setShowPinyin] = useState(true);
-  const [audioAutoPlay, setAudioAutoPlay] = useState(true);
+  const [draftProfile, setDraftProfile] = useState<{
+    name?: string;
+    dailyMinutes?: number;
+    showPinyin?: boolean;
+    audioAutoPlay?: boolean;
+  }>({});
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    if (!profile) return;
-    setName(profile.name);
-    setDailyMinutes(profile.dailyMinutes);
-    setShowPinyin(profile.showPinyin);
-    setAudioAutoPlay(profile.audioAutoPlay);
-  }, [profile]);
+  const name = draftProfile.name ?? profile?.name ?? "";
+  const dailyMinutes = draftProfile.dailyMinutes ?? profile?.dailyMinutes ?? 15;
+  const showPinyin = draftProfile.showPinyin ?? profile?.showPinyin ?? true;
+  const audioAutoPlay = draftProfile.audioAutoPlay ?? profile?.audioAutoPlay ?? true;
 
   const saveProfileSettings = async () => {
     await updateProfileMutation.mutateAsync({
@@ -151,11 +149,11 @@ export default function Profile() {
         <div style={{ display: "grid", gap: "16px" }}>
           <div>
             <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>Display Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }} />
+            <input type="text" value={name} onChange={(e) => setDraftProfile((draft) => ({ ...draft, name: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }} />
           </div>
           <div>
             <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>Daily Goal Minutes</label>
-            <select value={dailyMinutes} onChange={(e) => setDailyMinutes(Number(e.target.value))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }}>
+            <select value={dailyMinutes} onChange={(e) => setDraftProfile((draft) => ({ ...draft, dailyMinutes: Number(e.target.value) }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }}>
               <option value="5">5 Minutes (Casual)</option>
               <option value="15">15 Minutes (Regular)</option>
               <option value="30">30 Minutes (Scholar)</option>
@@ -167,7 +165,7 @@ export default function Profile() {
               <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Show Pinyin by Default</span>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Display pinyin above characters during lessons</p>
             </div>
-            <button onClick={() => setShowPinyin(!showPinyin)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
+            <button onClick={() => setDraftProfile((draft) => ({ ...draft, showPinyin: !showPinyin }))} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
               {showPinyin ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>
@@ -176,7 +174,7 @@ export default function Profile() {
               <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Audio Autoplay</span>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Automatically read characters aloud during reviews</p>
             </div>
-            <button onClick={() => setAudioAutoPlay(!audioAutoPlay)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
+            <button onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
               {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>

@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 import { useLoginMutation, useRegisterMutation } from "../api/auth/queries";
-import { useStore } from "../store/store";
 import { useAppSelector } from "../store/hooks";
 import { ApiError } from "../utils/errorUtils";
 
@@ -22,7 +21,6 @@ const getErrorMessage = (error: unknown) => {
 
 export default function Auth() {
   const navigate = useNavigate();
-  const localStore = useStore();
   const authStatus = useAppSelector((state) => state.auth.status);
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
@@ -62,14 +60,8 @@ export default function Auth() {
     setFormError("");
   };
 
-  const finishAuth = (displayName?: string) => {
-    if (displayName) {
-      localStore.updateProfile({ name: displayName });
-    }
-
-    navigate(localStore.profile.hasCompletedOnboarding ? "/home" : "/onboarding", {
-      replace: true,
-    });
+  const finishAuth = () => {
+    navigate("/home", { replace: true });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -87,18 +79,18 @@ export default function Auth() {
 
     try {
       if (isRegister) {
-        const response = await registerMutation.mutateAsync({
+        await registerMutation.mutateAsync({
           name: name.trim(),
           email: email.trim(),
           password,
         });
-        finishAuth(response.user.name || name.trim());
+        finishAuth();
       } else {
-        const response = await loginMutation.mutateAsync({
+        await loginMutation.mutateAsync({
           email: email.trim(),
           password,
         });
-        finishAuth(response.user.name);
+        finishAuth();
       }
     } catch (error) {
       setFormError(getErrorMessage(error));

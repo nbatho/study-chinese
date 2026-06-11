@@ -1,60 +1,50 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useStore } from "./store/store";
 import Navigation from "./components/Navigation";
+import { useUserProfileQuery } from "./api/users/queries";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { setAppearance, setOnboardingCompleted } from "./store/modules/appSlice";
 
 export default function App() {
-  const store = useStore();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const profileQuery = useUserProfileQuery();
+  const appAppearance = useAppSelector((state) => state.app.appAppearance);
+  const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
+  const serverProfile = profileQuery.data?.profile;
 
-  // Sync dark appearance on mount
   useEffect(() => {
-    if (store.profile.appAppearance === "dark") {
+    if (!serverProfile) return;
+    dispatch(setAppearance(serverProfile.appAppearance));
+    dispatch(setOnboardingCompleted(serverProfile.hasCompletedOnboarding));
+  }, [dispatch, serverProfile]);
+
+  useEffect(() => {
+    if (appAppearance === "dark") {
       document.body.classList.add("dark");
     } else {
       document.body.classList.remove("dark");
     }
-  }, [store.profile.appAppearance]);
+  }, [appAppearance]);
 
-  // If user hasn't finished Onboarding, force onboarding page
   useEffect(() => {
-    if (!store.profile.hasCompletedOnboarding && location.pathname !== "/onboarding") {
+    if (!profileQuery.isLoading && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [location.pathname, store.profile.hasCompletedOnboarding, navigate]);
+  }, [hasCompletedOnboarding, location.pathname, navigate, profileQuery.isLoading]);
 
-  if (!store.profile.hasCompletedOnboarding) {
+  if (profileQuery.isLoading || !hasCompletedOnboarding) {
     return null;
   }
 
   return (
     <div className="app-container">
-      {/* Global Achievement Toast Notify */}
-      {store.recentlyUnlocked && (
-        <div className="achievement-toast anim-pop">
-          <span style={{ fontSize: "2.4rem" }}>{store.recentlyUnlocked.emoji}</span>
-          <div style={{ textAlign: "left" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>
-              ACHIEVEMENT UNLOCKED
-            </span>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-main)" }}>
-              {store.recentlyUnlocked.title}
-            </h4>
-            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-              {store.recentlyUnlocked.description}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Main Screen Body View Router */}
       <main className="main-content">
         <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
       </main>
 
-      {/* Global Tab Navigation */}
       <Navigation />
     </div>
   );
