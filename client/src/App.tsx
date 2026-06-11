@@ -13,6 +13,7 @@ export default function App() {
   const profileQuery = useUserProfileQuery();
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
   const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
+  const language = useAppSelector((state) => state.app.language);
   const serverProfile = profileQuery.data?.profile;
 
   useEffect(() => {
@@ -22,12 +23,22 @@ export default function App() {
   }, [dispatch, serverProfile]);
 
   useEffect(() => {
-    if (appAppearance === "dark") {
-      document.body.classList.add("dark");
-    } else {
-      document.body.classList.remove("dark");
-    }
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyAppearance = () => {
+      const prefersDark = appAppearance === "system" ? mediaQuery.matches : appAppearance === "dark";
+      document.body.classList.toggle("dark", prefersDark);
+    };
+
+    applyAppearance();
+
+    if (appAppearance !== "system") return;
+    mediaQuery.addEventListener("change", applyAppearance);
+    return () => mediaQuery.removeEventListener("change", applyAppearance);
   }, [appAppearance]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   useEffect(() => {
     if (!profileQuery.isLoading && !hasCompletedOnboarding && location.pathname !== "/onboarding") {

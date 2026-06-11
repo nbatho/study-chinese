@@ -1,28 +1,16 @@
-import { Home, BookOpen, Dumbbell, RefreshCw, User, Sun, Moon } from "lucide-react";
+import { BookOpen, Dumbbell, Home, RefreshCw, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDueSrsCardsQuery } from "../api/srs/queries";
-import { useUpdateProfileMutation } from "../api/users/queries";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setAppearance } from "../store/modules/appSlice";
+import { useI18n } from "../i18n";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { cn } from "../utils/cn";
 
 export default function Navigation() {
-  const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useAppSelector((state) => state.app.appAppearance);
   const dueCardsQuery = useDueSrsCardsQuery(99);
-  const updateProfileMutation = useUpdateProfileMutation();
-
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    dispatch(setAppearance(nextTheme));
-    updateProfileMutation.mutate({ appAppearance: nextTheme });
-    if (nextTheme === "dark") {
-      document.body.classList.add("dark");
-    } else {
-      document.body.classList.remove("dark");
-    }
-  };
+  const { t } = useI18n();
 
   const path = location.pathname;
   let activeTab = "home";
@@ -32,101 +20,39 @@ export default function Navigation() {
   else if (path.startsWith("/profile")) activeTab = "profile";
 
   const tabs = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "learn", label: "Learn", icon: BookOpen },
-    { id: "practice", label: "Practice", icon: Dumbbell },
-    { id: "review", label: "Review", icon: RefreshCw, badge: dueCardsQuery.data?.cards.length ?? 0 },
-    { id: "profile", label: "Profile", icon: User }
+    { id: "home", label: t("nav.home"), icon: Home },
+    { id: "learn", label: t("nav.learn"), icon: BookOpen },
+    { id: "practice", label: t("nav.practice"), icon: Dumbbell },
+    { id: "review", label: t("nav.review"), icon: RefreshCw, badge: dueCardsQuery.data?.cards.length ?? 0 },
+    { id: "profile", label: t("nav.profile"), icon: User },
   ];
 
   return (
-    <nav className="glass-panel" style={{
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: "72px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-around",
-      borderTop: "1px solid var(--border-color)",
-      padding: "0 12px",
-      zIndex: 900,
-      boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.03)"
-    }}>
+    <nav className="glass-panel fixed inset-x-0 bottom-0 z-[900] flex h-[72px] items-center justify-around border-x-0 border-b-0 border-t px-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         return (
-          <button
+          <Button
             key={tab.id}
+            variant="ghost"
+            size="sm"
             onClick={() => navigate(`/${tab.id}`)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "none",
-              background: "none",
-              color: isActive ? "var(--primary-red)" : "var(--text-muted)",
-              cursor: "pointer",
-              padding: "8px 12px",
-              borderRadius: "12px",
-              fontSize: "0.75rem",
-              fontWeight: isActive ? 700 : 500,
-              gap: "4px",
-              position: "relative",
-              transition: "var(--transition-smooth)"
-            }}
+            className={cn(
+              "relative h-auto flex-col gap-1 rounded-lg px-3 py-2 text-xs",
+              isActive ? "text-primary hover:text-primary" : "text-muted-foreground",
+            )}
           >
-            <Icon size={isActive ? 22 : 20} style={{
-              transform: isActive ? "scale(1.1)" : "none",
-              transition: "var(--transition-smooth)"
-            }} />
+            <Icon className={cn("transition-transform", isActive ? "size-[22px] scale-110" : "size-5")} />
             <span>{tab.label}</span>
             {!!tab.badge && tab.badge > 0 && (
-              <span style={{
-                position: "absolute",
-                top: "4px",
-                right: "12px",
-                backgroundColor: "var(--primary-red)",
-                color: "white",
-                fontSize: "0.65rem",
-                borderRadius: "50%",
-                height: "16px",
-                width: "16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700
-              }}>
+              <Badge className="absolute right-3 top-1 flex size-4 items-center justify-center rounded-full p-0 text-[0.65rem] font-bold">
                 {tab.badge}
-              </span>
+              </Badge>
             )}
-          </button>
+          </Button>
         );
       })}
-
-      <button
-        onClick={toggleTheme}
-        style={{
-          border: "none",
-          background: "none",
-          color: "var(--text-muted)",
-          cursor: "pointer",
-          padding: "8px 12px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "4px",
-          fontSize: "0.75rem",
-          fontWeight: 500
-        }}
-      >
-        {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-        <span>Mode</span>
-      </button>
     </nav>
   );
 }

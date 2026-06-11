@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useDueSrsCardsQuery, useReviewSrsMutation } from "../api/srs/queries";
 import type { ReviewQuality } from "../api/srs";
 import { Layers, Volume2 } from "lucide-react";
+import { useI18n } from "../i18n";
 
 export default function Review() {
+  const { t } = useI18n();
   const dueCardsQuery = useDueSrsCardsQuery(15);
   const reviewMutation = useReviewSrsMutation();
   const [activeIdx, setActiveIdx] = useState(0);
@@ -30,22 +32,22 @@ export default function Review() {
   return (
     <div className="anim-slide">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 800, textAlign: "left" }}>SRS Review</h2>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 800, textAlign: "left" }}>{t("review.title")}</h2>
         <span style={{ backgroundColor: "rgba(242, 191, 76, 0.12)", color: "var(--gold)", padding: "6px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
-          <Layers size={14} /> Due: {dueCards.length} Cards
+          <Layers size={14} /> {t("review.due", { count: dueCards.length })}
         </span>
       </div>
 
       {dueCardsQuery.isLoading && (
         <div className="card" style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>
-          Loading your review queue...
+          {t("review.loading")}
         </div>
       )}
 
       {activeCard ? (
         <div>
           <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "16px", textAlign: "left" }}>
-            Reviewing card {activeIdx + 1} of {dueCards.length}
+            {t("review.progress", { current: activeIdx + 1, total: dueCards.length })}
           </div>
 
           <div
@@ -59,7 +61,7 @@ export default function Review() {
                   {activeCard.simplified}
                 </h1>
                 <span style={{ fontSize: "0.8rem", color: "var(--primary-red)", fontWeight: 700, textTransform: "uppercase", marginTop: "16px", display: "inline-block" }}>
-                  Tap Card to Reveal
+                  {t("review.tap")}
                 </span>
               </div>
             ) : (
@@ -68,7 +70,7 @@ export default function Review() {
                   <h1 className="hanzi-text" style={{ fontSize: "4.5rem", fontWeight: 800, color: "var(--text-main)" }}>
                     {activeCard.simplified}
                   </h1>
-                  <button onClick={() => playTTS(activeCard.simplified)} style={{ border: "none", background: "none", color: "var(--primary-red)", cursor: "pointer" }}>
+                  <button onClick={() => playTTS(activeCard.simplified)} aria-label={t("common.listen")} style={{ border: "none", background: "none", color: "var(--primary-red)", cursor: "pointer" }}>
                     <Volume2 size={28} />
                   </button>
                 </div>
@@ -77,7 +79,7 @@ export default function Review() {
                   {activeCard.english}
                 </p>
                 <div style={{ marginTop: "18px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  Mastery: {activeCard.dueCardDetails.masteryLevel}
+                  {t("review.mastery", { value: activeCard.dueCardDetails.masteryLevel })}
                 </div>
               </div>
             )}
@@ -86,10 +88,10 @@ export default function Review() {
           {flipped ? (
             <div className="anim-slide" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
               {[
-                { id: "again", label: "Again", hint: "< 1m", color: "var(--tone-4)" },
-                { id: "hard", label: "Hard", hint: "< 6m", color: "var(--tone-3)" },
-                { id: "good", label: "Good", hint: "10m", color: "var(--tone-1)" },
-                { id: "easy", label: "Easy", hint: "4d", color: "var(--tone-2)" }
+                { id: "again", label: t("review.again"), hint: "< 1m", color: "var(--tone-4)" },
+                { id: "hard", label: t("review.hard"), hint: "< 6m", color: "var(--tone-3)" },
+                { id: "good", label: t("review.good"), hint: "10m", color: "var(--tone-1)" },
+                { id: "easy", label: t("review.easy"), hint: "4d", color: "var(--tone-2)" },
               ].map((btn) => (
                 <button key={btn.id} onClick={() => handleQualitySelect(btn.id as ReviewQuality)} disabled={reviewMutation.isPending} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "12px 6px", borderRadius: "12px", border: `1.5px solid ${btn.color}`, background: "none", cursor: "pointer" }}>
                   <span style={{ fontWeight: 700, color: btn.color, fontSize: "0.95rem" }}>{btn.label}</span>
@@ -99,16 +101,16 @@ export default function Review() {
             </div>
           ) : (
             <button className="btn btn-primary" onClick={() => setFlipped(true)} style={{ width: "100%" }}>
-              Reveal Card Detail
+              {t("review.reveal")}
             </button>
           )}
         </div>
       ) : !dueCardsQuery.isLoading && (
         <div className="card anim-pop" style={{ padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: "4.5rem", marginBottom: "16px" }}>✓</div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 800 }}>All Caught Up!</h2>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t("review.done")}</h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", margin: "8px 0 0", maxWidth: "320px", display: "inline-block" }}>
-            No reviews due right now. Study new lessons to enroll more server-side SRS cards.
+            {t("review.doneBody")}
           </p>
         </div>
       )}

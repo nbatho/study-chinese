@@ -1,7 +1,9 @@
 import { ArrowLeft, BookOpen, Home, SearchX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "../i18n";
 
 export default function NotFound() {
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return (
@@ -74,11 +76,11 @@ export default function NotFound() {
           }}
         >
           <BookOpen size={14} />
-          LESSON NOT FOUND
+          {t("notFound.badge")}
         </span>
 
         <h1 style={{ fontSize: "2rem", marginBottom: "10px" }}>
-          This page is off the study path
+          {t("notFound.title")}
         </h1>
         <p
           style={{
@@ -88,7 +90,7 @@ export default function NotFound() {
             margin: "0 auto 28px",
           }}
         >
-          The route you opened does not match any lesson, practice deck, or app screen.
+          {t("notFound.body")}
         </p>
 
         <div
@@ -103,11 +105,11 @@ export default function NotFound() {
         >
           <button className="btn btn-secondary" onClick={() => navigate(-1)}>
             <ArrowLeft size={18} />
-            Go back
+            {t("notFound.goBack")}
           </button>
           <button className="btn btn-primary" onClick={() => navigate("/home", { replace: true })}>
             <Home size={18} />
-            Back home
+            {t("notFound.backHome")}
           </button>
         </div>
       </section>

@@ -7,12 +7,14 @@ import {
 import type { ChatMessage, ChatScenario } from "../api/aiTutor";
 import { ArrowLeft, AlertTriangle, Send, Sparkles, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "../i18n";
 
 interface AITutorProps {
   onClose?: () => void;
 }
 
 export default function AITutor({ onClose }: AITutorProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));
   const scenariosQuery = useChatScenariosQuery();
@@ -99,10 +101,10 @@ export default function AITutor({ onClose }: AITutorProps) {
         <div>
           <h3 style={{ fontSize: "1.1rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px" }}>
             <Sparkles size={18} className="tone-t3" />
-            {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : "AI Tutor Conversations"}
+            {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : t("ai.title")}
           </h3>
           <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            {selectedScenario ? selectedScenario.description : "Chat with backend mock tutor responses"}
+            {selectedScenario ? selectedScenario.description : t("ai.subtitle")}
           </p>
         </div>
       </header>
@@ -110,17 +112,17 @@ export default function AITutor({ onClose }: AITutorProps) {
       {!selectedScenario ? (
         <div className="anim-slide" style={{ flex: 1, padding: "24px", overflowY: "auto", maxWidth: "600px", margin: "0 auto", width: "100%" }}>
           <h4 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "16px", textAlign: "left" }}>
-            Select Dialogue Scenario
+            {t("ai.selectScenario")}
           </h4>
           <div style={{ display: "grid", gap: "12px" }}>
             {scenariosQuery.isLoading && (
               <div className="card" style={{ padding: "16px", color: "var(--text-muted)" }}>
-                Loading scenarios...
+                {t("ai.loadingScenarios")}
               </div>
             )}
             {scenariosQuery.isError && (
               <div className="card" style={{ padding: "16px", color: "var(--primary-red)" }}>
-                Cannot load scenarios from backend.
+                {t("ai.loadError")}
               </div>
             )}
             {scenarios.map((scenario) => (
@@ -177,7 +179,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                   {message.role === "tutor" ? (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)" }}>Tutor Xiao Hong</span>
+                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)" }}>{t("ai.tutorName")}</span>
                         <button
                           type="button"
                           onClick={() => playTTS(message.simplified)}
@@ -218,7 +220,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                   }}>
                     <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
                     <div>
-                      <strong>Did you mean:</strong> <em>"{message.correction.improved}"</em>
+                      <strong>{t("ai.didYouMean")}</strong> <em>"{message.correction.improved}"</em>
                       <p style={{ marginTop: "2px", color: "var(--text-muted)" }}>{message.correction.explanation}</p>
                     </div>
                   </div>
@@ -237,7 +239,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                 fontSize: "0.85rem",
                 fontWeight: 600
               }}>
-                Xiao Hong is writing a response...
+                {t("ai.thinking")}
               </div>
             )}
             <div ref={bottomRef} />
@@ -255,7 +257,7 @@ export default function AITutor({ onClose }: AITutorProps) {
           >
             <input
               type="text"
-              placeholder="Chat with Tutor in Chinese..."
+              placeholder={t("ai.placeholder")}
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               disabled={isThinking}

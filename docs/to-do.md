@@ -80,6 +80,7 @@ Cap nhat: 2026-06-11
 
 - [ ] Sua encoding/mojibake trong source UI copy, docs con lai va SQL seed.
   - [x] README da duoc viet lai UTF-8.
+  - [x] Cac man hinh Auth, Onboarding, Home, Profile, Review, NotFound, Learn, Practice, AITutor, CameraTranslator da duoc lam sach copy chinh va gan i18n EN/VI.
   - [ ] `docs/api.md`, `docs/be.md`, `docs/db.md` can kiem tra lai tung file.
   - [ ] UI copy trong pages va seed SQL con nhieu chu bi loi nhu `Â·`, `ðŸ...`, `å­¦`.
 - [ ] Mo rong test:
@@ -126,6 +127,15 @@ Cap nhat: 2026-06-11
 ## Frontend/UX
 
 - [ ] Thong nhat ngon ngu giao dien. Hien copy dang tron Anh/Viet va mot so chu Trung bi loi encoding.
+  - [x] Them mode ngon ngu `English / Tieng Viet`.
+  - [x] Luu ngon ngu trong Redux app state va localStorage.
+  - [x] Dong bo `document.documentElement.lang`.
+  - [x] Chuyen dieu khien ngon ngu vao Profile settings dang cong tac.
+  - [x] Chuyen dieu khien giao dien sang/toi/theo he thong vao Profile settings dang cong tac.
+  - [x] Dong bo copy chinh cho Auth, Onboarding, Home, Profile, Review, NotFound.
+  - [x] Dong bo copy tinh cap man hinh/action cho Learn, Practice, AITutor, CameraTranslator.
+  - [ ] Dong bo tiep copy chi tiet ben trong tung tool Practice neu can muc 100%.
+  - [ ] Doi/bo sung content tra ve tu server neu can hien thi song ngu cho lesson, vocab, grammar, phrase.
 - [ ] Thay `alert()` bang toast/modal co style chung, dac biet trong `Profile`, `Practice`, `CameraTranslator`.
 - [ ] Bo sung trang/luong quan ly tu vung:
   - [ ] Tim kiem tu vung day du.

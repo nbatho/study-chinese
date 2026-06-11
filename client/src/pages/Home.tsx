@@ -7,9 +7,25 @@ import {
   useUserProfileQuery,
   useUserStatsQuery,
 } from "../api";
-import { Activity, ArrowRight, BookOpen, Brain, Camera, Flame, PencilLine, PlayCircle, RefreshCw, Sparkles, Star, Trophy, Volume2 } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  BookOpen,
+  Brain,
+  Camera,
+  Flame,
+  PencilLine,
+  PlayCircle,
+  RefreshCw,
+  Sparkles,
+  Star,
+  Trophy,
+  Volume2,
+} from "lucide-react";
+import { useI18n } from "../i18n";
 
 export default function Home() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { setSelectedLessonId } = useOutletContext<{
     setSelectedLessonId: (lessonId: string | null) => void;
@@ -71,9 +87,11 @@ export default function Home() {
             {profile?.avatar || "学"}
           </div>
           <div>
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800 }}>Hi {profile?.name || "Learner"}!</h1>
+            <h1 style={{ fontSize: "1.4rem", fontWeight: 800 }}>
+              {t("home.greeting", { name: profile?.name || t("common.learner") })}
+            </h1>
             <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-              {(profile?.startLevel || "beginner").toUpperCase()} · Goal: {(profile?.goalPurpose || "travel").toUpperCase()}
+              {(profile?.startLevel || "beginner").toUpperCase()} · {t("common.goal")}: {(profile?.goalPurpose || "travel").toUpperCase()}
             </p>
           </div>
         </div>
@@ -85,7 +103,7 @@ export default function Home() {
 
       <section className="card" style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", alignItems: "center" }}>
-          <h3 style={{ fontSize: "0.95rem", fontWeight: 700 }}>Today's Goal</h3>
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 700 }}>{t("home.todayGoal")}</h3>
           <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>
             {todayStat.xp} / {Math.round(xpTarget)} XP
           </span>
@@ -95,10 +113,10 @@ export default function Home() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", textAlign: "center" }}>
           {[
-            { label: "XP Total", value: totalXp, icon: Star, cls: "tone-t3" },
-            { label: "Streak", value: streak?.current ?? 0, icon: Flame, cls: "tone-t4" },
-            { label: "Lessons", value: completedLessons, icon: BookOpen, cls: "tone-t2" },
-            { label: "Reviews", value: todayStat.wordsReviewed, icon: Brain, cls: "tone-t1" },
+            { label: t("home.xpTotal"), value: totalXp, icon: Star, cls: "tone-t3" },
+            { label: t("home.streak"), value: streak?.current ?? 0, icon: Flame, cls: "tone-t4" },
+            { label: t("home.lessons"), value: completedLessons, icon: BookOpen, cls: "tone-t2" },
+            { label: t("home.reviews"), value: todayStat.wordsReviewed, icon: Brain, cls: "tone-t1" },
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -115,11 +133,11 @@ export default function Home() {
       <section style={{ marginBottom: "24px", overflowX: "auto", paddingBottom: "8px" }}>
         <div style={{ display: "flex", gap: "16px", width: "max-content" }}>
           {[
-            { label: "AI Tutor", icon: Sparkles, color: "var(--tone-3)", action: () => navigate("/ai-tutor") },
-            { label: "Scan OCR", icon: Camera, color: "var(--jade)", action: () => navigate("/camera-translator") },
-            { label: "Tone Drill", icon: Activity, color: "var(--tone-1)", action: () => navigate("/practice") },
-            { label: "SRS Cards", icon: RefreshCw, color: "var(--primary-red)", action: () => navigate("/review") },
-            { label: "Write Hanzi", icon: PencilLine, color: "var(--gold)", action: () => navigate("/practice") }
+            { label: t("home.aiTutor"), icon: Sparkles, color: "var(--tone-3)", action: () => navigate("/ai-tutor") },
+            { label: t("home.scanOcr"), icon: Camera, color: "var(--jade)", action: () => navigate("/camera-translator") },
+            { label: t("home.toneDrill"), icon: Activity, color: "var(--tone-1)", action: () => navigate("/practice") },
+            { label: t("home.srsCards"), icon: RefreshCw, color: "var(--primary-red)", action: () => navigate("/review") },
+            { label: t("home.writeHanzi"), icon: PencilLine, color: "var(--gold)", action: () => navigate("/practice") }
           ].map((act) => {
             const Icon = act.icon;
             return (
@@ -136,9 +154,9 @@ export default function Home() {
 
       <section className="card card-gradient-red" style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Continue Learning</h3>
+          <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>{t("home.continueLearning")}</h3>
           <button onClick={() => navigate("/learn")} style={{ display: "flex", alignItems: "center", gap: "4px", background: "none", border: "none", color: "var(--primary-red)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>
-            All Lessons <ArrowRight size={14} />
+            {t("home.allLessons")} <ArrowRight size={14} />
           </button>
         </div>
         {nextLesson ? (
@@ -152,7 +170,7 @@ export default function Home() {
           >
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: "0.75rem", color: "var(--primary-red)", fontWeight: 700, marginBottom: "2px" }}>
-                HSK {nextLesson.hskLevel} · Lesson {nextLesson.order}
+                HSK {nextLesson.hskLevel} · {t("home.lessons")} {nextLesson.order}
               </div>
               <h4 style={{ fontSize: "1.1rem", fontWeight: 800 }}>{nextLesson.title}</h4>
               <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "1px" }}>{nextLesson.subtitle}</p>
@@ -165,14 +183,14 @@ export default function Home() {
           </div>
         ) : (
           <div style={{ textAlign: "center", padding: "16px", color: "var(--text-muted)", fontWeight: 700 }}>
-            Lessons will appear here when the server returns curriculum data.
+            {t("home.noLessons")}
           </div>
         )}
       </section>
 
       {currentPhrase && (
         <section className="card" style={{ marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "14px" }}>Phrase of the Day</h3>
+          <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "14px" }}>{t("home.phrase")}</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <h2 className="hanzi-text" style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--primary-red)", letterSpacing: "1px" }}>
               {currentPhrase.simplified}
@@ -183,7 +201,7 @@ export default function Home() {
               {currentPhrase.note}
             </p>
             <button className="btn btn-secondary" onClick={() => playTTS(currentPhrase.simplified)} style={{ marginTop: "16px", padding: "8px 16px", alignSelf: "flex-start", fontSize: "0.85rem" }}>
-              <Volume2 size={16} /> Listen
+              <Volume2 size={16} /> {t("common.listen")}
             </button>
           </div>
         </section>
@@ -192,13 +210,13 @@ export default function Home() {
       <section className="card card-gradient-gold" style={{ marginBottom: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Ready to Review</h3>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>{t("home.readyReview")}</h3>
             <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-              {dueCount} cards due from your server SRS queue.
+              {t("home.cardsDue", { count: dueCount })}
             </p>
           </div>
           <button className="btn btn-primary" onClick={() => navigate("/review")} style={{ padding: "10px 18px", fontSize: "0.85rem" }}>
-            Start Review ({dueCount})
+            {t("home.startReview", { count: dueCount })}
           </button>
         </div>
       </section>
@@ -206,12 +224,12 @@ export default function Home() {
       <section>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
           <Trophy size={18} style={{ color: "var(--gold)" }} />
-          <h3 style={{ fontSize: "1.05rem", fontWeight: 700 }}>Badge Achievements</h3>
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700 }}>{t("home.badges")}</h3>
         </div>
         <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "10px" }}>
           {unlockedAchievements.length === 0 ? (
             <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", padding: "8px" }}>
-              No badges unlocked yet. Keep studying to unlock achievements!
+              {t("home.noBadges")}
             </div>
           ) : (
             unlockedAchievements.map((ach) => (

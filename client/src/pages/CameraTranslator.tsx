@@ -4,12 +4,14 @@ import { useEnrollWordMutation } from "../api/srs/queries";
 import type { OcrBox, OcrSample, OcrScanPayload } from "../api/ocr";
 import { ArrowLeft, Camera, RefreshCw, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "../i18n";
 
 interface CameraTranslatorProps {
   onClose?: () => void;
 }
 
 export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));
   const scanMutation = useOcrScanMutation();
@@ -46,7 +48,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
       setCameraActive(true);
       await runScan({});
     } catch {
-      alert("Could not access camera. Please try a sample sign below or upload an image instead.");
+      alert(t("camera.accessError"));
     }
   };
 
@@ -88,7 +90,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
 
   const enrollSRS = async (wordId: string) => {
     await enrollWordMutation.mutateAsync({ wordId });
-    alert("Word enrolled in SRS review list!");
+    alert(t("camera.enrolled"));
   };
 
   return (
@@ -115,9 +117,9 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800 }}>Camera Scan OCR Translator</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800 }}>{t("camera.title")}</h3>
           <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            OCR boxes come from the backend mock scanner.
+            {t("camera.subtitle")}
           </p>
         </div>
       </header>
@@ -141,7 +143,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
           {loading && (
             <div style={{ zIndex: 10, color: "white", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
               <RefreshCw className="recording-pulse" size={36} />
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Running OCR Scanner...</span>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("camera.running")}</span>
             </div>
           )}
 
@@ -166,7 +168,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
             <div style={{ padding: "24px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
               <Camera size={48} style={{ marginBottom: "12px", display: "inline-block" }} />
               <p style={{ fontSize: "0.85rem" }}>
-                Camera Offline. Activate camera, upload a photo, or choose a sample below.
+                {t("camera.offline")}
               </p>
             </div>
           )}
@@ -208,16 +210,16 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
         <div style={{ display: "flex", gap: "12px", marginBottom: "32px", width: "100%", maxWidth: "400px" }}>
           {!cameraActive ? (
             <button className="btn btn-primary" onClick={startCamera} style={{ flex: 1 }} disabled={loading}>
-              <Camera size={18} /> Use Live Camera
+              <Camera size={18} /> {t("camera.useLive")}
             </button>
           ) : (
             <button className="btn btn-secondary" onClick={stopCamera} style={{ flex: 1 }}>
-              Stop Camera
+              {t("camera.stop")}
             </button>
           )}
 
           <label className="btn btn-secondary" style={{ flex: 1, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-            <Upload size={18} /> Upload Image
+            <Upload size={18} /> {t("camera.upload")}
             <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
           </label>
         </div>
@@ -225,7 +227,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
         {selectedBox && (
           <div className="card anim-pop" style={{ width: "100%", maxWidth: "400px", textAlign: "left", marginBottom: "32px", border: "2px solid var(--jade)" }}>
             <h4 style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--jade)", fontWeight: 700, marginBottom: "4px" }}>
-              Matched Chinese Term
+              {t("camera.matched")}
             </h4>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 className="hanzi-text" style={{ fontSize: "2.2rem", fontWeight: 800 }}>
@@ -237,21 +239,21 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
                 disabled={enrollWordMutation.isPending}
                 style={{ padding: "6px 12px", fontSize: "0.75rem" }}
               >
-                + Study Word (SRS)
+                {t("camera.studyWord")}
               </button>
             </div>
             <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--primary-red)", marginTop: "4px" }}>
               {selectedBox.pinyin}
             </div>
             <p style={{ fontSize: "0.95rem", color: "var(--text-main)", fontWeight: 500, marginTop: "8px" }}>
-              Meaning: <strong>{selectedBox.english}</strong>
+              {t("camera.meaning")} <strong>{selectedBox.english}</strong>
             </p>
           </div>
         )}
 
         <div style={{ width: "100%", maxWidth: "400px", textAlign: "left" }}>
           <h4 style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700, marginBottom: "12px" }}>
-            Or Select Demo Samples
+            {t("camera.samples")}
           </h4>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
             {samples.map((sample) => (

@@ -4,6 +4,11 @@ import { BookOpen, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 import { useLoginMutation, useRegisterMutation } from "../api/auth/queries";
 import { useAppSelector } from "../store/hooks";
 import { ApiError } from "../utils/errorUtils";
+import { useI18n } from "../i18n";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { cn } from "../utils/cn";
 
 type AuthMode = "login" | "register";
 
@@ -21,6 +26,7 @@ const getErrorMessage = (error: unknown) => {
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const authStatus = useAppSelector((state) => state.auth.status);
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
@@ -33,11 +39,9 @@ export default function Auth() {
 
   const isRegister = mode === "register";
   const isSubmitting = loginMutation.isPending || registerMutation.isPending;
-  const title = isRegister ? "Create your account" : "Welcome back";
-  const submitLabel = isRegister ? "Create account" : "Sign in";
-  const subtitle = isRegister
-    ? "Set up your Chinese learning path with lessons, review, and daily practice."
-    : "Continue your lessons, vocabulary reviews, and conversation practice.";
+  const title = isRegister ? t("auth.registerTitle") : t("auth.loginTitle");
+  const submitLabel = isRegister ? t("auth.submitRegister") : t("auth.submitLogin");
+  const subtitle = isRegister ? t("auth.registerSubtitle") : t("auth.loginSubtitle");
 
   const canSubmit = useMemo(() => {
     if (!email.trim() || !password) {
@@ -71,8 +75,8 @@ export default function Auth() {
     if (!canSubmit) {
       setFormError(
         isRegister
-          ? "Please enter your name, email, and a password with at least 8 characters."
-          : "Please enter a valid email and password.",
+          ? t("auth.invalidRegister")
+          : t("auth.invalidLogin"),
       );
       return;
     }
@@ -98,102 +102,41 @@ export default function Auth() {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: "24px",
-        background:
-          "radial-gradient(circle at 15% 10%, rgba(217, 63, 71, 0.12), transparent 28%), var(--bg-app)",
-      }}
-    >
+    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_15%_10%,rgba(217,63,71,0.12),transparent_28%),var(--bg-app)] p-6">
       <section
-        className="auth-shell anim-slide"
-        style={{
-          width: "100%",
-          maxWidth: "980px",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 0.95fr) minmax(360px, 1.05fr)",
-          overflow: "hidden",
-          borderRadius: "20px",
-          border: "1px solid var(--border-color)",
-          backgroundColor: "var(--bg-card)",
-          boxShadow: "0 18px 60px rgba(26, 26, 30, 0.08)",
-        }}
+        className="auth-shell anim-slide grid w-full max-w-[980px] grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)]"
       >
-        <aside
-          style={{
-            padding: "36px",
-            background:
-              "linear-gradient(145deg, rgba(217, 63, 71, 0.14), rgba(16, 185, 129, 0.08))",
-            borderRight: "1px solid var(--border-color)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            minHeight: "560px",
-          }}
-        >
+        <aside className="flex min-h-[560px] flex-col justify-between border-r bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-9">
           <div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", marginBottom: "36px" }}>
-              <span
-                style={{
-                  width: "42px",
-                  height: "42px",
-                  borderRadius: "12px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "var(--primary-red)",
-                  color: "white",
-                }}
-              >
+            <div className="mb-9 inline-flex items-center gap-2.5">
+              <span className="inline-flex size-[42px] items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <BookOpen size={21} />
               </span>
-              <strong style={{ fontSize: "1.05rem" }}>Study Chinese</strong>
+              <strong className="text-[1.05rem]">Study Chinese</strong>
             </div>
 
-            <h1 style={{ fontSize: "2.4rem", lineHeight: 1.1, marginBottom: "16px" }}>
-              Learn Chinese with progress that follows you.
+            <h1 className="mb-4 text-[2.4rem] leading-[1.1]">
+              {t("auth.heroTitle")}
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: "1rem", maxWidth: "360px" }}>
-              Build steady habits with HSK lessons, smart vocabulary review, handwriting support, and guided conversation practice.
+            <p className="max-w-[360px] text-base text-muted-foreground">
+              {t("auth.heroSubtitle")}
             </p>
           </div>
 
-          <div style={{ display: "grid", gap: "12px" }}>
-            {["Personalized HSK path", "Daily vocabulary review", "AI tutor conversations"].map((item) => (
-              <div
-                key={item}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(217, 63, 71, 0.12)",
-                  backgroundColor: "rgba(255, 255, 255, 0.5)",
-                  fontWeight: 700,
-                  color: "var(--text-main)",
-                }}
-              >
+          <div className="grid gap-3">
+            {[t("auth.featurePath"), t("auth.featureReview"), t("auth.featureTutor")].map((item) => (
+              <Card key={item} className="border-primary/10 bg-white/50 p-3.5 font-bold shadow-none dark:bg-white/5">
                 {item}
-              </div>
+              </Card>
             ))}
           </div>
         </aside>
 
-        <div style={{ padding: "36px", display: "flex", alignItems: "center" }}>
-          <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-            <div style={{ marginBottom: "28px" }}>
+        <div className="flex items-center p-9">
+          <form onSubmit={handleSubmit} className="w-full">
+            <div className="mb-7">
               <div
-                className="auth-tab-switch"
-                style={{
-                  display: "inline-flex",
-                  padding: "4px",
-                  borderRadius: "12px",
-                  backgroundColor: "var(--bg-card-hover)",
-                  border: "1px solid var(--border-color)",
-                  marginBottom: "24px",
-                  position: "relative",
-                }}
+                className="auth-tab-switch relative mb-6 inline-flex rounded-lg border bg-secondary p-1"
               >
                 <span
                   className="auth-tab-indicator"
@@ -204,132 +147,80 @@ export default function Auth() {
                 <button
                   type="button"
                   onClick={() => switchMode("login")}
-                  className="auth-tab-button"
-                  style={{
-                    padding: "9px 18px",
-                    border: "none",
-                    borderRadius: "9px",
-                    cursor: "pointer",
-                    fontWeight: 800,
-                    color: mode === "login" ? "white" : "var(--text-muted)",
-                    backgroundColor: "transparent",
-                    position: "relative",
-                    zIndex: 1,
-                  }}
+                  className={cn(
+                    "auth-tab-button relative z-10 rounded-md px-[18px] py-[9px] font-extrabold",
+                    mode === "login" ? "text-white" : "text-muted-foreground",
+                  )}
                 >
-                  Login
+                  {t("auth.login")}
                 </button>
                 <button
                   type="button"
                   onClick={() => switchMode("register")}
-                  className="auth-tab-button"
-                  style={{
-                    padding: "9px 18px",
-                    border: "none",
-                    borderRadius: "9px",
-                    cursor: "pointer",
-                    fontWeight: 800,
-                    color: mode === "register" ? "white" : "var(--text-muted)",
-                    backgroundColor: "transparent",
-                    position: "relative",
-                    zIndex: 1,
-                  }}
+                  className={cn(
+                    "auth-tab-button relative z-10 rounded-md px-[18px] py-[9px] font-extrabold",
+                    mode === "register" ? "text-white" : "text-muted-foreground",
+                  )}
                 >
-                  Register
+                  {t("auth.register")}
                 </button>
               </div>
 
               <div key={`copy-${mode}`} className="auth-mode-copy">
-                <h2 style={{ fontSize: "1.9rem", marginBottom: "8px" }}>{title}</h2>
-                <p style={{ color: "var(--text-muted)" }}>{subtitle}</p>
+                <h2 className="mb-2 text-[1.9rem]">{title}</h2>
+                <p className="text-muted-foreground">{subtitle}</p>
               </div>
             </div>
 
-            <div key={`fields-${mode}`} className="auth-mode-panel" style={{ display: "grid", gap: "14px" }}>
+            <div key={`fields-${mode}`} className="auth-mode-panel grid gap-3.5">
               {isRegister && (
-                <label className="auth-field-enter" style={{ display: "grid", gap: "8px", fontWeight: 700 }}>
-                  Name
-                  <span style={{ position: "relative" }}>
-                    <UserRound size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                    <input
+                <label className="auth-field-enter grid gap-2 font-bold">
+                  {t("auth.name")}
+                  <span className="relative">
+                    <UserRound className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                    <Input
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       placeholder="Nguyen Van A"
                       autoComplete="name"
-                      style={{
-                        width: "100%",
-                        padding: "14px 16px 14px 44px",
-                        borderRadius: "12px",
-                        border: "2px solid var(--border-color)",
-                        backgroundColor: "var(--bg-app)",
-                        color: "var(--text-main)",
-                        fontSize: "1rem",
-                        outline: "none",
-                      }}
+                      className="h-12 border-2 bg-background pl-11 text-base"
                     />
                   </span>
                 </label>
               )}
 
-              <label style={{ display: "grid", gap: "8px", fontWeight: 700 }}>
-                Email
-                <span style={{ position: "relative" }}>
-                  <Mail size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                  <input
+              <label className="grid gap-2 font-bold">
+                {t("auth.email")}
+                <span className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                  <Input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="learner@example.com"
                     autoComplete="email"
-                    style={{
-                      width: "100%",
-                      padding: "14px 16px 14px 44px",
-                      borderRadius: "12px",
-                      border: "2px solid var(--border-color)",
-                      backgroundColor: "var(--bg-app)",
-                      color: "var(--text-main)",
-                      fontSize: "1rem",
-                      outline: "none",
-                    }}
+                    className="h-12 border-2 bg-background pl-11 text-base"
                   />
                 </span>
               </label>
 
-              <label style={{ display: "grid", gap: "8px", fontWeight: 700 }}>
-                Password
-                <span style={{ position: "relative" }}>
-                  <Lock size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                  <input
+              <label className="grid gap-2 font-bold">
+                {t("auth.password")}
+                <span className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                  <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder={isRegister ? "At least 8 characters" : "Your password"}
+                    placeholder={isRegister ? t("auth.newPasswordPlaceholder") : t("auth.passwordPlaceholder")}
                     autoComplete={isRegister ? "new-password" : "current-password"}
-                    style={{
-                      width: "100%",
-                      padding: "14px 48px 14px 44px",
-                      borderRadius: "12px",
-                      border: "2px solid var(--border-color)",
-                      backgroundColor: "var(--bg-app)",
-                      color: "var(--text-main)",
-                      fontSize: "1rem",
-                      outline: "none",
-                    }}
+                    className="h-12 border-2 bg-background px-12 pl-11 text-base"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    style={{
-                      position: "absolute",
-                      right: "12px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      border: "none",
-                      background: "transparent",
-                      color: "var(--text-muted)",
-                      cursor: "pointer",
-                    }}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -340,50 +231,35 @@ export default function Auth() {
             {formError && (
               <div
                 role="alert"
-                style={{
-                  marginTop: "16px",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  border: "1px solid rgba(239, 68, 68, 0.24)",
-                  backgroundColor: "rgba(239, 68, 68, 0.08)",
-                  color: "var(--tone-4)",
-                  fontWeight: 700,
-                  fontSize: "0.9rem",
-                }}
+                className="mt-4 rounded-lg border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive"
               >
                 {formError}
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
-              className={`btn ${canSubmit && !isSubmitting ? "btn-primary" : "btn-disabled"}`}
+              variant={canSubmit && !isSubmitting ? "default" : "secondary"}
               disabled={!canSubmit || isSubmitting}
-              style={{ width: "100%", marginTop: "22px", padding: "14px 18px" }}
+              className="mt-[22px] h-12 w-full"
             >
-              {isSubmitting ? "Please wait..." : submitLabel}
-            </button>
+              {isSubmitting ? t("auth.wait") : submitLabel}
+            </Button>
 
-            <p style={{ marginTop: "18px", color: "var(--text-muted)", textAlign: "center", fontSize: "0.9rem" }}>
-              {isRegister ? "Already have an account?" : "New to Study Chinese?"}{" "}
+            <p className="mt-[18px] text-center text-sm text-muted-foreground">
+              {isRegister ? t("auth.hasAccount") : t("auth.newHere")}{" "}
               <button
                 type="button"
                 onClick={() => switchMode(isRegister ? "login" : "register")}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--primary-red)",
-                  cursor: "pointer",
-                  fontWeight: 800,
-                }}
+                className="font-extrabold text-primary"
               >
-                {isRegister ? "Log in" : "Create one"}
+                {isRegister ? t("auth.logIn") : t("auth.createOne")}
               </button>
             </p>
 
             {authStatus === "authenticated" && (
-              <p style={{ marginTop: "12px", color: "var(--jade)", textAlign: "center", fontWeight: 700 }}>
-                You are signed in. Preparing your study space...
+              <p className="mt-3 text-center font-bold text-jade">
+                {t("auth.signedIn")}
               </p>
             )}
           </form>

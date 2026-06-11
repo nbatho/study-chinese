@@ -4,8 +4,10 @@ import { useDailyContentQuery, useLessonDetailQuery, useLessonsQuery } from "../
 import { useCompleteLessonMutation } from "../api/lessons/queries";
 import type { LessonDetail } from "../api/lessons";
 import { ArrowLeft, Award, BookOpen, CheckCircle2, Search, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
+import { useI18n } from "../i18n";
 
 export default function Learn() {
+  const { t } = useI18n();
   const { selectedLessonId, setSelectedLessonId } = useOutletContext<{
     selectedLessonId: string | null;
     setSelectedLessonId: (lessonId: string | null) => void;
@@ -32,8 +34,8 @@ export default function Learn() {
         <>
           <div style={{ display: "flex", borderRadius: "12px", backgroundColor: "var(--bg-card-hover)", padding: "4px", marginBottom: "24px", border: "1px solid var(--border-color)" }}>
             {[
-              { id: "curriculum", label: "Curriculum Path" },
-              { id: "grammar", label: "Grammar Library" },
+              { id: "curriculum", label: t("learn.curriculum") },
+              { id: "grammar", label: t("learn.grammar") },
             ].map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} style={{ flex: 1, padding: "10px", border: "none", borderRadius: "8px", backgroundColor: activeTab === tab.id ? "var(--bg-card)" : "transparent", color: activeTab === tab.id ? "var(--primary-red)" : "var(--text-muted)", fontWeight: 700, cursor: "pointer" }}>
                 {tab.label}
@@ -51,7 +53,7 @@ export default function Learn() {
                 ))}
               </div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "16px", fontWeight: 600, textAlign: "left" }}>
-                HSK {selectedHSK} Progress: {Math.round(levelLessons.length ? (levelLessons.filter((lesson) => lesson.completedAt).length / levelLessons.length) * 100 : 0)}%
+                {t("learn.progress", { level: selectedHSK, percent: Math.round(levelLessons.length ? (levelLessons.filter((lesson) => lesson.completedAt).length / levelLessons.length) * 100 : 0) })}
               </div>
               <div style={{ display: "grid", gap: "14px" }}>
                 {levelLessons.map((lesson) => {
@@ -82,16 +84,16 @@ export default function Learn() {
             <div className="anim-slide">
               <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 16px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
                 <Search size={18} style={{ color: "var(--text-muted)" }} />
-                <input type="text" placeholder="Search grammar guides..." value={grammarQuery} onChange={(e) => setGrammarQuery(e.target.value)} style={{ border: "none", background: "none", outline: "none", width: "100%", fontSize: "0.95rem", color: "var(--text-main)" }} />
+                <input type="text" placeholder={t("learn.searchGrammar")} value={grammarQuery} onChange={(e) => setGrammarQuery(e.target.value)} style={{ border: "none", background: "none", outline: "none", width: "100%", fontSize: "0.95rem", color: "var(--text-main)" }} />
               </div>
               <div style={{ display: "grid", gap: "16px" }}>
                 {filteredGrammar.map((entry) => (
                   <div key={entry.id} className="card" style={{ textAlign: "left" }}>
                     <h4 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary-red)" }}>{entry.title}</h4>
-                    <div style={{ backgroundColor: "var(--bg-app)", padding: "8px 12px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, margin: "8px 0" }}>Pattern: {entry.pattern}</div>
+                    <div style={{ backgroundColor: "var(--bg-app)", padding: "8px 12px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, margin: "8px 0" }}>{t("learn.pattern")} {entry.pattern}</div>
                     <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "12px" }}>{entry.summary}</p>
                     <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "10px" }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>Example:</label>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>{t("learn.example")}</label>
                       {entry.examples.map((ex, i) => (
                         <div key={i} style={{ marginTop: "4px" }}>
                           <span className="hanzi-text" style={{ fontSize: "1.25rem", color: "var(--text-main)", fontWeight: 700 }}>{ex.simplified}</span>
@@ -112,6 +114,7 @@ export default function Learn() {
 }
 
 function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => void }) {
+  const { t } = useI18n();
   const lessonQuery = useLessonDetailQuery(lessonId);
   const completeLessonMutation = useCompleteLessonMutation(lessonId);
   const lesson = lessonQuery.data?.lesson;
@@ -183,7 +186,7 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
   };
 
   if (lessonQuery.isLoading || !lesson) {
-    return <div className="card" style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>Loading lesson from server...</div>;
+    return <div className="card" style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>{t("learn.loading")}</div>;
   }
 
   return (
@@ -204,7 +207,7 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
           <WordList lesson={lesson} playLineAudio={playLineAudio} />
           {lesson.grammar.length > 0 && (
             <div style={{ textAlign: "left", marginBottom: "32px" }}>
-              <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>Target Grammar Structures</h4>
+              <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>{t("learn.targetGrammar")}</h4>
               {lesson.grammar.map((gp) => (
                 <div key={gp.id} style={{ marginBottom: "12px" }}>
                   <div style={{ fontWeight: 700, color: "var(--primary-red)" }}>{gp.pattern}</div>
@@ -213,24 +216,24 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
               ))}
             </div>
           )}
-          <button className="btn btn-primary" onClick={handleStart} style={{ width: "100%" }}>Start Lesson</button>
+          <button className="btn btn-primary" onClick={handleStart} style={{ width: "100%" }}>{t("learn.start")}</button>
         </div>
       )}
 
       {stage === "dialogue" && lesson.dialogue && (
         <div className="anim-slide">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, textAlign: "left" }}>Dialogue: {lesson.dialogue.title}</h3>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, textAlign: "left" }}>{t("learn.dialogue")} {lesson.dialogue.title}</h3>
             <div style={{ display: "flex", gap: "12px" }}>
               <button onClick={() => setShowPinyin(!showPinyin)} style={{ background: "none", border: "none", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", color: showPinyin ? "var(--primary-red)" : "var(--text-muted)" }}>
-                Pinyin {showPinyin ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                {t("learn.pinyin")} {showPinyin ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
               </button>
               <button onClick={() => setShowTranslation(!showTranslation)} style={{ background: "none", border: "none", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", color: showTranslation ? "var(--primary-red)" : "var(--text-muted)" }}>
-                English {showTranslation ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                {t("learn.english")} {showTranslation ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
               </button>
             </div>
           </div>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "left", marginBottom: "20px" }}>Scenario: {lesson.dialogue.scenario}</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "left", marginBottom: "20px" }}>{t("learn.scenario")} {lesson.dialogue.scenario}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", maxHeight: "360px", overflowY: "auto", padding: "10px" }}>
             {lesson.dialogue.lines.map((line) => (
               <div key={line.id} onClick={() => playLineAudio(line.simplified)} style={{ alignSelf: line.isUser ? "flex-end" : "flex-start", maxWidth: "80%", padding: "12px 16px", borderRadius: "16px", borderTopLeftRadius: line.isUser ? "16px" : "4px", borderTopRightRadius: line.isUser ? "4px" : "16px", backgroundColor: line.isUser ? "rgba(217, 63, 71, 0.08)" : "var(--bg-card-hover)", border: "1px solid var(--border-color)", cursor: "pointer", textAlign: "left" }}>
@@ -244,15 +247,15 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
               </div>
             ))}
           </div>
-          <button className="btn btn-primary" onClick={() => { setStage("exercises"); initExerciseState(); }} style={{ width: "100%" }}>Go to Exercises</button>
+          <button className="btn btn-primary" onClick={() => { setStage("exercises"); initExerciseState(); }} style={{ width: "100%" }}>{t("learn.exercises")}</button>
         </div>
       )}
 
       {stage === "exercises" && currentExercise && (
         <div className="anim-slide">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>Question {exerciseIdx + 1} of {lesson.exercises.length}</span>
-            <span style={{ fontSize: "0.8rem", color: "var(--jade)", fontWeight: 700 }}>Score: {correctAnswersCount}</span>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
+            <span style={{ fontSize: "0.8rem", color: "var(--jade)", fontWeight: 700 }}>{t("learn.score", { count: correctAnswersCount })}</span>
           </div>
           <div className="card" style={{ marginBottom: "24px", textAlign: "center", padding: "30px 20px" }}>
             <h4 style={{ fontSize: "1rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "12px" }}>{currentExercise.kind}</h4>
@@ -297,15 +300,15 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
           </div>
           {isAnswerChecked && (
             <div className="anim-pop" style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--bg-card-hover)", border: "1px solid var(--border-color)", marginBottom: "24px", textAlign: "left" }}>
-              <h5 style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "4px" }}>Correct match</h5>
+              <h5 style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "4px" }}>{t("learn.correctMatch")}</h5>
               <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}><strong>{currentExercise.correctText}</strong></p>
             </div>
           )}
           {!isAnswerChecked ? (
-            <button className="btn btn-primary" disabled={selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence"} onClick={handleCheckAnswer} style={{ width: "100%" }}>Check Answer</button>
+            <button className="btn btn-primary" disabled={selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence"} onClick={handleCheckAnswer} style={{ width: "100%" }}>{t("learn.check")}</button>
           ) : (
             <button className="btn btn-primary" onClick={handleNextExercise} disabled={completeLessonMutation.isPending} style={{ width: "100%", backgroundColor: "var(--jade)", backgroundImage: "none", boxShadow: "none" }}>
-              {exerciseIdx + 1 === lesson.exercises.length ? "Finish Lesson" : "Next Question"}
+              {exerciseIdx + 1 === lesson.exercises.length ? t("learn.finish") : t("learn.nextQuestion")}
             </button>
           )}
         </div>
@@ -314,20 +317,20 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
       {stage === "completed" && (
         <div className="anim-slide" style={{ textAlign: "center", padding: "20px 0" }}>
           <Award size={72} style={{ color: "var(--gold)", marginBottom: "16px" }} />
-          <h2 style={{ fontSize: "1.8rem", fontWeight: 800 }}>Lesson Completed!</h2>
-          <p style={{ color: "var(--text-muted)", margin: "8px 0 24px" }}>You finished the lesson: <strong>{lesson.title}</strong></p>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: 800 }}>{t("learn.completed")}</h2>
+          <p style={{ color: "var(--text-muted)", margin: "8px 0 24px" }}>{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", maxWidth: "320px", margin: "0 auto 36px" }}>
             <div className="card" style={{ padding: "16px 8px" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>XP REWARD</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.xpReward")}</span>
               <h3 style={{ fontSize: "1.5rem", color: "var(--gold)", fontWeight: 800, marginTop: "4px" }}>+{lesson.xpReward}</h3>
             </div>
             <div className="card" style={{ padding: "16px 8px" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>ACCURACY</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.accuracy")}</span>
               <h3 style={{ fontSize: "1.5rem", color: "var(--jade)", fontWeight: 800, marginTop: "4px" }}>{finalAccuracy}%</h3>
             </div>
           </div>
           <WordList lesson={lesson} playLineAudio={playLineAudio} compact />
-          <button className="btn btn-primary" onClick={onClose} style={{ maxWidth: "240px", width: "100%", marginTop: "24px" }}>Back to Path</button>
+          <button className="btn btn-primary" onClick={onClose} style={{ maxWidth: "240px", width: "100%", marginTop: "24px" }}>{t("learn.backPath")}</button>
         </div>
       )}
     </div>
@@ -335,10 +338,11 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
 }
 
 function WordList({ lesson, playLineAudio, compact = false }: { lesson: LessonDetail; playLineAudio: (text: string) => void; compact?: boolean }) {
+  const { t } = useI18n();
   return (
     <div style={{ textAlign: "left", marginBottom: compact ? 0 : "24px" }}>
       <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>
-        {compact ? "Words enrolled in SRS reviews" : "New Words in This Lesson"}
+        {compact ? t("learn.srsWords") : t("learn.newWords")}
       </h4>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: compact ? "center" : "flex-start" }}>
         {lesson.newWords.map((word) => (

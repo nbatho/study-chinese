@@ -11,14 +11,7 @@ import './index.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Suspense fallback={
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        fontFamily: 'system-ui, sans-serif',
-        color: 'var(--text-muted)'
-      }}>
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
         Loading...
       </div>
     }>

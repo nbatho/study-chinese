@@ -9,35 +9,37 @@ import {
 } from "../api";
 import type { HanziStrokeCharacter } from "../api/practice";
 import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Volume2, XCircle } from "lucide-react";
+import { useI18n } from "../i18n";
 
 type Tool = "menu" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening";
 
 export default function Practice() {
+  const { t } = useI18n();
   const [activeTool, setActiveTool] = useState<Tool>("menu");
 
   return (
     <div className="anim-slide">
       {activeTool !== "menu" && (
         <button onClick={() => setActiveTool("menu")} style={{ display: "inline-flex", alignItems: "center", gap: "6px", border: "none", background: "none", color: "var(--primary-red)", fontWeight: 700, cursor: "pointer", marginBottom: "20px" }}>
-          <ArrowLeft size={16} /> Back to Practice Suite
+          <ArrowLeft size={16} /> {t("practice.back")}
         </button>
       )}
 
       {activeTool === "menu" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div style={{ textAlign: "left", marginBottom: "8px" }}>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 800 }}>Practice Suite</h2>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t("practice.title")}</h2>
             <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-              Practice tools now load prompts, pairs, and stroke data from the server.
+              {t("practice.subtitle")}
             </p>
           </div>
           {[
-            { id: "tones", title: "Tone Drill", desc: "Listen and identify Mandarin tone patterns", icon: Activity, color: "var(--tone-1)" },
-            { id: "pairs", title: "Minimal Pairs", desc: "Distinguish similar-sounding syllables", icon: Ear, color: "var(--tone-4)" },
-            { id: "typing", title: "Pinyin Typing", desc: "Type pinyin for server vocabulary", icon: Keyboard, color: "var(--jade)" },
-            { id: "listening", title: "Listening Check", desc: "Hear a word and choose the meaning", icon: Volume2, color: "var(--primary-red)" },
-            { id: "shadow", title: "Shadowing Practice", desc: "Speak along and receive server feedback", icon: Mic, color: "var(--tone-3)" },
-            { id: "hanzi", title: "Hanzi Stroke Writing", desc: "Trace server-provided stroke guides", icon: PencilLine, color: "var(--gold)" },
+            { id: "tones", title: t("practice.tones"), desc: t("practice.tonesDesc"), icon: Activity, color: "var(--tone-1)" },
+            { id: "pairs", title: t("practice.pairs"), desc: t("practice.pairsDesc"), icon: Ear, color: "var(--tone-4)" },
+            { id: "typing", title: t("practice.typing"), desc: t("practice.typingDesc"), icon: Keyboard, color: "var(--jade)" },
+            { id: "listening", title: t("practice.listening"), desc: t("practice.listeningDesc"), icon: Volume2, color: "var(--primary-red)" },
+            { id: "shadow", title: t("practice.shadow"), desc: t("practice.shadowDesc"), icon: Mic, color: "var(--tone-3)" },
+            { id: "hanzi", title: t("practice.hanzi"), desc: t("practice.hanziDesc"), icon: PencilLine, color: "var(--gold)" },
           ].map((tool) => {
             const Icon = tool.icon;
             return (
