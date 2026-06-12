@@ -130,6 +130,7 @@ Tất cả endpoint chính nằm dưới `/api/v1`.
 | `GET` | `/api/v1/vocab` | Tìm kiếm từ vựng |
 | `GET/POST` | `/api/v1/srs/*` | Ôn tập SRS |
 | `GET/POST` | `/api/v1/practice/*` | Bộ công cụ luyện tập |
+| `GET` | `/api/v1/audio` | Tạo audio đọc tiếng Trung bằng Edge TTS |
 | `POST` | `/api/v1/ocr/scan` | OCR demo/mapping từ |
 | `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor mock hoặc provider thật |
 
@@ -146,6 +147,10 @@ AI_MODEL=gemini-2.5-flash
 ```
 
 Các provider hỗ trợ: `gemini`, `openai`, `groq`, `openai-compatible`. Có thể dùng `AI_BASE_URL` cho endpoint OpenAI-compatible riêng. Server có timeout/retry, log token/cost và lưu `token_usage` vào `chat_messages`.
+
+## Audio / Edge TTS
+
+Frontend ưu tiên gọi `GET /api/v1/audio?text=你好&language=zh-CN` để phát MP3 từ Edge TTS, sau đó fallback về browser `speechSynthesis` nếu backend/provider lỗi. Voice mặc định là `zh-CN-XiaoxiaoNeural`; có thể đổi bằng `TTS_EDGE_VOICE` trong `server/.env`.
 
 ## Bảo Mật Và Secrets
 

@@ -34,7 +34,13 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   GROQ_API_KEY: process.env.GROQ_API_KEY,
-  OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock'
+  OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock',
+  TTS_PROVIDER: process.env.TTS_PROVIDER || 'edge',
+  TTS_EDGE_VOICE: process.env.TTS_EDGE_VOICE || 'zh-CN-XiaoxiaoNeural',
+  TTS_EDGE_OUTPUT_FORMAT:
+    process.env.TTS_EDGE_OUTPUT_FORMAT || 'audio-24khz-48kbitrate-mono-mp3',
+  TTS_MAX_TEXT_LENGTH: Number(process.env.TTS_MAX_TEXT_LENGTH || 300),
+  TTS_TIMEOUT_MS: Number(process.env.TTS_TIMEOUT_MS || 12000)
 };
 
 export const isProduction = env.NODE_ENV === 'production';

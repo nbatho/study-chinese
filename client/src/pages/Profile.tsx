@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useLogoutMutation } from "../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../api/users/queries";
 import { LogOut, ToggleLeft, ToggleRight } from "lucide-react";
@@ -41,7 +42,7 @@ export default function Profile() {
       audioAutoPlay,
       appAppearance,
     });
-    alert(t("profile.saved"));
+    toast.success(t("profile.saved"));
   };
 
   const handleLogout = async () => {

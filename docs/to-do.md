@@ -136,7 +136,7 @@ Cap nhat: 2026-06-11
   - [x] Dong bo copy tinh cap man hinh/action cho Learn, Practice, AITutor, CameraTranslator.
   - [ ] Dong bo tiep copy chi tiet ben trong tung tool Practice neu can muc 100%.
   - [ ] Doi/bo sung content tra ve tu server neu can hien thi song ngu cho lesson, vocab, grammar, phrase.
-- [ ] Thay `alert()` bang toast/modal co style chung, dac biet trong `Profile`, `Practice`, `CameraTranslator`.
+  - [x] Thay `alert()` bang toast/modal co style chung, dac biet trong `Profile`, `Practice`, `CameraTranslator`.
 - [ ] Bo sung trang/luong quan ly tu vung:
   - [ ] Tim kiem tu vung day du.
   - [ ] Favorite words UI.

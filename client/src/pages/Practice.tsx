@@ -9,6 +9,7 @@ import {
 } from "../api";
 import type { HanziStrokeCharacter } from "../api/practice";
 import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Volume2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { useI18n } from "../i18n";
 import { cn } from "../utils/cn";
 import LoadingCard from "../components/LoadingCard";
@@ -409,6 +410,7 @@ function ShadowingTool() {
 }
 
 function HanziDrawingTool() {
+  const { t } = useI18n();
   const strokesQuery = useHanziStrokesQuery();
   const addActivity = useAddActivityMutation();
   const characters = strokesQuery.data?.characters ?? [];
@@ -462,7 +464,7 @@ function HanziDrawingTool() {
       return;
     }
     await addActivity.mutateAsync({ xp: 10, exercisesCorrect: 1, exercisesTotal: 1 });
-    alert(`Character "${current.character}" complete! +10 XP awarded.`);
+    toast.success(t("practice.hanziComplete", { character: current.character }));
     handleNext();
   };
 

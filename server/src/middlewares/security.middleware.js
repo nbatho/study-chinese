@@ -97,3 +97,10 @@ export const ocrRateLimit = createRateLimiter({
   max: 10,
   message: 'OCR request limit reached. Please try again in a minute.'
 });
+
+export const audioRateLimit = createRateLimiter({
+  keyPrefix: 'audio',
+  windowMs: 60 * 1000,
+  max: 60,
+  message: 'Audio request limit reached. Please try again in a minute.'
+});

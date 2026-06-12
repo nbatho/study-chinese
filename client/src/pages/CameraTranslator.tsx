@@ -4,6 +4,7 @@ import { useEnrollWordMutation } from "../api/srs/queries";
 import type { OcrBox, OcrSample, OcrScanPayload } from "../api/ocr";
 import { ArrowLeft, Camera, RefreshCw, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useI18n } from "../i18n";
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
@@ -51,7 +52,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
       setCameraActive(true);
       await runScan({});
     } catch {
-      alert(t("camera.accessError"));
+      toast.error(t("camera.accessError"));
     }
   };
 
@@ -93,7 +94,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
 
   const enrollSRS = async (wordId: string) => {
     await enrollWordMutation.mutateAsync({ wordId });
-    alert(t("camera.enrolled"));
+    toast.success(t("camera.enrolled"));
   };
 
   return (

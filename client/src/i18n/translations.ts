@@ -215,7 +215,8 @@ export const translations = {
     "practice.shadow": "Shadowing Practice",
     "practice.shadowDesc": "Speak along and receive server feedback",
     "practice.hanzi": "Hanzi Stroke Writing",
-    "practice.hanziDesc": "Trace server-provided stroke guides"
+    "practice.hanziDesc": "Trace server-provided stroke guides",
+    "practice.hanziComplete": "Character \"{character}\" complete! +10 XP awarded."
   },
   vi: {
     "nav.home": "Trang chủ",
@@ -433,7 +434,8 @@ export const translations = {
     "practice.shadow": "Luyện nhại giọng",
     "practice.shadowDesc": "Đọc theo và nhận phản hồi từ server",
     "practice.hanzi": "Viết nét Hán tự",
-    "practice.hanziDesc": "Tập viết theo hướng dẫn nét từ server"
+    "practice.hanziDesc": "Tập viết theo hướng dẫn nét từ server",
+    "practice.hanziComplete": "Đã hoàn thành chữ \"{character}\"! +10 XP."
   }
 } as const;
 

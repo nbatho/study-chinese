@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import Navigation from "./components/Navigation";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useUserProfileQuery } from "./api/users/queries";
@@ -60,6 +61,7 @@ export default function App() {
       </main>
 
       <Navigation />
+      <Toaster richColors position="top-center" />
     </div>
   );
 }
