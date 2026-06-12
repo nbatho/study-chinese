@@ -1,14 +1,14 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: study-chinese-postgres
     environment:
       POSTGRES_DB: study_chinese
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./server/prod.sql:/docker-entrypoint-initdb.d/001-prod.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d study_chinese"]
       interval: 5s
@@ -16,31 +16,35 @@ services:
       retries: 10
 
   server:
+    container_name: study-chinese-server
     build:
       context: ./server
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 5000
       CLIENT_URL: http://localhost:5173
+      API_BASE_URL: http://localhost:5173/api/v1
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/study_chinese
       JWT_SECRET: local-dev-secret-change-before-production-123456
       AI_PROVIDER: mock
       OCR_PROVIDER: mock
-    ports:
-      - "5000:5000"
+      TTS_PROVIDER: edge
+      TTS_EDGE_VOICE: zh-CN-XiaoxiaoNeural
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
 
   client:
+    container_name: study-chinese-client
     build:
       context: ./client
-      args:
-        VITE_API_GATEWAY_URL: http://localhost:5000
     ports:
-      - "5173:5173"
+      - "5173:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:

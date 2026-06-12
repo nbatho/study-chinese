@@ -78,16 +78,23 @@ URL mặc định:
 
 ## Docker Compose
 
-Docker Compose dựng PostgreSQL, server và client:
+Docker Compose dựng PostgreSQL, server và client. Client được build static và serve bằng nginx ở `http://localhost:5173`; nginx proxy `/api/*` sang server trong mạng Docker.
 
 ```bash
 docker compose up --build
 ```
 
-Sau khi PostgreSQL sẵn sàng, import schema/seed nếu container DB còn trống:
+URL mặc định khi chạy Docker:
+
+- Client: `http://localhost:5173`
+- API qua client nginx proxy: `http://localhost:5173/api/v1`
+- PostgreSQL chạy nội bộ trong Docker network với hostname `postgres`. Nếu cần truy cập DB từ host, thêm port mapping thủ công hoặc dùng `docker compose exec postgres psql -U postgres -d study_chinese`.
+
+PostgreSQL tự import `server/prod.sql` trong lần tạo volume đầu tiên. Nếu volume đã tồn tại và cần seed lại database từ đầu:
 
 ```bash
-npm run db:init
+docker compose down -v
+docker compose up --build
 ```
 
 ## Scripts
