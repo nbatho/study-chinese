@@ -107,7 +107,7 @@ Cap nhat: 2026-06-11
   - [ ] Lessons/SRS/lists/practice/OCR can schema rieng.
 - [x] Dong bo OpenAPI/Swagger voi route thuc te muc hien tai.
 - [ ] Thay mock provider:
-  - [ ] `AI_PROVIDER=mock`: tich hop provider that cho AI tutor, co timeout, retry, logging token/cost.
+  - [x] `AI_PROVIDER=mock`: tich hop provider that cho AI tutor, co timeout, retry, logging token/cost.
   - [ ] `OCR_PROVIDER=mock`: tich hop OCR that hoac service rieng, tra ve bounding box/do tin cay.
   - [ ] `TTS_PROVIDER=mock`: tich hop provider am thanh mau, cache file audio va tra `audioUrl` cho client.
   - [ ] Shadowing/pronunciation hien cham diem deterministic, can speech recognition/scoring that hoac ghi ro la demo trong UI/API.

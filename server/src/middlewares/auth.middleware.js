@@ -41,5 +41,3 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
 
   next();
 });
-
-export const checkAuth = requireAuth;

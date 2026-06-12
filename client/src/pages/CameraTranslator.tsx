@@ -6,6 +6,9 @@ import { ArrowLeft, Camera, RefreshCw, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../i18n";
 
+const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
+const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent disabled:opacity-60";
+
 interface CameraTranslatorProps {
   onClose?: () => void;
 }
@@ -94,56 +97,25 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
   };
 
   return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "var(--bg-app)",
-      zIndex: 1000,
-      display: "flex",
-      flexDirection: "column",
-      overflowY: "auto"
-    }}>
-      <header className="glass-panel" style={{
-        padding: "16px",
-        display: "flex",
-        alignItems: "center",
-        borderBottom: "1px solid var(--border-color)",
-        gap: "16px"
-      }}>
-        <button onClick={handleClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+    <div className="fixed inset-0 z-[1000] flex flex-col overflow-y-auto bg-background">
+      <header className="flex items-center gap-4 border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl">
+        <button onClick={handleClose} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800 }}>{t("camera.title")}</h3>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+          <h3 className="text-[1.1rem] font-extrabold">{t("camera.title")}</h3>
+          <p className="text-xs text-muted-foreground">
             {t("camera.subtitle")}
           </p>
         </div>
       </header>
 
-      <div style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: "400px",
-          height: "300px",
-          backgroundColor: "#1e1e24",
-          borderRadius: "20px",
-          border: "2px solid var(--border-color)",
-          overflow: "hidden",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: "24px"
-        }}>
+      <div className="flex flex-1 flex-col items-center p-4 sm:p-5">
+        <div className="relative mb-6 flex h-[260px] w-full max-w-[400px] items-center justify-center overflow-hidden rounded-[20px] border-2 bg-[#1e1e24] shadow-[0_8px_30px_rgba(0,0,0,0.1)] sm:h-[300px]">
           {loading && (
-            <div style={{ zIndex: 10, color: "white", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+            <div className="z-10 flex flex-col items-center gap-3 text-white">
               <RefreshCw className="recording-pulse" size={36} />
-              <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("camera.running")}</span>
+              <span className="text-[0.85rem] font-semibold">{t("camera.running")}</span>
             </div>
           )}
 
@@ -152,7 +124,7 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
               ref={videoRef}
               autoPlay
               playsInline
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              className="size-full object-cover"
             />
           )}
 
@@ -160,29 +132,21 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
             <img
               src={uploadedImage}
               alt="Scan"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              className="size-full object-cover"
             />
           )}
 
           {!cameraActive && !uploadedImage && !loading && (
-            <div style={{ padding: "24px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
-              <Camera size={48} style={{ marginBottom: "12px", display: "inline-block" }} />
-              <p style={{ fontSize: "0.85rem" }}>
+            <div className="p-6 text-center text-white/40">
+              <Camera size={48} className="mb-3 inline-block" />
+              <p className="text-[0.85rem]">
                 {t("camera.offline")}
               </p>
             </div>
           )}
 
           {(cameraActive || uploadedImage) && !loading && (
-            <div style={{
-              position: "absolute",
-              top: "10%",
-              left: "10%",
-              right: "10%",
-              bottom: "10%",
-              border: "1.5px dashed rgba(217, 63, 71, 0.4)",
-              pointerEvents: "none"
-            }} />
+            <div className="pointer-events-none absolute inset-[10%] border-[1.5px] border-dashed border-primary/40" />
           )}
 
           {!loading && boxes.map((box) => (
@@ -190,90 +154,73 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
               key={box.id}
               onClick={() => setSelectedBox(box)}
               style={{
-                position: "absolute",
                 top: `${box.top}%`,
                 left: `${box.left}%`,
                 width: `${box.width}%`,
                 height: `${box.height}%`,
-                border: "2px solid var(--jade)",
-                backgroundColor: "rgba(16, 185, 129, 0.2)",
-                borderRadius: "4px",
-                cursor: "pointer",
                 padding: 0,
-                transition: "var(--transition-smooth)"
               }}
-              className="ocr-box-btn"
+              className="absolute cursor-pointer rounded border-2 border-jade bg-jade/20 transition"
             />
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: "12px", marginBottom: "32px", width: "100%", maxWidth: "400px" }}>
+        <div className="mb-8 flex w-full max-w-[400px] flex-col gap-3 min-[420px]:flex-row">
           {!cameraActive ? (
-            <button className="btn btn-primary" onClick={startCamera} style={{ flex: 1 }} disabled={loading}>
+            <button className={`${primaryButtonClass} flex-1`} onClick={startCamera} disabled={loading}>
               <Camera size={18} /> {t("camera.useLive")}
             </button>
           ) : (
-            <button className="btn btn-secondary" onClick={stopCamera} style={{ flex: 1 }}>
+            <button className={`${secondaryButtonClass} flex-1`} onClick={stopCamera}>
               {t("camera.stop")}
             </button>
           )}
 
-          <label className="btn btn-secondary" style={{ flex: 1, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+          <label className={`${secondaryButtonClass} flex-1`}>
             <Upload size={18} /> {t("camera.upload")}
-            <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
+            <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
           </label>
         </div>
 
         {selectedBox && (
-          <div className="card anim-pop" style={{ width: "100%", maxWidth: "400px", textAlign: "left", marginBottom: "32px", border: "2px solid var(--jade)" }}>
-            <h4 style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--jade)", fontWeight: 700, marginBottom: "4px" }}>
+          <div className="anim-pop mb-8 w-full max-w-[400px] rounded-lg border-2 border-jade bg-card p-5 text-left shadow-sm">
+            <h4 className="mb-1 text-xs font-bold uppercase text-jade">
               {t("camera.matched")}
             </h4>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 className="hanzi-text" style={{ fontSize: "2.2rem", fontWeight: 800 }}>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-serif text-[2.2rem] font-extrabold">
                 {selectedBox.text}
               </h2>
               <button
-                className="btn btn-secondary"
+                className={`${secondaryButtonClass} px-3 py-1.5 text-xs`}
                 onClick={() => enrollSRS(selectedBox.wordId)}
                 disabled={enrollWordMutation.isPending}
-                style={{ padding: "6px 12px", fontSize: "0.75rem" }}
               >
                 {t("camera.studyWord")}
               </button>
             </div>
-            <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--primary-red)", marginTop: "4px" }}>
+            <div className="mt-1 text-[1.05rem] font-bold text-primary">
               {selectedBox.pinyin}
             </div>
-            <p style={{ fontSize: "0.95rem", color: "var(--text-main)", fontWeight: 500, marginTop: "8px" }}>
+            <p className="mt-2 text-[0.95rem] font-medium">
               {t("camera.meaning")} <strong>{selectedBox.english}</strong>
             </p>
           </div>
         )}
 
-        <div style={{ width: "100%", maxWidth: "400px", textAlign: "left" }}>
-          <h4 style={{ fontSize: "0.85rem", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700, marginBottom: "12px" }}>
+        <div className="w-full max-w-[400px] text-left">
+          <h4 className="mb-3 text-[0.85rem] font-bold uppercase text-muted-foreground">
             {t("camera.samples")}
           </h4>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {samples.map((sample) => (
               <button
                 key={sample.id}
                 onClick={() => selectSample(sample)}
-                className="btn btn-secondary"
+                className={`${secondaryButtonClass} flex-col rounded-[14px] px-2 py-4 text-[0.8rem] font-bold`}
                 disabled={loading}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "16px 8px",
-                  borderRadius: "14px",
-                  gap: "6px",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  alignItems: "center"
-                }}
               >
-                <span style={{ fontSize: "1.8rem" }}>{sample.marker}</span>
+                <span className="text-[1.8rem]">{sample.marker}</span>
                 <span>{sample.label}</span>
               </button>
             ))}

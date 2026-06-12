@@ -5,9 +5,13 @@ import {
   useStartChatSessionMutation,
 } from "../api/aiTutor/queries";
 import type { ChatMessage, ChatScenario } from "../api/aiTutor";
-import { ArrowLeft, AlertTriangle, Send, Sparkles, Volume2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Send, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../i18n";
+import { cn } from "../utils/cn";
+import TtsButton from "../components/TtsButton";
+
+const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 
 interface AITutorProps {
   onClose?: () => void;
@@ -67,61 +71,36 @@ export default function AITutor({ onClose }: AITutorProps) {
     ]);
   };
 
-  const playTTS = (text: string) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "var(--bg-app)",
-      zIndex: 1000,
-      display: "flex",
-      flexDirection: "column"
-    }}>
-      <header className="glass-panel" style={{
-        padding: "16px",
-        display: "flex",
-        alignItems: "center",
-        borderBottom: "1px solid var(--border-color)",
-        gap: "16px"
-      }}>
-        <button onClick={handleClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+    <div className="fixed inset-0 z-[1000] flex flex-col bg-background">
+      <header className="flex items-center gap-4 border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl">
+        <button onClick={handleClose} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <div>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px" }}>
-            <Sparkles size={18} className="tone-t3" />
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 truncate text-[1.1rem] font-extrabold">
+            <Sparkles size={18} className="shrink-0 text-tone-3" />
             {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : t("ai.title")}
           </h3>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+          <p className="truncate text-xs text-muted-foreground">
             {selectedScenario ? selectedScenario.description : t("ai.subtitle")}
           </p>
         </div>
       </header>
 
       {!selectedScenario ? (
-        <div className="anim-slide" style={{ flex: 1, padding: "24px", overflowY: "auto", maxWidth: "600px", margin: "0 auto", width: "100%" }}>
-          <h4 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "16px", textAlign: "left" }}>
+        <div className="anim-slide mx-auto w-full max-w-[600px] flex-1 overflow-y-auto p-4 sm:p-6">
+          <h4 className="mb-4 text-left text-base font-bold uppercase text-muted-foreground">
             {t("ai.selectScenario")}
           </h4>
-          <div style={{ display: "grid", gap: "12px" }}>
+          <div className="grid gap-3">
             {scenariosQuery.isLoading && (
-              <div className="card" style={{ padding: "16px", color: "var(--text-muted)" }}>
+              <div className="rounded-lg border bg-card p-4 text-muted-foreground shadow-sm">
                 {t("ai.loadingScenarios")}
               </div>
             )}
             {scenariosQuery.isError && (
-              <div className="card" style={{ padding: "16px", color: "var(--primary-red)" }}>
+              <div className="rounded-lg border bg-card p-4 text-primary shadow-sm">
                 {t("ai.loadError")}
               </div>
             )}
@@ -130,24 +109,13 @@ export default function AITutor({ onClose }: AITutorProps) {
                 key={scenario.id}
                 type="button"
                 onClick={() => selectScenario(scenario)}
-                className="card"
+                className="flex items-center gap-4 rounded-lg border bg-card p-4 text-left text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-wait disabled:opacity-70"
                 disabled={startSessionMutation.isPending}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "16px",
-                  padding: "16px",
-                  cursor: startSessionMutation.isPending ? "wait" : "pointer",
-                  textAlign: "left",
-                  border: "1px solid var(--border-color)",
-                  backgroundColor: "var(--bg-card)",
-                  color: "var(--text-main)"
-                }}
               >
-                <span style={{ fontSize: "2.2rem" }}>{scenario.emoji}</span>
-                <span>
-                  <strong style={{ display: "block", fontSize: "1.05rem" }}>{scenario.title}</strong>
-                  <span style={{ display: "block", fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                <span className="text-[2.2rem]">{scenario.emoji}</span>
+                <span className="min-w-0">
+                  <strong className="block truncate text-[1.05rem]">{scenario.title}</strong>
+                  <span className="mt-0.5 block text-[0.8rem] text-muted-foreground">
                     {scenario.description}
                   </span>
                 </span>
@@ -156,72 +124,47 @@ export default function AITutor({ onClose }: AITutorProps) {
           </div>
         </div>
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100% - 65px)" }}>
-          <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="flex h-[calc(100%-65px)] flex-1 flex-col">
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5">
             {messages.map((message) => (
               <div
                 key={message.id}
-                style={{
-                  alignSelf: message.role === "tutor" ? "flex-start" : "flex-end",
-                  maxWidth: "80%",
-                  textAlign: "left"
-                }}
+                className={cn("max-w-[88%] text-left sm:max-w-[80%]", message.role === "tutor" ? "self-start" : "self-end")}
               >
-                <div style={{
-                  padding: "14px 18px",
-                  borderRadius: "16px",
-                  borderTopLeftRadius: message.role === "tutor" ? "4px" : "16px",
-                  borderTopRightRadius: message.role === "tutor" ? "16px" : "4px",
-                  backgroundColor: message.role === "tutor" ? "var(--bg-card)" : "var(--primary-red)",
-                  color: message.role === "tutor" ? "var(--text-main)" : "white",
-                  border: message.role === "tutor" ? "1px solid var(--border-color)" : "none",
-                }}>
+                <div className={cn("rounded-2xl px-[18px] py-3.5", message.role === "tutor" ? "rounded-tl border bg-card text-foreground" : "rounded-tr bg-primary text-white")}>
                   {message.role === "tutor" ? (
                     <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-muted)" }}>{t("ai.tutorName")}</span>
-                        <button
-                          type="button"
-                          onClick={() => playTTS(message.simplified)}
-                          style={{ border: "none", background: "none", color: "var(--primary-red)", cursor: "pointer" }}
-                        >
-                          <Volume2 size={16} />
-                        </button>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[0.7rem] font-bold text-muted-foreground">{t("ai.tutorName")}</span>
+                        <TtsButton
+                          text={message.simplified}
+                          aria-label={t("common.listen")}
+                          className="border-0 bg-transparent p-1 text-primary shadow-none hover:bg-transparent"
+                        />
                       </div>
-                      <h3 className="hanzi-text" style={{ fontSize: "1.35rem", fontWeight: 700 }}>
+                      <h3 className="font-serif text-[1.35rem] font-bold">
                         {message.simplified}
                       </h3>
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                      <div className="mt-0.5 text-[0.85rem] text-muted-foreground">
                         {message.pinyin ?? ""}
                       </div>
-                      <div style={{ fontSize: "0.85rem", color: "var(--text-main)", borderTop: "1px solid rgba(0,0,0,0.04)", paddingTop: "4px", marginTop: "6px" }}>
+                      <div className="mt-1.5 border-t border-black/5 pt-1 text-[0.85rem] text-foreground">
                         {message.english ?? ""}
                       </div>
                     </div>
                   ) : (
-                    <h3 className="hanzi-text" style={{ fontSize: "1.35rem", fontWeight: 700 }}>
+                    <h3 className="font-serif text-[1.35rem] font-bold">
                       {message.simplified}
                     </h3>
                   )}
                 </div>
 
                 {message.correction && (
-                  <div className="anim-pop" style={{
-                    marginTop: "8px",
-                    padding: "10px 14px",
-                    borderRadius: "12px",
-                    backgroundColor: "rgba(245, 158, 11, 0.08)",
-                    border: "1px dashed var(--tone-3)",
-                    color: "var(--tone-3)",
-                    fontSize: "0.8rem",
-                    display: "flex",
-                    gap: "8px",
-                    alignItems: "flex-start"
-                  }}>
-                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+                  <div className="anim-pop mt-2 flex items-start gap-2 rounded-xl border border-dashed border-tone-3 bg-tone-3/10 px-3.5 py-2.5 text-[0.8rem] text-tone-3">
+                    <AlertTriangle size={16} className="mt-0.5 shrink-0" />
                     <div>
                       <strong>{t("ai.didYouMean")}</strong> <em>"{message.correction.improved}"</em>
-                      <p style={{ marginTop: "2px", color: "var(--text-muted)" }}>{message.correction.explanation}</p>
+                      <p className="mt-0.5 text-muted-foreground">{message.correction.explanation}</p>
                     </div>
                   </div>
                 )}
@@ -229,16 +172,7 @@ export default function AITutor({ onClose }: AITutorProps) {
             ))}
 
             {isThinking && (
-              <div style={{
-                alignSelf: "flex-start",
-                padding: "12px 18px",
-                borderRadius: "16px",
-                backgroundColor: "var(--bg-card-hover)",
-                border: "1px solid var(--border-color)",
-                color: "var(--text-muted)",
-                fontSize: "0.85rem",
-                fontWeight: 600
-              }}>
+              <div className="self-start rounded-2xl border bg-secondary px-[18px] py-3 text-[0.85rem] font-semibold text-muted-foreground">
                 {t("ai.thinking")}
               </div>
             )}
@@ -247,13 +181,7 @@ export default function AITutor({ onClose }: AITutorProps) {
 
           <form
             onSubmit={handleSend}
-            className="glass-panel"
-            style={{
-              padding: "14px 18px",
-              display: "flex",
-              gap: "12px",
-              borderTop: "1px solid var(--border-color)"
-            }}
+            className="flex gap-3 border-t bg-card/90 px-3.5 py-3 backdrop-blur-xl sm:px-[18px]"
           >
             <input
               type="text"
@@ -261,28 +189,12 @@ export default function AITutor({ onClose }: AITutorProps) {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               disabled={isThinking}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1px solid var(--border-color)",
-                backgroundColor: "var(--bg-app)",
-                color: "var(--text-main)",
-                fontSize: "0.95rem",
-                outline: "none"
-              }}
+              className="min-w-0 flex-1 rounded-[10px] border bg-background px-4 py-3 text-[0.95rem] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={!userInput.trim() || isThinking}
-              className="btn btn-primary"
-              style={{
-                width: "48px",
-                height: "48px",
-                padding: 0,
-                borderRadius: "10px",
-                flexShrink: 0
-              }}
+              className={cn(primaryButtonClass, "size-12 shrink-0 rounded-[10px] p-0")}
             >
               <Send size={18} />
             </button>

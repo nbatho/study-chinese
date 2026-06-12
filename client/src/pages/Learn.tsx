@@ -5,6 +5,9 @@ import { useCompleteLessonMutation } from "../api/lessons/queries";
 import type { LessonDetail } from "../api/lessons";
 import { ArrowLeft, Award, BookOpen, CheckCircle2, Search, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
 import { useI18n } from "../i18n";
+import { cn } from "../utils/cn";
+import LoadingCard from "../components/LoadingCard";
+import { speakChinese } from "../utils/tts";
 
 export default function Learn() {
   const { t } = useI18n();
@@ -32,12 +35,12 @@ export default function Learn() {
         <LessonPlayer lessonId={selectedLessonId} onClose={() => setSelectedLessonId(null)} />
       ) : (
         <>
-          <div style={{ display: "flex", borderRadius: "12px", backgroundColor: "var(--bg-card-hover)", padding: "4px", marginBottom: "24px", border: "1px solid var(--border-color)" }}>
+          <div className="mb-6 flex rounded-xl border bg-secondary p-1">
             {[
               { id: "curriculum", label: t("learn.curriculum") },
               { id: "grammar", label: t("learn.grammar") },
             ].map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} style={{ flex: 1, padding: "10px", border: "none", borderRadius: "8px", backgroundColor: activeTab === tab.id ? "var(--bg-card)" : "transparent", color: activeTab === tab.id ? "var(--primary-red)" : "var(--text-muted)", fontWeight: 700, cursor: "pointer" }}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 rounded-lg p-2.5 font-bold transition", activeTab === tab.id ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}>
                 {tab.label}
               </button>
             ))}
@@ -45,35 +48,35 @@ export default function Learn() {
 
           {activeTab === "curriculum" ? (
             <div>
-              <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+              <div className="mb-5 flex gap-2.5">
                 {[1, 2, 3].map((level) => (
-                  <button key={level} onClick={() => setSelectedHSK(level)} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `2px solid ${selectedHSK === level ? "var(--primary-red)" : "var(--border-color)"}`, backgroundColor: selectedHSK === level ? "rgba(217, 63, 71, 0.04)" : "var(--bg-card)", color: selectedHSK === level ? "var(--primary-red)" : "var(--text-main)", fontWeight: 800, cursor: "pointer" }}>
+                  <button key={level} onClick={() => setSelectedHSK(level)} className={cn("flex-1 rounded-xl border-2 bg-card p-3 font-extrabold transition", selectedHSK === level ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground")}>
                     HSK {level}
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "16px", fontWeight: 600, textAlign: "left" }}>
+              <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
                 {t("learn.progress", { level: selectedHSK, percent: Math.round(levelLessons.length ? (levelLessons.filter((lesson) => lesson.completedAt).length / levelLessons.length) * 100 : 0) })}
               </div>
-              <div style={{ display: "grid", gap: "14px" }}>
+              <div className="grid gap-3.5">
                 {levelLessons.map((lesson) => {
                   const isCompleted = !!lesson.completedAt;
                   return (
-                    <div key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px", cursor: "pointer", borderLeft: isCompleted ? "4px solid var(--jade)" : "4px solid var(--border-color)" }}>
-                      <div style={{ textAlign: "left" }}>
-                        <span style={{ fontSize: "0.75rem", color: isCompleted ? "var(--jade)" : "var(--primary-red)", fontWeight: 700 }}>
+                    <div key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={cn("flex cursor-pointer items-center justify-between gap-4 rounded-lg border bg-card p-[18px] text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md", isCompleted ? "border-l-4 border-l-jade" : "border-l-4 border-l-border")}>
+                      <div className="min-w-0">
+                        <span className={cn("text-xs font-bold", isCompleted ? "text-jade" : "text-primary")}>
                           Lesson {lesson.order} · {lesson.skill.toUpperCase()}
                         </span>
-                        <h4 style={{ fontSize: "1.1rem", fontWeight: 800, marginTop: "2px" }}>{lesson.title}</h4>
-                        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>{lesson.subtitle}</p>
+                        <h4 className="mt-0.5 truncate text-[1.1rem] font-extrabold">{lesson.title}</h4>
+                        <p className="mt-0.5 line-clamp-2 text-[0.85rem] text-muted-foreground">{lesson.subtitle}</p>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div className="flex shrink-0 items-center gap-3">
                         {isCompleted && (
-                          <span style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", color: "var(--jade)", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700 }}>
+                          <span className="rounded-md bg-jade/10 px-2 py-1 text-xs font-bold text-jade">
                             {Math.round(lesson.bestAccuracy)}% Acc
                           </span>
                         )}
-                        <BookOpen size={20} className={isCompleted ? "tone-t2" : "tone-t4"} />
+                        <BookOpen size={20} className={isCompleted ? "text-tone-2" : "text-tone-4"} />
                       </div>
                     </div>
                   );
@@ -82,23 +85,23 @@ export default function Learn() {
             </div>
           ) : (
             <div className="anim-slide">
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 16px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
-                <Search size={18} style={{ color: "var(--text-muted)" }} />
-                <input type="text" placeholder={t("learn.searchGrammar")} value={grammarQuery} onChange={(e) => setGrammarQuery(e.target.value)} style={{ border: "none", background: "none", outline: "none", width: "100%", fontSize: "0.95rem", color: "var(--text-main)" }} />
+              <div className="mb-5 flex items-center gap-2.5 rounded-xl border bg-card px-4 py-2">
+                <Search size={18} className="text-muted-foreground" />
+                <input type="text" placeholder={t("learn.searchGrammar")} value={grammarQuery} onChange={(e) => setGrammarQuery(e.target.value)} className="w-full bg-transparent text-[0.95rem] text-foreground outline-none placeholder:text-muted-foreground" />
               </div>
-              <div style={{ display: "grid", gap: "16px" }}>
+              <div className="grid gap-4">
                 {filteredGrammar.map((entry) => (
-                  <div key={entry.id} className="card" style={{ textAlign: "left" }}>
-                    <h4 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary-red)" }}>{entry.title}</h4>
-                    <div style={{ backgroundColor: "var(--bg-app)", padding: "8px 12px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, margin: "8px 0" }}>{t("learn.pattern")} {entry.pattern}</div>
-                    <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "12px" }}>{entry.summary}</p>
-                    <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "10px" }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>{t("learn.example")}</label>
+                  <div key={entry.id} className="rounded-lg border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <h4 className="text-[1.1rem] font-extrabold text-primary">{entry.title}</h4>
+                    <div className="my-2 rounded-lg bg-background px-3 py-2 text-[0.85rem] font-semibold">{t("learn.pattern")} {entry.pattern}</div>
+                    <p className="mb-3 text-[0.9rem] text-muted-foreground">{entry.summary}</p>
+                    <div className="border-t border-dashed pt-2.5">
+                      <label className="text-xs font-bold uppercase text-muted-foreground">{t("learn.example")}</label>
                       {entry.examples.map((ex, i) => (
-                        <div key={i} style={{ marginTop: "4px" }}>
-                          <span className="hanzi-text" style={{ fontSize: "1.25rem", color: "var(--text-main)", fontWeight: 700 }}>{ex.simplified}</span>
-                          <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginLeft: "10px" }}>({ex.pinyin})</span>
-                          <p style={{ fontSize: "0.9rem", color: "var(--text-main)", marginTop: "2px" }}>{ex.english}</p>
+                        <div key={i} className="mt-1">
+                          <span className="font-serif text-xl font-bold">{ex.simplified}</span>
+                          <span className="ml-2.5 text-[0.85rem] text-muted-foreground">({ex.pinyin})</span>
+                          <p className="mt-0.5 text-[0.9rem]">{ex.english}</p>
                         </div>
                       ))}
                     </div>
@@ -131,15 +134,6 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
   const exerciseCount = lesson?.exercises.length ?? 0;
   const finalAccuracy = exerciseCount ? Math.round((correctAnswersCount / exerciseCount) * 100) : 0;
 
-  const playLineAudio = (text: string) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   const initExerciseState = () => {
     setSelectedOptionIdx(null);
     setIsAnswerChecked(false);
@@ -165,7 +159,7 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
     if (correct) setCorrectAnswersCount((prev) => prev + 1);
     setIsAnswerChecked(true);
     if (currentExercise.audioWordId || currentExercise.kind === "listening") {
-      playLineAudio(currentExercise.correctText);
+      speakChinese(currentExercise.correctText);
     }
   };
 
@@ -186,110 +180,104 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
   };
 
   if (lessonQuery.isLoading || !lesson) {
-    return <div className="card" style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>{t("learn.loading")}</div>;
+    return <LoadingCard label={t("learn.loading")} />;
   }
 
   return (
-    <div className="card anim-pop" style={{ maxWidth: "640px", margin: "0 auto", padding: "24px", borderRadius: "20px" }}>
+    <div className="anim-pop mx-auto max-w-[640px] rounded-[20px] border bg-card p-4 shadow-sm sm:p-6">
       {stage === "intro" && (
         <div className="anim-slide">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-            <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+          <div className="mb-4 flex items-center gap-2.5">
+            <button onClick={onClose} className="text-muted-foreground">
               <ArrowLeft size={20} />
             </button>
-            <span style={{ fontSize: "0.8rem", color: "var(--primary-red)", fontWeight: 700 }}>HSK {lesson.hskLevel} · Curriculum Path</span>
+            <span className="text-[0.8rem] font-bold text-primary">HSK {lesson.hskLevel} · Curriculum Path</span>
           </div>
-          <h2 style={{ fontSize: "1.6rem", fontWeight: 800, textAlign: "left" }}>{lesson.title}</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "left", marginBottom: "16px" }}>{lesson.subtitle}</p>
-          <div style={{ backgroundColor: "var(--bg-app)", padding: "16px", borderRadius: "12px", fontSize: "0.9rem", color: "var(--text-main)", textAlign: "left", lineHeight: 1.6, marginBottom: "24px" }}>
+          <h2 className="text-left text-2xl font-extrabold sm:text-[1.6rem]">{lesson.title}</h2>
+          <p className="mb-4 text-left text-[0.9rem] text-muted-foreground">{lesson.subtitle}</p>
+          <div className="mb-6 rounded-xl bg-background p-4 text-left text-[0.9rem] leading-relaxed">
             {lesson.intro}
           </div>
-          <WordList lesson={lesson} playLineAudio={playLineAudio} />
+          <WordList lesson={lesson} />
           {lesson.grammar.length > 0 && (
-            <div style={{ textAlign: "left", marginBottom: "32px" }}>
-              <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>{t("learn.targetGrammar")}</h4>
+            <div className="mb-8 text-left">
+              <h4 className="mb-2.5 text-[0.9rem] font-bold uppercase text-muted-foreground">{t("learn.targetGrammar")}</h4>
               {lesson.grammar.map((gp) => (
-                <div key={gp.id} style={{ marginBottom: "12px" }}>
-                  <div style={{ fontWeight: 700, color: "var(--primary-red)" }}>{gp.pattern}</div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>{gp.explanation}</p>
+                <div key={gp.id} className="mb-3">
+                  <div className="font-bold text-primary">{gp.pattern}</div>
+                  <p className="mt-0.5 text-[0.85rem] text-muted-foreground">{gp.explanation}</p>
                 </div>
               ))}
             </div>
           )}
-          <button className="btn btn-primary" onClick={handleStart} style={{ width: "100%" }}>{t("learn.start")}</button>
+          <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={handleStart}>{t("learn.start")}</button>
         </div>
       )}
 
       {stage === "dialogue" && lesson.dialogue && (
         <div className="anim-slide">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, textAlign: "left" }}>{t("learn.dialogue")} {lesson.dialogue.title}</h3>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button onClick={() => setShowPinyin(!showPinyin)} style={{ background: "none", border: "none", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", color: showPinyin ? "var(--primary-red)" : "var(--text-muted)" }}>
+          <div className="mb-[18px] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-left text-[1.2rem] font-extrabold">{t("learn.dialogue")} {lesson.dialogue.title}</h3>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={() => setShowPinyin(!showPinyin)} className={cn("flex items-center gap-1 text-xs font-semibold", showPinyin ? "text-primary" : "text-muted-foreground")}>
                 {t("learn.pinyin")} {showPinyin ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
               </button>
-              <button onClick={() => setShowTranslation(!showTranslation)} style={{ background: "none", border: "none", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", color: showTranslation ? "var(--primary-red)" : "var(--text-muted)" }}>
+              <button onClick={() => setShowTranslation(!showTranslation)} className={cn("flex items-center gap-1 text-xs font-semibold", showTranslation ? "text-primary" : "text-muted-foreground")}>
                 {t("learn.english")} {showTranslation ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
               </button>
             </div>
           </div>
-          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "left", marginBottom: "20px" }}>{t("learn.scenario")} {lesson.dialogue.scenario}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", maxHeight: "360px", overflowY: "auto", padding: "10px" }}>
+          <p className="mb-5 text-left text-[0.8rem] italic text-muted-foreground">{t("learn.scenario")} {lesson.dialogue.scenario}</p>
+          <div className="mb-8 flex max-h-[360px] flex-col gap-4 overflow-y-auto p-2.5">
             {lesson.dialogue.lines.map((line) => (
-              <div key={line.id} onClick={() => playLineAudio(line.simplified)} style={{ alignSelf: line.isUser ? "flex-end" : "flex-start", maxWidth: "80%", padding: "12px 16px", borderRadius: "16px", borderTopLeftRadius: line.isUser ? "16px" : "4px", borderTopRightRadius: line.isUser ? "4px" : "16px", backgroundColor: line.isUser ? "rgba(217, 63, 71, 0.08)" : "var(--bg-card-hover)", border: "1px solid var(--border-color)", cursor: "pointer", textAlign: "left" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)" }}>{line.speaker}</span>
-                  <Volume2 size={12} style={{ color: "var(--text-muted)" }} />
+              <div key={line.id} onClick={() => speakChinese(line.simplified)} className={cn("max-w-[88%] cursor-pointer border p-3 text-left sm:max-w-[80%] sm:px-4", line.isUser ? "self-end rounded-2xl rounded-tr bg-primary/10" : "self-start rounded-2xl rounded-tl bg-secondary")}>
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[0.7rem] font-extrabold text-muted-foreground">{line.speaker}</span>
+                  <Volume2 size={12} className="text-muted-foreground" />
                 </div>
-                <h3 className="hanzi-text" style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-main)" }}>{line.simplified}</h3>
-                {showPinyin && <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "2px" }}>{line.pinyin}</div>}
-                {showTranslation && <p style={{ fontSize: "0.85rem", color: "var(--text-main)", borderTop: "1px solid rgba(0,0,0,0.04)", paddingTop: "4px", marginTop: "6px" }}>{line.english}</p>}
+                <h3 className="font-serif text-[1.45rem] font-bold">{line.simplified}</h3>
+                {showPinyin && <div className="mt-0.5 text-[0.85rem] text-muted-foreground">{line.pinyin}</div>}
+                {showTranslation && <p className="mt-1.5 border-t border-black/5 pt-1 text-[0.85rem]">{line.english}</p>}
               </div>
             ))}
           </div>
-          <button className="btn btn-primary" onClick={() => { setStage("exercises"); initExerciseState(); }} style={{ width: "100%" }}>{t("learn.exercises")}</button>
+          <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => { setStage("exercises"); initExerciseState(); }}>{t("learn.exercises")}</button>
         </div>
       )}
 
       {stage === "exercises" && currentExercise && (
         <div className="anim-slide">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
-            <span style={{ fontSize: "0.8rem", color: "var(--jade)", fontWeight: 700 }}>{t("learn.score", { count: correctAnswersCount })}</span>
+          <div className="mb-[18px] flex items-center justify-between gap-3">
+            <span className="text-[0.8rem] font-bold text-muted-foreground">{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
+            <span className="text-[0.8rem] font-bold text-jade">{t("learn.score", { count: correctAnswersCount })}</span>
           </div>
-          <div className="card" style={{ marginBottom: "24px", textAlign: "center", padding: "30px 20px" }}>
-            <h4 style={{ fontSize: "1rem", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "12px" }}>{currentExercise.kind}</h4>
+          <div className="mb-6 rounded-lg border bg-card px-5 py-[30px] text-center shadow-sm">
+            <h4 className="mb-3 text-base uppercase text-muted-foreground">{currentExercise.kind}</h4>
             {currentExercise.kind === "listening" && (
-              <button className="btn btn-secondary" onClick={() => playLineAudio(currentExercise.correctText)} style={{ padding: "16px 24px", borderRadius: "50%", width: "80px", height: "80px", marginBottom: "20px" }}>
+              <button className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" onClick={() => speakChinese(currentExercise.correctText)}>
                 <Volume2 size={36} />
               </button>
             )}
-            {currentExercise.promptHanzi && <h2 className="hanzi-text" style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--primary-red)", marginBottom: "8px" }}>{currentExercise.promptHanzi}</h2>}
-            {currentExercise.promptPinyin && <p style={{ fontSize: "1rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "8px" }}>{currentExercise.promptPinyin}</p>}
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700 }}>{currentExercise.prompt}</h3>
+            {currentExercise.promptHanzi && <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">{currentExercise.promptHanzi}</h2>}
+            {currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
+            <h3 className="text-[1.2rem] font-bold">{currentExercise.prompt}</h3>
           </div>
-          <div style={{ display: "grid", gap: "10px", marginBottom: "28px" }}>
+          <div className="mb-7 grid gap-2.5">
             {currentExercise.kind === "arrangeSentence" ? (
               <ArrangeExercise options={currentExercise.options || []} arrangedWords={arrangedWords} isAnswerChecked={isAnswerChecked} onToggle={handleWordArrangeToggle} />
             ) : (
               (currentExercise.options || []).map((option, idx) => {
                 const isSelected = selectedOptionIdx === idx;
-                let borderCol = isSelected ? "var(--primary-red)" : "var(--border-color)";
-                let bgCol = isSelected ? "rgba(217, 63, 71, 0.04)" : "var(--bg-card)";
-                let txtCol = "var(--text-main)";
+                let stateClass = isSelected ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-foreground";
                 if (isAnswerChecked) {
                   if (idx === currentExercise.correctIndex) {
-                    borderCol = "var(--jade)";
-                    bgCol = "rgba(16, 185, 129, 0.08)";
-                    txtCol = "var(--jade)";
+                    stateClass = "border-jade bg-jade/10 text-jade";
                   } else if (isSelected) {
-                    borderCol = "var(--primary-red)";
-                    bgCol = "rgba(239, 68, 68, 0.08)";
-                    txtCol = "var(--primary-red)";
+                    stateClass = "border-primary bg-tone-4/10 text-primary";
                   }
                 }
                 return (
-                  <button key={idx} disabled={isAnswerChecked} onClick={() => setSelectedOptionIdx(idx)} style={{ padding: "16px 20px", borderRadius: "14px", border: `2px solid ${borderCol}`, backgroundColor: bgCol, color: txtCol, fontSize: "1rem", fontWeight: 600, cursor: isAnswerChecked ? "default" : "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <button key={idx} disabled={isAnswerChecked} onClick={() => setSelectedOptionIdx(idx)} className={cn("flex items-center justify-between rounded-[14px] border-2 px-5 py-4 text-left text-base font-semibold", isAnswerChecked ? "cursor-default" : "cursor-pointer", stateClass)}>
                     <span>{option}</span>
                     {isAnswerChecked && idx === currentExercise.correctIndex && <CheckCircle2 size={18} />}
                     {isAnswerChecked && isSelected && idx !== currentExercise.correctIndex && <XCircle size={18} />}
@@ -299,15 +287,15 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
             )}
           </div>
           {isAnswerChecked && (
-            <div className="anim-pop" style={{ padding: "16px", borderRadius: "12px", backgroundColor: "var(--bg-card-hover)", border: "1px solid var(--border-color)", marginBottom: "24px", textAlign: "left" }}>
-              <h5 style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "4px" }}>{t("learn.correctMatch")}</h5>
-              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}><strong>{currentExercise.correctText}</strong></p>
+            <div className="anim-pop mb-6 rounded-xl border bg-secondary p-4 text-left">
+              <h5 className="mb-1 font-bold">{t("learn.correctMatch")}</h5>
+              <p className="text-[0.85rem] text-muted-foreground"><strong>{currentExercise.correctText}</strong></p>
             </div>
           )}
           {!isAnswerChecked ? (
-            <button className="btn btn-primary" disabled={selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence"} onClick={handleCheckAnswer} style={{ width: "100%" }}>{t("learn.check")}</button>
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" disabled={selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence"} onClick={handleCheckAnswer}>{t("learn.check")}</button>
           ) : (
-            <button className="btn btn-primary" onClick={handleNextExercise} disabled={completeLessonMutation.isPending} style={{ width: "100%", backgroundColor: "var(--jade)", backgroundImage: "none", boxShadow: "none" }}>
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-jade px-6 py-3 text-sm font-semibold text-white transition hover:bg-jade/90 disabled:opacity-60" onClick={handleNextExercise} disabled={completeLessonMutation.isPending}>
               {exerciseIdx + 1 === lesson.exercises.length ? t("learn.finish") : t("learn.nextQuestion")}
             </button>
           )}
@@ -315,41 +303,41 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
       )}
 
       {stage === "completed" && (
-        <div className="anim-slide" style={{ textAlign: "center", padding: "20px 0" }}>
-          <Award size={72} style={{ color: "var(--gold)", marginBottom: "16px" }} />
-          <h2 style={{ fontSize: "1.8rem", fontWeight: 800 }}>{t("learn.completed")}</h2>
-          <p style={{ color: "var(--text-muted)", margin: "8px 0 24px" }}>{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", maxWidth: "320px", margin: "0 auto 36px" }}>
-            <div className="card" style={{ padding: "16px 8px" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.xpReward")}</span>
-              <h3 style={{ fontSize: "1.5rem", color: "var(--gold)", fontWeight: 800, marginTop: "4px" }}>+{lesson.xpReward}</h3>
+        <div className="anim-slide py-5 text-center">
+          <Award size={72} className="mx-auto mb-4 text-gold" />
+          <h2 className="text-3xl font-extrabold">{t("learn.completed")}</h2>
+          <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
+          <div className="mx-auto mb-9 grid max-w-80 grid-cols-2 gap-4">
+            <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
+              <span className="text-xs font-bold text-muted-foreground">{t("learn.xpReward")}</span>
+              <h3 className="mt-1 text-2xl font-extrabold text-gold">+{lesson.xpReward}</h3>
             </div>
-            <div className="card" style={{ padding: "16px 8px" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>{t("learn.accuracy")}</span>
-              <h3 style={{ fontSize: "1.5rem", color: "var(--jade)", fontWeight: 800, marginTop: "4px" }}>{finalAccuracy}%</h3>
+            <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
+              <span className="text-xs font-bold text-muted-foreground">{t("learn.accuracy")}</span>
+              <h3 className="mt-1 text-2xl font-extrabold text-jade">{finalAccuracy}%</h3>
             </div>
           </div>
-          <WordList lesson={lesson} playLineAudio={playLineAudio} compact />
-          <button className="btn btn-primary" onClick={onClose} style={{ maxWidth: "240px", width: "100%", marginTop: "24px" }}>{t("learn.backPath")}</button>
+          <WordList lesson={lesson} compact />
+          <button className="mt-6 inline-flex w-full max-w-60 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={onClose}>{t("learn.backPath")}</button>
         </div>
       )}
     </div>
   );
 }
 
-function WordList({ lesson, playLineAudio, compact = false }: { lesson: LessonDetail; playLineAudio: (text: string) => void; compact?: boolean }) {
+function WordList({ lesson, compact = false }: { lesson: LessonDetail; compact?: boolean }) {
   const { t } = useI18n();
   return (
-    <div style={{ textAlign: "left", marginBottom: compact ? 0 : "24px" }}>
-      <h4 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "10px" }}>
+    <div className={cn("text-left", !compact && "mb-6")}>
+      <h4 className="mb-2.5 text-[0.9rem] font-bold uppercase text-muted-foreground">
         {compact ? t("learn.srsWords") : t("learn.newWords")}
       </h4>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: compact ? "center" : "flex-start" }}>
+      <div className={cn("flex flex-wrap gap-2.5", compact ? "justify-center" : "justify-start")}>
         {lesson.newWords.map((word) => (
-          <button key={word.id} onClick={() => playLineAudio(word.simplified)} style={{ padding: "8px 12px", borderRadius: "10px", backgroundColor: "var(--bg-card-hover)", border: "1px solid var(--border-color)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span className="hanzi-text" style={{ fontSize: "1.1rem", fontWeight: 700 }}>{word.simplified}</span>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>({word.pinyin})</span>
-            <Volume2 size={12} className="tone-t1" />
+          <button key={word.id} onClick={() => speakChinese(word.simplified)} className="flex items-center gap-1.5 rounded-[10px] border bg-secondary px-3 py-2">
+            <span className="font-serif text-[1.1rem] font-bold">{word.simplified}</span>
+            <span className="text-xs text-muted-foreground">({word.pinyin})</span>
+            <Volume2 size={12} className="text-tone-1" />
           </button>
         ))}
       </div>
@@ -359,19 +347,19 @@ function WordList({ lesson, playLineAudio, compact = false }: { lesson: LessonDe
 
 function ArrangeExercise({ options, arrangedWords, isAnswerChecked, onToggle }: { options: string[]; arrangedWords: string[]; isAnswerChecked: boolean; onToggle: (word: string) => void }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <div style={{ padding: "16px", borderRadius: "12px", minHeight: "56px", border: "2px dashed var(--border-color)", backgroundColor: "var(--bg-app)", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
+    <div className="flex flex-col gap-4">
+      <div className="flex min-h-14 flex-wrap justify-center gap-2 rounded-xl border-2 border-dashed bg-background p-4">
         {arrangedWords.map((word, i) => (
-          <button key={`${word}-${i}`} onClick={() => onToggle(word)} className="hanzi-text anim-pop" style={{ padding: "6px 12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "8px", fontSize: "1.25rem", fontWeight: 700, cursor: "pointer" }}>
+          <button key={`${word}-${i}`} onClick={() => onToggle(word)} className="anim-pop rounded-lg border bg-card px-3 py-1.5 font-serif text-xl font-bold">
             {word}
           </button>
         ))}
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
+      <div className="flex flex-wrap justify-center gap-2.5">
         {options.map((word, idx) => {
           const isSelected = arrangedWords.includes(word);
           return (
-            <button key={`${word}-${idx}`} disabled={isSelected || isAnswerChecked} onClick={() => onToggle(word)} className="hanzi-text" style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: isSelected ? "transparent" : "var(--bg-card)", color: isSelected ? "transparent" : "var(--text-main)", fontSize: "1.25rem", fontWeight: 700, cursor: isSelected ? "default" : "pointer", opacity: isSelected ? 0.25 : 1 }}>
+            <button key={`${word}-${idx}`} disabled={isSelected || isAnswerChecked} onClick={() => onToggle(word)} className={cn("rounded-[10px] border px-4 py-2 font-serif text-xl font-bold", isSelected ? "cursor-default bg-transparent text-transparent opacity-25" : "bg-card text-foreground")}>
               {word}
             </button>
           );

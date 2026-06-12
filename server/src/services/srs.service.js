@@ -200,3 +200,8 @@ export const reviewCard = async (userId, { wordId, quality }) => {
     };
   });
 };
+
+export const __private__ = {
+  calculateReview,
+  masteryFromInterval
+};

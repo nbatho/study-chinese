@@ -131,9 +131,21 @@ Tất cả endpoint chính nằm dưới `/api/v1`.
 | `GET/POST` | `/api/v1/srs/*` | Ôn tập SRS |
 | `GET/POST` | `/api/v1/practice/*` | Bộ công cụ luyện tập |
 | `POST` | `/api/v1/ocr/scan` | OCR demo/mapping từ |
-| `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor mock/demo |
+| `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor mock hoặc provider thật |
 
 Các alias cũ `/api/health`, `/api/words`, `/api/profile`, `/api-docs` vẫn còn redirect để tương thích local cũ.
+
+## AI Tutor Provider
+
+Mặc định server dùng `AI_PROVIDER=mock`. Để dùng provider thật, cập nhật `server/.env`:
+
+```text
+AI_PROVIDER=gemini
+GEMINI_API_KEY=...
+AI_MODEL=gemini-2.5-flash
+```
+
+Các provider hỗ trợ: `gemini`, `openai`, `groq`, `openai-compatible`. Có thể dùng `AI_BASE_URL` cho endpoint OpenAI-compatible riêng. Server có timeout/retry, log token/cost và lưu `token_usage` vào `chat_messages`.
 
 ## Bảo Mật Và Secrets
 

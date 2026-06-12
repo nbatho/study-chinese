@@ -28,7 +28,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="glass-panel fixed inset-x-0 bottom-0 z-[900] flex h-[72px] items-center justify-around border-x-0 border-b-0 border-t px-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <nav className="fixed inset-x-0 bottom-0 z-[900] flex h-[72px] items-center justify-around border-t bg-card/90 px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-xl sm:px-3 lg:left-1/2 lg:max-w-3xl lg:-translate-x-1/2 lg:rounded-t-lg lg:border-x">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -39,12 +39,12 @@ export default function Navigation() {
             size="sm"
             onClick={() => navigate(`/${tab.id}`)}
             className={cn(
-              "relative h-auto flex-col gap-1 rounded-lg px-3 py-2 text-xs",
+              "relative h-auto min-w-0 flex-1 flex-col gap-1 rounded-lg px-1.5 py-2 text-[0.68rem] sm:px-3 sm:text-xs",
               isActive ? "text-primary hover:text-primary" : "text-muted-foreground",
             )}
           >
             <Icon className={cn("transition-transform", isActive ? "size-[22px] scale-110" : "size-5")} />
-            <span>{tab.label}</span>
+            <span className="max-w-full truncate">{tab.label}</span>
             {!!tab.badge && tab.badge > 0 && (
               <Badge className="absolute right-3 top-1 flex size-4 items-center justify-center rounded-full p-0 text-[0.65rem] font-bold">
                 {tab.badge}

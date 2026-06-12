@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice";
 import { useI18n } from "../i18n";
+import { cn } from "../utils/cn";
 
 export default function Onboarding() {
   const dispatch = useAppDispatch();
@@ -73,75 +74,45 @@ export default function Onboarding() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px",
-      background: "linear-gradient(135deg, var(--bg-app), rgba(217, 63, 71, 0.05))",
-    }}>
-      <div className="card anim-pop" style={{
-        maxWidth: "480px",
-        width: "100%",
-        padding: "36px",
-        borderRadius: "24px",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.06)",
-      }}>
-        <div style={{ display: "flex", gap: "6px", marginBottom: "32px" }}>
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,var(--bg-app),rgba(217,63,71,0.05))] p-4 sm:p-6">
+      <div className="anim-pop w-full max-w-[480px] rounded-3xl border bg-card p-5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] sm:p-9">
+        <div className="mb-8 flex gap-1.5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} style={{
-              flex: 1,
-              height: "6px",
-              borderRadius: "3px",
-              backgroundColor: i <= step ? "var(--primary-red)" : "var(--border-color)",
-              transition: "var(--transition-smooth)",
-            }} />
+            <div key={i} className={cn("h-1.5 flex-1 rounded-[3px] transition", i <= step ? "bg-primary" : "bg-border")} />
           ))}
         </div>
 
         {step === 1 && (
           <div className="anim-slide">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <Sparkles className="tone-t1" size={24} />
-              <h2 style={{ fontSize: "1.7rem" }}>{t("onboarding.welcome")}</h2>
+            <div className="mb-3 flex items-center gap-2">
+              <Sparkles className="text-tone-1" size={24} />
+              <h2 className="text-2xl sm:text-[1.7rem]">{t("onboarding.welcome")}</h2>
             </div>
-            <p style={{ color: "var(--text-muted)", marginBottom: "28px" }}>
+            <p className="mb-7 text-muted-foreground">
               {t("onboarding.welcomeBody")}
             </p>
-            <div style={{ marginBottom: "32px" }}>
-              <label style={{ display: "block", fontWeight: 600, fontSize: "0.9rem", marginBottom: "8px" }}>{t("onboarding.yourName")}</label>
+            <div className="mb-8">
+              <label className="mb-2 block text-[0.9rem] font-semibold">{t("onboarding.yourName")}</label>
               <input
                 type="text"
                 placeholder={t("onboarding.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "14px 18px",
-                  borderRadius: "12px",
-                  border: "2px solid var(--border-color)",
-                  backgroundColor: "var(--bg-app)",
-                  color: "var(--text-main)",
-                  fontSize: "1rem",
-                  fontWeight: 500,
-                  outline: "none",
-                  transition: "var(--transition-smooth)",
-                }}
-                onFocus={(e) => e.target.style.borderColor = "var(--primary-red)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--border-color)"}
+                className="w-full rounded-xl border-2 bg-background px-[18px] py-3.5 text-base font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontWeight: 600, fontSize: "0.9rem", marginBottom: "12px" }}>{t("onboarding.avatar")}</label>
-              <div className="avatar-select-grid">
+            <div className="mb-6">
+              <label className="mb-3 block text-[0.9rem] font-semibold">{t("onboarding.avatar")}</label>
+              <div className="grid grid-cols-5 gap-2 sm:grid-cols-4 sm:gap-3">
                 {avatars.map((av) => (
                   <button
                     key={av}
                     onClick={() => setSelectedAvatar(av)}
-                    className={`avatar-option ${selectedAvatar === av ? "selected" : ""}`}
-                    style={{ border: "none" }}
+                    className={cn(
+                      "rounded-lg border-2 border-transparent bg-secondary p-2 text-center text-3xl transition hover:scale-105 sm:p-3 sm:text-4xl",
+                      selectedAvatar === av && "border-primary bg-primary/10",
+                    )}
                   >
                     {av}
                   </button>
@@ -153,34 +124,27 @@ export default function Onboarding() {
 
         {step === 2 && (
           <div className="anim-slide">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <BookOpen className="tone-t2" size={24} />
-              <h2 style={{ fontSize: "1.7rem" }}>{t("onboarding.levelTitle")}</h2>
+            <div className="mb-3 flex items-center gap-2">
+              <BookOpen className="text-tone-2" size={24} />
+              <h2 className="text-2xl sm:text-[1.7rem]">{t("onboarding.levelTitle")}</h2>
             </div>
-            <p style={{ color: "var(--text-muted)", marginBottom: "28px" }}>
+            <p className="mb-7 text-muted-foreground">
               {t("onboarding.levelBody")}
             </p>
-            <div style={{ display: "grid", gap: "12px", marginBottom: "32px" }}>
+            <div className="mb-8 grid gap-3">
               {levels.map((lvl) => (
                 <div
                   key={lvl.id}
                   onClick={() => setSelectedLevel(lvl.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    padding: "16px",
-                    borderRadius: "14px",
-                    border: `2px solid ${selectedLevel === lvl.id ? "var(--primary-red)" : "var(--border-color)"}`,
-                    backgroundColor: selectedLevel === lvl.id ? "rgba(217, 63, 71, 0.04)" : "var(--bg-card)",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)",
-                  }}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-4 rounded-[14px] border-2 bg-card p-4 transition",
+                    selectedLevel === lvl.id ? "border-primary bg-primary/5" : "border-border",
+                  )}
                 >
-                  <span style={{ fontSize: "1.8rem" }}>{lvl.emoji}</span>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: 700, color: "var(--text-main)" }}>{lvl.title}</div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{lvl.sub}</div>
+                  <span className="text-[1.8rem]">{lvl.emoji}</span>
+                  <div className="text-left">
+                    <div className="font-bold">{lvl.title}</div>
+                    <div className="text-[0.8rem] text-muted-foreground">{lvl.sub}</div>
                   </div>
                 </div>
               ))}
@@ -190,34 +154,26 @@ export default function Onboarding() {
 
         {step === 3 && (
           <div className="anim-slide">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-              <Target className="tone-t3" size={24} />
-              <h2 style={{ fontSize: "1.7rem" }}>{t("onboarding.goalTitle")}</h2>
+            <div className="mb-3 flex items-center gap-2">
+              <Target className="text-tone-3" size={24} />
+              <h2 className="text-2xl sm:text-[1.7rem]">{t("onboarding.goalTitle")}</h2>
             </div>
-            <p style={{ color: "var(--text-muted)", marginBottom: "28px" }}>
+            <p className="mb-7 text-muted-foreground">
               {t("onboarding.goalBody")}
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "32px" }}>
+            <div className="mb-8 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
               {goals.map((goal) => (
                 <div
                   key={goal.id}
                   onClick={() => setSelectedGoal(goal.id)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    padding: "16px",
-                    borderRadius: "14px",
-                    border: `2px solid ${selectedGoal === goal.id ? "var(--primary-red)" : "var(--border-color)"}`,
-                    backgroundColor: selectedGoal === goal.id ? "rgba(217, 63, 71, 0.04)" : "var(--bg-card)",
-                    cursor: "pointer",
-                    transition: "var(--transition-smooth)",
-                    textAlign: "left",
-                  }}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-start rounded-[14px] border-2 bg-card p-4 text-left transition",
+                    selectedGoal === goal.id ? "border-primary bg-primary/5" : "border-border",
+                  )}
                 >
-                  <span style={{ fontSize: "1.6rem", marginBottom: "8px" }}>{goal.emoji}</span>
-                  <div style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>{goal.title}</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>{goal.desc}</div>
+                  <span className="mb-2 text-[1.6rem]">{goal.emoji}</span>
+                  <div className="text-[0.95rem] font-bold">{goal.title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{goal.desc}</div>
                 </div>
               ))}
             </div>
@@ -225,38 +181,29 @@ export default function Onboarding() {
         )}
 
         {step === 4 && (
-          <div className="anim-slide" style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "4.5rem", marginBottom: "16px" }}>{selectedAvatar}</div>
-            <h2 style={{ fontSize: "1.8rem", marginBottom: "8px" }}>
+          <div className="anim-slide text-center">
+            <div className="mb-4 text-7xl">{selectedAvatar}</div>
+            <h2 className="mb-2 text-3xl">
               {t("onboarding.ready", { name: name || t("common.learner") })}
             </h2>
-            <p style={{ color: "var(--text-muted)", marginBottom: "32px", fontSize: "0.95rem" }}>
-              {t("common.level")}: <strong style={{ color: "var(--text-main)" }}>{selectedLevel.toUpperCase()}</strong> · {t("common.goal")}: <strong style={{ color: "var(--text-main)" }}>{selectedGoal.toUpperCase()}</strong>
+            <p className="mb-8 text-[0.95rem] text-muted-foreground">
+              {t("common.level")}: <strong className="text-foreground">{selectedLevel.toUpperCase()}</strong> · {t("common.goal")}: <strong className="text-foreground">{selectedGoal.toUpperCase()}</strong>
               <br />
               {t("onboarding.readyBody")}
             </p>
-            <div style={{
-              padding: "16px 20px",
-              borderRadius: "12px",
-              backgroundColor: "rgba(16, 185, 129, 0.08)",
-              border: "1px dashed var(--jade)",
-              color: "var(--jade)",
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              marginBottom: "36px",
-            }}>
+            <div className="mb-9 rounded-xl border border-dashed border-jade bg-jade/10 px-5 py-4 text-[0.9rem] font-semibold text-jade">
               {t("onboarding.seed")}
             </div>
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "12px", justifyContent: step > 1 ? "space-between" : "flex-end" }}>
+        <div className={cn("flex gap-3", step > 1 ? "justify-between" : "justify-end")}>
           {step > 1 && (
-            <button className="btn btn-secondary" onClick={handleBack} style={{ flex: 1 }}>
+            <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent" onClick={handleBack}>
               {t("common.back")}
             </button>
           )}
-          <button className="btn btn-primary" onClick={handleNext} disabled={updateProfileMutation.isPending || addActivityMutation.isPending} style={{ flex: step > 1 ? 1 : 0 }}>
+          <button className={cn("inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground", step > 1 && "flex-1")} onClick={handleNext} disabled={updateProfileMutation.isPending || addActivityMutation.isPending}>
             {updateProfileMutation.isPending || addActivityMutation.isPending ? t("common.saving") : step === 4 ? t("onboarding.letsGo") : t("common.continue")}
             {step < 4 && <ArrowRight size={18} />}
           </button>

@@ -22,6 +22,18 @@ export const env = {
   ),
 
   AI_PROVIDER: process.env.AI_PROVIDER || 'mock',
+  AI_MODEL: process.env.AI_MODEL,
+  AI_API_KEY: process.env.AI_API_KEY,
+  AI_BASE_URL: process.env.AI_BASE_URL,
+  AI_TIMEOUT_MS: Number(process.env.AI_TIMEOUT_MS || 12000),
+  AI_RETRY_ATTEMPTS: Number(process.env.AI_RETRY_ATTEMPTS || 1),
+  AI_RETRY_DELAY_MS: Number(process.env.AI_RETRY_DELAY_MS || 400),
+  AI_FALLBACK_TO_MOCK: process.env.AI_FALLBACK_TO_MOCK !== 'false',
+  AI_INPUT_COST_PER_1M_TOKENS: Number(process.env.AI_INPUT_COST_PER_1M_TOKENS || 0),
+  AI_OUTPUT_COST_PER_1M_TOKENS: Number(process.env.AI_OUTPUT_COST_PER_1M_TOKENS || 0),
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
   OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock'
 };
 

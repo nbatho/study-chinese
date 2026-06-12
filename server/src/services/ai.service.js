@@ -1,7 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
-import { env } from '../config/env.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
+import { getAiTutorReply } from './ai-provider.service.js';
 
 const mapScenario = (row) => ({
   id: row.id,
@@ -23,29 +23,6 @@ const mapMessage = (row) => ({
   english: row.english,
   correction: row.correction
 });
-
-const createTutorReply = (text) => {
-  const hasLatinOnly = /[a-z]/i.test(text) && !/[\u3400-\u9fff]/.test(text);
-  const wantsTea = /茶|cha|tea/i.test(text);
-
-  return {
-    rawText: wantsTea ? '好的，您想喝热茶还是冰茶？' : '很好！请再用一句中文回答我。',
-    pinyin: wantsTea
-      ? 'Hǎo de, nín xiǎng hē rè chá háishì bīng chá?'
-      : 'Hěn hǎo! Qǐng zài yòng yī jù Zhōngwén huídá wǒ.',
-    english: wantsTea
-      ? 'Sure, would you like hot tea or iced tea?'
-      : 'Good! Please answer me with one more Chinese sentence.',
-    correction: hasLatinOnly
-      ? {
-          original: text,
-          improved: 'Hãy thử viết bằng Hán tự hoặc pinyin có dấu.',
-          explanation:
-            'Tin nhắn đang dùng pinyin/Latin không dấu. Khi luyện giao tiếp, hãy thêm dấu thanh hoặc thử viết bằng chữ Hán để AI sửa chính xác hơn.'
-        }
-      : null
-  };
-};
 
 export const getChatScenarios = async () => {
   const result = await query(
@@ -124,13 +101,19 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     throw badRequest('text không được để trống.');
   }
 
-  return withTransaction(async (client) => {
+  const userText = text.trim();
+  const context = await withTransaction(async (client) => {
     const sessionResult = await client.query(
       `
-        SELECT id
-        FROM chat_sessions
-        WHERE id = $1 AND user_id = $2
-        FOR UPDATE
+        SELECT
+          s.id,
+          cs.id AS scenario_id,
+          cs.title AS scenario_title,
+          cs.description AS scenario_description
+        FROM chat_sessions s
+        LEFT JOIN chat_scenarios cs ON cs.id = s.scenario_id
+        WHERE s.id = $1 AND s.user_id = $2
+        FOR UPDATE OF s
       `,
       [sessionId, userId]
     );
@@ -145,10 +128,44 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
         VALUES ($1, 'user', $2, $2)
         RETURNING *
       `,
-      [sessionId, text.trim()]
+      [sessionId, userText]
     );
 
-    const reply = createTutorReply(text.trim());
+    const historyResult = await client.query(
+      `
+        SELECT *
+        FROM (
+          SELECT *
+          FROM chat_messages
+          WHERE session_id = $1
+          ORDER BY created_at DESC
+          LIMIT 10
+        ) recent_messages
+        ORDER BY created_at ASC
+      `,
+      [sessionId]
+    );
+
+    return {
+      userMessage: mapMessage(userMessageResult.rows[0]),
+      scenario: sessionResult.rows[0].scenario_id
+        ? {
+            id: sessionResult.rows[0].scenario_id,
+            title: sessionResult.rows[0].scenario_title,
+            description: sessionResult.rows[0].scenario_description
+          }
+        : null,
+      messages: historyResult.rows
+    };
+  });
+
+  const reply = await getAiTutorReply({
+    scenario: context.scenario,
+    messages: context.messages,
+    userText
+  });
+
+  return withTransaction(async (client) => {
     const tutorMessageResult = await client.query(
       `
         INSERT INTO chat_messages (
@@ -159,9 +176,10 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
           pinyin,
           english,
           correction,
-          model_name
+          model_name,
+          token_usage
         )
-        VALUES ($1, 'tutor', $2, $2, $3, $4, $5, $6)
+        VALUES ($1, 'tutor', $2, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `,
       [
@@ -170,7 +188,8 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
         reply.pinyin,
         reply.english,
         reply.correction ? JSON.stringify(reply.correction) : null,
-        env.AI_PROVIDER
+        reply.modelName,
+        reply.tokenUsage ? JSON.stringify(reply.tokenUsage) : null
       ]
     );
 
@@ -181,7 +200,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     });
 
     return {
-      userMessage: mapMessage(userMessageResult.rows[0]),
+      userMessage: context.userMessage,
       tutorMessage: mapMessage(tutorMessageResult.rows[0]),
       xpEarned: 10,
       todayStats: {

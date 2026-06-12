@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navigation from "./components/Navigation";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { useUserProfileQuery } from "./api/users/queries";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setAppearance, setOnboardingCompleted } from "./store/modules/appSlice";
@@ -51,9 +52,11 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
-      <main className="main-content">
-        <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
+    <div className="flex min-h-screen flex-col">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-4 sm:pt-6 lg:max-w-5xl lg:px-6">
+        <ErrorBoundary resetKey={location.pathname}>
+          <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
+        </ErrorBoundary>
       </main>
 
       <Navigation />

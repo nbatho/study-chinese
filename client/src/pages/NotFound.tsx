@@ -7,107 +7,34 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div
-      className="anim-slide"
-      style={{
-        minHeight: "calc(100vh - 140px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px 0 40px",
-      }}
-    >
-      <section
-        className="card card-gradient-red"
-        style={{
-          width: "100%",
-          maxWidth: "560px",
-          textAlign: "center",
-          padding: "32px 24px",
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: "auto -32px -48px auto",
-            fontFamily: "var(--font-serif)",
-            fontSize: "8rem",
-            color: "rgba(217, 63, 71, 0.08)",
-            lineHeight: 1,
-            pointerEvents: "none",
-          }}
-        >
+    <div className="anim-slide flex min-h-[calc(100vh-140px)] items-center justify-center px-0 pb-10 pt-4">
+      <section className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,rgba(217,63,71,0.15),rgba(242,89,82,0.05))] px-6 py-8 text-center shadow-sm">
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-12 -right-8 font-serif text-9xl leading-none text-primary/10">
           404
         </div>
 
-        <div
-          style={{
-            width: "76px",
-            height: "76px",
-            borderRadius: "20px",
-            margin: "0 auto 20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(217, 63, 71, 0.1)",
-            border: "1px solid rgba(217, 63, 71, 0.18)",
-            color: "var(--primary-red)",
-          }}
-        >
+        <div className="mx-auto mb-5 flex size-[76px] items-center justify-center rounded-[20px] border border-primary/20 bg-primary/10 text-primary">
           <SearchX size={38} />
         </div>
 
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 10px",
-            borderRadius: "999px",
-            backgroundColor: "var(--bg-card)",
-            border: "1px solid var(--border-color)",
-            color: "var(--text-muted)",
-            fontSize: "0.78rem",
-            fontWeight: 700,
-            marginBottom: "14px",
-          }}
-        >
+        <span className="mb-3.5 inline-flex items-center gap-2 rounded-full border bg-card px-2.5 py-1.5 text-[0.78rem] font-bold text-muted-foreground">
           <BookOpen size={14} />
           {t("notFound.badge")}
         </span>
 
-        <h1 style={{ fontSize: "2rem", marginBottom: "10px" }}>
+        <h1 className="mb-2.5 text-3xl">
           {t("notFound.title")}
         </h1>
-        <p
-          style={{
-            color: "var(--text-muted)",
-            fontSize: "0.95rem",
-            maxWidth: "420px",
-            margin: "0 auto 28px",
-          }}
-        >
+        <p className="mx-auto mb-7 max-w-[420px] text-[0.95rem] text-muted-foreground">
           {t("notFound.body")}
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+        <div className="relative z-[1] flex flex-wrap justify-center gap-3">
+          <button className="inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent" onClick={() => navigate(-1)}>
             <ArrowLeft size={18} />
             {t("notFound.goBack")}
           </button>
-          <button className="btn btn-primary" onClick={() => navigate("/home", { replace: true })}>
+          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => navigate("/home", { replace: true })}>
             <Home size={18} />
             {t("notFound.backHome")}
           </button>

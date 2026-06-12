@@ -20,9 +20,10 @@ import {
   Sparkles,
   Star,
   Trophy,
-  Volume2,
 } from "lucide-react";
 import { useI18n } from "../i18n";
+import { cn } from "../utils/cn";
+import TtsButton from "../components/TtsButton";
 
 export default function Home() {
   const { t } = useI18n();
@@ -60,102 +61,83 @@ export default function Home() {
   const xpTarget = Math.max((profile?.dailyMinutes ?? 15) * 3, 45);
   const xpProgress = Math.min(todayStat.xp, xpTarget);
 
-  const playTTS = (text: string) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   return (
-    <div className="anim-slide" style={{ paddingBottom: "32px" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{
-            fontSize: "2.8rem",
-            width: "64px",
-            height: "64px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "var(--bg-card)",
-            borderRadius: "50%",
-            border: "1px solid var(--border-color)",
-          }}>
+    <div className="anim-slide pb-8">
+      <header className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border bg-card text-[2.25rem] sm:size-16 sm:text-[2.8rem]">
             {profile?.avatar || "学"}
           </div>
-          <div>
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800 }}>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-extrabold sm:text-[1.4rem]">
               {t("home.greeting", { name: profile?.name || t("common.learner") })}
             </h1>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+            <p className="truncate text-xs font-medium text-muted-foreground sm:text-[0.8rem]">
               {(profile?.startLevel || "beginner").toUpperCase()} · {t("common.goal")}: {(profile?.goalPurpose || "travel").toUpperCase()}
             </p>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Flame size={28} className="tone-t4" fill="var(--tone-4)" />
-          <span style={{ fontSize: "1.25rem", fontWeight: 800 }}>{streak?.current ?? 0}</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Flame size={28} className="text-tone-4" fill="var(--tone-4)" />
+          <span className="text-xl font-extrabold">{streak?.current ?? 0}</span>
         </div>
       </header>
 
-      <section className="card" style={{ marginBottom: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", alignItems: "center" }}>
-          <h3 style={{ fontSize: "0.95rem", fontWeight: 700 }}>{t("home.todayGoal")}</h3>
-          <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 600 }}>
+      <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h3 className="text-sm font-bold sm:text-[0.95rem]">{t("home.todayGoal")}</h3>
+          <span className="text-xs font-semibold text-muted-foreground sm:text-[0.85rem]">
             {todayStat.xp} / {Math.round(xpTarget)} XP
           </span>
         </div>
-        <div style={{ width: "100%", height: "12px", backgroundColor: "var(--bg-app)", borderRadius: "6px", overflow: "hidden", marginBottom: "20px", border: "1px solid var(--border-color)" }}>
-          <div style={{ width: `${(xpProgress / xpTarget) * 100}%`, height: "100%", background: "linear-gradient(90deg, var(--primary-red), var(--accent-red))", borderRadius: "6px" }} />
+        <div className="mb-5 h-3 w-full overflow-hidden rounded-md border bg-background">
+          <div className="h-full rounded-md bg-[linear-gradient(90deg,var(--primary-red),var(--accent-red))]" style={{ width: `${(xpProgress / xpTarget) * 100}%` }} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", textAlign: "center" }}>
+        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4 sm:gap-2.5">
           {[
-            { label: t("home.xpTotal"), value: totalXp, icon: Star, cls: "tone-t3" },
-            { label: t("home.streak"), value: streak?.current ?? 0, icon: Flame, cls: "tone-t4" },
-            { label: t("home.lessons"), value: completedLessons, icon: BookOpen, cls: "tone-t2" },
-            { label: t("home.reviews"), value: todayStat.wordsReviewed, icon: Brain, cls: "tone-t1" },
+            { label: t("home.xpTotal"), value: totalXp, icon: Star, cls: "text-tone-3" },
+            { label: t("home.streak"), value: streak?.current ?? 0, icon: Flame, cls: "text-tone-4" },
+            { label: t("home.lessons"), value: completedLessons, icon: BookOpen, cls: "text-tone-2" },
+            { label: t("home.reviews"), value: todayStat.wordsReviewed, icon: Brain, cls: "text-tone-1" },
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div key={item.label} className="flex flex-col items-center rounded-md bg-secondary/50 px-2 py-3 sm:bg-transparent sm:p-0">
                 <Icon size={20} className={item.cls} />
-                <span style={{ fontWeight: 800, fontSize: "1.1rem", marginTop: "4px" }}>{item.value}</span>
-                <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{item.label}</span>
+                <span className="mt-1 text-[1.1rem] font-extrabold">{item.value}</span>
+                <span className="text-[0.65rem] text-muted-foreground">{item.label}</span>
               </div>
             );
           })}
         </div>
       </section>
 
-      <section style={{ marginBottom: "24px", overflowX: "auto", paddingBottom: "8px" }}>
-        <div style={{ display: "flex", gap: "16px", width: "max-content" }}>
+      <section className="mb-6 overflow-x-auto pb-2">
+        <div className="flex w-max gap-4">
           {[
-            { label: t("home.aiTutor"), icon: Sparkles, color: "var(--tone-3)", action: () => navigate("/ai-tutor") },
-            { label: t("home.scanOcr"), icon: Camera, color: "var(--jade)", action: () => navigate("/camera-translator") },
-            { label: t("home.toneDrill"), icon: Activity, color: "var(--tone-1)", action: () => navigate("/practice") },
-            { label: t("home.srsCards"), icon: RefreshCw, color: "var(--primary-red)", action: () => navigate("/review") },
-            { label: t("home.writeHanzi"), icon: PencilLine, color: "var(--gold)", action: () => navigate("/practice") }
+            { label: t("home.aiTutor"), icon: Sparkles, cls: "bg-tone-3", action: () => navigate("/ai-tutor") },
+            { label: t("home.scanOcr"), icon: Camera, cls: "bg-jade", action: () => navigate("/camera-translator") },
+            { label: t("home.toneDrill"), icon: Activity, cls: "bg-tone-1", action: () => navigate("/practice") },
+            { label: t("home.srsCards"), icon: RefreshCw, cls: "bg-primary", action: () => navigate("/review") },
+            { label: t("home.writeHanzi"), icon: PencilLine, cls: "bg-gold", action: () => navigate("/practice") }
           ].map((act) => {
             const Icon = act.icon;
             return (
-              <button key={act.label} onClick={act.action} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", width: "72px", gap: "6px" }}>
-                <div style={{ width: "56px", height: "56px", borderRadius: "50%", backgroundColor: act.color, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+              <button key={act.label} onClick={act.action} className="flex w-[72px] flex-col items-center gap-1.5 text-foreground">
+                <div className={cn("flex size-14 items-center justify-center rounded-full text-white", act.cls)}>
                   <Icon size={24} />
                 </div>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-main)" }}>{act.label}</span>
+                <span className="text-xs font-semibold">{act.label}</span>
               </button>
             );
           })}
         </div>
       </section>
 
-      <section className="card card-gradient-red" style={{ marginBottom: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>{t("home.continueLearning")}</h3>
-          <button onClick={() => navigate("/learn")} style={{ display: "flex", alignItems: "center", gap: "4px", background: "none", border: "none", color: "var(--primary-red)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer" }}>
+      <section className="mb-5 rounded-lg border border-primary/20 bg-[linear-gradient(135deg,rgba(217,63,71,0.15),rgba(242,89,82,0.05))] p-4 shadow-sm sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-base font-bold">{t("home.continueLearning")}</h3>
+          <button onClick={() => navigate("/learn")} className="flex items-center gap-1 text-[0.85rem] font-bold text-primary">
             {t("home.allLessons")} <ArrowRight size={14} />
           </button>
         </div>
@@ -165,77 +147,76 @@ export default function Home() {
               setSelectedLessonId(nextLesson.id);
               navigate("/learn");
             }}
-            className="continue-subcard"
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", cursor: "pointer" }}
+            className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--primary-red)", fontWeight: 700, marginBottom: "2px" }}>
+            <div className="min-w-0">
+              <div className="mb-0.5 text-xs font-bold text-primary">
                 HSK {nextLesson.hskLevel} · {t("home.lessons")} {nextLesson.order}
               </div>
-              <h4 style={{ fontSize: "1.1rem", fontWeight: 800 }}>{nextLesson.title}</h4>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "1px" }}>{nextLesson.subtitle}</p>
-              <div style={{ display: "flex", gap: "8px", marginTop: "8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              <h4 className="truncate text-[1.1rem] font-extrabold">{nextLesson.title}</h4>
+              <p className="mt-px line-clamp-2 text-[0.8rem] text-muted-foreground">{nextLesson.subtitle}</p>
+              <div className="mt-2 flex gap-2 text-xs text-muted-foreground">
                 <span>{nextLesson.estimatedMinutes} min</span>
                 <span>+{nextLesson.xpReward} XP</span>
               </div>
             </div>
-            <PlayCircle size={44} className="tone-t4" fill="rgba(217, 63, 71, 0.1)" />
+            <PlayCircle size={44} className="shrink-0 text-tone-4" fill="rgba(217, 63, 71, 0.1)" />
           </div>
         ) : (
-          <div style={{ textAlign: "center", padding: "16px", color: "var(--text-muted)", fontWeight: 700 }}>
+          <div className="p-4 text-center font-bold text-muted-foreground">
             {t("home.noLessons")}
           </div>
         )}
       </section>
 
       {currentPhrase && (
-        <section className="card" style={{ marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "14px" }}>{t("home.phrase")}</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <h2 className="hanzi-text" style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--primary-red)", letterSpacing: "1px" }}>
+        <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <h3 className="mb-3.5 text-base font-bold">{t("home.phrase")}</h3>
+          <div className="flex flex-col gap-1.5">
+            <h2 className="font-serif text-4xl font-extrabold tracking-[1px] text-primary sm:text-[2.4rem]">
               {currentPhrase.simplified}
             </h2>
-            <div style={{ fontSize: "1rem", color: "var(--text-muted)", fontWeight: 500 }}>{currentPhrase.pinyin}</div>
-            <p style={{ fontSize: "1rem", color: "var(--text-main)", fontWeight: 500, marginTop: "4px" }}>"{currentPhrase.english}"</p>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", borderLeft: "2px solid var(--border-color)", paddingLeft: "8px", marginTop: "4px" }}>
+            <div className="text-base font-medium text-muted-foreground">{currentPhrase.pinyin}</div>
+            <p className="mt-1 text-base font-medium">"{currentPhrase.english}"</p>
+            <p className="mt-1 border-l-2 pl-2 text-[0.8rem] italic text-muted-foreground">
               {currentPhrase.note}
             </p>
-            <button className="btn btn-secondary" onClick={() => playTTS(currentPhrase.simplified)} style={{ marginTop: "16px", padding: "8px 16px", alignSelf: "flex-start", fontSize: "0.85rem" }}>
-              <Volume2 size={16} /> {t("common.listen")}
-            </button>
+            <TtsButton text={currentPhrase.simplified} className="mt-4 w-fit">
+              {t("common.listen")}
+            </TtsButton>
           </div>
         </section>
       )}
 
-      <section className="card card-gradient-gold" style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <section className="mb-6 rounded-lg border border-gold/20 bg-[linear-gradient(135deg,rgba(242,191,76,0.15),rgba(242,191,76,0.05))] p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>{t("home.readyReview")}</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+            <h3 className="text-base font-bold">{t("home.readyReview")}</h3>
+            <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
               {t("home.cardsDue", { count: dueCount })}
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => navigate("/review")} style={{ padding: "10px 18px", fontSize: "0.85rem" }}>
+          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-[18px] py-2.5 text-[0.85rem] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => navigate("/review")}>
             {t("home.startReview", { count: dueCount })}
           </button>
         </div>
       </section>
 
       <section>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <Trophy size={18} style={{ color: "var(--gold)" }} />
-          <h3 style={{ fontSize: "1.05rem", fontWeight: 700 }}>{t("home.badges")}</h3>
+        <div className="mb-3 flex items-center gap-2">
+          <Trophy size={18} className="text-gold" />
+          <h3 className="text-[1.05rem] font-bold">{t("home.badges")}</h3>
         </div>
-        <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "10px" }}>
+        <div className="flex gap-3 overflow-x-auto pb-2.5">
           {unlockedAchievements.length === 0 ? (
-            <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", padding: "8px" }}>
+            <div className="p-2 text-[0.85rem] text-muted-foreground">
               {t("home.noBadges")}
             </div>
           ) : (
             unlockedAchievements.map((ach) => (
-              <div key={ach.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "10px", borderRadius: "14px", backgroundColor: "rgba(242, 191, 76, 0.08)", border: "1px solid rgba(242, 191, 76, 0.25)", minWidth: "96px", textAlign: "center" }}>
-                <span style={{ fontSize: "2rem" }}>{ach.emoji}</span>
-                <span style={{ fontSize: "0.7rem", fontWeight: 700, marginTop: "6px", color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "80px" }}>
+              <div key={ach.id} className="flex min-w-24 flex-col items-center rounded-[14px] border border-gold/25 bg-gold/10 p-2.5 text-center">
+                <span className="text-3xl">{ach.emoji}</span>
+                <span className="mt-1.5 w-20 truncate text-[0.7rem] font-bold">
                   {ach.title}
                 </span>
               </div>

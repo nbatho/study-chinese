@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../api/users/queries";
@@ -8,6 +7,7 @@ import { useI18n } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance } from "../store/modules/appSlice";
 import type { AppAppearance } from "../store/modules/appSlice";
+import { cn } from "../utils/cn";
 
 export default function Profile() {
   const dispatch = useAppDispatch();
@@ -33,26 +33,6 @@ export default function Profile() {
   const dailyMinutes = draftProfile.dailyMinutes ?? profile?.dailyMinutes ?? 15;
   const showPinyin = draftProfile.showPinyin ?? profile?.showPinyin ?? true;
   const audioAutoPlay = draftProfile.audioAutoPlay ?? profile?.audioAutoPlay ?? true;
-  const toggleButtonStyle = (active: boolean): CSSProperties => ({
-    flex: 1,
-    border: "none",
-    borderRadius: "7px",
-    backgroundColor: active ? "var(--primary-red)" : "transparent",
-    color: active ? "#fff" : "var(--text-muted)",
-    cursor: "pointer",
-    fontWeight: 800,
-    padding: "9px 10px",
-    transition: "var(--transition-smooth)",
-  });
-  const switchGroupStyle: CSSProperties = {
-    display: "flex",
-    gap: "4px",
-    padding: "4px",
-    border: "1px solid var(--border-color)",
-    borderRadius: "10px",
-    backgroundColor: "var(--bg-app)",
-  };
-
   const saveProfileSettings = async () => {
     await updateProfileMutation.mutateAsync({
       name: name.trim() || t("common.learner"),
@@ -131,57 +111,57 @@ export default function Profile() {
     : 0;
 
   return (
-    <div className="anim-slide" style={{ paddingBottom: "40px" }}>
-      <section className="card" style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px", textAlign: "left" }}>
-        <div style={{ fontSize: "3.2rem" }}>{profile?.avatar || "学"}</div>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: "1.35rem", fontWeight: 800 }}>{profile?.name || t("common.learner")}</h2>
-          <span style={{ fontSize: "0.8rem", color: "var(--primary-red)", fontWeight: 700 }}>
+    <div className="anim-slide pb-10">
+      <section className="mb-5 flex items-center gap-4 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <div className="text-5xl sm:text-[3.2rem]">{profile?.avatar || "学"}</div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-xl font-extrabold sm:text-[1.35rem]">{profile?.name || t("common.learner")}</h2>
+          <span className="text-[0.8rem] font-bold text-primary">
             {t("profile.memberSince", { date: profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString() : t("common.today") })}
           </span>
-          <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-            <span style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-card-hover)", padding: "4px 8px", borderRadius: "6px", fontWeight: 700, color: "var(--text-muted)" }}>
+          <div className="mt-2 flex flex-wrap gap-2.5">
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("profile.streakDays", { count: streak?.current ?? 0 })}
             </span>
-            <span style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-card-hover)", padding: "4px 8px", borderRadius: "6px", fontWeight: 700, color: "var(--text-muted)" }}>
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("common.level")}: {(profile?.startLevel || "beginner").toUpperCase()}
             </span>
           </div>
         </div>
       </section>
 
-      <section className="card" style={{ marginBottom: "20px", textAlign: "left" }}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "4px" }}>{t("profile.weeklyXp")}</h3>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginBottom: "16px" }}>{t("profile.weeklyXpBody")}</p>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <canvas ref={canvasRef} width={340} height={180} style={{ width: "100%", maxWidth: "340px", height: "180px" }} />
+      <section className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <h3 className="mb-1 text-base font-bold">{t("profile.weeklyXp")}</h3>
+        <p className="mb-4 text-[0.8rem] text-muted-foreground">{t("profile.weeklyXpBody")}</p>
+        <div className="flex justify-center">
+          <canvas ref={canvasRef} width={340} height={180} className="h-[180px] w-full max-w-[340px]" />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", textAlign: "center", marginTop: "16px", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
+        <div className="mt-4 grid grid-cols-3 gap-2.5 border-t border-dashed pt-4 text-center">
           <div>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>{t("profile.studyTime")}</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--primary-red)" }}>{today.minutesStudied} min</strong>
+            <span className="block text-[0.7rem] font-bold text-muted-foreground">{t("profile.studyTime")}</span>
+            <strong className="text-[1.1rem] text-primary">{today.minutesStudied} min</strong>
           </div>
           <div>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>{t("profile.accuracy")}</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--jade)" }}>{accuracy}%</strong>
+            <span className="block text-[0.7rem] font-bold text-muted-foreground">{t("profile.accuracy")}</span>
+            <strong className="text-[1.1rem] text-jade">{accuracy}%</strong>
           </div>
           <div>
-            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>{t("home.reviews").toUpperCase()}</span>
-            <strong style={{ fontSize: "1.1rem", color: "var(--tone-3)" }}>{today.wordsReviewed}</strong>
+            <span className="block text-[0.7rem] font-bold text-muted-foreground">{t("home.reviews").toUpperCase()}</span>
+            <strong className="text-[1.1rem] text-tone-3">{today.wordsReviewed}</strong>
           </div>
         </div>
       </section>
 
-      <section className="card" style={{ textAlign: "left", marginBottom: "20px" }}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "16px" }}>{t("profile.appSettings")}</h3>
-        <div style={{ display: "grid", gap: "16px" }}>
+      <section className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <h3 className="mb-4 text-base font-bold">{t("profile.appSettings")}</h3>
+        <div className="grid gap-4">
           <div>
-            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>{t("profile.displayName")}</label>
-            <input type="text" value={name} onChange={(e) => setDraftProfile((draft) => ({ ...draft, name: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }} />
+            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.displayName")}</label>
+            <input type="text" value={name} onChange={(e) => setDraftProfile((draft) => ({ ...draft, name: e.target.value }))} className="w-full rounded-lg border bg-background px-3.5 py-2.5 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>{t("profile.dailyGoal")}</label>
-            <select value={dailyMinutes} onChange={(e) => setDraftProfile((draft) => ({ ...draft, dailyMinutes: Number(e.target.value) }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-main)", outline: "none" }}>
+            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.dailyGoal")}</label>
+            <select value={dailyMinutes} onChange={(e) => setDraftProfile((draft) => ({ ...draft, dailyMinutes: Number(e.target.value) }))} className="w-full rounded-lg border bg-background px-3.5 py-2.5 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
               <option value="5">5 {t("common.minutes")} (Casual)</option>
               <option value="15">15 {t("common.minutes")} (Regular)</option>
               <option value="30">30 {t("common.minutes")} (Scholar)</option>
@@ -189,15 +169,18 @@ export default function Profile() {
             </select>
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>{t("profile.appearance")}</label>
-            <div role="group" aria-label={t("profile.appearance")} style={switchGroupStyle}>
+            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.appearance")}</label>
+            <div role="group" aria-label={t("profile.appearance")} className="flex gap-1 rounded-[10px] border bg-background p-1">
               {(["light", "dark", "system"] as AppAppearance[]).map((appearance) => (
                 <button
                   key={appearance}
                   type="button"
                   aria-pressed={appAppearance === appearance}
                   onClick={() => dispatch(setAppearance(appearance))}
-                  style={toggleButtonStyle(appAppearance === appearance)}
+                  className={cn(
+                    "flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition",
+                    appAppearance === appearance && "bg-primary text-white",
+                  )}
                 >
                   {appearance === "light" && t("profile.appearanceLight")}
                   {appearance === "dark" && t("profile.appearanceDark")}
@@ -207,13 +190,13 @@ export default function Profile() {
             </div>
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>{t("profile.language")}</label>
-            <div role="group" aria-label={t("profile.language")} style={switchGroupStyle}>
+            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.language")}</label>
+            <div role="group" aria-label={t("profile.language")} className="flex gap-1 rounded-[10px] border bg-background p-1">
               <button
                 type="button"
                 aria-pressed={language === "en"}
                 onClick={() => setLanguage("en")}
-                style={toggleButtonStyle(language === "en")}
+                className={cn("flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "en" && "bg-primary text-white")}
               >
                 English
               </button>
@@ -221,46 +204,45 @@ export default function Profile() {
                 type="button"
                 aria-pressed={language === "vi"}
                 onClick={() => setLanguage("vi")}
-                style={toggleButtonStyle(language === "vi")}
+                className={cn("flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "vi" && "bg-primary text-white")}
               >
                 Tiếng Việt
               </button>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px" }}>
+          <div className="flex items-center justify-between gap-4 pt-2">
             <div>
-              <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{t("profile.showPinyin")}</span>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t("profile.showPinyinBody")}</p>
+              <span className="text-[0.95rem] font-semibold">{t("profile.showPinyin")}</span>
+              <p className="text-xs text-muted-foreground">{t("profile.showPinyinBody")}</p>
             </div>
-            <button onClick={() => setDraftProfile((draft) => ({ ...draft, showPinyin: !showPinyin }))} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
+            <button onClick={() => setDraftProfile((draft) => ({ ...draft, showPinyin: !showPinyin }))} className="text-primary">
               {showPinyin ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px" }}>
+          <div className="flex items-center justify-between gap-4 pt-2">
             <div>
-              <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{t("profile.audioAutoplay")}</span>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t("profile.audioAutoplayBody")}</p>
+              <span className="text-[0.95rem] font-semibold">{t("profile.audioAutoplay")}</span>
+              <p className="text-xs text-muted-foreground">{t("profile.audioAutoplayBody")}</p>
             </div>
-            <button onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--primary-red)" }}>
+            <button onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} className="text-primary">
               {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={saveProfileSettings} disabled={updateProfileMutation.isPending} style={{ width: "100%", marginTop: "24px" }}>
+        <button className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" onClick={saveProfileSettings} disabled={updateProfileMutation.isPending}>
           {updateProfileMutation.isPending ? t("common.saving") : t("profile.save")}
         </button>
       </section>
 
-      <section className="card" style={{ textAlign: "left" }}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "6px" }}>{t("profile.account")}</h3>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "16px" }}>
+      <section className="rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <h3 className="mb-1.5 text-base font-bold">{t("profile.account")}</h3>
+        <p className="mb-4 text-[0.85rem] text-muted-foreground">
           {t("profile.accountBody")}
         </p>
         <button
-          className="btn btn-secondary"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-tone-4 transition hover:bg-accent disabled:opacity-60"
           onClick={handleLogout}
           disabled={logoutMutation.isPending}
-          style={{ width: "100%", color: "var(--tone-4)" }}
         >
           <LogOut size={18} />
           {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}

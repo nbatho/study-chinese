@@ -102,11 +102,11 @@ export default function Auth() {
   };
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_15%_10%,rgba(217,63,71,0.12),transparent_28%),var(--bg-app)] p-6">
+    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_15%_10%,rgba(217,63,71,0.12),transparent_28%),var(--bg-app)] p-4 sm:p-6">
       <section
-        className="auth-shell anim-slide grid w-full max-w-[980px] grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)] overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)]"
+        className="anim-slide grid w-full max-w-[980px] overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)] md:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]"
       >
-        <aside className="flex min-h-[560px] flex-col justify-between border-r bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-9">
+        <aside className="flex min-h-auto flex-col justify-between border-b bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-5 sm:p-7 md:min-h-[560px] md:border-b-0 md:border-r md:p-9">
           <div>
             <div className="mb-9 inline-flex items-center gap-2.5">
               <span className="inline-flex size-[42px] items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -115,7 +115,7 @@ export default function Auth() {
               <strong className="text-[1.05rem]">Study Chinese</strong>
             </div>
 
-            <h1 className="mb-4 text-[2.4rem] leading-[1.1]">
+            <h1 className="mb-4 text-3xl leading-[1.1] sm:text-[2.4rem]">
               {t("auth.heroTitle")}
             </h1>
             <p className="max-w-[360px] text-base text-muted-foreground">
@@ -132,14 +132,14 @@ export default function Auth() {
           </div>
         </aside>
 
-        <div className="flex items-center p-9">
+        <div className="flex items-center p-5 sm:p-7 md:p-9">
           <form onSubmit={handleSubmit} className="w-full">
             <div className="mb-7">
               <div
-                className="auth-tab-switch relative mb-6 inline-flex rounded-lg border bg-secondary p-1"
+                className="relative isolate mb-6 inline-flex rounded-lg border bg-secondary p-1"
               >
                 <span
-                  className="auth-tab-indicator"
+                  className="absolute bottom-1 left-1 top-1 z-0 w-[calc(50%-4px)] rounded-[9px] bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red))] shadow-[0_6px_18px_rgba(217,63,71,0.24)] transition-transform duration-300 ease-out"
                   style={{
                     transform: mode === "register" ? "translateX(100%)" : "translateX(0)",
                   }}
@@ -148,7 +148,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("login")}
                   className={cn(
-                    "auth-tab-button relative z-10 rounded-md px-[18px] py-[9px] font-extrabold",
+                    "relative z-10 rounded-md px-[18px] py-[9px] font-extrabold transition hover:-translate-y-px",
                     mode === "login" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -158,7 +158,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("register")}
                   className={cn(
-                    "auth-tab-button relative z-10 rounded-md px-[18px] py-[9px] font-extrabold",
+                    "relative z-10 rounded-md px-[18px] py-[9px] font-extrabold transition hover:-translate-y-px",
                     mode === "register" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -166,15 +166,15 @@ export default function Auth() {
                 </button>
               </div>
 
-              <div key={`copy-${mode}`} className="auth-mode-copy">
-                <h2 className="mb-2 text-[1.9rem]">{title}</h2>
+              <div key={`copy-${mode}`} className="animate-[auth-copy-in_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+                <h2 className="mb-2 text-2xl sm:text-[1.9rem]">{title}</h2>
                 <p className="text-muted-foreground">{subtitle}</p>
               </div>
             </div>
 
-            <div key={`fields-${mode}`} className="auth-mode-panel grid gap-3.5">
+            <div key={`fields-${mode}`} className="grid origin-top gap-3.5 animate-[auth-panel-in_0.32s_cubic-bezier(0.16,1,0.3,1)]">
               {isRegister && (
-                <label className="auth-field-enter grid gap-2 font-bold">
+                <label className="grid gap-2 overflow-hidden font-bold animate-[auth-field-in_0.3s_cubic-bezier(0.16,1,0.3,1)]">
                   {t("auth.name")}
                   <span className="relative">
                     <UserRound className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
