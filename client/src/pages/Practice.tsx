@@ -23,6 +23,14 @@ const innerCardClass = "rounded-lg border bg-card shadow-sm";
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent disabled:opacity-60";
 
+const blobToDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read recorded audio."));
+    reader.readAsDataURL(blob);
+  });
+
 export default function Practice() {
   const { t } = useI18n();
   const [activeTool, setActiveTool] = useState<Tool>("menu");
@@ -98,7 +106,13 @@ function ToneDrillTool() {
   const check = async (tone: number) => {
     setSelectedTone(tone);
     setChecked(true);
-    await addActivity.mutateAsync({ xp: tone === correctTone ? 5 : 0, exercisesCorrect: tone === correctTone ? 1 : 0, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: tone === correctTone ? 5 : 0,
+      exercisesCorrect: tone === correctTone ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "tones",
+      skillScore: tone === correctTone ? 100 : 0,
+    });
   };
 
   if (isLoading || !word) return <LoadingCard label="Loading practice words..." />;
@@ -157,7 +171,13 @@ function MinimalPairsTool() {
     const isCorrect = (selection === "A" && playedA) || (selection === "B" && !playedA);
     if (isCorrect) setCorrectCount((prev) => prev + 1);
     setIsAnswerChecked(true);
-    await addActivity.mutateAsync({ xp: isCorrect ? 5 : 0, exercisesCorrect: isCorrect ? 1 : 0, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: isCorrect ? 5 : 0,
+      exercisesCorrect: isCorrect ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "listening",
+      skillScore: isCorrect ? 100 : 0,
+    });
   };
 
   const goToNextPair = () => {
@@ -216,7 +236,13 @@ function PinyinTypingTool() {
     const isMatch = cleanInput === cleanPinyin || cleanInput === cleanStandard;
     setCorrect(isMatch);
     setChecked(true);
-    await addActivity.mutateAsync({ xp: isMatch ? 10 : 0, exercisesCorrect: isMatch ? 1 : 0, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: isMatch ? 10 : 0,
+      exercisesCorrect: isMatch ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "typing",
+      skillScore: isMatch ? 100 : 0,
+    });
   };
 
   if (isLoading || !word) return <LoadingCard label="Loading practice words..." />;
@@ -263,7 +289,13 @@ function ListeningTool() {
     setSelected(wordId);
     setChecked(true);
     const isCorrect = wordId === word.id;
-    await addActivity.mutateAsync({ xp: isCorrect ? 8 : 0, exercisesCorrect: isCorrect ? 1 : 0, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: isCorrect ? 8 : 0,
+      exercisesCorrect: isCorrect ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "listening",
+      skillScore: isCorrect ? 100 : 0,
+    });
   };
 
   if (isLoading || !word) return <LoadingCard label="Loading listening words..." />;
@@ -300,10 +332,28 @@ function ShadowingTool() {
   const prompts = promptsQuery.data?.prompts ?? [];
   const [idx, setIdx] = useState(0);
   const [recording, setRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
   const [score, setScore] = useState<Awaited<ReturnType<typeof scoreMutation.mutateAsync>>["score"] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const autoStopRef = useRef<number | null>(null);
   const prompt = prompts[idx % Math.max(prompts.length, 1)];
+
+  const clearAutoStop = () => {
+    if (autoStopRef.current) {
+      window.clearTimeout(autoStopRef.current);
+      autoStopRef.current = null;
+    }
+  };
+
+  const releaseMicrophone = () => {
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    mediaRecorderRef.current = null;
+  };
 
   useEffect(() => {
     if (!recording || !canvasRef.current) {
@@ -330,21 +380,105 @@ function ShadowingTool() {
     draw();
   }, [recording]);
 
+  useEffect(() => () => {
+    clearAutoStop();
+    releaseMicrophone();
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+  }, []);
+
   if (promptsQuery.isLoading || !prompt) return <LoadingCard label="Loading shadowing prompts from server..." />;
 
-  const stopRecord = async () => {
-    setRecording(false);
-    const result = await scoreMutation.mutateAsync({ promptId: prompt.id });
+  const scoreRecordedAudio = async (audioBlob: Blob) => {
+    const audio = await blobToDataUrl(audioBlob);
+    const result = await scoreMutation.mutateAsync({
+      promptId: prompt.id,
+      audio,
+      audioMimeType: audioBlob.type,
+    });
     setScore(result.score);
-    await addActivity.mutateAsync({ xp: 15, minutes: 1, exercisesCorrect: result.score.overall >= 80 ? 1 : 0, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: 15,
+      minutes: 1,
+      exercisesCorrect: result.score.overall >= 80 ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "shadow",
+      skillScore: result.score.overall,
+    });
   };
 
-  const startRecord = () => {
-    setRecording(true);
+  const stopRecord = () => {
+    clearAutoStop();
+    const recorder = mediaRecorderRef.current;
+
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+      return;
+    }
+
+    setRecording(false);
+    releaseMicrophone();
+  };
+
+  const startRecord = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setRecordingError("Your browser does not support microphone recording.");
+      return;
+    }
+
     setScore(null);
-    window.setTimeout(() => {
-      void stopRecord();
-    }, 2500);
+    setRecordingError(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) =>
+        MediaRecorder.isTypeSupported(type),
+      );
+      const recorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream);
+
+      audioChunksRef.current = [];
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onerror = () => {
+        setRecording(false);
+        setRecordingError("Recording failed. Please try again.");
+        clearAutoStop();
+        releaseMicrophone();
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        setRecording(false);
+        releaseMicrophone();
+
+        if (!audioBlob.size) {
+          setRecordingError("No audio was captured. Please try again.");
+          return;
+        }
+
+        void scoreRecordedAudio(audioBlob).catch(() => {
+          setRecordingError("Could not score this recording. Please try again.");
+        });
+      };
+
+      recorder.start();
+      setRecording(true);
+      autoStopRef.current = window.setTimeout(stopRecord, 3000);
+    } catch {
+      setRecording(false);
+      releaseMicrophone();
+      setRecordingError("Microphone permission is required for shadowing practice.");
+    }
   };
 
   return (
@@ -362,6 +496,11 @@ function ShadowingTool() {
         <div className="mb-5">
           <canvas ref={canvasRef} width={280} height={60} className="h-[60px] w-full" />
           <span className="text-xs font-bold text-primary">RECORDING VOICE...</span>
+        </div>
+      )}
+      {recordingError && (
+        <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm font-semibold text-primary">
+          {recordingError}
         </div>
       )}
       {score && (
@@ -391,7 +530,7 @@ function ShadowingTool() {
       )}
       <div className="flex gap-3">
         {!recording ? (
-          <button className={cn(primaryButtonClass, "recording-pulse flex-1")} onClick={startRecord} disabled={scoreMutation.isPending}>
+          <button className={cn(primaryButtonClass, "recording-pulse flex-1")} onClick={() => void startRecord()} disabled={scoreMutation.isPending}>
             Start Speak
           </button>
         ) : (
@@ -463,7 +602,13 @@ function HanziDrawingTool() {
       setActiveStrokeIdx((prev) => prev + 1);
       return;
     }
-    await addActivity.mutateAsync({ xp: 10, exercisesCorrect: 1, exercisesTotal: 1 });
+    await addActivity.mutateAsync({
+      xp: 10,
+      exercisesCorrect: 1,
+      exercisesTotal: 1,
+      skill: "hanzi",
+      skillScore: 100,
+    });
     toast.success(t("practice.hanziComplete", { character: current.character }));
     handleNext();
   };

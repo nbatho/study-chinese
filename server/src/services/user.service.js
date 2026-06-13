@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { mapDailyStats, mapStreak, recordActivity } from './activity.service.js';
+import { evaluateAchievements } from './achievement.service.js';
 
 const mapProfile = (row) => ({
   name: row.name,
@@ -102,17 +103,31 @@ export const addUserActivity = async (userId, payload) => {
   const minutes = Number(payload.minutes || 0);
   const exercisesCorrect = Number(payload.exercisesCorrect || 0);
   const exercisesTotal = Number(payload.exercisesTotal || 0);
+  const skillScore = Number(payload.skillScore || 0);
 
-  if ([xp, minutes, exercisesCorrect, exercisesTotal].some((value) => value < 0)) {
+  if ([xp, minutes, exercisesCorrect, exercisesTotal, skillScore].some((value) => value < 0)) {
     throw badRequest('Các chỉ số hoạt động không được âm.');
   }
 
-  return withTransaction((client) =>
-    recordActivity(client, userId, {
+  return withTransaction(async (client) => {
+    const activity = await recordActivity(client, userId, {
       xp,
       minutesStudied: minutes,
       exercisesCorrect,
       exercisesTotal
-    })
-  );
+    });
+    const unlockedAchievements = await evaluateAchievements(client, userId, {
+      event: 'activity_recorded',
+      skill: payload.skill,
+      skillScore,
+      xpEarned: xp,
+      exercisesCorrect,
+      exercisesTotal
+    });
+
+    return {
+      ...activity,
+      unlockedAchievements
+    };
+  });
 };

@@ -3,6 +3,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { usersApi } from './index';
 import type { AddActivityPayload, UserProfile } from './types';
+import { showAchievementToasts } from '../../utils/achievementToast';
 
 export const useUserProfileQuery = (enabled = true) =>
     useQuery({
@@ -33,9 +34,11 @@ export const useAddActivityMutation = () => {
 
     return useMutation({
         mutationFn: (payload: AddActivityPayload) => unwrapApiData(usersApi.addActivity(payload)),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.users.profile });
             queryClient.invalidateQueries({ queryKey: ['users', 'stats'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
+            showAchievementToasts(data.unlockedAchievements);
         },
     });
 };

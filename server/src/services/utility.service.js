@@ -1,16 +1,9 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
-import { notFound } from '../utils/http-error.js';
-
-const mapAchievement = (row) => ({
-  id: row.id,
-  title: row.title,
-  description: row.description,
-  emoji: row.emoji,
-  targetValue: Number(row.target_value),
-  category: row.category,
-  unlockedAt: row.unlocked_at
-});
+import {
+  getAchievements as getAchievementsForUser,
+  unlockAchievement as unlockEarnedAchievement
+} from './achievement.service.js';
 
 const mapPhrase = (row) => ({
   simplified: row.simplified,
@@ -52,57 +45,13 @@ const ocrSamples = [
 ];
 
 export const getAchievements = async (userId) => {
-  const result = await query(
-    `
-      SELECT a.*, ua.unlocked_at
-      FROM achievements a
-      LEFT JOIN user_achievements ua
-        ON ua.achievement_id = a.id AND ua.user_id = $1
-      WHERE a.is_active = true
-      ORDER BY a.category, a.target_value, a.id
-    `,
-    [userId]
-  );
-
-  return {
-    achievements: result.rows.map(mapAchievement)
-  };
+  const client = { query };
+  return getAchievementsForUser(client, userId);
 };
 
 export const unlockAchievement = async (userId, achievementId) =>
   withTransaction(async (client) => {
-    const achievementResult = await client.query(
-      `
-        SELECT *
-        FROM achievements
-        WHERE id = $1 AND is_active = true
-      `,
-      [achievementId]
-    );
-
-    if (achievementResult.rowCount === 0) {
-      throw notFound('Khong tim thay thanh tuu.');
-    }
-
-    await client.query(
-      `
-        INSERT INTO user_achievements (user_id, achievement_id, trigger_context)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id, achievement_id) DO NOTHING
-      `,
-      [userId, achievementId, JSON.stringify({ source: 'manual_api' })]
-    );
-
-    const achievement = achievementResult.rows[0];
-
-    return {
-      unlocked: true,
-      achievement: {
-        id: achievement.id,
-        title: achievement.title,
-        emoji: achievement.emoji
-      }
-    };
+    return unlockEarnedAchievement(client, userId, achievementId);
   });
 
 export const getDailyContent = async () => {

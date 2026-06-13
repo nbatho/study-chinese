@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
+import { evaluateAchievements } from './achievement.service.js';
 import { getAiTutorReply } from './ai-provider.service.js';
 
 const mapScenario = (row) => ({
@@ -198,6 +199,11 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     const activity = await recordActivity(client, userId, {
       xp: 10
     });
+    const unlockedAchievements = await evaluateAchievements(client, userId, {
+      event: 'ai_message',
+      skill: 'speaking',
+      xpEarned: 10
+    });
 
     return {
       userMessage: context.userMessage,
@@ -206,7 +212,8 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
       todayStats: {
         xp: activity.todayStats.xp,
         minutesStudied: activity.todayStats.minutesStudied
-      }
+      },
+      unlockedAchievements
     };
   });
 };

@@ -14,5 +14,5 @@ export interface AchievementsResponse {
 
 export interface UnlockAchievementResponse {
     unlocked: boolean;
-    achievement: Pick<Achievement, 'id' | 'title' | 'emoji'>;
+    achievement: Achievement;
 }

@@ -1,4 +1,4 @@
-import { BookOpen, Dumbbell, Home, RefreshCw, User } from "lucide-react";
+import { BookOpen, Dumbbell, Home, RefreshCw, Trophy, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDueSrsCardsQuery } from "../api/srs/queries";
 import { useI18n } from "../i18n";
@@ -17,6 +17,7 @@ export default function Navigation() {
   if (path.startsWith("/learn")) activeTab = "learn";
   else if (path.startsWith("/practice")) activeTab = "practice";
   else if (path.startsWith("/review")) activeTab = "review";
+  else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/profile")) activeTab = "profile";
 
   const tabs = [
@@ -24,6 +25,7 @@ export default function Navigation() {
     { id: "learn", label: t("nav.learn"), icon: BookOpen },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "review", label: t("nav.review"), icon: RefreshCw, badge: dueCardsQuery.data?.cards.length ?? 0 },
+    { id: "achievements", label: t("nav.achievements"), icon: Trophy },
     { id: "profile", label: t("nav.profile"), icon: User },
   ];
 

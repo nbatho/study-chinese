@@ -741,7 +741,7 @@
     "/achievements/{id}/unlock": {
       "post": {
         "tags": ["Achievements"],
-        "summary": "Unlock a special achievement",
+        "summary": "Check and unlock an earned achievement",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "example": "tone_master" } }

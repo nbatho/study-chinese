@@ -1,3 +1,4 @@
+import type { Achievement } from '../achievements';
 import type { DailyStat } from '../users';
 
 export interface ChatScenario {
@@ -53,4 +54,5 @@ export interface SendMessageResponse {
     tutorMessage: ChatMessage;
     xpEarned: number;
     todayStats: Pick<DailyStat, 'xp' | 'minutesStudied'>;
+    unlockedAchievements?: Achievement[];
 }

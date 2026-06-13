@@ -43,6 +43,7 @@ export interface HanziStrokesResponse {
 export interface ShadowingScorePayload {
     promptId: string;
     audio?: string;
+    audioMimeType?: string;
 }
 
 export interface ShadowingScore {

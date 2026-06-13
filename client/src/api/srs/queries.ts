@@ -3,6 +3,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { srsApi } from './index';
 import type { EnrollWordPayload, ReviewCardPayload } from './types';
+import { showAchievementToasts } from '../../utils/achievementToast';
 
 export const useDueSrsCardsQuery = (limit = 20) =>
     useQuery({
@@ -15,9 +16,11 @@ export const useReviewSrsMutation = () => {
 
     return useMutation({
         mutationFn: (payload: ReviewCardPayload) => unwrapApiData(srsApi.review(payload)),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['srs', 'due'] });
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
+            showAchievementToasts(data.unlockedAchievements);
         },
     });
 };

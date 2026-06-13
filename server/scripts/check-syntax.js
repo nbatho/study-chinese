@@ -50,4 +50,3 @@ for (const dir of includeDirs) {
 
 const files = (await Promise.all(existingDirs.map(listJavaScriptFiles))).flat();
 await Promise.all(files.map(checkFile));
-console.log(`Checked ${files.length} JavaScript files.`);

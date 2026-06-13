@@ -61,7 +61,7 @@ export default function App() {
       </main>
 
       <Navigation />
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

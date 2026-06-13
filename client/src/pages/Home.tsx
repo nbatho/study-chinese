@@ -203,9 +203,14 @@ export default function Home() {
       </section>
 
       <section>
-        <div className="mb-3 flex items-center gap-2">
-          <Trophy size={18} className="text-gold" />
-          <h3 className="text-[1.05rem] font-bold">{t("home.badges")}</h3>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Trophy size={18} className="text-gold" />
+            <h3 className="text-[1.05rem] font-bold">{t("home.badges")}</h3>
+          </div>
+          <button onClick={() => navigate("/achievements")} className="text-xs font-bold text-primary">
+            {t("achievements.title")}
+          </button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2.5">
           {unlockedAchievements.length === 0 ? (

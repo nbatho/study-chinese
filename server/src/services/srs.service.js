@@ -2,6 +2,7 @@ import { query, withTransaction } from '../config/db.config.js';
 import { addDays } from '../utils/date.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
+import { evaluateAchievements } from './achievement.service.js';
 import { getWordOrThrow } from './vocab.service.js';
 
 const qualityMap = {
@@ -192,11 +193,20 @@ export const reviewCard = async (userId, { wordId, quality }) => {
       xp: nextCard.xpEarned,
       wordsReviewed: 1
     });
+    const unlockedAchievements = await evaluateAchievements(client, userId, {
+      event: 'srs_review',
+      wordId,
+      quality,
+      xpEarned: nextCard.xpEarned,
+      masteryLevel: nextCard.masteryLevel,
+      correctStreak: nextCard.correctStreak
+    });
 
     return {
       card: mapCard(updatedResult.rows[0]),
       xpEarned: nextCard.xpEarned,
-      todayWordsReviewed: activity.todayStats.wordsReviewed
+      todayWordsReviewed: activity.todayStats.wordsReviewed,
+      unlockedAchievements
     };
   });
 };

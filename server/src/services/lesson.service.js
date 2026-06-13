@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
+import { evaluateAchievements } from './achievement.service.js';
 import { mapWord } from './vocab.service.js';
 
 const mapLessonSummary = (row) => ({
@@ -142,7 +143,7 @@ export const completeLesson = async (userId, lessonId, payload) => {
   return withTransaction(async (client) => {
     const lessonResult = await client.query(
       `
-        SELECT id, xp_reward, content_version
+        SELECT id, xp_reward, content_version, hsk_level, skill
         FROM lessons
         WHERE id = $1 AND is_active = true
       `,
@@ -210,6 +211,15 @@ export const completeLesson = async (userId, lessonId, payload) => {
       minutesStudied: minutes,
       lessonsCompleted: 1
     });
+    const unlockedAchievements = await evaluateAchievements(client, userId, {
+      event: 'lesson_completed',
+      lessonId,
+      hskLevel: Number(lesson.hsk_level),
+      lessonSkill: lesson.skill,
+      lessonAccuracy: accuracy,
+      newWordsEnrolled: newWordsEnrolled.length,
+      xpEarned: Number(lesson.xp_reward)
+    });
 
     const progress = progressResult.rows[0];
 
@@ -222,7 +232,8 @@ export const completeLesson = async (userId, lessonId, payload) => {
         bestAccuracy: Number(progress.best_accuracy),
         attempts: Number(progress.attempts)
       },
-      streak: activity.streak
+      streak: activity.streak,
+      unlockedAchievements
     };
   });
 };

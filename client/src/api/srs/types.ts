@@ -1,3 +1,5 @@
+import type { Achievement } from '../achievements';
+
 export interface SrsDueCard {
     wordId: string;
     simplified: string;
@@ -38,6 +40,7 @@ export interface ReviewCardResponse {
     card: SrsCard;
     xpEarned: number;
     todayWordsReviewed: number;
+    unlockedAchievements?: Achievement[];
 }
 
 export interface EnrollWordPayload {

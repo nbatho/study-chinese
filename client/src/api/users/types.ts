@@ -1,3 +1,5 @@
+import type { Achievement } from '../achievements';
+
 export type SkillLevel = 'beginner' | 'elementary' | 'intermediate' | 'advanced';
 export type LearningGoal = 'travel' | 'business' | 'hskExam' | 'culture' | 'family' | 'casual';
 export type AppAppearance = 'light' | 'dark' | 'system';
@@ -46,9 +48,12 @@ export interface AddActivityPayload {
     minutes?: number;
     exercisesCorrect?: number;
     exercisesTotal?: number;
+    skill?: string;
+    skillScore?: number;
 }
 
 export interface AddActivityResponse {
     todayStats: DailyStat;
     streak: UserStreak;
+    unlockedAchievements?: Achievement[];
 }

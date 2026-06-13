@@ -3,6 +3,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { aiTutorApi } from './index';
 import type { SendMessagePayload, StartSessionPayload } from './types';
+import { showAchievementToasts } from '../../utils/achievementToast';
 
 export const useChatScenariosQuery = () =>
     useQuery({
@@ -21,8 +22,10 @@ export const useSendChatMessageMutation = (sessionId: string) => {
     return useMutation({
         mutationFn: (payload: SendMessagePayload) =>
             unwrapApiData(aiTutorApi.sendMessage(sessionId, payload)),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
+            showAchievementToasts(data.unlockedAchievements);
         },
     });
 };

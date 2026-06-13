@@ -1,3 +1,4 @@
+import type { Achievement } from '../achievements';
 import type { UserStreak } from '../users';
 import type { Word } from '../vocabulary';
 
@@ -82,4 +83,5 @@ export interface CompleteLessonResponse {
         attempts: number;
     };
     streak: UserStreak;
+    unlockedAchievements?: Achievement[];
 }
