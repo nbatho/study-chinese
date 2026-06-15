@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useOcrSamplesQuery, useOcrScanMutation } from "../api/ocr/queries";
+import { useOcrScanMutation } from "../api/ocr/queries";
 import { useEnrollWordMutation } from "../api/srs/queries";
-import type { OcrBox, OcrSample, OcrScanPayload, OcrSegment } from "../api/ocr";
+import type { OcrBox, OcrScanPayload, OcrSegment } from "../api/ocr";
 import { ArrowLeft, Camera, RefreshCw, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));
   const scanMutation = useOcrScanMutation();
-  const samplesQuery = useOcrSamplesQuery();
   const enrollWordMutation = useEnrollWordMutation();
   const [cameraActive, setCameraActive] = useState(false);
   const [selectedBox, setSelectedBox] = useState<OcrBox | null>(null);
@@ -28,7 +27,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
   const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const loading = scanMutation.isPending;
-  const samples = samplesQuery.data?.samples ?? [];
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -129,15 +127,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
   useEffect(() => {
     return () => stopCamera();
   }, []);
-
-  const selectSample = async (sample: OcrSample) => {
-    stopCamera();
-    setUploadedImage(sample.image);
-    setBoxes([]);
-    setSegments([]);
-    setSelectedSegmentIds([]);
-    await runScan({ sampleId: sample.id });
-  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -372,24 +361,6 @@ export default function CameraTranslator({ onClose }: CameraTranslatorProps) {
           </section>
         )}
 
-        <div className="w-full max-w-[400px] text-left">
-          <h4 className="mb-3 text-[0.85rem] font-bold uppercase text-muted-foreground">
-            {t("camera.samples")}
-          </h4>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {samples.map((sample) => (
-              <button
-                key={sample.id}
-                onClick={() => selectSample(sample)}
-                className={`${secondaryButtonClass} flex-col rounded-[14px] px-2 py-4 text-[0.8rem] font-bold`}
-                disabled={loading}
-              >
-                <span className="text-[1.8rem]">{sample.marker}</span>
-                <span>{sample.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

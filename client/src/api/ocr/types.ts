@@ -30,7 +30,6 @@ export interface OcrScanPayload {
     image?: string;
     text?: string;
     detectedText?: string;
-    sampleId?: string;
 }
 
 export interface OcrScanResponse {
@@ -39,15 +38,4 @@ export interface OcrScanResponse {
     segments?: OcrSegment[];
     detectedText?: string;
     provider?: string;
-}
-
-export interface OcrSample {
-    id: string;
-    label: string;
-    marker: string;
-    image: string;
-}
-
-export interface OcrSamplesResponse {
-    samples: OcrSample[];
 }

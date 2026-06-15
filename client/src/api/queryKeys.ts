@@ -26,7 +26,6 @@ export const queryKeys = {
         scenarios: ['ai-tutor', 'scenarios'] as const,
     },
     ocr: {
-        samples: ['ocr', 'samples'] as const,
         scan: ['ocr', 'scan'] as const,
     },
     achievements: {

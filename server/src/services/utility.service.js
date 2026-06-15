@@ -51,6 +51,14 @@ const getOcrProvider = () => String(env.OCR_PROVIDER || 'mock').toLowerCase();
 
 const asText = (value) => String(value || '').trim();
 
+const compactForLookup = (value) => asText(value).replace(/\s+/g, '');
+
+const entryMatchesText = (text, entry) => {
+  const compactText = compactForLookup(text);
+
+  return compactText.includes(entry.simplified) || compactText.includes(entry.traditional);
+};
+
 const getSampleDetectedText = (payload) => {
   const sample = ocrSamples.find((item) => item.id === payload?.sampleId);
   return sample?.detectedText || '';
@@ -140,15 +148,14 @@ const countPrefixChars = (value, target) => {
 
 const getRegionForWord = (word, regions) =>
   regions.find((region) => {
-    const text = asText(region.text);
-    return text.includes(word.simplified) || text.includes(word.traditional);
+    return entryMatchesText(region.text, word);
   });
 
 const buildBox = (word, index, regions) => {
   const region = getRegionForWord(word, regions);
 
   if (region?.box) {
-    const regionText = asText(region.text);
+    const regionText = compactForLookup(region.text);
     const target = regionText.includes(word.simplified) ? word.simplified : word.traditional;
     const prefixChars = countPrefixChars(regionText, target);
     const totalChars = Math.max(1, countChars(regionText));
@@ -202,15 +209,27 @@ const boxOverlapsRegion = (box, region) => {
   const regionBottom = region.top + region.height;
 
   return !(
-    boxRight < region.left ||
-    regionRight < box.left ||
-    boxBottom < region.top ||
-    regionBottom < box.top
+    boxRight <= region.left ||
+    regionRight <= box.left ||
+    boxBottom <= region.top ||
+    regionBottom <= box.top
   );
 };
 
+const boxOverlapRatio = (first, second) => {
+  const left = Math.max(first.left, second.left);
+  const right = Math.min(first.left + first.width, second.left + second.width);
+  const top = Math.max(first.top, second.top);
+  const bottom = Math.min(first.top + first.height, second.top + second.height);
+  const intersection = Math.max(0, right - left) * Math.max(0, bottom - top);
+  const firstArea = Math.max(1, first.width * first.height);
+  const secondArea = Math.max(1, second.width * second.height);
+
+  return intersection / Math.min(firstArea, secondArea);
+};
+
 const segmentDictionaryEntries = (text, entries) => {
-  const normalizedText = String(text || '');
+  const normalizedText = compactForLookup(text);
   const segments = [];
   let cursor = 0;
 
@@ -234,6 +253,7 @@ const segmentDictionaryEntries = (text, entries) => {
 
 const getDictionaryEntriesForText = async (detectedText) => {
   const text = asText(detectedText);
+  const compactText = compactForLookup(detectedText);
 
   if (!text) {
     return [];
@@ -246,10 +266,12 @@ const getDictionaryEntriesForText = async (detectedText) => {
         FROM dictionary_entries
         WHERE position(simplified in $1) > 0
            OR position(traditional in $1) > 0
+           OR position(simplified in $2) > 0
+           OR position(traditional in $2) > 0
         ORDER BY char_length(simplified) DESC, simplified
         LIMIT 100
       `,
-      [text]
+      [text, compactText]
     );
 
     return result.rows;
@@ -265,7 +287,7 @@ const getDictionaryEntriesForText = async (detectedText) => {
 const buildDictionaryBoxes = (regions, dictionaryEntries) =>
   regions.flatMap((region, regionIndex) => {
     const segments = segmentDictionaryEntries(region.text, dictionaryEntries);
-    const regionText = asText(region.text);
+    const regionText = compactForLookup(region.text);
     const totalChars = Math.max(1, countChars(regionText));
     let cursor = 0;
 
@@ -290,6 +312,30 @@ const buildDictionaryBoxes = (regions, dictionaryEntries) =>
       };
     });
   });
+
+const filterDictionaryBoxes = (dictionaryBoxes, matchedBoxes) =>
+  dictionaryBoxes.filter((box) => !matchedBoxes.some((matchedBox) => boxOverlapRatio(box, matchedBox) > 0.5));
+
+const getOcrRegionBoxes = (regions, detectedText) => {
+  const rawRegionBoxes = regions.map(toOcrRegionBox).filter((region) => region.text);
+
+  if (rawRegionBoxes.length > 0 || !asText(detectedText)) {
+    return rawRegionBoxes;
+  }
+
+  return [
+    {
+      id: 'region_fallback',
+      text: asText(detectedText),
+      top: 35.5,
+      left: 30,
+      width: Math.min(60, Math.max(12, countChars(compactForLookup(detectedText)) * 8)),
+      height: 12,
+      confidence: null,
+      matched: false
+    }
+  ];
+};
 
 const toSegment = (box, index) => ({
   id: `segment_${index + 1}_${box.id}`,
@@ -351,6 +397,7 @@ export const getOcrSamples = async () => ({
 
 export const scanOcr = async (userId, payload) => {
   const { detectedText, regions, mode } = await getDetectedText(payload);
+  const compactDetectedText = compactForLookup(detectedText);
 
   const result = await query(
     `
@@ -360,11 +407,13 @@ export const scanOcr = async (userId, payload) => {
         AND (
           position(simplified in $1) > 0
           OR position(traditional in $1) > 0
+          OR position(simplified in $2) > 0
+          OR position(traditional in $2) > 0
         )
       ORDER BY char_length(simplified) DESC, simplified
       LIMIT 10
     `,
-    [detectedText]
+    [detectedText, compactDetectedText]
   );
 
   const matchedBoxes = result.rows.map((word, index) => ({
@@ -377,9 +426,9 @@ export const scanOcr = async (userId, payload) => {
     matched: true
   }));
 
-  const rawRegionBoxes = regions.map(toOcrRegionBox).filter((region) => region.text);
-  const dictionaryEntries = matchedBoxes.length > 0 ? [] : await getDictionaryEntriesForText(detectedText);
-  const dictionaryBoxes = buildDictionaryBoxes(rawRegionBoxes, dictionaryEntries);
+  const rawRegionBoxes = getOcrRegionBoxes(regions, detectedText);
+  const dictionaryEntries = await getDictionaryEntriesForText(detectedText);
+  const dictionaryBoxes = filterDictionaryBoxes(buildDictionaryBoxes(rawRegionBoxes, dictionaryEntries), matchedBoxes);
   const translatedBoxes = [...matchedBoxes, ...dictionaryBoxes];
   const unmatchedRegionBoxes = rawRegionBoxes.filter(
     (region) => !translatedBoxes.some((box) => boxOverlapsRegion(box, region))
