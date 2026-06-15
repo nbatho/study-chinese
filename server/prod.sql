@@ -88,6 +88,21 @@ CREATE TABLE IF NOT EXISTS words (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS dictionary_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source VARCHAR(50) NOT NULL DEFAULT 'cc-cedict',
+  traditional VARCHAR(100) NOT NULL,
+  simplified VARCHAR(100) NOT NULL,
+  pinyin VARCHAR(200) NOT NULL,
+  pinyin_plain VARCHAR(200) NOT NULL,
+  english TEXT NOT NULL,
+  search_text TEXT NOT NULL,
+  content_version VARCHAR(50),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (source, traditional, simplified, pinyin)
+);
+
 CREATE TABLE IF NOT EXISTS lessons (
   id VARCHAR(50) PRIMARY KEY,
   release_id UUID REFERENCES content_releases(id) ON DELETE SET NULL,
@@ -304,6 +319,10 @@ DROP TRIGGER IF EXISTS trg_words_updated_at ON words;
 CREATE TRIGGER trg_words_updated_at BEFORE UPDATE ON words
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_dictionary_entries_updated_at ON dictionary_entries;
+CREATE TRIGGER trg_dictionary_entries_updated_at BEFORE UPDATE ON dictionary_entries
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_lessons_updated_at ON lessons;
 CREATE TRIGGER trg_lessons_updated_at BEFORE UPDATE ON lessons
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -351,6 +370,10 @@ CREATE INDEX IF NOT EXISTS idx_words_traditional ON words (traditional);
 CREATE INDEX IF NOT EXISTS idx_words_pinyin_plain ON words (pinyin_plain);
 CREATE INDEX IF NOT EXISTS idx_words_hsk_category ON words (hsk_level, category);
 CREATE INDEX IF NOT EXISTS idx_words_search_trgm ON words USING gin (search_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_dictionary_entries_simplified ON dictionary_entries (simplified);
+CREATE INDEX IF NOT EXISTS idx_dictionary_entries_traditional ON dictionary_entries (traditional);
+CREATE INDEX IF NOT EXISTS idx_dictionary_entries_pinyin_plain ON dictionary_entries (pinyin_plain);
+CREATE INDEX IF NOT EXISTS idx_dictionary_entries_search_trgm ON dictionary_entries USING gin (search_text gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_srs_cards_due ON srs_cards (user_id, due_date);
 CREATE INDEX IF NOT EXISTS idx_custom_lists_user ON custom_lists (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_updated ON chat_sessions (user_id, updated_at DESC);

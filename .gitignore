@@ -19,6 +19,7 @@
 **/*.pid
 **/*.seed
 **/*.pid.lock
+server/data/cedict_ts.u8
 
 # Build & TypeScript Cache
 **/dist/

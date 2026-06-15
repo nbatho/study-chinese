@@ -696,7 +696,7 @@
     "/ocr/samples": {
       "get": {
         "tags": ["OCR"],
-        "summary": "List OCR sample images/text for the client demo",
+        "summary": "List OCR sample images/text for fallback demo data",
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": { "description": "OCR samples" },
@@ -707,7 +707,7 @@
     "/ocr/scan": {
       "post": {
         "tags": ["OCR"],
-        "summary": "Scan image/base64 or detected text and map Chinese words",
+        "summary": "Scan image/base64 with OCR provider or detected text fallback and map Chinese words",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,

@@ -1,5 +1,6 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
+import { AppError } from '../utils/http-error.js';
 import {
   getAchievements as getAchievementsForUser,
   unlockAchievement as unlockEarnedAchievement
@@ -43,6 +44,263 @@ const ocrSamples = [
     detectedText: '书 学习'
   }
 ];
+
+const supportedOcrProviders = new Set(['mock', 'paddle']);
+
+const getOcrProvider = () => String(env.OCR_PROVIDER || 'mock').toLowerCase();
+
+const asText = (value) => String(value || '').trim();
+
+const getSampleDetectedText = (payload) => {
+  const sample = ocrSamples.find((item) => item.id === payload?.sampleId);
+  return sample?.detectedText || '';
+};
+
+const getFallbackDetectedText = (payload) =>
+  asText(payload?.text || payload?.detectedText || getSampleDetectedText(payload) || '中国站');
+
+const callPaddleOcr = async (image) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), env.OCR_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`${env.OCR_BASE_URL.replace(/\/$/, '')}/scan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ image }),
+      signal: controller.signal
+    });
+
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new AppError(502, 'OCR_PROVIDER_ERROR', 'OCR local service returned an error.', {
+        provider: 'paddle',
+        statusCode: response.status,
+        details: body
+      });
+    }
+
+    return {
+      detectedText: asText(body.text),
+      regions: Array.isArray(body.regions) ? body.regions : []
+    };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new AppError(504, 'OCR_PROVIDER_TIMEOUT', 'OCR local service timed out.', {
+        provider: 'paddle',
+        timeoutMs: env.OCR_TIMEOUT_MS
+      });
+    }
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError(502, 'OCR_PROVIDER_ERROR', 'Could not connect to OCR local service.', {
+      provider: 'paddle',
+      baseUrl: env.OCR_BASE_URL
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const getDetectedText = async (payload = {}) => {
+  const provider = getOcrProvider();
+
+  if (!supportedOcrProviders.has(provider)) {
+    throw new AppError(500, 'OCR_PROVIDER_UNSUPPORTED', `Unsupported OCR_PROVIDER=${provider}.`);
+  }
+
+  if (provider === 'paddle' && payload.image) {
+    const paddleResult = await callPaddleOcr(payload.image);
+    return {
+      detectedText: paddleResult.detectedText || getFallbackDetectedText(payload),
+      regions: paddleResult.regions,
+      mode: 'paddle_ocr'
+    };
+  }
+
+  return {
+    detectedText: getFallbackDetectedText(payload),
+    regions: [],
+    mode: provider === 'paddle' ? 'paddle_fallback_text_match' : 'mock_text_match'
+  };
+};
+
+const countChars = (value) => [...String(value || '')].length;
+
+const countPrefixChars = (value, target) => {
+  const index = String(value || '').indexOf(target);
+  return index < 0 ? -1 : countChars(String(value).slice(0, index));
+};
+
+const getRegionForWord = (word, regions) =>
+  regions.find((region) => {
+    const text = asText(region.text);
+    return text.includes(word.simplified) || text.includes(word.traditional);
+  });
+
+const buildBox = (word, index, regions) => {
+  const region = getRegionForWord(word, regions);
+
+  if (region?.box) {
+    const regionText = asText(region.text);
+    const target = regionText.includes(word.simplified) ? word.simplified : word.traditional;
+    const prefixChars = countPrefixChars(regionText, target);
+    const totalChars = Math.max(1, countChars(regionText));
+    const targetChars = Math.max(1, countChars(target));
+    const regionBox = region.box;
+
+    const estimatedLeft =
+      prefixChars >= 0
+        ? Number(regionBox.left) + (Number(regionBox.width) * prefixChars) / totalChars
+        : Number(regionBox.left);
+    const estimatedWidth =
+      prefixChars >= 0
+        ? Math.max(4, (Number(regionBox.width) * targetChars) / totalChars)
+        : Math.max(4, Number(regionBox.width));
+
+    return {
+      top: Number(regionBox.top),
+      left: estimatedLeft,
+      width: estimatedWidth,
+      height: Math.max(4, Number(regionBox.height))
+    };
+  }
+
+  return {
+    top: 35.5,
+    left: 30 + index * 12,
+    width: Math.max(8, countChars(word.simplified) * 8),
+    height: 12
+  };
+};
+
+const toOcrRegionBox = (region, index) => {
+  const box = region?.box || {};
+
+  return {
+    id: `region_${index + 1}`,
+    text: asText(region?.text),
+    top: Number(box.top) || 0,
+    left: Number(box.left) || 0,
+    width: Math.max(4, Number(box.width) || 8),
+    height: Math.max(4, Number(box.height) || 8),
+    confidence: typeof region?.confidence === 'number' ? region.confidence : null,
+    matched: false
+  };
+};
+
+const boxOverlapsRegion = (box, region) => {
+  const boxRight = box.left + box.width;
+  const boxBottom = box.top + box.height;
+  const regionRight = region.left + region.width;
+  const regionBottom = region.top + region.height;
+
+  return !(
+    boxRight < region.left ||
+    regionRight < box.left ||
+    boxBottom < region.top ||
+    regionBottom < box.top
+  );
+};
+
+const segmentDictionaryEntries = (text, entries) => {
+  const normalizedText = String(text || '');
+  const segments = [];
+  let cursor = 0;
+
+  while (cursor < normalizedText.length) {
+    const remaining = normalizedText.slice(cursor);
+    const match = entries.find(
+      (entry) => remaining.startsWith(entry.simplified) || remaining.startsWith(entry.traditional)
+    );
+
+    if (!match) {
+      cursor += 1;
+      continue;
+    }
+
+    segments.push(match);
+    cursor += Math.max(match.simplified.length, match.traditional.length, 1);
+  }
+
+  return segments;
+};
+
+const getDictionaryEntriesForText = async (detectedText) => {
+  const text = asText(detectedText);
+
+  if (!text) {
+    return [];
+  }
+
+  try {
+    const result = await query(
+      `
+        SELECT *
+        FROM dictionary_entries
+        WHERE position(simplified in $1) > 0
+           OR position(traditional in $1) > 0
+        ORDER BY char_length(simplified) DESC, simplified
+        LIMIT 100
+      `,
+      [text]
+    );
+
+    return result.rows;
+  } catch (error) {
+    if (error.code === '42P01') {
+      return [];
+    }
+
+    throw error;
+  }
+};
+
+const buildDictionaryBoxes = (regions, dictionaryEntries) =>
+  regions.flatMap((region, regionIndex) => {
+    const segments = segmentDictionaryEntries(region.text, dictionaryEntries);
+    const regionText = asText(region.text);
+    const totalChars = Math.max(1, countChars(regionText));
+    let cursor = 0;
+
+    return segments.map((entry, segmentIndex) => {
+      const target = regionText.includes(entry.simplified) ? entry.simplified : entry.traditional;
+      const prefixChars = countPrefixChars(regionText.slice(cursor), target);
+      const safePrefixChars = prefixChars >= 0 ? cursor + prefixChars : cursor;
+      cursor = safePrefixChars + countChars(target);
+
+      return {
+        id: `dict_${regionIndex + 1}_${segmentIndex + 1}`,
+        text: entry.simplified,
+        pinyin: entry.pinyin,
+        english: entry.english,
+        top: region.top,
+        left: region.left + (region.width * safePrefixChars) / totalChars,
+        width: Math.max(4, (region.width * Math.max(1, countChars(target))) / totalChars),
+        height: region.height,
+        confidence: region.confidence,
+        matched: true,
+        source: 'cc-cedict'
+      };
+    });
+  });
+
+const toSegment = (box, index) => ({
+  id: `segment_${index + 1}_${box.id}`,
+  text: box.text,
+  pinyin: box.pinyin,
+  english: box.english,
+  source: box.source || (box.wordId ? 'words' : 'ocr'),
+  wordId: box.wordId,
+  confidence: box.confidence,
+  matched: Boolean(box.english || box.pinyin || box.wordId)
+});
 
 export const getAchievements = async (userId) => {
   const client = { query };
@@ -92,8 +350,7 @@ export const getOcrSamples = async () => ({
 });
 
 export const scanOcr = async (userId, payload) => {
-  const sample = ocrSamples.find((item) => item.id === payload.sampleId);
-  const detectedText = String(payload.text || payload.detectedText || sample?.detectedText || '中国站');
+  const { detectedText, regions, mode } = await getDetectedText(payload);
 
   const result = await query(
     `
@@ -110,17 +367,24 @@ export const scanOcr = async (userId, payload) => {
     [detectedText]
   );
 
-  const boxes = result.rows.map((word, index) => ({
+  const matchedBoxes = result.rows.map((word, index) => ({
     id: `box_${index + 1}`,
     wordId: word.id,
     text: word.simplified,
     pinyin: word.pinyin,
     english: word.english,
-    top: 35.5,
-    left: 30 + index * 12,
-    width: Math.max(8, word.simplified.length * 8),
-    height: 12
+    ...buildBox(word, index, regions),
+    matched: true
   }));
+
+  const rawRegionBoxes = regions.map(toOcrRegionBox).filter((region) => region.text);
+  const dictionaryEntries = matchedBoxes.length > 0 ? [] : await getDictionaryEntriesForText(detectedText);
+  const dictionaryBoxes = buildDictionaryBoxes(rawRegionBoxes, dictionaryEntries);
+  const translatedBoxes = [...matchedBoxes, ...dictionaryBoxes];
+  const unmatchedRegionBoxes = rawRegionBoxes.filter(
+    (region) => !translatedBoxes.some((box) => boxOverlapsRegion(box, region))
+  );
+  const boxes = [...translatedBoxes, ...unmatchedRegionBoxes];
 
   await query(
     `
@@ -131,12 +395,22 @@ export const scanOcr = async (userId, payload) => {
       userId,
       env.OCR_PROVIDER,
       detectedText,
-      JSON.stringify(boxes.map((box) => box.wordId)),
-      JSON.stringify({ mode: 'mock_text_match' })
+      JSON.stringify(matchedBoxes.map((box) => box.wordId)),
+      JSON.stringify({
+        mode,
+        regionCount: regions.length,
+        matchedCount: matchedBoxes.length,
+        dictionaryMatchCount: dictionaryBoxes.length,
+        baseUrl: mode === 'paddle_ocr' ? env.OCR_BASE_URL : undefined
+      })
     ]
   );
 
   return {
-    boxes
+    boxes,
+    regions: rawRegionBoxes,
+    segments: boxes.map(toSegment),
+    detectedText,
+    provider: getOcrProvider()
   };
 };

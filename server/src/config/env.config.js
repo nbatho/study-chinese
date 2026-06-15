@@ -35,6 +35,8 @@ export const env = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock',
+  OCR_BASE_URL: process.env.OCR_BASE_URL || 'http://ocr:8000',
+  OCR_TIMEOUT_MS: Number(process.env.OCR_TIMEOUT_MS || 30000),
   TTS_PROVIDER: process.env.TTS_PROVIDER || 'edge',
   TTS_EDGE_VOICE: process.env.TTS_EDGE_VOICE || 'zh-CN-XiaoxiaoNeural',
   TTS_EDGE_OUTPUT_FORMAT:

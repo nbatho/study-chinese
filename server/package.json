@@ -9,6 +9,7 @@
     "dev": "nodemon index.js",
     "lint": "node scripts/check-syntax.js",
     "db:init": "node scripts/init-db.js",
+    "dict:import": "node scripts/import-cc-cedict.js",
     "test": "node --test",
     "test:integration": "node --test test/integration/*.test.js"
   },
