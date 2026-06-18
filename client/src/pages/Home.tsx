@@ -116,7 +116,7 @@ export default function Home() {
         <div className="flex w-max gap-4">
           {[
             { label: t("home.aiTutor"), icon: Sparkles, cls: "bg-tone-3", action: () => navigate("/ai-tutor") },
-            { label: t("home.scanOcr"), icon: Camera, cls: "bg-jade", action: () => navigate("/camera-translator") },
+            { label: t("home.scanOcr"), icon: Camera, cls: "bg-jade", action: () => navigate("/translate") },
             { label: t("home.toneDrill"), icon: Activity, cls: "bg-tone-1", action: () => navigate("/practice") },
             { label: t("home.srsCards"), icon: RefreshCw, cls: "bg-primary", action: () => navigate("/review") },
             { label: t("home.writeHanzi"), icon: PencilLine, cls: "bg-gold", action: () => navigate("/practice") }

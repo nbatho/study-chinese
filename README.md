@@ -44,7 +44,7 @@ Mặc định `server/.env.example` trỏ tới PostgreSQL local:
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/study_chinese
 ```
 
-Khởi tạo schema và seed từ `server/prod.sql`:
+Khởi tạo schema từ `server/schema.sql` và dữ liệu mẫu từ `server/mock-data.sql`:
 
 ```bash
 npm run db:init
@@ -55,6 +55,8 @@ Hoặc chạy trực tiếp:
 ```bash
 npm --prefix server run db:init
 ```
+
+Nếu chỉ muốn tạo schema trống, đặt `SKIP_MOCK_DATA=true` khi chạy lệnh trên.
 
 ## Chạy Development
 
@@ -99,7 +101,7 @@ docker compose --profile local-db up --build
 
 Khi bật profile này, PostgreSQL chạy nội bộ trong Docker network với hostname `postgres`. Nếu cần truy cập DB từ host, thêm port mapping thủ công hoặc dùng `docker compose exec postgres psql -U postgres -d study_chinese`.
 
-PostgreSQL tự import `server/prod.sql` trong lần tạo volume đầu tiên. Nếu volume đã tồn tại và cần seed lại database từ đầu:
+PostgreSQL tự import `server/schema.sql` rồi `server/mock-data.sql` trong lần tạo volume đầu tiên. Nếu volume đã tồn tại và cần seed lại database từ đầu:
 
 ```bash
 docker compose down -v

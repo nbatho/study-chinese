@@ -12,6 +12,9 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 900 : false
+  );
   const profileQuery = useUserProfileQuery();
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
   const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
@@ -53,14 +56,20 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="mx-auto w-full max-w-3xl flex-1 px-3 pb-24 pt-4 sm:px-4 sm:pt-6 lg:max-w-5xl lg:px-6">
-        <ErrorBoundary resetKey={location.pathname}>
-          <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
-        </ErrorBoundary>
+    <div className="flex min-h-screen bg-background">
+      <Navigation
+        collapsed={isSidebarCollapsed}
+        onToggleCollapsed={() => setIsSidebarCollapsed((value) => !value)}
+      />
+
+      <main className="min-w-0 flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
+        <div className="mx-auto w-full max-w-6xl">
+          <ErrorBoundary resetKey={location.pathname}>
+            <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
+          </ErrorBoundary>
+        </div>
       </main>
 
-      <Navigation />
       <Toaster richColors position="top-right" />
     </div>
   );
