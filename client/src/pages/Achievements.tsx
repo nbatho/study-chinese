@@ -3,9 +3,11 @@ import { Award, CheckCircle2, LockKeyhole, Sparkles, Trophy } from "lucide-react
 import { useAchievementsQuery } from "../api";
 import type { Achievement } from "../api/achievements";
 import LoadingCard from "../components/LoadingCard";
+import LoginPromptCard from "../components/LoginPromptCard";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../i18n";
+import { useAppSelector } from "../store/hooks";
 import type { TranslationKey } from "../i18n/translations";
 import { cn } from "../utils/cn";
 
@@ -55,6 +57,23 @@ const formatUnlockedDate = (value: string | null) => {
 };
 
 export default function Achievements() {
+  const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={Trophy}
+        title={t("loginPrompt.achievementsTitle")}
+        description={t("loginPrompt.achievementsBody")}
+      />
+    );
+  }
+
+  return <AchievementsContent />;
+}
+
+function AchievementsContent() {
   const { t } = useI18n();
   const achievementsQuery = useAchievementsQuery();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");

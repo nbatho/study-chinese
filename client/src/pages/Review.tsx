@@ -1,13 +1,32 @@
 import { useState } from "react";
 import { useDueSrsCardsQuery, useReviewSrsMutation } from "../api/srs/queries";
 import type { ReviewQuality } from "../api/srs";
-import { Layers } from "lucide-react";
+import { Layers, RefreshCw } from "lucide-react";
 import { useI18n } from "../i18n";
+import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
+import LoginPromptCard from "../components/LoginPromptCard";
 import LoadingCard from "../components/LoadingCard";
 import TtsButton from "../components/TtsButton";
 
 export default function Review() {
+  const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={RefreshCw}
+        title={t("loginPrompt.reviewTitle")}
+        description={t("loginPrompt.reviewBody")}
+      />
+    );
+  }
+
+  return <ReviewContent />;
+}
+
+function ReviewContent() {
   const { t } = useI18n();
   const dueCardsQuery = useDueSrsCardsQuery(15);
   const reviewMutation = useReviewSrsMutation();

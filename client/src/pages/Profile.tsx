@@ -1,24 +1,38 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useLogoutMutation } from "../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../api/users/queries";
-import { LogOut, ToggleLeft, ToggleRight } from "lucide-react";
+import { ToggleLeft, ToggleRight, User } from "lucide-react";
 import { useI18n } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance } from "../store/modules/appSlice";
 import type { AppAppearance } from "../store/modules/appSlice";
+import LoginPromptCard from "../components/LoginPromptCard";
 import { cn } from "../utils/cn";
 
 export default function Profile() {
+  const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={User}
+        title={t("loginPrompt.profileTitle")}
+        description={t("loginPrompt.profileBody")}
+      />
+    );
+  }
+
+  return <ProfileContent />;
+}
+
+function ProfileContent() {
   const dispatch = useAppDispatch();
   const { language, setLanguage, t } = useI18n();
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
-  const navigate = useNavigate();
   const profileQuery = useUserProfileQuery();
   const statsQuery = useUserStatsQuery(7);
   const updateProfileMutation = useUpdateProfileMutation();
-  const logoutMutation = useLogoutMutation();
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
   const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
@@ -43,11 +57,6 @@ export default function Profile() {
       appAppearance,
     });
     toast.success(t("profile.saved"));
-  };
-
-  const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    navigate("/auth", { replace: true });
   };
 
   useEffect(() => {
@@ -235,20 +244,6 @@ export default function Profile() {
         </button>
       </section>
 
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
-        <h3 className="mb-1.5 text-base font-bold">{t("profile.account")}</h3>
-        <p className="mb-4 text-[0.85rem] text-muted-foreground">
-          {t("profile.accountBody")}
-        </p>
-        <button
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-tone-4 transition hover:bg-accent disabled:opacity-60"
-          onClick={handleLogout}
-          disabled={logoutMutation.isPending}
-        >
-          <LogOut size={18} />
-          {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
-        </button>
-      </section>
     </div>
   );
 }

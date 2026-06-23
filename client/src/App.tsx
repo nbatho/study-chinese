@@ -15,7 +15,8 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false
   );
-  const profileQuery = useUserProfileQuery();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const profileQuery = useUserProfileQuery(isAuthenticated);
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
   const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
   const language = useAppSelector((state) => state.app.language);
@@ -46,12 +47,12 @@ export default function App() {
   }, [language]);
 
   useEffect(() => {
-    if (!profileQuery.isLoading && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
+    if (isAuthenticated && !profileQuery.isLoading && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [hasCompletedOnboarding, location.pathname, navigate, profileQuery.isLoading]);
+  }, [hasCompletedOnboarding, isAuthenticated, location.pathname, navigate, profileQuery.isLoading]);
 
-  if (profileQuery.isLoading || !hasCompletedOnboarding) {
+  if (isAuthenticated && (profileQuery.isLoading || !hasCompletedOnboarding)) {
     return null;
   }
 

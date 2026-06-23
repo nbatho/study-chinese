@@ -10,6 +10,7 @@ export const translations = {
     "nav.translate": "Translate",
     "nav.achievements": "Achievements",
     "nav.profile": "Profile",
+    "nav.aiTutor": "AI Tutor",
     "nav.mode": "Mode",
     "nav.language": "EN",
     "nav.collapse": "Collapse sidebar",
@@ -292,7 +293,18 @@ export const translations = {
     "practice.shadowDesc": "Speak along and receive server feedback",
     "practice.hanzi": "Hanzi Stroke Writing",
     "practice.hanziDesc": "Trace server-provided stroke guides",
-    "practice.hanziComplete": "Character \"{character}\" complete! +10 XP awarded."
+    "practice.hanziComplete": "Character \"{character}\" complete! +10 XP awarded.",
+
+    "loginPrompt.backHome": "Back home",
+    "loginPrompt.login": "Sign in",
+    "loginPrompt.reviewTitle": "Log in to review your flashcards",
+    "loginPrompt.reviewBody": "SRS review uses your personal learning data to schedule vocabulary cards. Sign in to access your review queue.",
+    "loginPrompt.profileTitle": "Log in to view your profile",
+    "loginPrompt.profileBody": "Your profile shows study stats, streak progress, and app settings. Sign in to see your data.",
+    "loginPrompt.achievementsTitle": "Log in to see your achievements",
+    "loginPrompt.achievementsBody": "Track every badge you've unlocked on your study path. Sign in to view your achievement gallery.",
+    "loginPrompt.aiTutorTitle": "Log in to chat with AI Tutor",
+    "loginPrompt.aiTutorBody": "The AI tutor provides personalized Chinese conversation practice. Sign in to start a session."
   },
   vi: {
     "nav.home": "Trang chủ",
@@ -304,6 +316,7 @@ export const translations = {
     "nav.dictionary": "Từ điển",
     "nav.translate": "Dịch",
     "nav.profile": "Hồ sơ",
+    "nav.aiTutor": "AI Tutor",
     "nav.mode": "Giao diện",
     "nav.language": "VI",
     "nav.collapse": "Thu gọn sidebar",
@@ -587,7 +600,17 @@ export const translations = {
     "dictionary.favorite": "Yêu thích",
     "dictionary.review": "Ôn tập",
     "dictionary.inList": "Đã có",
-    "dictionary.addToList": "Thêm vào"
+    "dictionary.addToList": "Thêm vào",
+    "loginPrompt.backHome": "Về trang chủ",
+    "loginPrompt.login": "Đăng nhập",
+    "loginPrompt.reviewTitle": "Đăng nhập để ôn tập flashcard",
+    "loginPrompt.reviewBody": "Ôn tập SRS sử dụng dữ liệu học cá nhân để xếp lịch thẻ từ vựng. Đăng nhập để vào hàng đợi ôn tập.",
+    "loginPrompt.profileTitle": "Đăng nhập để xem hồ sơ",
+    "loginPrompt.profileBody": "Hồ sơ hiển thị thống kê học, chuỗi ngày và cài đặt ứng dụng. Đăng nhập để xem dữ liệu của bạn.",
+    "loginPrompt.achievementsTitle": "Đăng nhập để xem thành tựu",
+    "loginPrompt.achievementsBody": "Theo dõi mọi huy hiệu đã đạt trên lộ trình học. Đăng nhập để xem bộ sưu tập thành tựu.",
+    "loginPrompt.aiTutorTitle": "Đăng nhập để trò chuyện với AI Tutor",
+    "loginPrompt.aiTutorBody": "AI tutor cung cấp luyện hội thoại tiếng Trung cá nhân hóa. Đăng nhập để bắt đầu."
   }
 } as const;
 

@@ -8,7 +8,9 @@ import type { ChatMessage, ChatScenario } from "../api/aiTutor";
 import { ArrowLeft, AlertTriangle, Send, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../i18n";
+import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
+import LoginPromptCard from "../components/LoginPromptCard";
 import TtsButton from "../components/TtsButton";
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
@@ -18,6 +20,23 @@ interface AITutorProps {
 }
 
 export default function AITutor({ onClose }: AITutorProps) {
+  const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={Sparkles}
+        title={t("loginPrompt.aiTutorTitle")}
+        description={t("loginPrompt.aiTutorBody")}
+      />
+    );
+  }
+
+  return <AITutorContent onClose={onClose} />;
+}
+
+function AITutorContent({ onClose }: AITutorProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate("/home"));

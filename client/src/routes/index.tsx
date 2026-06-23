@@ -2,7 +2,7 @@ import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import type { RouteConfig } from "../types/app";
 import App from "../App";
-import { PrivateRoute, PublicRoute } from "./AuthRoute";
+import { OptionalAuthRoute, PublicRoute } from "./AuthRoute";
 
 // Lazy loaded page components
 const Home = lazy(() => import("../pages/Home"));
@@ -23,18 +23,18 @@ export const routes: RouteConfig[] = [
   {
     path: "/",
     element: (
-      <PrivateRoute>
+      <OptionalAuthRoute>
         <App />
-      </PrivateRoute>
+      </OptionalAuthRoute>
     ), // App serves as the global layout component
     children: [
       {
         index: true,
-        element: <Navigate to="/home" replace />
+        element: <Home />
       },
       {
         path: "home",
-        element: <Home />
+        element: <Navigate to="/" replace />
       },
       {
         path: "guide",
@@ -85,7 +85,7 @@ export const routes: RouteConfig[] = [
   {
     path: "/auth",
     element: (
-      <PublicRoute redirectAuthenticatedTo="/home">
+      <PublicRoute redirectAuthenticatedTo="/">
         <Auth />
       </PublicRoute>
     )

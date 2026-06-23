@@ -5,10 +5,11 @@ import { srsApi } from './index';
 import type { EnrollWordPayload, ReviewCardPayload } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
 
-export const useDueSrsCardsQuery = (limit = 20) =>
+export const useDueSrsCardsQuery = (limit = 20, enabled = true) =>
     useQuery({
         queryKey: queryKeys.srs.due(limit),
         queryFn: () => unwrapApiData(srsApi.due({ limit })),
+        enabled,
     });
 
 export const useReviewSrsMutation = () => {

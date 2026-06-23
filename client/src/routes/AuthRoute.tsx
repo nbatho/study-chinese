@@ -36,7 +36,7 @@ const useAutoLogin = () => {
   return status;
 };
 
-export const PrivateRoute = ({ children, redirectTo = "/auth" }: RouteGuardProps) => {
+export const PrivateRoute = ({ children, redirectTo = "/" }: RouteGuardProps) => {
   const location = useLocation();
   const status = useAutoLogin();
 
@@ -46,6 +46,16 @@ export const PrivateRoute = ({ children, redirectTo = "/auth" }: RouteGuardProps
 
   if (status === "unauthenticated") {
     return <Navigate to={redirectTo} replace state={{ from: location }} />;
+  }
+
+  return children;
+};
+
+export const OptionalAuthRoute = ({ children }: RouteGuardProps) => {
+  const status = useAutoLogin();
+
+  if (status === "idle" || status === "loading") {
+    return <RouteLoading />;
   }
 
   return children;

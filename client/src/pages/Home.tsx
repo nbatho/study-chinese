@@ -22,6 +22,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useI18n } from "../i18n";
+import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import TtsButton from "../components/TtsButton";
 
@@ -31,11 +32,12 @@ export default function Home() {
   const { setSelectedLessonId } = useOutletContext<{
     setSelectedLessonId: (lessonId: string | null) => void;
   }>();
-  const profileQuery = useUserProfileQuery();
-  const statsQuery = useUserStatsQuery(7);
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const profileQuery = useUserProfileQuery(isAuthenticated);
+  const statsQuery = useUserStatsQuery(7, isAuthenticated);
   const lessonsQuery = useLessonsQuery();
-  const dueCardsQuery = useDueSrsCardsQuery(20);
-  const achievementsQuery = useAchievementsQuery();
+  const dueCardsQuery = useDueSrsCardsQuery(20, isAuthenticated);
+  const achievementsQuery = useAchievementsQuery(isAuthenticated);
   const dailyContentQuery = useDailyContentQuery();
 
   const profile = profileQuery.data?.profile;

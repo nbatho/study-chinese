@@ -4,10 +4,11 @@ import { unwrapApiData } from '../shared';
 import { achievementsApi } from './index';
 import { showAchievementToasts } from '../../utils/achievementToast';
 
-export const useAchievementsQuery = () =>
+export const useAchievementsQuery = (enabled = true) =>
     useQuery({
         queryKey: queryKeys.achievements.all,
         queryFn: () => unwrapApiData(achievementsApi.list()),
+        enabled,
     });
 
 export const useUnlockAchievementMutation = () => {

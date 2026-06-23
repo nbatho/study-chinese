@@ -23,10 +23,11 @@ export const useUpdateProfileMutation = () => {
     });
 };
 
-export const useUserStatsQuery = (days = 7) =>
+export const useUserStatsQuery = (days = 7, enabled = true) =>
     useQuery({
         queryKey: queryKeys.users.stats(days),
         queryFn: () => unwrapApiData(usersApi.getStats({ days })),
+        enabled,
     });
 
 export const useUserMistakesQuery = (limit = 30) =>

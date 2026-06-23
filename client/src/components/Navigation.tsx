@@ -7,13 +7,19 @@ import {
   Dumbbell,
   Home,
   Languages,
+  Lock,
+  LogIn,
+  LogOut,
   RefreshCw,
+  Sparkles,
   Trophy,
   User,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useLogoutMutation } from "../api/auth/queries";
 import { useDueSrsCardsQuery } from "../api/srs/queries";
 import { useI18n } from "../i18n";
+import { useAppSelector } from "../store/hooks";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { cn } from "../utils/cn";
@@ -26,7 +32,9 @@ interface NavigationProps {
 export default function Navigation({ collapsed, onToggleCollapsed }: NavigationProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const dueCardsQuery = useDueSrsCardsQuery(99);
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
+  const logoutMutation = useLogoutMutation();
   const { t } = useI18n();
 
   const path = location.pathname;
@@ -37,6 +45,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/review")) activeTab = "review";
   else if (path.startsWith("/dictionary")) activeTab = "dictionary";
   else if (path.startsWith("/translate") || path.startsWith("/camera-translator")) activeTab = "translate";
+  else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
   else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/profile")) activeTab = "profile";
 
@@ -44,12 +53,18 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
     { id: "home", label: t("nav.home"), icon: Home },
     { id: "learn", label: t("nav.learn"), icon: BookOpen },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
-    { id: "review", label: t("nav.review"), icon: RefreshCw, badge: dueCardsQuery.data?.cards.length ?? 0 },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },
-    { id: "achievements", label: t("nav.achievements"), icon: Trophy },
-    { id: "profile", label: t("nav.profile"), icon: User },
+    { id: "review", label: t("nav.review"), icon: RefreshCw, badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0, requiresAuth: true },
+    { id: "ai-tutor", label: "AI Tutor", icon: Sparkles, requiresAuth: true },
+    { id: "achievements", label: t("nav.achievements"), icon: Trophy, requiresAuth: true },
+    { id: "profile", label: t("nav.profile"), icon: User, requiresAuth: true },
   ];
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    navigate("/", { replace: true });
+  };
 
   return (
     <aside
@@ -61,7 +76,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
       <div className="flex h-20 items-center gap-3 border-b px-3">
         <button
           type="button"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/")}
           className={cn(
             "flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition hover:bg-secondary",
             collapsed ? "justify-center p-2" : "px-2 py-2",
@@ -132,6 +147,16 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
             >
               <Icon className="size-5 shrink-0" />
               {!collapsed && <span className="ml-3 truncate">{tab.label}</span>}
+              {!isAuthenticated && tab.requiresAuth && (
+                <Lock
+                  size={12}
+                  className={cn(
+                    "absolute",
+                    collapsed ? "right-1.5 top-1.5" : "right-3",
+                    isActive ? "text-primary-foreground/60" : "text-muted-foreground/50",
+                  )}
+                />
+              )}
               {!!tab.badge && tab.badge > 0 && (
                 <Badge
                   className={cn(
@@ -148,6 +173,43 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
       </nav>
 
       <div className="border-t p-3">
+        {isAuthenticated ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+            className={cn(
+              "mb-3 h-11 w-full rounded-lg font-bold text-tone-4",
+              collapsed ? "px-0" : "justify-start px-3",
+            )}
+            aria-label={t("profile.logout")}
+            title={t("profile.logout")}
+          >
+            <LogOut className="size-5 shrink-0" />
+            {!collapsed && (
+              <span className="ml-3 truncate">
+                {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
+              </span>
+            )}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="default"
+            onClick={() => navigate("/auth")}
+            className={cn(
+              "mb-3 h-11 w-full rounded-lg font-bold",
+              collapsed ? "px-0" : "justify-start px-3",
+            )}
+            aria-label={t("auth.login")}
+            title={t("auth.login")}
+          >
+            <LogIn className="size-5 shrink-0" />
+            {!collapsed && <span className="ml-3 truncate">{t("auth.login")}</span>}
+          </Button>
+        )}
+
         {collapsed ? (
           <Button
             type="button"
