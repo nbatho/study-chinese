@@ -215,7 +215,7 @@ export const translations = {
     "notFound.backHome": "Back home",
 
     "ai.title": "AI Tutor Conversations",
-    "ai.subtitle": "Chat with backend mock tutor responses",
+    "ai.subtitle": "Chat with your Chinese AI tutor",
     "ai.selectScenario": "Select Dialogue Scenario",
     "ai.loadingScenarios": "Loading scenarios...",
     "ai.loadError": "Cannot load scenarios from backend.",
@@ -457,7 +457,7 @@ export const translations = {
     "notFound.backHome": "Về trang chủ",
 
     "ai.title": "Hội thoại với AI Tutor",
-    "ai.subtitle": "Trò chuyện với tutor mock từ backend",
+    "ai.subtitle": "Trò chuyện với gia sư AI tiếng Trung",
     "ai.selectScenario": "Chọn tình huống hội thoại",
     "ai.loadingScenarios": "Đang tải tình huống...",
     "ai.loadError": "Không tải được tình huống từ backend.",

@@ -29,7 +29,10 @@ export const env = {
   AI_TIMEOUT_MS: Number(process.env.AI_TIMEOUT_MS || 12000),
   AI_RETRY_ATTEMPTS: Number(process.env.AI_RETRY_ATTEMPTS || 1),
   AI_RETRY_DELAY_MS: Number(process.env.AI_RETRY_DELAY_MS || 400),
-  AI_FALLBACK_TO_MOCK: process.env.AI_FALLBACK_TO_MOCK !== 'false',
+  AI_FALLBACK_TO_MOCK:
+    process.env.AI_FALLBACK_TO_MOCK === undefined
+      ? (process.env.NODE_ENV || 'development') !== 'production'
+      : process.env.AI_FALLBACK_TO_MOCK === 'true',
   AI_INPUT_COST_PER_1M_TOKENS: Number(process.env.AI_INPUT_COST_PER_1M_TOKENS || 0),
   AI_OUTPUT_COST_PER_1M_TOKENS: Number(process.env.AI_OUTPUT_COST_PER_1M_TOKENS || 0),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
@@ -37,6 +40,7 @@ export const env = {
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   OCR_PROVIDER: process.env.OCR_PROVIDER || 'mock',
   OCR_BASE_URL: process.env.OCR_BASE_URL || 'http://ocr:8000',
+  OCR_API_KEY: process.env.OCR_API_KEY,
   OCR_TIMEOUT_MS: Number(process.env.OCR_TIMEOUT_MS || 30000),
   TTS_PROVIDER: process.env.TTS_PROVIDER || 'edge',
   TTS_EDGE_VOICE: process.env.TTS_EDGE_VOICE || 'zh-CN-XiaoxiaoNeural',

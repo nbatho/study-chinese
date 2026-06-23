@@ -21,7 +21,7 @@ const mapGrammarLibrary = (row) => ({
   examples: row.examples || []
 });
 
-const ocrSamples = [
+const legacyOcrSamples = [
   {
     id: 'sign',
     label: 'Street Sign',
@@ -59,10 +59,7 @@ const entryMatchesText = (text, entry) => {
   return compactText.includes(entry.simplified) || compactText.includes(entry.traditional);
 };
 
-const getSampleDetectedText = (payload) => {
-  const sample = ocrSamples.find((item) => item.id === payload?.sampleId);
-  return sample?.detectedText || '';
-};
+const getSampleDetectedText = () => '';
 
 const getFallbackDetectedText = (payload) =>
   asText(payload?.text || payload?.detectedText || getSampleDetectedText(payload) || '中国站');
@@ -70,13 +67,18 @@ const getFallbackDetectedText = (payload) =>
 const callPaddleOcr = async (image) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), env.OCR_TIMEOUT_MS);
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+
+  if (env.OCR_API_KEY) {
+    headers['x-ocr-api-key'] = env.OCR_API_KEY;
+  }
 
   try {
     const response = await fetch(`${env.OCR_BASE_URL.replace(/\/$/, '')}/scan`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({ image }),
       signal: controller.signal
     });
@@ -392,7 +394,7 @@ export const getDailyContent = async () => {
 };
 
 export const getOcrSamples = async () => ({
-  samples: ocrSamples.map(({ detectedText, ...sample }) => sample)
+  samples: []
 });
 
 export const scanOcr = async (userId, payload) => {

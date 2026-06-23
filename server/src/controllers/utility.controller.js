@@ -3,7 +3,6 @@ import { success } from '../utils/response.js';
 import {
   getAchievements,
   getDailyContent,
-  getOcrSamples,
   scanOcr,
   unlockAchievement
 } from '../services/utility.service.js';
@@ -28,7 +27,3 @@ export const scanImage = asyncHandler(async (req, res) => {
   success(res, data);
 });
 
-export const listOcrSamples = asyncHandler(async (req, res) => {
-  const data = await getOcrSamples();
-  success(res, data);
-});

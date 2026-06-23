@@ -5,7 +5,7 @@ import tempfile
 import traceback
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from paddleocr import PaddleOCR
 from PIL import Image
 from pydantic import BaseModel
@@ -46,6 +46,12 @@ def decode_image(image: str) -> bytes:
         return base64.b64decode(encoded, validate=True)
     except (binascii.Error, ValueError) as exc:
         raise HTTPException(status_code=400, detail="Invalid base64 image.") from exc
+
+
+def verify_api_key(x_ocr_api_key: str | None) -> None:
+    expected_api_key = os.getenv("OCR_API_KEY")
+    if expected_api_key and x_ocr_api_key != expected_api_key:
+        raise HTTPException(status_code=401, detail="Invalid OCR API key.")
 
 
 def normalize_box(box: list[float], width: int, height: int) -> dict[str, float]:
@@ -147,7 +153,8 @@ def health() -> dict[str, str]:
 
 
 @app.post("/scan")
-def scan(payload: ScanRequest) -> dict[str, Any]:
+def scan(payload: ScanRequest, x_ocr_api_key: str | None = Header(default=None)) -> dict[str, Any]:
+    verify_api_key(x_ocr_api_key)
     image_bytes = decode_image(payload.image)
 
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as file:

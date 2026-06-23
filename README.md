@@ -149,8 +149,8 @@ Tất cả endpoint chính nằm dưới `/api/v1`.
 | `GET/POST` | `/api/v1/srs/*` | Ôn tập SRS |
 | `GET/POST` | `/api/v1/practice/*` | Bộ công cụ luyện tập |
 | `GET` | `/api/v1/audio` | Tạo audio đọc tiếng Trung bằng Edge TTS |
-| `POST` | `/api/v1/ocr/scan` | OCR local PaddleOCR hoặc fallback demo/mapping từ |
-| `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor mock hoặc provider thật |
+| `POST` | `/api/v1/ocr/scan` | OCR qua PaddleOCR local hoặc text mapping |
+| `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor qua mock/dev hoặc provider thật |
 
 Các alias cũ `/api/health`, `/api/words`, `/api/profile`, `/api-docs` vẫn còn redirect để tương thích local cũ.
 
@@ -181,6 +181,33 @@ Nếu chạy server ngoài Docker nhưng vẫn chạy OCR service riêng trên h
 ```text
 OCR_BASE_URL=http://localhost:8000
 ```
+
+### Deploy OCR to Hugging Face Spaces
+
+The `ocr-service/` folder is ready to be used as a Hugging Face Docker Space. Create a new Space with SDK `Docker`, then push the contents of `ocr-service/` as the Space repository root.
+
+Set these Space runtime variables:
+
+```text
+OCR_LANG=ch
+OCR_DET_MODEL=PP-OCRv6_small_det
+OCR_REC_MODEL=PP-OCRv6_small_rec
+OCR_DEVICE=cpu
+OCR_ENGINE=paddle_dynamic
+OCR_ENABLE_MKLDNN=false
+OCR_API_KEY=replace-with-a-random-secret
+```
+
+Then point the backend to the public Space URL:
+
+```text
+OCR_PROVIDER=paddle
+OCR_BASE_URL=https://your-username-your-space.hf.space
+OCR_API_KEY=the-same-random-secret
+OCR_TIMEOUT_MS=60000
+```
+
+`OCR_API_KEY` is optional, but recommended for a public Space. The backend sends it to the OCR service as `x-ocr-api-key`.
 
 OCR service dùng PP-OCR Series với:
 

@@ -665,7 +665,7 @@
     "/practice/shadowing/score": {
       "post": {
         "tags": ["Practice"],
-        "summary": "Score a shadowing attempt with the current demo scorer",
+        "summary": "Score a shadowing attempt from submitted audio",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -689,17 +689,6 @@
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": { "description": "Stroke guide data" },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
-        }
-      }
-    },
-    "/ocr/samples": {
-      "get": {
-        "tags": ["OCR"],
-        "summary": "List OCR sample images/text for fallback demo data",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": { "description": "OCR samples" },
           "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }

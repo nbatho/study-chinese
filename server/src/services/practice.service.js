@@ -1,3 +1,5 @@
+import { badRequest } from '../utils/http-error.js';
+
 const minimalPairs = [
   { id: 'ma-1-3', wordA: 'mā', wordB: 'mǎ', charA: '妈', charB: '马', toneA: 1, toneB: 3, label: 'mother vs horse' },
   { id: 'ma-1-2', wordA: 'mā', wordB: 'má', charA: '妈', charB: '麻', toneA: 1, toneB: 2, label: 'mother vs hemp' },
@@ -39,12 +41,58 @@ export const getShadowingPrompts = async () => ({ prompts: shadowingPrompts });
 
 export const getHanziStrokes = async () => ({ characters: hanziStrokes });
 
-export const scoreShadowing = async ({ promptId }) => {
+const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
+
+const decodeAudioBytes = (audio) => {
+  if (!audio || typeof audio !== 'string') {
+    throw badRequest('Can gui audio de cham shadowing.');
+  }
+
+  const commaIndex = audio.indexOf(',');
+  const encoded = commaIndex >= 0 ? audio.slice(commaIndex + 1) : audio;
+
+  try {
+    return Buffer.from(encoded, 'base64');
+  } catch {
+    throw badRequest('Audio khong hop le.');
+  }
+};
+
+const getAudioEnergyScore = (buffer) => {
+  if (buffer.length === 0) {
+    return 0;
+  }
+
+  const sampleCount = Math.min(buffer.length, 12000);
+  let sum = 0;
+  let changes = 0;
+  let previous = buffer[0];
+
+  for (let index = 0; index < sampleCount; index += 1) {
+    const value = buffer[index];
+    sum += Math.abs(value - 128);
+    if (Math.abs(value - previous) > 12) {
+      changes += 1;
+    }
+    previous = value;
+  }
+
+  const amplitude = sum / sampleCount;
+  const variation = changes / sampleCount;
+
+  return clampScore(45 + amplitude * 0.7 + variation * 180);
+};
+
+export const scoreShadowing = async ({ promptId, audio, audioMimeType }) => {
   const prompt = shadowingPrompts.find((item) => item.id === promptId) || shadowingPrompts[0];
-  const base = prompt.id.length;
-  const accuracy = 78 + (base % 17);
-  const tones = 76 + ((base * 3) % 18);
-  const fluency = 80 + ((base * 5) % 16);
+  const audioBuffer = decodeAudioBytes(audio);
+  const expectedBytes = Math.max(2500, prompt.hanzi.length * 900);
+  const lengthRatio = Math.min(audioBuffer.length / expectedBytes, 1.35);
+  const energy = getAudioEnergyScore(audioBuffer);
+  const mimeBonus = String(audioMimeType || '').includes('audio/') ? 4 : 0;
+  const accuracy = clampScore(42 + lengthRatio * 30 + energy * 0.28 + mimeBonus);
+  const tones = clampScore(38 + lengthRatio * 24 + energy * 0.34);
+  const fluency = clampScore(45 + Math.min(lengthRatio, 1) * 38 + energy * 0.18);
   const overall = Math.round((accuracy + tones + fluency) / 3);
 
   return {
@@ -54,9 +102,11 @@ export const scoreShadowing = async ({ promptId }) => {
       fluency,
       overall,
       tip:
-        overall >= 90
-          ? 'Excellent pronunciation. Keep your tone contour steady.'
-          : 'Good work. Slow down slightly and make the tone ending clearer.'
+        overall >= 85
+          ? 'Recording quality looks strong. Keep your tone contour steady.'
+          : audioBuffer.length < expectedBytes * 0.6
+            ? 'The recording seems short. Try speaking the whole prompt clearly.'
+            : 'Good work. Slow down slightly and make the tone ending clearer.'
     }
   };
 };
