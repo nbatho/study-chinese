@@ -18,7 +18,21 @@ export default function Review() {
 
   const handleQualitySelect = async (quality: ReviewQuality) => {
     if (!activeCard) return;
-    await reviewMutation.mutateAsync({ wordId: activeCard.wordId, quality });
+    await reviewMutation.mutateAsync({
+      wordId: activeCard.wordId,
+      quality,
+      mistake: quality === "again" || quality === "hard" ? {
+        wordId: activeCard.wordId,
+        skill: "srs",
+        prompt: activeCard.simplified,
+        userAnswer: quality,
+        correctAnswer: activeCard.english,
+        simplified: activeCard.simplified,
+        pinyin: activeCard.pinyin,
+        english: activeCard.english,
+        context: { tool: "review", quality },
+      } : undefined,
+    });
     setFlipped(false);
     setActiveIdx((idx) => Math.max(0, Math.min(idx, dueCards.length - 2)));
   };

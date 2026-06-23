@@ -5,6 +5,7 @@ export const queryKeys = {
     users: {
         profile: ['users', 'profile'] as const,
         stats: (days?: number) => ['users', 'stats', days ?? 7] as const,
+        mistakes: (limit?: number) => ['users', 'mistakes', limit ?? 30] as const,
     },
     lessons: {
         list: ['lessons'] as const,

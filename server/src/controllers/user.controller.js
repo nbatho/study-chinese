@@ -2,8 +2,10 @@ import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
 import {
   addUserActivity,
+  getUserMistakes,
   getUserProfile,
   getUserStats,
+  recordMistakePractice,
   updateUserProfile
 } from '../services/user.service.js';
 
@@ -24,5 +26,15 @@ export const getStats = asyncHandler(async (req, res) => {
 
 export const addActivity = asyncHandler(async (req, res) => {
   const data = await addUserActivity(req.user.id, req.body);
+  success(res, data);
+});
+
+export const listMistakes = asyncHandler(async (req, res) => {
+  const data = await getUserMistakes(req.user.id, req.query);
+  success(res, data);
+});
+
+export const submitMistakePractice = asyncHandler(async (req, res) => {
+  const data = await recordMistakePractice(req.user.id, req.params.id, req.body);
   success(res, data);
 });

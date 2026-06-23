@@ -50,10 +50,54 @@ export interface AddActivityPayload {
     exercisesTotal?: number;
     skill?: string;
     skillScore?: number;
+    mistake?: MistakePayload;
 }
 
 export interface AddActivityResponse {
     todayStats: DailyStat;
     streak: UserStreak;
+    mistake?: MistakeItem | null;
     unlockedAchievements?: Achievement[];
+}
+
+export interface MistakePayload {
+    wordId?: string;
+    skill: string;
+    prompt?: string;
+    userAnswer?: string;
+    correctAnswer?: string;
+    simplified?: string;
+    pinyin?: string;
+    english?: string;
+    context?: Record<string, unknown>;
+}
+
+export interface MistakeItem {
+    id: string;
+    wordId?: string | null;
+    skill: string;
+    prompt?: string | null;
+    userAnswer?: string | null;
+    correctAnswer?: string | null;
+    simplified?: string | null;
+    pinyin?: string | null;
+    english?: string | null;
+    context?: Record<string, unknown>;
+    mistakeCount: number;
+    resolvedCount: number;
+    needsPracticeCount: number;
+    lastMistakeAt: string;
+    lastPracticedAt?: string | null;
+}
+
+export interface MistakesResponse {
+    mistakes: MistakeItem[];
+}
+
+export interface PracticeMistakePayload {
+    correct: boolean;
+}
+
+export interface PracticeMistakeResponse {
+    mistake: MistakeItem;
 }

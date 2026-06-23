@@ -1,5 +1,6 @@
+import crypto from 'crypto';
 import { query } from '../config/db.config.js';
-import { notFound } from '../utils/http-error.js';
+import { badRequest, notFound } from '../utils/http-error.js';
 
 export const mapWord = (row) => ({
   id: row.id,
@@ -72,4 +73,94 @@ export const getWordOrThrow = async (wordId, client = { query }) => {
   }
 
   return result.rows[0];
+};
+
+const toPlainPinyin = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ü/g, 'u')
+    .replace(/Ü/g, 'U')
+    .toLowerCase()
+    .trim();
+
+const makeCustomWordId = ({ simplified, pinyin, english }) => {
+  const hash = crypto
+    .createHash('sha1')
+    .update(`${simplified}|${pinyin}|${english}`)
+    .digest('hex')
+    .slice(0, 24);
+
+  return `ocr_${hash}`;
+};
+
+export const ensureVocabularyWord = async (input, client = { query }) => {
+  const payload = typeof input === 'string' ? { wordId: input } : input || {};
+
+  if (payload.wordId) {
+    return mapWord(await getWordOrThrow(payload.wordId, client));
+  }
+
+  const simplified = String(payload.simplified || payload.text || '').trim();
+  const traditional = String(payload.traditional || simplified).trim();
+  const pinyin = String(payload.pinyin || '').trim();
+  const english = String(payload.english || payload.meaning || 'Saved from OCR').trim();
+
+  if (!simplified) {
+    throw badRequest('Can luu mot tu hoac cum tu hop le.');
+  }
+
+  const existingResult = await client.query(
+    `
+      SELECT *
+      FROM words
+      WHERE is_active = true
+        AND simplified = $1
+      ORDER BY hsk_level, id
+      LIMIT 1
+    `,
+    [simplified]
+  );
+
+  if (existingResult.rowCount > 0) {
+    return mapWord(existingResult.rows[0]);
+  }
+
+  const id = makeCustomWordId({ simplified, pinyin, english });
+  const pinyinPlain = toPlainPinyin(pinyin);
+  const searchText = [simplified, traditional, pinyin, pinyinPlain, english, 'ocr saved custom']
+    .filter(Boolean)
+    .join(' ');
+
+  const result = await client.query(
+    `
+      INSERT INTO words (
+        id,
+        simplified,
+        traditional,
+        pinyin,
+        pinyin_plain,
+        tones,
+        english,
+        part_of_speech,
+        hsk_level,
+        category,
+        search_text
+      )
+      VALUES ($1, $2, $3, $4, $5, '{}', $6, 'phrase', 0, 'OCR', $7)
+      ON CONFLICT (id)
+      DO UPDATE SET
+        simplified = EXCLUDED.simplified,
+        traditional = EXCLUDED.traditional,
+        pinyin = EXCLUDED.pinyin,
+        pinyin_plain = EXCLUDED.pinyin_plain,
+        english = EXCLUDED.english,
+        search_text = EXCLUDED.search_text,
+        updated_at = now()
+      RETURNING *
+    `,
+    [id, simplified, traditional, pinyin || simplified, pinyinPlain, english, searchText]
+  );
+
+  return mapWord(result.rows[0]);
 };

@@ -29,6 +29,12 @@ export const useUserStatsQuery = (days = 7) =>
         queryFn: () => unwrapApiData(usersApi.getStats({ days })),
     });
 
+export const useUserMistakesQuery = (limit = 30) =>
+    useQuery({
+        queryKey: queryKeys.users.mistakes(limit),
+        queryFn: () => unwrapApiData(usersApi.getMistakes({ limit })),
+    });
+
 export const useAddActivityMutation = () => {
     const queryClient = useQueryClient();
 
@@ -37,8 +43,21 @@ export const useAddActivityMutation = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.users.profile });
             queryClient.invalidateQueries({ queryKey: ['users', 'stats'] });
+            queryClient.invalidateQueries({ queryKey: ['users', 'mistakes'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
+        },
+    });
+};
+
+export const usePracticeMistakeMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ mistakeId, correct }: { mistakeId: string; correct: boolean }) =>
+            unwrapApiData(usersApi.practiceMistake(mistakeId, { correct })),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users', 'mistakes'] });
         },
     });
 };

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { listsApi } from './index';
-import type { CreateListPayload } from './types';
+import type { AddWordToListPayload, CreateListPayload } from './types';
 
 export const useListsQuery = () =>
     useQuery({
@@ -36,7 +36,8 @@ export const useAddWordToListMutation = (listId: string) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (wordId: string) => unwrapApiData(listsApi.addWord(listId, { wordId })),
+        mutationFn: (payload: string | AddWordToListPayload) =>
+            unwrapApiData(listsApi.addWord(listId, typeof payload === 'string' ? { wordId: payload } : payload)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.lists.all });
         },

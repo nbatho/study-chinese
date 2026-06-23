@@ -1,6 +1,6 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { notFound } from '../utils/http-error.js';
-import { getWordOrThrow } from './vocab.service.js';
+import { ensureVocabularyWord, getWordOrThrow } from './vocab.service.js';
 
 const mapCustomList = (row) => ({
   id: row.id,
@@ -127,9 +127,9 @@ export const deleteCustomList = async (userId, listId) => {
   return null;
 };
 
-export const addWordToList = async (userId, listId, wordId) =>
+export const addWordToList = async (userId, listId, wordInput) =>
   withTransaction(async (client) => {
-    await getWordOrThrow(wordId, client);
+    const word = await ensureVocabularyWord(wordInput, client);
     await getListWordIds(client, listId, userId);
 
     await client.query(
@@ -142,7 +142,7 @@ export const addWordToList = async (userId, listId, wordId) =>
         )
         ON CONFLICT (list_id, word_id) DO NOTHING
       `,
-      [listId, wordId]
+      [listId, word.id]
     );
 
     const list = await getListWordIds(client, listId, userId);

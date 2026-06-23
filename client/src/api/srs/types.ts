@@ -34,19 +34,37 @@ export interface DueCardsResponse {
 export interface ReviewCardPayload {
     wordId: string;
     quality: ReviewQuality;
+    mistake?: {
+        wordId?: string;
+        skill: string;
+        prompt?: string;
+        userAnswer?: string;
+        correctAnswer?: string;
+        simplified?: string;
+        pinyin?: string;
+        english?: string;
+        context?: Record<string, unknown>;
+    };
 }
 
 export interface ReviewCardResponse {
     card: SrsCard;
     xpEarned: number;
     todayWordsReviewed: number;
+    mistake?: unknown;
     unlockedAchievements?: Achievement[];
 }
 
 export interface EnrollWordPayload {
-    wordId: string;
+    wordId?: string;
+    simplified?: string;
+    traditional?: string;
+    text?: string;
+    pinyin?: string;
+    english?: string;
 }
 
 export interface EnrollWordResponse {
     enrolled: boolean;
+    word?: unknown;
 }

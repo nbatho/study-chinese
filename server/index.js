@@ -12,13 +12,32 @@ import { closeDB } from './src/config/db.config.js';
 
 const PORT = env.PORT;
 const app = express();
+const corsOrigins = new Set(
+  [
+    env.CLIENT_URL,
+    ...(env.CLIENT_URLS ? env.CLIENT_URLS.split(',') : []),
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5174'
+  ]
+    .map((origin) => origin?.trim())
+    .filter(Boolean)
+);
 
 app.disable('x-powered-by');
 app.use(requestId);
 app.use(securityHeaders);
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin(origin, callback) {
+      if (!origin || corsOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     credentials: true
   })
 );

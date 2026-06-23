@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera,
+  BookmarkPlus,
   Clipboard,
   FileImage,
   Languages,
+  ListPlus,
   Loader2,
   RefreshCw,
   ScanLine,
@@ -12,6 +14,12 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  useAddWordToListMutation,
+  useCreateListMutation,
+  useEnrollWordMutation,
+  useListsQuery,
+} from "../api";
 import { useOcrScanMutation } from "../api/ocr/queries";
 import type { OcrBox, OcrScanPayload, OcrSegment } from "../api/ocr";
 import { Button } from "../components/ui/button";
@@ -36,6 +44,9 @@ const getCombinedMeaning = (segments: OcrSegment[]) =>
 
 export default function Translate() {
   const scanMutation = useOcrScanMutation();
+  const listsQuery = useListsQuery();
+  const createListMutation = useCreateListMutation();
+  const enrollMutation = useEnrollWordMutation();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -49,8 +60,12 @@ export default function Translate() {
   const [selectedBox, setSelectedBox] = useState<OcrBox | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [selectedOcrListId, setSelectedOcrListId] = useState("");
+  const [newOcrListName, setNewOcrListName] = useState("OCR Saved");
 
   const loading = scanMutation.isPending;
+  const lists = listsQuery.data?.lists ?? [];
+  const addWordMutation = useAddWordToListMutation(selectedOcrListId);
   const selectedSegments = useMemo(
     () => segments.filter((segment) => selectedSegmentIds.includes(segment.id)),
     [segments, selectedSegmentIds],
@@ -62,6 +77,16 @@ export default function Translate() {
     .filter(Boolean)
     .join(" ");
   const currentSourceText = getCombinedText(activeSegments) || detectedText || sourceText;
+
+  const toLearningPayload = (segment: OcrSegment) =>
+    segment.wordId
+      ? { wordId: segment.wordId }
+      : {
+          simplified: segment.text,
+          text: segment.text,
+          pinyin: segment.pinyin,
+          english: segment.english,
+        };
 
   const runScan = async (payload: OcrScanPayload) => {
     setSelectedBox(null);
@@ -200,6 +225,53 @@ export default function Translate() {
     await navigator.clipboard.writeText(translatedText);
     toast.success("Đã sao chép bản dịch.");
   };
+
+  const createOcrList = async () => {
+    const response = await createListMutation.mutateAsync({
+      name: newOcrListName.trim() || "OCR Saved",
+      emoji: "OCR",
+    });
+    setSelectedOcrListId(response.list.id);
+    toast.success("Da tao danh sach OCR.");
+  };
+
+  const saveSegmentToList = async (segment: OcrSegment) => {
+    if (!selectedOcrListId) {
+      toast.info("Chon hoac tao danh sach truoc.");
+      return;
+    }
+
+    await addWordMutation.mutateAsync(toLearningPayload(segment));
+    toast.success(`Da luu "${segment.text}" vao danh sach.`);
+  };
+
+  const saveSegmentToSrs = async (segment: OcrSegment) => {
+    const response = await enrollMutation.mutateAsync(toLearningPayload(segment));
+    toast.success(response.enrolled ? `Da them "${segment.text}" vao on tap.` : `"${segment.text}" da co trong on tap.`);
+  };
+
+  const saveActiveSegmentsToList = async () => {
+    if (!selectedOcrListId) {
+      toast.info("Chon hoac tao danh sach truoc.");
+      return;
+    }
+
+    for (const segment of activeSegments) {
+      await saveSegmentToList(segment);
+    }
+  };
+
+  const saveActiveSegmentsToSrs = async () => {
+    for (const segment of activeSegments) {
+      await saveSegmentToSrs(segment);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedOcrListId && lists[0]) {
+      setSelectedOcrListId(lists[0].id);
+    }
+  }, [lists, selectedOcrListId]);
 
   useEffect(() => () => stopCamera(), []);
 
@@ -450,6 +522,58 @@ export default function Translate() {
                   </button>
                 )}
               </div>
+              <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <select
+                    value={selectedOcrListId}
+                    onChange={(event) => setSelectedOcrListId(event.target.value)}
+                    className="min-w-0 rounded-lg border bg-card px-3 py-2 text-sm font-semibold outline-none"
+                  >
+                    <option value="">Chon danh sach</option>
+                    {lists.map((list) => (
+                      <option key={list.id} value={list.id}>
+                        {list.name} ({list.wordIds.length})
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={createOcrList}
+                    disabled={createListMutation.isPending}
+                  >
+                    <ListPlus size={16} />
+                    Tao list
+                  </Button>
+                </div>
+                <input
+                  value={newOcrListName}
+                  onChange={(event) => setNewOcrListName(event.target.value)}
+                  placeholder="Ten list OCR"
+                  className="rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void saveActiveSegmentsToList()}
+                    disabled={!selectedOcrListId || addWordMutation.isPending}
+                  >
+                    <ListPlus size={16} />
+                    Luu list
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => void saveActiveSegmentsToSrs()}
+                    disabled={enrollMutation.isPending}
+                  >
+                    <BookmarkPlus size={16} />
+                    Them SRS
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-2">
                 {segments.map((segment) => {
                   const selected = selectedSegmentIds.includes(segment.id);

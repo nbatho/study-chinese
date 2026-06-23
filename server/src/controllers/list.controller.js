@@ -30,7 +30,7 @@ export const deleteList = asyncHandler(async (req, res) => {
 });
 
 export const addListWord = asyncHandler(async (req, res) => {
-  const data = await addWordToList(req.user.id, req.params.id, req.body.wordId);
+  const data = await addWordToList(req.user.id, req.params.id, req.body);
   success(res, data);
 });
 

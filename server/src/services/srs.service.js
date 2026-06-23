@@ -3,7 +3,8 @@ import { addDays } from '../utils/date.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
-import { getWordOrThrow } from './vocab.service.js';
+import { recordMistake } from './mistake.service.js';
+import { ensureVocabularyWord, getWordOrThrow } from './vocab.service.js';
 
 const qualityMap = {
   again: { easeDelta: -0.2, xp: 0 },
@@ -110,8 +111,8 @@ export const getDueCards = async (userId, limit = 20) => {
   };
 };
 
-export const enrollWord = async (userId, wordId) => {
-  await getWordOrThrow(wordId);
+export const enrollWord = async (userId, input) => {
+  const word = await ensureVocabularyWord(input);
 
   const result = await query(
     `
@@ -120,15 +121,18 @@ export const enrollWord = async (userId, wordId) => {
       ON CONFLICT (user_id, word_id) DO NOTHING
       RETURNING word_id
     `,
-    [userId, wordId]
+    [userId, word.id]
   );
 
   return {
-    enrolled: result.rowCount > 0
+    enrolled: result.rowCount > 0,
+    word
   };
 };
 
-export const reviewCard = async (userId, { wordId, quality }) => {
+export const reviewCard = async (userId, payload) => {
+  const { wordId, quality } = payload;
+
   if (!qualityMap[quality]) {
     throw badRequest("quality phải là 'again', 'hard', 'good' hoặc 'easy'.");
   }
@@ -201,11 +205,16 @@ export const reviewCard = async (userId, { wordId, quality }) => {
       masteryLevel: nextCard.masteryLevel,
       correctStreak: nextCard.correctStreak
     });
+    const mistake =
+      (quality === 'again' || quality === 'hard') && payload.mistake
+        ? await recordMistake(client, userId, payload.mistake)
+        : null;
 
     return {
       card: mapCard(updatedResult.rows[0]),
       xpEarned: nextCard.xpEarned,
       todayWordsReviewed: activity.todayStats.wordsReviewed,
+      mistake,
       unlockedAchievements
     };
   });

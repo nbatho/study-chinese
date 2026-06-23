@@ -22,3 +22,12 @@ export interface ListWordsResponse {
     listId: string;
     wordIds: string[];
 }
+
+export interface AddWordToListPayload {
+    wordId?: string;
+    simplified?: string;
+    traditional?: string;
+    text?: string;
+    pinyin?: string;
+    english?: string;
+}

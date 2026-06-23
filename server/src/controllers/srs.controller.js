@@ -13,6 +13,6 @@ export const submitReview = asyncHandler(async (req, res) => {
 });
 
 export const enrollSrsWord = asyncHandler(async (req, res) => {
-  const data = await enrollWord(req.user.id, req.body.wordId);
+  const data = await enrollWord(req.user.id, req.body);
   success(res, data);
 });

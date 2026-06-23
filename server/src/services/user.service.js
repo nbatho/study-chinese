@@ -2,6 +2,7 @@ import { query, withTransaction } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { mapDailyStats, mapStreak, recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
+import { listMistakes, practiceMistake, recordMistake } from './mistake.service.js';
 
 const mapProfile = (row) => ({
   name: row.name,
@@ -124,10 +125,17 @@ export const addUserActivity = async (userId, payload) => {
       exercisesCorrect,
       exercisesTotal
     });
+    const mistake = payload.mistake ? await recordMistake(client, userId, payload.mistake) : null;
 
     return {
       ...activity,
+      mistake,
       unlockedAchievements
     };
   });
 };
+
+export const getUserMistakes = async (userId, options) => listMistakes(userId, options);
+
+export const recordMistakePractice = async (userId, mistakeId, payload) =>
+  practiceMistake(userId, mistakeId, payload);

@@ -3,12 +3,14 @@ import {
   useAddActivityMutation,
   useHanziStrokesQuery,
   useMinimalPairsQuery,
+  usePracticeMistakeMutation,
   useScoreShadowingMutation,
   useShadowingPromptsQuery,
+  useUserMistakesQuery,
   useVocabularyQuery,
 } from "../api";
 import type { HanziStrokeCharacter } from "../api/practice";
-import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Volume2, XCircle } from "lucide-react";
+import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../i18n";
 import { cn } from "../utils/cn";
@@ -16,7 +18,7 @@ import LoadingCard from "../components/LoadingCard";
 import TtsButton from "../components/TtsButton";
 import { speakChinese } from "../utils/tts";
 
-type Tool = "menu" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening";
+type Tool = "menu" | "weak" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening";
 
 const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm sm:p-7";
 const innerCardClass = "rounded-lg border bg-card shadow-sm";
@@ -30,6 +32,13 @@ const blobToDataUrl = (blob: Blob) =>
     reader.onerror = () => reject(new Error("Could not read recorded audio."));
     reader.readAsDataURL(blob);
   });
+
+const normalizeAnswer = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
 export default function Practice() {
   const { t } = useI18n();
@@ -53,6 +62,7 @@ export default function Practice() {
           </div>
           {[
             { id: "tones", title: t("practice.tones"), desc: t("practice.tonesDesc"), icon: Activity, cls: "bg-tone-1" },
+            { id: "weak", title: "Weak Practice", desc: "Review words and skills you missed before.", icon: Target, cls: "bg-primary" },
             { id: "pairs", title: t("practice.pairs"), desc: t("practice.pairsDesc"), icon: Ear, cls: "bg-tone-4" },
             { id: "typing", title: t("practice.typing"), desc: t("practice.typingDesc"), icon: Keyboard, cls: "bg-jade" },
             { id: "listening", title: t("practice.listening"), desc: t("practice.listeningDesc"), icon: Volume2, cls: "bg-primary" },
@@ -75,6 +85,7 @@ export default function Practice() {
         </div>
       )}
 
+      {activeTool === "weak" && <WeakPracticeTool />}
       {activeTool === "tones" && <ToneDrillTool />}
       {activeTool === "pairs" && <MinimalPairsTool />}
       {activeTool === "typing" && <PinyinTypingTool />}
@@ -91,6 +102,137 @@ function usePracticeWords() {
     ...vocabQuery,
     words: vocabQuery.data?.vocab ?? [],
   };
+}
+
+function WeakPracticeTool() {
+  const mistakesQuery = useUserMistakesQuery(50);
+  const practiceMistake = usePracticeMistakeMutation();
+  const addActivity = useAddActivityMutation();
+  const mistakes = (mistakesQuery.data?.mistakes ?? []).filter((item) => item.needsPracticeCount > 0);
+  const [idx, setIdx] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [checked, setChecked] = useState<null | boolean>(null);
+  const activeMistake = mistakes[idx % Math.max(mistakes.length, 1)];
+
+  if (mistakesQuery.isLoading) return <LoadingCard label="Loading weak spots..." />;
+
+  if (!activeMistake) {
+    return (
+      <div className={panelClass}>
+        <Target className="mx-auto mb-4 text-jade" size={56} />
+        <h3 className="text-[1.3rem] font-extrabold">No weak spots yet</h3>
+        <p className="mt-2 text-[0.9rem] text-muted-foreground">
+          Missed answers from review and practice will appear here automatically.
+        </p>
+      </div>
+    );
+  }
+
+  const acceptedAnswers = [
+    activeMistake.correctAnswer,
+    activeMistake.pinyin,
+    activeMistake.english,
+  ]
+    .filter(Boolean)
+    .map((value) => normalizeAnswer(String(value)));
+  const normalizedInput = normalizeAnswer(answer);
+  const isCorrect =
+    normalizedInput.length > 0 &&
+    acceptedAnswers.some((candidate) => candidate === normalizedInput || candidate.includes(normalizedInput));
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!answer.trim() || checked !== null) return;
+    setChecked(isCorrect);
+    await practiceMistake.mutateAsync({ mistakeId: activeMistake.id, correct: isCorrect });
+    await addActivity.mutateAsync({
+      xp: isCorrect ? 8 : 0,
+      exercisesCorrect: isCorrect ? 1 : 0,
+      exercisesTotal: 1,
+      skill: `weak-${activeMistake.skill}`,
+      skillScore: isCorrect ? 100 : 0,
+      mistake: !isCorrect
+        ? {
+            wordId: activeMistake.wordId || undefined,
+            skill: activeMistake.skill,
+            prompt: activeMistake.prompt || activeMistake.simplified || undefined,
+            userAnswer: answer,
+            correctAnswer: activeMistake.correctAnswer || activeMistake.pinyin || activeMistake.english || undefined,
+            simplified: activeMistake.simplified || undefined,
+            pinyin: activeMistake.pinyin || undefined,
+            english: activeMistake.english || undefined,
+            context: { source: "weak-practice" },
+          }
+        : undefined,
+    });
+  };
+
+  const next = () => {
+    setIdx((value) => value + 1);
+    setAnswer("");
+    setChecked(null);
+  };
+
+  return (
+    <div className={panelClass}>
+      <div className="mb-5 flex items-center justify-between gap-3 text-left">
+        <div>
+          <h3 className="text-[1.3rem] font-extrabold">Weak Practice</h3>
+          <p className="text-[0.85rem] text-muted-foreground">
+            {mistakes.length} active weak spots - {activeMistake.skill}
+          </p>
+        </div>
+        <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+          x{activeMistake.needsPracticeCount}
+        </span>
+      </div>
+
+      <div className={cn(innerCardClass, "mb-6 p-7")}>
+        <h1 className="font-serif text-6xl font-extrabold text-primary">
+          {activeMistake.simplified || activeMistake.prompt || "?"}
+        </h1>
+        {activeMistake.prompt && activeMistake.prompt !== activeMistake.simplified && (
+          <p className="mt-3 text-[0.9rem] font-semibold text-muted-foreground">{activeMistake.prompt}</p>
+        )}
+        {activeMistake.simplified && (
+          <TtsButton text={activeMistake.simplified} className={cn(secondaryButtonClass, "mt-4 px-4 py-2")}>
+            Listen
+          </TtsButton>
+        )}
+      </div>
+
+      <form onSubmit={submit} className="grid gap-4">
+        <input
+          value={answer}
+          onChange={(event) => setAnswer(event.target.value)}
+          disabled={checked !== null}
+          placeholder="Type pinyin, meaning, or the corrected answer..."
+          className="rounded-xl border-2 bg-background p-4 text-center text-[1rem] font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+        />
+
+        {checked !== null && (
+          <div className={cn("rounded-xl border p-4 text-left text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
+            {checked ? "Correct. This weak spot is cooling down." : "Not yet. Review the target answer below."}
+            <div className="mt-2 text-foreground">
+              {activeMistake.pinyin && <div>Pinyin: {activeMistake.pinyin}</div>}
+              {activeMistake.english && <div>Meaning: {activeMistake.english}</div>}
+              {activeMistake.correctAnswer && <div>Correct: {activeMistake.correctAnswer}</div>}
+            </div>
+          </div>
+        )}
+
+        {checked === null ? (
+          <button className={primaryButtonClass} type="submit" disabled={!answer.trim() || practiceMistake.isPending || addActivity.isPending}>
+            Check Weak Spot
+          </button>
+        ) : (
+          <button className={primaryButtonClass} type="button" onClick={next}>
+            Next Weak Spot
+          </button>
+        )}
+      </form>
+    </div>
+  );
 }
 
 function ToneDrillTool() {
@@ -112,6 +254,17 @@ function ToneDrillTool() {
       exercisesTotal: 1,
       skill: "tones",
       skillScore: tone === correctTone ? 100 : 0,
+      mistake: tone !== correctTone ? {
+        wordId: word.id,
+        skill: "tones",
+        prompt: word.simplified,
+        userAnswer: `Tone ${tone}`,
+        correctAnswer: `Tone ${correctTone}`,
+        simplified: word.simplified,
+        pinyin: word.pinyin,
+        english: word.english,
+        context: { tool: "tone-drill" },
+      } : undefined,
     });
   };
 
@@ -177,6 +330,16 @@ function MinimalPairsTool() {
       exercisesTotal: 1,
       skill: "listening",
       skillScore: isCorrect ? 100 : 0,
+      mistake: !isCorrect ? {
+        skill: "minimal-pairs",
+        prompt: activePair.label,
+        userAnswer: selection === "A" ? activePair.wordA : activePair.wordB,
+        correctAnswer: playedA ? activePair.wordA : activePair.wordB,
+        simplified: playedA ? activePair.charA : activePair.charB,
+        pinyin: playedA ? activePair.wordA : activePair.wordB,
+        english: activePair.label,
+        context: { tool: "minimal-pairs", selected: selection },
+      } : undefined,
     });
   };
 
@@ -242,6 +405,17 @@ function PinyinTypingTool() {
       exercisesTotal: 1,
       skill: "typing",
       skillScore: isMatch ? 100 : 0,
+      mistake: !isMatch ? {
+        wordId: word.id,
+        skill: "typing",
+        prompt: word.simplified,
+        userAnswer: typed,
+        correctAnswer: word.pinyin,
+        simplified: word.simplified,
+        pinyin: word.pinyin,
+        english: word.english,
+        context: { tool: "pinyin-typing" },
+      } : undefined,
     });
   };
 
@@ -295,6 +469,17 @@ function ListeningTool() {
       exercisesTotal: 1,
       skill: "listening",
       skillScore: isCorrect ? 100 : 0,
+      mistake: !isCorrect ? {
+        wordId: word.id,
+        skill: "listening",
+        prompt: "Choose the meaning you heard",
+        userAnswer: options.find((option) => option.id === wordId)?.english,
+        correctAnswer: word.english,
+        simplified: word.simplified,
+        pinyin: word.pinyin,
+        english: word.english,
+        context: { tool: "listening-check" },
+      } : undefined,
     });
   };
 
@@ -403,6 +588,16 @@ function ShadowingTool() {
       exercisesTotal: 1,
       skill: "shadow",
       skillScore: result.score.overall,
+      mistake: result.score.overall < 80 ? {
+        skill: "shadow",
+        prompt: prompt.hanzi,
+        userAnswer: `${result.score.overall}%`,
+        correctAnswer: prompt.pinyin,
+        simplified: prompt.hanzi,
+        pinyin: prompt.pinyin,
+        english: prompt.english,
+        context: { tool: "shadowing", score: result.score },
+      } : undefined,
     });
   };
 
