@@ -21,6 +21,7 @@ import {
   useListsQuery,
 } from "../api";
 import { useOcrScanMutation } from "../api/ocr/queries";
+import { useOcrHistoryQuery } from "../api/ocr/queries";
 import type { OcrBox, OcrScanPayload, OcrSegment } from "../api/ocr";
 import { Button } from "../components/ui/button";
 import { cn } from "../utils/cn";
@@ -44,6 +45,7 @@ const getCombinedMeaning = (segments: OcrSegment[]) =>
 
 export default function Translate() {
   const scanMutation = useOcrScanMutation();
+  const ocrHistoryQuery = useOcrHistoryQuery(12);
   const listsQuery = useListsQuery();
   const createListMutation = useCreateListMutation();
   const enrollMutation = useEnrollWordMutation();
@@ -65,7 +67,9 @@ export default function Translate() {
 
   const loading = scanMutation.isPending;
   const lists = listsQuery.data?.lists ?? [];
-  const addWordMutation = useAddWordToListMutation(selectedOcrListId);
+  const historyEvents = ocrHistoryQuery.data?.events ?? [];
+  const activeOcrListId = selectedOcrListId || lists[0]?.id || "";
+  const addWordMutation = useAddWordToListMutation(activeOcrListId);
   const selectedSegments = useMemo(
     () => segments.filter((segment) => selectedSegmentIds.includes(segment.id)),
     [segments, selectedSegmentIds],
@@ -236,7 +240,7 @@ export default function Translate() {
   };
 
   const saveSegmentToList = async (segment: OcrSegment) => {
-    if (!selectedOcrListId) {
+    if (!activeOcrListId) {
       toast.info("Chon hoac tao danh sach truoc.");
       return;
     }
@@ -251,7 +255,7 @@ export default function Translate() {
   };
 
   const saveActiveSegmentsToList = async () => {
-    if (!selectedOcrListId) {
+    if (!activeOcrListId) {
       toast.info("Chon hoac tao danh sach truoc.");
       return;
     }
@@ -266,12 +270,6 @@ export default function Translate() {
       await saveSegmentToSrs(segment);
     }
   };
-
-  useEffect(() => {
-    if (!selectedOcrListId && lists[0]) {
-      setSelectedOcrListId(lists[0].id);
-    }
-  }, [lists, selectedOcrListId]);
 
   useEffect(() => () => stopCamera(), []);
 
@@ -525,7 +523,7 @@ export default function Translate() {
               <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <select
-                    value={selectedOcrListId}
+                    value={activeOcrListId}
                     onChange={(event) => setSelectedOcrListId(event.target.value)}
                     className="min-w-0 rounded-lg border bg-card px-3 py-2 text-sm font-semibold outline-none"
                   >
@@ -557,7 +555,7 @@ export default function Translate() {
                     type="button"
                     variant="outline"
                     onClick={() => void saveActiveSegmentsToList()}
-                    disabled={!selectedOcrListId || addWordMutation.isPending}
+                    disabled={!activeOcrListId || addWordMutation.isPending}
                   >
                     <ListPlus size={16} />
                     Luu list
@@ -612,6 +610,40 @@ export default function Translate() {
               </div>
             </div>
           )}
+
+          <div className="mt-6 border-t pt-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-xs font-bold uppercase text-muted-foreground">Lịch sử OCR</h3>
+              {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
+            </div>
+            {historyEvents.length === 0 ? (
+              <div className="rounded-lg border bg-background p-3 text-sm font-semibold text-muted-foreground">
+                Chưa có lịch sử quét.
+              </div>
+            ) : (
+              <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
+                {historyEvents.map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => {
+                      setMode("text");
+                      setSourceText(event.detectedText || "");
+                      void runScan({ text: event.detectedText || "" });
+                    }}
+                    className="rounded-lg border bg-background p-3 text-left transition hover:border-primary/60"
+                  >
+                    <span className="line-clamp-1 font-serif text-xl font-extrabold">
+                      {event.detectedText || "Không có text"}
+                    </span>
+                    <span className="mt-1 block text-xs font-semibold text-muted-foreground">
+                      {new Date(event.createdAt).toLocaleString()} - {event.matchedWordIds.length} từ match
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </div>

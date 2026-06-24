@@ -39,3 +39,16 @@ export interface OcrScanResponse {
     detectedText?: string;
     provider?: string;
 }
+
+export interface OcrHistoryEvent {
+    id: string;
+    provider: string;
+    detectedText: string;
+    matchedWordIds: string[];
+    metadata: Record<string, unknown>;
+    createdAt: string;
+}
+
+export interface OcrHistoryResponse {
+    events: OcrHistoryEvent[];
+}

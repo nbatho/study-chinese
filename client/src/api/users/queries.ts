@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { usersApi } from './index';
-import type { AddActivityPayload, UserProfile } from './types';
+import type { AddActivityPayload, MistakePayload, UserProfile } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
 
 export const useUserProfileQuery = (enabled = true) =>
@@ -30,6 +30,13 @@ export const useUserStatsQuery = (days = 7, enabled = true) =>
         enabled,
     });
 
+export const useTodayPlanQuery = (enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.users.todayPlan,
+        queryFn: () => unwrapApiData(usersApi.getTodayPlan()),
+        enabled,
+    });
+
 export const useUserMistakesQuery = (limit = 30) =>
     useQuery({
         queryKey: queryKeys.users.mistakes(limit),
@@ -44,6 +51,7 @@ export const useAddActivityMutation = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.users.profile });
             queryClient.invalidateQueries({ queryKey: ['users', 'stats'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
             queryClient.invalidateQueries({ queryKey: ['users', 'mistakes'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
@@ -59,6 +67,19 @@ export const usePracticeMistakeMutation = () => {
             unwrapApiData(usersApi.practiceMistake(mistakeId, { correct })),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users', 'mistakes'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+        },
+    });
+};
+
+export const useRecordMistakeMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: MistakePayload) => unwrapApiData(usersApi.recordMistake(payload)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users', 'mistakes'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
         },
     });
 };

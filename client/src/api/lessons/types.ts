@@ -55,6 +55,7 @@ export interface LessonDetail extends Omit<LessonSummary, 'completedAt' | 'bestA
         options?: string[];
         correctIndex?: number;
         correctText: string;
+        answerExplanation?: string | null;
         audioWordId?: string;
         tone?: number;
     }>;

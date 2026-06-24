@@ -6,9 +6,12 @@ import type {
     MistakesResponse,
     PracticeMistakePayload,
     PracticeMistakeResponse,
+    RecordMistakeResponse,
+    TodayPlanResponse,
     UserProfile,
     UserProfileResponse,
     UserStatsResponse,
+    MistakePayload,
 } from './types';
 
 export const usersApi = {
@@ -19,8 +22,13 @@ export const usersApi = {
 
     getStats: (params?: { days?: number }) => apiRequest<UserStatsResponse>(beApi.get('users/stats', { params })),
 
+    getTodayPlan: () => apiRequest<TodayPlanResponse>(beApi.get('users/today-plan')),
+
     getMistakes: (params?: { limit?: number }) =>
         apiRequest<MistakesResponse>(beApi.get('users/mistakes', { params })),
+
+    recordMistake: (payload: MistakePayload) =>
+        apiRequest<RecordMistakeResponse>(beApi.post('users/mistakes', payload)),
 
     practiceMistake: (mistakeId: string, payload: PracticeMistakePayload) =>
         apiRequest<PracticeMistakeResponse>(beApi.post(`users/mistakes/${mistakeId}/practice`, payload)),

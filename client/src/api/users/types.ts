@@ -43,6 +43,27 @@ export interface UserStatsResponse {
     stats: DailyStat[];
 }
 
+export interface TodayPlanStep {
+    id: string;
+    kind: 'review' | 'practice' | 'lesson' | 'ai';
+    title: string;
+    description: string;
+    estimateMinutes: number;
+    href: string;
+    status: 'done' | 'current' | 'next';
+    meta?: Record<string, unknown>;
+}
+
+export interface TodayPlanResponse {
+    plan: {
+        dateKey: string;
+        xpTarget: number;
+        todayXp: number;
+        dailyMinutes: number;
+        steps: TodayPlanStep[];
+    };
+}
+
 export interface AddActivityPayload {
     xp?: number;
     minutes?: number;
@@ -92,6 +113,10 @@ export interface MistakeItem {
 
 export interface MistakesResponse {
     mistakes: MistakeItem[];
+}
+
+export interface RecordMistakeResponse {
+    mistake: MistakeItem;
 }
 
 export interface PracticeMistakePayload {

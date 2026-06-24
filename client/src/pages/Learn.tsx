@@ -1,13 +1,25 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { useDailyContentQuery, useLessonDetailQuery, useLessonsQuery } from "../api";
+import { useDailyContentQuery, useLessonDetailQuery, useLessonsQuery, useRecordMistakeMutation } from "../api";
 import { useCompleteLessonMutation } from "../api/lessons/queries";
 import type { LessonDetail } from "../api/lessons";
+import type { MistakePayload } from "../api/users";
 import { ArrowLeft, Award, BookOpen, CheckCircle2, Search, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
 import { useI18n } from "../i18n";
+import type { TranslationKey } from "../i18n";
 import { cn } from "../utils/cn";
 import LoadingCard from "../components/LoadingCard";
 import { speakChinese } from "../utils/tts";
+
+const exerciseKindTranslationKeys: Record<string, TranslationKey> = {
+  arrangeSentence: "learn.exerciseKind.arrangeSentence",
+  fillBlank: "learn.exerciseKind.fillBlank",
+  listening: "learn.exerciseKind.listening",
+  matchPinyin: "learn.exerciseKind.matchPinyin",
+  multipleChoice: "learn.exerciseKind.multipleChoice",
+  tonePicker: "learn.exerciseKind.tonePicker",
+  trueFalse: "learn.exerciseKind.trueFalse",
+};
 
 export default function Learn() {
   const { t } = useI18n();
@@ -120,6 +132,7 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
   const { t } = useI18n();
   const lessonQuery = useLessonDetailQuery(lessonId);
   const completeLessonMutation = useCompleteLessonMutation(lessonId);
+  const recordMistakeMutation = useRecordMistakeMutation();
   const lesson = lessonQuery.data?.lesson;
   const [stage, setStage] = useState<"intro" | "dialogue" | "exercises" | "completed">("intro");
   const [showPinyin, setShowPinyin] = useState(true);
@@ -152,11 +165,18 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
 
   const handleCheckAnswer = () => {
     if (!currentExercise) return;
-    if (selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence") return;
+    if (isAnswerChecked) return;
+    const isArrangeExercise = currentExercise.kind === "arrangeSentence";
+    if (isArrangeExercise ? arrangedWords.length === 0 : selectedOptionIdx === null) return;
     const correct = currentExercise.kind === "arrangeSentence"
       ? arrangedWords.join("") === currentExercise.correctText.replace(/\s+/g, "")
       : selectedOptionIdx === currentExercise.correctIndex;
     if (correct) setCorrectAnswersCount((prev) => prev + 1);
+    if (!correct) {
+      void recordMistakeMutation
+        .mutateAsync(buildLessonMistakePayload(lesson, currentExercise, selectedOptionIdx, arrangedWords))
+        .catch(() => undefined);
+    }
     setIsAnswerChecked(true);
     if (currentExercise.audioWordId || currentExercise.kind === "listening") {
       speakChinese(currentExercise.correctText);
@@ -247,12 +267,19 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
 
       {stage === "exercises" && currentExercise && (
         <div className="anim-slide">
+          {(() => {
+            const kindLabelKey = exerciseKindTranslationKeys[currentExercise.kind];
+            const isArrangeExercise = currentExercise.kind === "arrangeSentence";
+            const isCheckDisabled = isArrangeExercise ? arrangedWords.length === 0 : selectedOptionIdx === null;
+
+            return (
+              <>
           <div className="mb-[18px] flex items-center justify-between gap-3">
             <span className="text-[0.8rem] font-bold text-muted-foreground">{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
             <span className="text-[0.8rem] font-bold text-jade">{t("learn.score", { count: correctAnswersCount })}</span>
           </div>
           <div className="mb-6 rounded-lg border bg-card px-5 py-[30px] text-center shadow-sm">
-            <h4 className="mb-3 text-base uppercase text-muted-foreground">{currentExercise.kind}</h4>
+            <h4 className="mb-3 text-base uppercase text-muted-foreground">{kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
             {currentExercise.kind === "listening" && (
               <button className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" onClick={() => speakChinese(currentExercise.correctText)}>
                 <Volume2 size={36} />
@@ -289,16 +316,28 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
           {isAnswerChecked && (
             <div className="anim-pop mb-6 rounded-xl border bg-secondary p-4 text-left">
               <h5 className="mb-1 font-bold">{t("learn.correctMatch")}</h5>
-              <p className="text-[0.85rem] text-muted-foreground"><strong>{currentExercise.correctText}</strong></p>
+              <div className="space-y-1.5 text-[0.9rem] text-muted-foreground">
+                <p><strong className="text-foreground">{currentExercise.correctText}</strong></p>
+                {currentExercise.promptPinyin && (
+                  <p><span className="font-semibold text-foreground">{t("learn.answerPinyin")}</span> {currentExercise.promptPinyin}</p>
+                )}
+                {currentExercise.promptEnglish && (
+                  <p><span className="font-semibold text-foreground">{t("learn.answerMeaning")}</span> {currentExercise.promptEnglish}</p>
+                )}
+                {currentExercise.answerExplanation && <p>{currentExercise.answerExplanation}</p>}
+              </div>
             </div>
           )}
           {!isAnswerChecked ? (
-            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" disabled={selectedOptionIdx === null && arrangedWords.length === 0 && currentExercise.kind === "arrangeSentence"} onClick={handleCheckAnswer}>{t("learn.check")}</button>
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" disabled={isCheckDisabled} onClick={handleCheckAnswer}>{t("learn.check")}</button>
           ) : (
             <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-jade px-6 py-3 text-sm font-semibold text-white transition hover:bg-jade/90 disabled:opacity-60" onClick={handleNextExercise} disabled={completeLessonMutation.isPending}>
               {exerciseIdx + 1 === lesson.exercises.length ? t("learn.finish") : t("learn.nextQuestion")}
             </button>
           )}
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -323,6 +362,59 @@ function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => 
       )}
     </div>
   );
+}
+
+type LessonExercise = LessonDetail["exercises"][number];
+
+function hasChineseText(value?: string | null) {
+  return /[\u3400-\u9fff]/.test(value || "");
+}
+
+function buildLessonMistakePayload(
+  lesson: LessonDetail,
+  exercise: LessonExercise,
+  selectedOptionIdx: number | null,
+  arrangedWords: string[],
+): MistakePayload {
+  const matchedWord =
+    lesson.newWords.find((word) => word.id === exercise.audioWordId) ??
+    lesson.newWords.find((word) =>
+      word.simplified === exercise.promptHanzi ||
+      word.simplified === exercise.correctText ||
+      exercise.prompt.includes(word.simplified),
+    );
+  const selectedOption =
+    selectedOptionIdx === null ? undefined : exercise.options?.[selectedOptionIdx];
+  const correctOption =
+    exercise.correctIndex === undefined ? undefined : exercise.options?.[exercise.correctIndex];
+  const userAnswer =
+    exercise.kind === "arrangeSentence" ? arrangedWords.join("") : selectedOption;
+  const simplified =
+    exercise.promptHanzi ||
+    matchedWord?.simplified ||
+    (hasChineseText(exercise.correctText) ? exercise.correctText : undefined);
+
+  return {
+    wordId: matchedWord?.id,
+    skill: `lesson-${exercise.kind}`.slice(0, 50),
+    prompt: exercise.prompt,
+    userAnswer: userAnswer || "(blank)",
+    correctAnswer: exercise.correctText || correctOption,
+    simplified,
+    pinyin: exercise.promptPinyin || matchedWord?.pinyin,
+    english: exercise.promptEnglish || matchedWord?.english,
+    context: {
+      source: "lesson",
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      lessonSkill: lesson.skill,
+      exerciseId: exercise.id,
+      exerciseKind: exercise.kind,
+      selectedOptionIndex: selectedOptionIdx,
+      correctOptionIndex: exercise.correctIndex,
+      correctOption,
+    },
+  };
 }
 
 function WordList({ lesson, compact = false }: { lesson: LessonDetail; compact?: boolean }) {

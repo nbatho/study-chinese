@@ -96,6 +96,38 @@ export const getCustomLists = async (userId) => {
   };
 };
 
+export const getCustomListDetails = async (userId, listId) => {
+  const list = await getListWordIds({ query }, listId, userId);
+  const wordsResult = await query(
+    `
+      SELECT w.*
+      FROM custom_list_words clw
+      JOIN custom_lists cl ON cl.id = clw.list_id
+      JOIN words w ON w.id = clw.word_id
+      WHERE cl.id = $1 AND cl.user_id = $2
+      ORDER BY clw.order_num, w.simplified
+    `,
+    [listId, userId]
+  );
+
+  return {
+    list: {
+      ...list,
+      words: wordsResult.rows.map((row) => ({
+        id: row.id,
+        simplified: row.simplified,
+        traditional: row.traditional,
+        pinyin: row.pinyin,
+        tones: row.tones || [],
+        english: row.english,
+        partOfSpeech: row.part_of_speech,
+        hskLevel: Number(row.hsk_level),
+        category: row.category
+      }))
+    }
+  };
+};
+
 export const createCustomList = async (userId, { name, emoji }) => {
   const result = await query(
     `

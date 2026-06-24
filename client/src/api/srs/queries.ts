@@ -20,6 +20,7 @@ export const useReviewSrsMutation = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['srs', 'due'] });
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
         },
@@ -33,6 +34,7 @@ export const useEnrollWordMutation = () => {
         mutationFn: (payload: EnrollWordPayload) => unwrapApiData(srsApi.enroll(payload)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['srs', 'due'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
         },
     });
 };

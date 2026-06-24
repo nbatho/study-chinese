@@ -177,12 +177,37 @@ export const createMockTutorReply = (text) => {
   };
 };
 
-const buildSystemPrompt = (scenario) => `
+const formatLearningContext = (learningContext) => {
+  if (!learningContext) {
+    return '- Chưa có dữ liệu cá nhân hóa.';
+  }
+
+  const mistakes = (learningContext.mistakes || [])
+    .map((item) => `${item.simplified || item.prompt || item.skill} (${item.pinyin || 'no pinyin'}): ${item.english || item.correctAnswer || item.skill}`)
+    .join('; ');
+  const listWords = (learningContext.listWords || [])
+    .map((item) => `${item.simplified} (${item.pinyin}): ${item.english}`)
+    .join('; ');
+  const recentLesson = learningContext.recentLesson
+    ? `${learningContext.recentLesson.title} - ${learningContext.recentLesson.skill}`
+    : '';
+
+  return [
+    mistakes ? `- Lỗi hay gặp: ${mistakes}` : '',
+    listWords ? `- Từ trong list gần đây: ${listWords}` : '',
+    recentLesson ? `- Bài học gần đây: ${recentLesson}` : ''
+  ].filter(Boolean).join('\n') || '- Chưa có dữ liệu cá nhân hóa.';
+};
+
+const buildSystemPrompt = (scenario, learningContext) => `
 Bạn là Xiao Hong (小红), một gia sư dạy tiếng Trung giao tiếp thân thiện và chu đáo.
 
 Ngữ cảnh kịch bản:
 - Tên: ${scenario?.title || 'Free Talk'}
 - Mô tả: ${scenario?.description || 'Luyện hội thoại tiếng Trung hằng ngày.'}
+
+Ngữ cảnh học tập cá nhân của học viên:
+${formatLearningContext(learningContext)}
 
 Nhiệm vụ:
 1. Trả lời bằng tiếng Trung giản thể, ngắn gọn, tự nhiên, phù hợp HSK 1-3.
@@ -200,8 +225,8 @@ Chỉ trả về JSON hợp lệ, không markdown, theo schema:
 ${JSON.stringify(JSON_SCHEMA_HINT)}
 `;
 
-const toProviderMessages = ({ scenario, messages, userText }) => {
-  const system = buildSystemPrompt(scenario);
+const toProviderMessages = ({ scenario, messages, userText, learningContext }) => {
+  const system = buildSystemPrompt(scenario, learningContext);
   const history = (messages || []).slice(-10).map((message) => ({
     role: message.role === 'tutor' ? 'assistant' : 'user',
     content: message.raw_text || message.normalized_simplified || ''
@@ -299,11 +324,11 @@ const requireApiKey = (provider) => {
   return apiKey;
 };
 
-const callGemini = async ({ scenario, messages, userText }) => {
+const callGemini = async ({ scenario, messages, userText, learningContext }) => {
   const provider = 'gemini';
   const apiKey = requireApiKey(provider);
   const modelName = env.AI_MODEL || 'gemini-2.5-flash';
-  const { system, history } = toProviderMessages({ scenario, messages, userText });
+  const { system, history } = toProviderMessages({ scenario, messages, userText, learningContext });
   const startedAt = now();
   const url =
     env.AI_BASE_URL ||
@@ -368,9 +393,9 @@ const openAiConfig = (provider) => {
   };
 };
 
-const callOpenAiCompatible = async ({ scenario, messages, userText, provider }) => {
+const callOpenAiCompatible = async ({ scenario, messages, userText, provider, learningContext }) => {
   const config = openAiConfig(provider);
-  const { system, history } = toProviderMessages({ scenario, messages, userText });
+  const { system, history } = toProviderMessages({ scenario, messages, userText, learningContext });
   const startedAt = now();
   const data = await fetchJsonWithRetry(
     config.url,
@@ -431,7 +456,7 @@ export const logAiUsage = (reply, { fallback = false, blocked = false } = {}) =>
   );
 };
 
-export const getAiTutorReply = async ({ scenario, messages, userText }) => {
+export const getAiTutorReply = async ({ scenario, messages, userText, learningContext }) => {
   const provider = String(env.AI_PROVIDER || 'mock').toLowerCase();
   const guard = getGuardDecision(userText);
 
@@ -450,12 +475,13 @@ export const getAiTutorReply = async ({ scenario, messages, userText }) => {
   try {
     const reply =
       provider === 'gemini'
-        ? await callGemini({ scenario, messages, userText })
+        ? await callGemini({ scenario, messages, userText, learningContext })
         : await callOpenAiCompatible({
             scenario,
             messages,
             userText,
-            provider
+            provider,
+            learningContext
           });
 
     logAiUsage(reply);

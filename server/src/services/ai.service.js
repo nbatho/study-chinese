@@ -25,6 +25,96 @@ const mapMessage = (row) => ({
   correction: row.correction
 });
 
+const personalScenarios = [
+  {
+    id: 'personal-weak',
+    title: 'Luyen diem yeu',
+    emoji: 'Target',
+    description: 'Hoi thoai dung cac tu va ky nang ban hay sai.',
+    initialMessage: {
+      simplified: '我们来练习你的难点吧。',
+      pinyin: 'Wǒmen lái liànxí nǐ de nándiǎn ba.',
+      english: 'Let us practice your weak spots.'
+    }
+  },
+  {
+    id: 'personal-list',
+    title: 'Luyen tu trong list',
+    emoji: 'List',
+    description: 'AI Tutor uu tien tu vung trong danh sach ban luu gan day.',
+    initialMessage: {
+      simplified: '请用你保存的词说一句话。',
+      pinyin: 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.',
+      english: 'Please make a sentence with a word you saved.'
+    }
+  },
+  {
+    id: 'personal-lesson',
+    title: 'On bai vua hoc',
+    emoji: 'Brain',
+    description: 'Luyen hoi thoai xoay quanh bai hoc gan nhat.',
+    initialMessage: {
+      simplified: '我们复习你刚学的内容。',
+      pinyin: 'Wǒmen fùxí nǐ gāng xué de nèiróng.',
+      english: 'Let us review what you just learned.'
+    }
+  }
+];
+
+const getPersonalScenario = (scenarioId) =>
+  personalScenarios.find((scenario) => scenario.id === scenarioId) || null;
+
+const getLearningContext = async (client, userId) => {
+  const [mistakesResult, listWordsResult, lessonResult] = await Promise.all([
+    client.query(
+      `
+        SELECT
+          um.skill,
+          um.prompt,
+          um.correct_answer AS "correctAnswer",
+          COALESCE(w.simplified, um.simplified) AS simplified,
+          COALESCE(w.pinyin, um.pinyin) AS pinyin,
+          COALESCE(w.english, um.english) AS english
+        FROM user_mistakes um
+        LEFT JOIN words w ON w.id = um.word_id
+        WHERE um.user_id = $1 AND GREATEST(um.mistake_count - um.resolved_count, 0) > 0
+        ORDER BY GREATEST(um.mistake_count - um.resolved_count, 0) DESC, um.last_mistake_at DESC
+        LIMIT 5
+      `,
+      [userId]
+    ),
+    client.query(
+      `
+        SELECT w.simplified, w.pinyin, w.english
+        FROM custom_lists cl
+        JOIN custom_list_words clw ON clw.list_id = cl.id
+        JOIN words w ON w.id = clw.word_id
+        WHERE cl.user_id = $1
+        ORDER BY cl.updated_at DESC, clw.order_num
+        LIMIT 8
+      `,
+      [userId]
+    ),
+    client.query(
+      `
+        SELECT l.title, l.skill
+        FROM user_lesson_progress ulp
+        JOIN lessons l ON l.id = ulp.lesson_id
+        WHERE ulp.user_id = $1
+        ORDER BY ulp.completed_at DESC NULLS LAST, ulp.updated_at DESC
+        LIMIT 1
+      `,
+      [userId]
+    )
+  ]);
+
+  return {
+    mistakes: mistakesResult.rows,
+    listWords: listWordsResult.rows,
+    recentLesson: lessonResult.rows[0] || null
+  };
+};
+
 export const getChatScenarios = async () => {
   const result = await query(
     `
@@ -36,14 +126,15 @@ export const getChatScenarios = async () => {
   );
 
   return {
-    scenarios: result.rows.map(mapScenario)
+    scenarios: [...personalScenarios, ...result.rows.map(mapScenario)]
   };
 };
 
 export const startChatSession = async (userId, { scenarioId }) =>
   withTransaction(async (client) => {
-    const resolvedScenarioId = scenarioId || 'general';
-    const scenarioResult = await client.query(
+    const personalScenario = getPersonalScenario(scenarioId);
+    const resolvedScenarioId = personalScenario ? null : scenarioId || 'general';
+    const scenarioResult = personalScenario ? { rowCount: 0, rows: [] } : await client.query(
       `
         SELECT *
         FROM chat_scenarios
@@ -52,18 +143,18 @@ export const startChatSession = async (userId, { scenarioId }) =>
       [resolvedScenarioId]
     );
 
-    if (scenarioResult.rowCount === 0 && scenarioId) {
+    if (scenarioResult.rowCount === 0 && scenarioId && !personalScenario) {
       throw notFound('Không tìm thấy kịch bản trò chuyện.');
     }
 
-    const scenario = scenarioResult.rows[0] || null;
+    const scenario = personalScenario || scenarioResult.rows[0] || null;
     const sessionResult = await client.query(
       `
         INSERT INTO chat_sessions (user_id, scenario_id, title)
         VALUES ($1, $2, $3)
         RETURNING *
       `,
-      [userId, scenarioId || null, scenario?.title || 'Free Talk']
+      [userId, personalScenario ? null : scenarioId || null, scenario?.title || 'Free Talk']
     );
 
     const messages = [];
@@ -82,7 +173,12 @@ export const startChatSession = async (userId, { scenarioId }) =>
           VALUES ($1, 'tutor', $2, $2, $3, $4)
           RETURNING *
         `,
-        [sessionResult.rows[0].id, scenario.init_msg_simplified, scenario.init_msg_pinyin, scenario.init_msg_english]
+        [
+          sessionResult.rows[0].id,
+          scenario.init_msg_simplified || scenario.initialMessage?.simplified,
+          scenario.init_msg_pinyin || scenario.initialMessage?.pinyin,
+          scenario.init_msg_english || scenario.initialMessage?.english
+        ]
       );
       messages.push(mapMessage(messageResult.rows[0]));
     }
@@ -108,6 +204,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
       `
         SELECT
           s.id,
+          s.title AS session_title,
           cs.id AS scenario_id,
           cs.title AS scenario_title,
           cs.description AS scenario_description
@@ -155,15 +252,21 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
             title: sessionResult.rows[0].scenario_title,
             description: sessionResult.rows[0].scenario_description
           }
-        : null,
-      messages: historyResult.rows
+        : {
+            id: 'personal',
+            title: sessionResult.rows[0].session_title || 'Personal Practice',
+            description: 'Personalized Chinese practice using current learning data.'
+          },
+      messages: historyResult.rows,
+      learningContext: await getLearningContext(client, userId)
     };
   });
 
   const reply = await getAiTutorReply({
     scenario: context.scenario,
     messages: context.messages,
-    userText
+    userText,
+    learningContext: context.learningContext
   });
 
   return withTransaction(async (client) => {

@@ -79,7 +79,10 @@ function AchievementsContent() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
-  const achievements = achievementsQuery.data?.achievements ?? [];
+  const achievements = useMemo(
+    () => achievementsQuery.data?.achievements ?? [],
+    [achievementsQuery.data?.achievements],
+  );
   const unlockedCount = achievements.filter((achievement) => achievement.unlockedAt).length;
   const lockedCount = achievements.length - unlockedCount;
   const progressPercent = achievements.length

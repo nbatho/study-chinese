@@ -4,7 +4,8 @@ import {
   createList,
   deleteList,
   listCustomLists,
-  removeListWord
+  removeListWord,
+  showCustomList
 } from '../controllers/list.controller.js';
 import { requireAuth } from '../middlewares/auth.middleware.js';
 import { requireFields } from '../middlewares/validate.middleware.js';
@@ -14,6 +15,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', listCustomLists);
+router.get('/:id', showCustomList);
 router.post('/', requireFields(['name']), createList);
 router.delete('/:id', deleteList);
 router.post('/:id/words', addListWord);

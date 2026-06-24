@@ -350,6 +350,15 @@ const toSegment = (box, index) => ({
   matched: Boolean(box.english || box.pinyin || box.wordId)
 });
 
+const mapOcrHistoryEvent = (row) => ({
+  id: row.id,
+  provider: row.provider,
+  detectedText: row.detected_text,
+  matchedWordIds: row.matched_word_ids || [],
+  metadata: row.metadata || {},
+  createdAt: row.created_at
+});
+
 export const getAchievements = async (userId) => {
   const client = { query };
   return getAchievementsForUser(client, userId);
@@ -463,5 +472,23 @@ export const scanOcr = async (userId, payload) => {
     segments: boxes.map(toSegment),
     detectedText,
     provider: getOcrProvider()
+  };
+};
+
+export const getOcrHistory = async (userId, { limit = 20 } = {}) => {
+  const normalizedLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+  const result = await query(
+    `
+      SELECT *
+      FROM ocr_scan_events
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `,
+    [userId, normalizedLimit]
+  );
+
+  return {
+    events: result.rows.map(mapOcrHistoryEvent)
   };
 };

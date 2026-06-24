@@ -152,6 +152,7 @@ CREATE TABLE IF NOT EXISTS exercises (
   options JSONB NOT NULL DEFAULT '[]'::jsonb,
   correct_index INT,
   correct_text TEXT NOT NULL,
+  answer_explanation TEXT,
   audio_word_id VARCHAR(50) REFERENCES words(id) ON DELETE SET NULL,
   tone INT,
   order_num INT NOT NULL DEFAULT 0,

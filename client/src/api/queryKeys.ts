@@ -6,6 +6,7 @@ export const queryKeys = {
         profile: ['users', 'profile'] as const,
         stats: (days?: number) => ['users', 'stats', days ?? 7] as const,
         mistakes: (limit?: number) => ['users', 'mistakes', limit ?? 30] as const,
+        todayPlan: ['users', 'today-plan'] as const,
     },
     lessons: {
         list: ['lessons'] as const,
@@ -22,12 +23,14 @@ export const queryKeys = {
     },
     lists: {
         all: ['lists'] as const,
+        detail: (listId: string) => ['lists', listId] as const,
     },
     aiTutor: {
         scenarios: ['ai-tutor', 'scenarios'] as const,
     },
     ocr: {
         scan: ['ocr', 'scan'] as const,
+        history: (limit?: number) => ['ocr', 'history', limit ?? 20] as const,
     },
     achievements: {
         all: ['achievements'] as const,

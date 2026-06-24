@@ -36,6 +36,7 @@ const mapExercise = (row) => ({
   options: row.options || [],
   correctIndex: row.correct_index,
   correctText: row.correct_text,
+  answerExplanation: row.answer_explanation,
   audioWordId: row.audio_word_id,
   tone: row.tone
 });

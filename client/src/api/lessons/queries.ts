@@ -29,6 +29,7 @@ export const useCompleteLessonMutation = (lessonId: string) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.lessons.detail(lessonId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.due() });
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
         },

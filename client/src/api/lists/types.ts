@@ -5,6 +5,22 @@ export interface CustomList {
     wordIds: string[];
 }
 
+export interface CustomListWord {
+    id: string;
+    simplified: string;
+    traditional: string;
+    pinyin: string;
+    tones: number[];
+    english: string;
+    partOfSpeech: string;
+    hskLevel: number;
+    category: string;
+}
+
+export interface CustomListDetail extends CustomList {
+    words: CustomListWord[];
+}
+
 export interface ListsResponse {
     lists: CustomList[];
 }
@@ -16,6 +32,10 @@ export interface CreateListPayload {
 
 export interface CreateListResponse {
     list: CustomList;
+}
+
+export interface ListDetailResponse {
+    list: CustomListDetail;
 }
 
 export interface ListWordsResponse {

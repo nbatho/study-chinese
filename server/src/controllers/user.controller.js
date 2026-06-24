@@ -2,6 +2,8 @@ import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
 import {
   addUserActivity,
+  createUserMistake,
+  getTodayPlan,
   getUserMistakes,
   getUserProfile,
   getUserStats,
@@ -24,6 +26,11 @@ export const getStats = asyncHandler(async (req, res) => {
   success(res, data);
 });
 
+export const showTodayPlan = asyncHandler(async (req, res) => {
+  const data = await getTodayPlan(req.user.id);
+  success(res, data);
+});
+
 export const addActivity = asyncHandler(async (req, res) => {
   const data = await addUserActivity(req.user.id, req.body);
   success(res, data);
@@ -31,6 +38,11 @@ export const addActivity = asyncHandler(async (req, res) => {
 
 export const listMistakes = asyncHandler(async (req, res) => {
   const data = await getUserMistakes(req.user.id, req.query);
+  success(res, data);
+});
+
+export const createMistake = asyncHandler(async (req, res) => {
+  const data = await createUserMistake(req.user.id, req.body);
   success(res, data);
 });
 

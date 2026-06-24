@@ -377,10 +377,10 @@ DO UPDATE SET order_num = EXCLUDED.order_num;
 INSERT INTO grammar_points (id, lesson_id, pattern, explanation, tips, examples, order_num)
 VALUES
 ('gp_1_1_1', 'l1_1', 'Initial + Final + Tone', 'Every pinyin syllable combines an optional initial consonant, a final vowel, and a tone mark.', ARRAY['Practice each initial slowly before combining syllables.'], $$[
-  {"simplified":"妈","traditional":"媽","pinyin":"mā","english":"mother (1st tone)"},
-  {"simplified":"马","traditional":"馬","pinyin":"mǎ","english":"horse (3rd tone)"}
+  {"simplified":"妈","traditional":"媽","pinyin":"mā","english":"mother (第一声)"},
+  {"simplified":"马","traditional":"馬","pinyin":"mǎ","english":"horse (第三声)"}
 ]$$::jsonb, 1),
-('gp_1_2_1', 'l1_2', 'Tone contour', '1st tone is high level, 2nd rising, 3rd low dipping, 4th falling, neutral short and light.', ARRAY['Over-emphasize tones while starting out.'], '[]'::jsonb, 1),
+('gp_1_2_1', 'l1_2', 'Tone contour', '第一声 is high level, 第二声 rising, 第三声 low dipping, 第四声 falling, neutral short and light.', ARRAY['Over-emphasize tones while starting out.'], '[]'::jsonb, 1),
 ('gp_1_5_1', 'l1_5', 'Subject + 叫 + Name', 'Use 叫 after a person to say what someone is called.', ARRAY['我叫 is the most natural beginner pattern for giving your name.'], $$[
   {"simplified":"我叫安娜。","traditional":"我叫安娜。","pinyin":"Wǒ jiào Ānnà.","english":"My name is Anna."},
   {"simplified":"你叫什么名字？","traditional":"你叫什麼名字？","pinyin":"Nǐ jiào shénme míngzì?","english":"What is your name?"}
@@ -439,7 +439,7 @@ INSERT INTO exercises (
 VALUES
 ('e1_1_1', 'l1_1', 'matchPinyin', 'Match 你好 to its pinyin', '你好', '["nǐ hǎo", "nǐ hào", "nǐ háo", "nì hǎo"]'::jsonb, 0, 'nǐ hǎo', 'wd_hello', NULL, 1),
 ('e1_1_2', 'l1_1', 'multipleChoice', 'Which means hello?', NULL, '["再见", "你好", "谢谢", "对不起"]'::jsonb, 1, '你好', 'wd_hello', NULL, 2),
-('e1_2_1', 'l1_2', 'tonePicker', 'Which tone is nǐ?', NULL, '["1st", "2nd", "3rd", "4th"]'::jsonb, 2, '3rd', NULL, 3, 1),
+('e1_2_1', 'l1_2', 'tonePicker', 'nǐ 是第几声？', NULL, '["第一声", "第二声", "第三声", "第四声"]'::jsonb, 2, '第三声', NULL, 3, 1),
 ('e1_3_1', 'l1_3', 'multipleChoice', '你好 means...', '你好', '["goodbye", "hello", "sorry", "thank you"]'::jsonb, 1, 'hello', 'wd_hello', NULL, 1),
 ('e1_3_2', 'l1_3', 'multipleChoice', '再见 means...', '再见', '["hello", "thank you", "goodbye", "please"]'::jsonb, 2, 'goodbye', 'wd_goodbye', NULL, 2),
 ('e1_4_1', 'l1_4', 'multipleChoice', '三 means...', '三', '["2", "3", "4", "5"]'::jsonb, 1, '3', 'wd_three', NULL, 1),
@@ -508,6 +508,80 @@ DO UPDATE SET lesson_id = EXCLUDED.lesson_id,
               audio_word_id = EXCLUDED.audio_word_id,
               tone = EXCLUDED.tone,
               order_num = EXCLUDED.order_num;
+
+ALTER TABLE exercises
+ADD COLUMN IF NOT EXISTS answer_explanation TEXT;
+
+UPDATE exercises AS e
+SET
+  prompt_pinyin = details.prompt_pinyin,
+  prompt_english = details.prompt_english,
+  answer_explanation = details.answer_explanation,
+  updated_at = now()
+FROM (
+  VALUES
+    ('e1_1_1', 'nǐ hǎo', 'hello', '你好 is read nǐ hǎo: 你 and 好 both use third tone marks.'),
+    ('e1_1_2', 'nǐ hǎo', 'hello', '你好 is the standard greeting for hello.'),
+    ('e1_2_1', 'nǐ', 'you', 'nǐ has the dipping third-tone mark ǐ, so the answer is 第三声.'),
+    ('e1_3_1', 'nǐ hǎo', 'hello', '你好 literally joins 你 (you) and 好 (good), and is used to say hello.'),
+    ('e1_3_2', 'zài jiàn', 'goodbye', '再见 means see you again and is used for goodbye.'),
+    ('e1_4_1', 'sān', 'three', '三 is the Chinese number 3.'),
+    ('e1_4_2', 'jiǔ', 'nine', '九 is the Chinese number 9.'),
+    ('e1_4_3', 'wǔ', 'five', '五 is pronounced wǔ with a third tone.'),
+    ('e1_4_4', 'qī', 'seven', 'The listening word is 七, which means seven.'),
+    ('e1_5_1', 'wǒ jiào Ānnà', 'I am called Anna.', '我叫... is the common pattern for saying your name.'),
+    ('e1_5_2', 'wǒ jiào Ānnà', 'I am called Anna.', '叫 means to be called, so it completes 我叫安娜.'),
+    ('e1_5_3', 'nǐ jiào shénme míngzi?', 'What is your name?', '你叫什么名字？ asks what someone is called.'),
+    ('e1_6_1', 'māma', 'mom', '妈妈 means mom or mother.'),
+    ('e1_6_2', 'gēge', 'older brother', '哥哥 refers to an older brother.'),
+    ('e1_6_3', 'péngyou', 'friend', '朋友 is pronounced péngyou and means friend.'),
+    ('e1_7_1', 'wǒ shì xuésheng', 'I am a student.', '是 links the subject 我 with the noun 学生.'),
+    ('e1_7_2', 'tā bú shì lǎoshī', 'He is not a teacher.', '不 negates 是, giving 不是.'),
+    ('e1_7_3', 'shì', 'to be', '是 links nouns, but adjectives usually do not take 是 directly.'),
+    ('e1_8_1', 'chá', 'tea', '茶 means tea.'),
+    ('e1_8_2', 'kā fēi', 'coffee', '咖啡 is pronounced kā fēi.'),
+    ('e1_8_3', 'wǒ hē chá', 'I drink tea.', 'The sentence order is subject + verb + object: 我 + 喝 + 茶.'),
+    ('e1_9_1', 'duōshao qián', 'how much money', '多少钱 is the common way to ask how much something costs.'),
+    ('e1_9_2', 'zhège duōshao qián?', 'How much is this?', '多少 asks how much or how many.'),
+    ('e1_9_3', 'wǒ mǎi píngguǒ', 'I buy apples.', 'The sentence order is subject + verb + object: 我 + 买 + 苹果.'),
+    ('e1_10_1', 'jīntiān', 'today', '今天 means today.'),
+    ('e1_10_2', 'míngtiān', 'tomorrow', '明天 means tomorrow.'),
+    ('e1_10_3', 'zǎoshang', 'morning', '早上 is pronounced zǎoshang and means morning.'),
+    ('e2_1_1', 'dìtiě', 'subway', '地铁 means subway or metro.'),
+    ('e2_1_2', 'zuǒ zhuǎn', 'turn left', '左 means left and 转 means turn.'),
+    ('e2_1_3', 'zhí zǒu ránhòu yòu zhuǎn', 'Go straight, then turn right.', '然后 marks the next step, so it sits between 直走 and 右转.'),
+    ('e2_2_1', 'wǒ mǎi le píngguǒ', 'I bought apples.', '了 after the verb marks a completed action.'),
+    ('e2_2_2', 'wǒ hē le kāfēi', 'I drank coffee.', 'Place 了 after the verb 喝 to show the action was completed.'),
+    ('e2_2_3', 'le', 'completed-action marker', '了 is not only past tense; it marks completion or a changed state.'),
+    ('e2_3_1', 'hǎochī', 'delicious', '好吃 describes food that tastes good.'),
+    ('e2_3_2', 'là', 'spicy', '辣 means spicy.'),
+    ('e2_3_3', 'wǒ yào niúròu miàn', 'I want beef noodles.', '要 means want, followed by the item 牛肉面.'),
+    ('e3_1_1', 'wǒmen qù túshūguǎn ba', 'Let us go to the library.', '吧 softens the sentence into a suggestion.'),
+    ('e3_1_2', 'jiànyì', 'to suggest', '建议 means to suggest or suggestion.'),
+    ('e3_1_3', 'wǒmen liànxí Zhōngwén ba', 'Let us practice Chinese.', '吧 makes 我们练习中文 sound like a suggestion.'),
+    ('e3_1_4', 'juédìng', 'to decide', '决定 means to decide.'),
+    ('e3_2_1', 'jīntiān bǐ zuótiān lěng', 'Today is colder than yesterday.', 'In a 比 comparison, the pattern is A + 比 + B + adjective.'),
+    ('e3_2_2', 'tā bǐ tā gāo', 'She is taller than him.', 'A simple 比 comparison does not use 很 before the adjective.'),
+    ('e3_2_3', 'guì', 'expensive', '贵 means expensive.'),
+    ('e3_2_4', 'zhège bǐ nàge guì', 'This one is more expensive than that one.', '比 connects the two things being compared.'),
+    ('e3_3_1', 'huìyì', 'meeting', '会议 means meeting.'),
+    ('e3_3_2', 'hétong', 'contract', '合同 means contract.'),
+    ('e3_3_3', 'wǒmen tǎolùn yíxià hétong', 'Let us discuss the contract briefly.', '一下 after 讨论 makes the action sound brief or light.'),
+    ('e3_3_4', 'jīhuì', 'opportunity', '机会 is pronounced jīhuì and means opportunity.'),
+    ('e3_4_1', 'kǎoshì', 'exam', '考试 means exam or test.'),
+    ('e3_4_2', 'zuòyè', 'homework', '作业 means homework.'),
+    ('e3_4_3', 'duì wǒ lái shuō, kǎoshì hěn zhòngyào', 'For me, exams are important.', '重要 means important and fits after 很.'),
+    ('e3_4_4', 'zhège zuòyè bù nán', 'This homework is not difficult.', '不 negates the adjective 难.'),
+    ('e3_5_1', 'wénhuà', 'culture', '文化 means culture.'),
+    ('e3_5_2', 'lìshǐ', 'history', '历史 means history.'),
+    ('e3_5_3', 'huánjìng', 'environment', '环境 is pronounced huánjìng and means environment.'),
+    ('e3_5_4', 'wǒ xiǎng xuéxí Zhōngguó wénhuà', 'I want to study Chinese culture.', '想 means want to, followed by the action 学习中国文化.'),
+    ('e3_6_1', 'wǒ juéde Zhōngwén hěn yǒu yìsi', 'I think Chinese is interesting.', '觉得 introduces an opinion or feeling.'),
+    ('e3_6_2', 'wàngjì', 'to forget', '忘记 means to forget.'),
+    ('e3_6_3', 'yǒu yìsi', 'interesting', '有意思 describes something interesting.'),
+    ('e3_6_4', 'wǒ jìzhù nǐ de yìjiàn', 'I remember your opinion.', '记住 means to remember, followed by the thing remembered.')
+) AS details(id, prompt_pinyin, prompt_english, answer_explanation)
+WHERE e.id = details.id;
 
 INSERT INTO achievements (id, title, description, emoji, target_value, category)
 VALUES

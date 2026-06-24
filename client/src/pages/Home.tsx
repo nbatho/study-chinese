@@ -4,6 +4,7 @@ import {
   useDailyContentQuery,
   useDueSrsCardsQuery,
   useLessonsQuery,
+  useTodayPlanQuery,
   useUserProfileQuery,
   useUserStatsQuery,
 } from "../api";
@@ -13,6 +14,8 @@ import {
   BookOpen,
   Brain,
   Camera,
+  CheckCircle2,
+  Clock3,
   Flame,
   PencilLine,
   PlayCircle,
@@ -39,6 +42,7 @@ export default function Home() {
   const dueCardsQuery = useDueSrsCardsQuery(20, isAuthenticated);
   const achievementsQuery = useAchievementsQuery(isAuthenticated);
   const dailyContentQuery = useDailyContentQuery();
+  const todayPlanQuery = useTodayPlanQuery(isAuthenticated);
 
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
@@ -60,6 +64,7 @@ export default function Home() {
   const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
   const nextLesson = lessons.find((lesson) => !lesson.completedAt) ?? lessons[0];
   const currentPhrase = dailyContentQuery.data?.phrase;
+  const todayPlan = todayPlanQuery.data?.plan;
   const xpTarget = Math.max((profile?.dailyMinutes ?? 15) * 3, 45);
   const xpProgress = Math.min(todayStat.xp, xpTarget);
 
@@ -113,6 +118,49 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {isAuthenticated && todayPlan && (
+        <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold">Hôm nay học gì</h3>
+              <p className="text-xs font-semibold text-muted-foreground">
+                {todayPlan.todayXp} / {todayPlan.xpTarget} XP - mục tiêu {todayPlan.dailyMinutes} phút
+              </p>
+            </div>
+            <Clock3 size={20} className="text-primary" />
+          </div>
+          <div className="grid gap-2.5">
+            {todayPlan.steps.map((step, index) => (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => {
+                  if (step.kind === "lesson" && typeof step.meta?.lessonId === "string") {
+                    setSelectedLessonId(step.meta.lessonId);
+                    navigate("/learn");
+                    return;
+                  }
+                  navigate(step.href);
+                }}
+                className="flex items-center gap-3 rounded-lg border bg-background px-3 py-3 text-left transition hover:border-primary/50 hover:bg-secondary/60"
+              >
+                <span className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-md text-xs font-extrabold",
+                  step.status === "current" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
+                )}>
+                  {step.status === "done" ? <CheckCircle2 size={16} /> : index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-extrabold">{step.title}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{step.description}</span>
+                </span>
+                <span className="shrink-0 text-xs font-bold text-primary">{step.estimateMinutes}m</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mb-6 overflow-x-auto pb-2">
         <div className="flex w-max gap-4">
