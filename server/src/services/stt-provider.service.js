@@ -32,6 +32,27 @@ const requireSttApiKey = () => {
   return key;
 };
 
+const asFiniteNumber = (value) => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
+};
+
+const getNoSpeechProbability = (segments) => {
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return undefined;
+  }
+
+  const probabilities = segments
+    .map((segment) => asFiniteNumber(segment.no_speech_prob))
+    .filter((value) => value !== undefined);
+
+  if (probabilities.length === 0) {
+    return undefined;
+  }
+
+  return probabilities.reduce((sum, value) => sum + value, 0) / probabilities.length;
+};
+
 /**
  * Mock transcription keeps the contract usable in tests without pretending
  * the learner said the expected answer.
@@ -69,6 +90,11 @@ const callGroqWhisper = async ({ audioBuffer, mimeType, language }) => {
   formData.append('model', model);
   formData.append('language', language || 'zh');
   formData.append('response_format', 'verbose_json');
+  formData.append('temperature', '0');
+  formData.append(
+    'prompt',
+    'Mandarin Chinese pronunciation practice. Transcribe only clear speech; leave the transcript empty when no clear speech is present.'
+  );
 
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -107,6 +133,7 @@ const callGroqWhisper = async ({ audioBuffer, mimeType, language }) => {
       text: (data.text || '').trim(),
       language: data.language || language || 'zh',
       duration: data.duration || 0,
+      noSpeechProbability: getNoSpeechProbability(data.segments),
       provider: 'groq',
       model: data.model || model,
       latencyMs
@@ -129,6 +156,7 @@ export const logSttUsage = (result, { fallback = false } = {}) => {
       latencyMs: result.latencyMs,
       textLength: (result.text || '').length,
       duration: result.duration,
+      noSpeechProbability: result.noSpeechProbability,
       fallback
     })
   );

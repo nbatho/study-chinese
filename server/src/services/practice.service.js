@@ -24,6 +24,7 @@ const hanziStrokes = [
 ];
 
 const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
+const NO_SPEECH_PROBABILITY_THRESHOLD = 0.6;
 
 const decodeAudioBytes = (audio) => {
   if (!audio || typeof audio !== 'string') {
@@ -75,6 +76,23 @@ const scoreFromTranscription = (expectedText, transcribedText, audioDuration = 0
   const expectedNorm = normalizeChinese(expectedText);
   const gotNorm = normalizeChinese(transcribedText);
   const charDiff = buildCharDiff(expectedText, transcribedText);
+
+  if (gotNorm.length === 0) {
+    return {
+      accuracy: 0,
+      tones: 0,
+      fluency: 0,
+      overall: 0,
+      tip: 'No speech was detected. Please speak clearly and closer to the microphone.',
+      transcribedText: '',
+      details: {
+        expected: expectedText,
+        got: '',
+        charDiff
+      }
+    };
+  }
+
   const expectedLen = [...expectedNorm].length;
   const correctCount = charDiff.filter((entry) => entry.status === 'correct').length;
   const extraCount = charDiff.filter((entry) => entry.status === 'extra').length;
@@ -96,8 +114,6 @@ const scoreFromTranscription = (expectedText, transcribedText, audioDuration = 0
     tip = 'Good job! Pay attention to the highlighted characters and practice those sounds.';
   } else if (overall >= 50) {
     tip = 'Keep practicing. Try listening to the sample again and repeat slowly.';
-  } else if (gotNorm.length === 0) {
-    tip = 'No speech was detected. Please speak clearly and closer to the microphone.';
   } else {
     tip = 'Try again. Listen to the sample carefully and match each syllable.';
   }
@@ -137,6 +153,16 @@ const transcribeForScoring = async ({ audio, audioMimeType }) => {
   } catch {
     throw badRequest('Khong the nhan dien giong noi. Vui long thu lai hoac cau hinh STT provider that.');
   }
+};
+
+const scoreFromSttResult = (expectedText, sttResult) => {
+  const noSpeechProbability = Number(sttResult?.noSpeechProbability);
+  const providerFlaggedNoSpeech =
+    Number.isFinite(noSpeechProbability) &&
+    noSpeechProbability >= NO_SPEECH_PROBABILITY_THRESHOLD;
+  const transcribedText = providerFlaggedNoSpeech ? '' : sttResult?.text;
+
+  return scoreFromTranscription(expectedText, transcribedText, sttResult?.duration);
 };
 
 export const getPracticeCatalog = async () => ({
@@ -193,7 +219,7 @@ export const getHanziStrokes = async () => ({ characters: hanziStrokes });
 export const scoreShadowing = async ({ expectedText, audio, audioMimeType }) => {
   const expected = getRequiredExpectedText(expectedText);
   const sttResult = await transcribeForScoring({ audio, audioMimeType });
-  const score = scoreFromTranscription(expected, sttResult.text, sttResult.duration);
+  const score = scoreFromSttResult(expected, sttResult);
 
   return { score };
 };
@@ -201,13 +227,14 @@ export const scoreShadowing = async ({ expectedText, audio, audioMimeType }) => 
 export const checkPronunciation = async ({ audio, audioMimeType, expectedText }) => {
   const expected = getRequiredExpectedText(expectedText);
   const sttResult = await transcribeForScoring({ audio, audioMimeType });
-  const score = scoreFromTranscription(expected, sttResult.text, sttResult.duration);
+  const score = scoreFromSttResult(expected, sttResult);
 
-  return { transcribedText: sttResult.text, score };
+  return { transcribedText: score.transcribedText, score };
 };
 
 export const __private__ = {
   buildCharDiff,
   normalizeChinese,
+  scoreFromSttResult,
   scoreFromTranscription
 };

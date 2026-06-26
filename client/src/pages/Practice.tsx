@@ -29,6 +29,11 @@ const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm
 const innerCardClass = "rounded-lg border bg-card shadow-sm";
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent disabled:opacity-60";
+const silentRecordingMessage = "No speech was detected. Please speak clearly and try again.";
+const minVoicedFrames = 8;
+const minVoicedFrameRatio = 0.04;
+const minVoicePeak = 0.1;
+const minVoiceRms = 0.018;
 
 const blobToDataUrl = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
@@ -876,13 +881,20 @@ function ShadowingTool() {
   const [idx, setIdx] = useState(0);
   const [recording, setRecording] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [score, setScore] = useState<Awaited<ReturnType<typeof scoreMutation.mutateAsync>>["score"] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const voiceLevelRef = useRef({ frames: 0, peak: 0, maxRms: 0, voicedFrames: 0 });
   const audioChunksRef = useRef<Blob[]>([]);
   const autoStopRef = useRef<number | null>(null);
+  const recordedAudioUrlRef = useRef<string | null>(null);
   const prompt = prompts[idx % Math.max(prompts.length, 1)];
 
   const clearAutoStop = () => {
@@ -892,10 +904,106 @@ function ShadowingTool() {
     }
   };
 
+  const resetVoiceLevel = () => {
+    voiceLevelRef.current = { frames: 0, peak: 0, maxRms: 0, voicedFrames: 0 };
+  };
+
+  const closeAudioMeter = () => {
+    audioSourceRef.current?.disconnect();
+    audioSourceRef.current = null;
+    analyserRef.current = null;
+    audioDataRef.current = null;
+    void audioContextRef.current?.close().catch(() => undefined);
+    audioContextRef.current = null;
+  };
+
+  const setupAudioMeter = (stream: MediaStream) => {
+    closeAudioMeter();
+    resetVoiceLevel();
+
+    const AudioContextCtor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+    if (!AudioContextCtor) return;
+
+    try {
+      const audioContext = new AudioContextCtor();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.35;
+      source.connect(analyser);
+
+      audioContextRef.current = audioContext;
+      audioSourceRef.current = source;
+      analyserRef.current = analyser;
+      audioDataRef.current = new Uint8Array(new ArrayBuffer(analyser.fftSize));
+    } catch {
+      closeAudioMeter();
+    }
+  };
+
+  const readVoiceLevel = () => {
+    const analyser = analyserRef.current;
+    const audioData = audioDataRef.current;
+
+    if (!analyser || !audioData) return 0;
+
+    analyser.getByteTimeDomainData(audioData);
+
+    let sumSquares = 0;
+    let peak = 0;
+
+    for (const sample of audioData) {
+      const centered = Math.abs((sample - 128) / 128);
+      sumSquares += centered * centered;
+      peak = Math.max(peak, centered);
+    }
+
+    const rms = Math.sqrt(sumSquares / audioData.length);
+    const stats = voiceLevelRef.current;
+    stats.frames += 1;
+    stats.peak = Math.max(stats.peak, peak);
+    stats.maxRms = Math.max(stats.maxRms, rms);
+    if (rms >= minVoiceRms && peak >= minVoicePeak) stats.voicedFrames += 1;
+
+    return Math.max(rms, peak * 0.5);
+  };
+
+  const hasCapturedSpeech = () => {
+    const stats = voiceLevelRef.current;
+    if (stats.frames === 0) return false;
+    const voicedFrameRatio = stats.voicedFrames / stats.frames;
+    return (
+      stats.voicedFrames >= minVoicedFrames &&
+      voicedFrameRatio >= minVoicedFrameRatio &&
+      stats.peak >= minVoicePeak &&
+      stats.maxRms >= minVoiceRms
+    );
+  };
+
   const releaseMicrophone = () => {
+    closeAudioMeter();
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
     mediaRecorderRef.current = null;
+  };
+
+  const clearRecordedAudio = (updateState = true) => {
+    if (recordedAudioUrlRef.current) {
+      URL.revokeObjectURL(recordedAudioUrlRef.current);
+      recordedAudioUrlRef.current = null;
+    }
+    if (updateState) setRecordedAudioUrl(null);
+  };
+
+  const showRecordedAudio = (audioBlob: Blob) => {
+    clearRecordedAudio();
+    const url = URL.createObjectURL(audioBlob);
+    recordedAudioUrlRef.current = url;
+    setRecordedAudioUrl(url);
   };
 
   useEffect(() => {
@@ -909,11 +1017,13 @@ function ShadowingTool() {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "rgb(217, 63, 71)";
+      const level = readVoiceLevel();
       const barWidth = 4;
       const gap = 2;
       const count = Math.floor(canvas.width / (barWidth + gap));
       for (let i = 0; i < count; i += 1) {
-        const height = Math.random() * (canvas.height - 20) + 10;
+        const wave = Math.sin((i / Math.max(count - 1, 1)) * Math.PI);
+        const height = Math.max(4, wave * level * canvas.height * 2.8);
         const x = i * (barWidth + gap);
         const y = (canvas.height - height) / 2;
         ctx.fillRect(x, y, barWidth, height);
@@ -926,6 +1036,7 @@ function ShadowingTool() {
   useEffect(() => () => {
     clearAutoStop();
     releaseMicrophone();
+    clearRecordedAudio(false);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
   }, []);
 
@@ -980,9 +1091,11 @@ function ShadowingTool() {
 
     setScore(null);
     setRecordingError(null);
+    clearRecordedAudio();
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setupAudioMeter(stream);
       const preferredMimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((type) =>
         MediaRecorder.isTypeSupported(type),
       );
@@ -1011,6 +1124,7 @@ function ShadowingTool() {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
+        const capturedSpeech = hasCapturedSpeech();
         setRecording(false);
         releaseMicrophone();
 
@@ -1019,6 +1133,12 @@ function ShadowingTool() {
           return;
         }
 
+        if (!capturedSpeech) {
+          setRecordingError(silentRecordingMessage);
+          return;
+        }
+
+        showRecordedAudio(audioBlob);
         void scoreRecordedAudio(audioBlob).catch(() => {
           setRecordingError("Could not score this recording. Please try again.");
         });
@@ -1037,6 +1157,14 @@ function ShadowingTool() {
   const tryAgain = () => {
     setScore(null);
     setRecordingError(null);
+    clearRecordedAudio();
+  };
+
+  const nextPrompt = () => {
+    setIdx((value) => value + 1);
+    setScore(null);
+    setRecordingError(null);
+    clearRecordedAudio();
   };
 
   const overallLabel =
@@ -1074,6 +1202,12 @@ function ShadowingTool() {
       {recordingError && (
         <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm font-semibold text-primary">
           {recordingError}
+        </div>
+      )}
+      {recordedAudioUrl && (
+        <div className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm">
+          <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Your recording</p>
+          <audio controls src={recordedAudioUrl} className="w-full" />
         </div>
       )}
       {score && (
@@ -1138,7 +1272,7 @@ function ShadowingTool() {
             <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={tryAgain}>
               Try Again
             </button>
-            <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={() => { setIdx((value) => value + 1); setScore(null); }}>
+            <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={nextPrompt}>
               Next
             </button>
           </>
