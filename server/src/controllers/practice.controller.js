@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
 import {
+  checkPronunciation,
   getHanziStrokes,
   getMinimalPairs,
   getPracticeCatalog,
@@ -32,3 +33,9 @@ export const submitShadowingScore = asyncHandler(async (req, res) => {
   const data = await scoreShadowing(req.body);
   success(res, data);
 });
+
+export const submitPronunciationCheck = asyncHandler(async (req, res) => {
+  const data = await checkPronunciation(req.body);
+  success(res, data);
+});
+

@@ -4,6 +4,8 @@ import type {
     HanziStrokesResponse,
     MinimalPairsResponse,
     PracticeCatalogResponse,
+    PronunciationCheckPayload,
+    PronunciationCheckResponse,
     ShadowingPromptsResponse,
     ShadowingScorePayload,
     ShadowingScoreResponse,
@@ -20,7 +22,11 @@ export const practiceApi = {
     scoreShadowing: (payload: ShadowingScorePayload) =>
         apiRequest<ShadowingScoreResponse>(beApi.post('practice/shadowing/score', payload)),
 
+    pronunciationCheck: (payload: PronunciationCheckPayload) =>
+        apiRequest<PronunciationCheckResponse>(beApi.post('practice/pronunciation/check', payload)),
+
     hanziStrokes: () => apiRequest<HanziStrokesResponse>(beApi.get('practice/hanzi-strokes')),
 };
 
 export * from './types';
+

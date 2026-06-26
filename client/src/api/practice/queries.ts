@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { practiceApi } from './index';
-import type { ShadowingScorePayload } from './types';
+import type { PronunciationCheckPayload, ShadowingScorePayload } from './types';
 
 export const usePracticeCatalogQuery = () =>
     useQuery({
@@ -28,8 +28,15 @@ export const useScoreShadowingMutation = () =>
             unwrapApiData(practiceApi.scoreShadowing(payload)),
     });
 
+export const usePronunciationCheckMutation = () =>
+    useMutation({
+        mutationFn: (payload: PronunciationCheckPayload) =>
+            unwrapApiData(practiceApi.pronunciationCheck(payload)),
+    });
+
 export const useHanziStrokesQuery = () =>
     useQuery({
         queryKey: queryKeys.practice.hanziStrokes,
         queryFn: () => unwrapApiData(practiceApi.hanziStrokes()),
     });
+

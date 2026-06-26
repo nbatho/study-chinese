@@ -39,6 +39,7 @@ export default function AITutor({ onClose }: AITutorProps) {
 function AITutorContent({ onClose }: AITutorProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const isOverlay = Boolean(onClose);
   const handleClose = onClose || (() => navigate("/home"));
   const scenariosQuery = useChatScenariosQuery();
   const startSessionMutation = useStartChatSessionMutation();
@@ -91,16 +92,32 @@ function AITutorContent({ onClose }: AITutorProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex flex-col bg-background">
-      <header className="flex items-center gap-4 border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl">
-        <button onClick={handleClose} className="text-muted-foreground">
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden bg-background",
+        isOverlay
+          ? "fixed inset-0 z-[1000]"
+          : "anim-slide h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)]",
+      )}
+    >
+      <header
+        className={cn(
+          "flex items-center gap-4",
+          isOverlay ? "border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl" : "mb-5",
+        )}
+      >
+        <button
+          type="button"
+          onClick={handleClose}
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+        >
           <ArrowLeft size={20} />
         </button>
         <div className="min-w-0">
-          <h3 className="flex items-center gap-1.5 truncate text-[1.1rem] font-extrabold">
+          <h2 className="flex items-center gap-1.5 truncate text-2xl font-extrabold">
             <Sparkles size={18} className="shrink-0 text-tone-3" />
             {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : t("ai.title")}
-          </h3>
+          </h2>
           <p className="truncate text-xs text-muted-foreground">
             {selectedScenario ? selectedScenario.description : t("ai.subtitle")}
           </p>
@@ -143,8 +160,8 @@ function AITutorContent({ onClose }: AITutorProps) {
           </div>
         </div>
       ) : (
-        <div className="flex h-[calc(100%-65px)] flex-1 flex-col">
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -200,7 +217,10 @@ function AITutorContent({ onClose }: AITutorProps) {
 
           <form
             onSubmit={handleSend}
-            className="flex gap-3 border-t bg-card/90 px-3.5 py-3 backdrop-blur-xl sm:px-[18px]"
+            className={cn(
+              "flex gap-3 py-3",
+              isOverlay ? "border-t bg-card/90 px-3.5 backdrop-blur-xl sm:px-[18px]" : "pt-3",
+            )}
           >
             <input
               type="text"

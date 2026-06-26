@@ -1,4 +1,6 @@
+import { query } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
+import { transcribeAudio } from './stt-provider.service.js';
 
 const minimalPairs = [
   { id: 'ma-1-3', wordA: 'mā', wordB: 'mǎ', charA: '妈', charB: '马', toneA: 1, toneB: 3, label: 'mother vs horse' },
@@ -7,14 +9,6 @@ const minimalPairs = [
   { id: 'shu-1-3', wordA: 'shū', wordB: 'shǔ', charA: '书', charB: '鼠', toneA: 1, toneB: 3, label: 'book vs mouse' },
   { id: 'cha-2-4', wordA: 'chá', wordB: 'chà', charA: '茶', charB: '差', toneA: 2, toneB: 4, label: 'tea vs poor' },
   { id: 'mai-3-4', wordA: 'mǎi', wordB: 'mài', charA: '买', charB: '卖', toneA: 3, toneB: 4, label: 'buy vs sell' }
-];
-
-const shadowingPrompts = [
-  { id: 'hello', hanzi: '你好！', pinyin: 'nǐ hǎo', english: 'Hello!' },
-  { id: 'recently', hanzi: '最近好吗？', pinyin: 'zuìjìn hǎo ma', english: 'How are you lately?' },
-  { id: 'student', hanzi: '我是学生。', pinyin: 'wǒ shì xuéshēng', english: 'I am a student.' },
-  { id: 'price', hanzi: '这个多少钱？', pinyin: 'zhège duōshǎo qián', english: 'How much is this?' },
-  { id: 'meet', hanzi: '很高兴认识你！', pinyin: 'hěn gāoxìng rènshi nǐ', english: 'Nice to meet you!' }
 ];
 
 const hanziStrokes = [
@@ -28,18 +22,6 @@ const hanziStrokes = [
   { id: 'shan', character: '山', strokes: ['M15,85 L15,50', 'M50,85 L50,25', 'M85,85 L85,50', 'M15,85 L85,85'] },
   { id: 'kou', character: '口', strokes: ['M25,20 L25,80', 'M75,20 L75,80', 'M25,20 L75,20', 'M25,80 L75,80'] }
 ];
-
-export const getPracticeCatalog = async () => ({
-  minimalPairs,
-  shadowingPrompts,
-  hanziStrokes
-});
-
-export const getMinimalPairs = async () => ({ pairs: minimalPairs });
-
-export const getShadowingPrompts = async () => ({ prompts: shadowingPrompts });
-
-export const getHanziStrokes = async () => ({ characters: hanziStrokes });
 
 const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
 
@@ -58,55 +40,174 @@ const decodeAudioBytes = (audio) => {
   }
 };
 
-const getAudioEnergyScore = (buffer) => {
-  if (buffer.length === 0) {
-    return 0;
-  }
+const normalizeChinese = (text) =>
+  (text || '')
+    .replace(/[\s\u3000]/g, '')
+    .replace(/[。，！？、；：""''（）《》【】…—·\u00b7.,!?;:'"()[\]{}]/g, '');
 
-  const sampleCount = Math.min(buffer.length, 12000);
-  let sum = 0;
-  let changes = 0;
-  let previous = buffer[0];
+const buildCharDiff = (expected, got) => {
+  const expectedChars = [...normalizeChinese(expected)];
+  const gotChars = [...normalizeChinese(got)];
+  const diff = [];
+  const maxLen = Math.max(expectedChars.length, gotChars.length);
 
-  for (let index = 0; index < sampleCount; index += 1) {
-    const value = buffer[index];
-    sum += Math.abs(value - 128);
-    if (Math.abs(value - previous) > 12) {
-      changes += 1;
+  for (let i = 0; i < maxLen; i += 1) {
+    const expectedChar = expectedChars[i];
+    const gotChar = gotChars[i];
+
+    if (expectedChar && gotChar) {
+      diff.push({
+        char: expectedChar,
+        got: gotChar,
+        status: expectedChar === gotChar ? 'correct' : 'wrong'
+      });
+    } else if (expectedChar && !gotChar) {
+      diff.push({ char: expectedChar, got: '', status: 'missing' });
+    } else if (!expectedChar && gotChar) {
+      diff.push({ char: gotChar, got: gotChar, status: 'extra' });
     }
-    previous = value;
   }
 
-  const amplitude = sum / sampleCount;
-  const variation = changes / sampleCount;
-
-  return clampScore(45 + amplitude * 0.7 + variation * 180);
+  return diff;
 };
 
-export const scoreShadowing = async ({ promptId, audio, audioMimeType }) => {
-  const prompt = shadowingPrompts.find((item) => item.id === promptId) || shadowingPrompts[0];
-  const audioBuffer = decodeAudioBytes(audio);
-  const expectedBytes = Math.max(2500, prompt.hanzi.length * 900);
-  const lengthRatio = Math.min(audioBuffer.length / expectedBytes, 1.35);
-  const energy = getAudioEnergyScore(audioBuffer);
-  const mimeBonus = String(audioMimeType || '').includes('audio/') ? 4 : 0;
-  const accuracy = clampScore(42 + lengthRatio * 30 + energy * 0.28 + mimeBonus);
-  const tones = clampScore(38 + lengthRatio * 24 + energy * 0.34);
-  const fluency = clampScore(45 + Math.min(lengthRatio, 1) * 38 + energy * 0.18);
+const scoreFromTranscription = (expectedText, transcribedText, audioDuration = 0) => {
+  const expectedNorm = normalizeChinese(expectedText);
+  const gotNorm = normalizeChinese(transcribedText);
+  const charDiff = buildCharDiff(expectedText, transcribedText);
+  const expectedLen = [...expectedNorm].length;
+  const correctCount = charDiff.filter((entry) => entry.status === 'correct').length;
+  const extraCount = charDiff.filter((entry) => entry.status === 'extra').length;
+  const rawAccuracy = expectedLen > 0 ? (correctCount / expectedLen) * 100 : 0;
+  const accuracy = clampScore(rawAccuracy - Math.min(extraCount * 5, 15));
+  const tones = clampScore(rawAccuracy * 0.9 + (audioDuration > 0.5 ? 10 : 0));
+  const expectedDuration = expectedLen * 0.4;
+  const durationRatio = audioDuration > 0 && expectedDuration > 0
+    ? Math.min(audioDuration / expectedDuration, 1.5)
+    : 0;
+  const completeness = expectedLen > 0 ? Math.min(correctCount / expectedLen, 1) : 0;
+  const fluency = clampScore(completeness * 70 + durationRatio * 20 + 10);
   const overall = Math.round((accuracy + tones + fluency) / 3);
 
+  let tip;
+  if (overall >= 90) {
+    tip = 'Excellent pronunciation! Your tones and articulation are very clear.';
+  } else if (overall >= 75) {
+    tip = 'Good job! Pay attention to the highlighted characters and practice those sounds.';
+  } else if (overall >= 50) {
+    tip = 'Keep practicing. Try listening to the sample again and repeat slowly.';
+  } else if (gotNorm.length === 0) {
+    tip = 'No speech was detected. Please speak clearly and closer to the microphone.';
+  } else {
+    tip = 'Try again. Listen to the sample carefully and match each syllable.';
+  }
+
   return {
-    score: {
-      accuracy,
-      tones,
-      fluency,
-      overall,
-      tip:
-        overall >= 85
-          ? 'Recording quality looks strong. Keep your tone contour steady.'
-          : audioBuffer.length < expectedBytes * 0.6
-            ? 'The recording seems short. Try speaking the whole prompt clearly.'
-            : 'Good work. Slow down slightly and make the tone ending clearer.'
+    accuracy,
+    tones,
+    fluency,
+    overall,
+    tip,
+    transcribedText,
+    details: {
+      expected: expectedText,
+      got: transcribedText,
+      charDiff
     }
   };
+};
+
+const getRequiredExpectedText = (expectedText) => {
+  if (!expectedText || typeof expectedText !== 'string' || !expectedText.trim()) {
+    throw badRequest('expectedText is required.');
+  }
+
+  return expectedText.trim();
+};
+
+const transcribeForScoring = async ({ audio, audioMimeType }) => {
+  const audioBuffer = decodeAudioBytes(audio);
+
+  try {
+    return await transcribeAudio({
+      audioBuffer,
+      mimeType: audioMimeType,
+      language: 'zh'
+    });
+  } catch {
+    throw badRequest('Khong the nhan dien giong noi. Vui long thu lai hoac cau hinh STT provider that.');
+  }
+};
+
+export const getPracticeCatalog = async () => ({
+  minimalPairs,
+  hanziStrokes
+});
+
+export const getMinimalPairs = async () => ({ pairs: minimalPairs });
+
+export const getShadowingPrompts = async () => {
+  const [phrasesResult, wordsResult] = await Promise.all([
+    query(
+      `
+        SELECT
+          'dp-' || id AS id,
+          simplified AS hanzi,
+          pinyin,
+          english
+        FROM daily_phrases
+        WHERE is_active = true
+        ORDER BY random()
+        LIMIT 10
+      `
+    ),
+    query(
+      `
+        SELECT
+          id,
+          simplified AS hanzi,
+          pinyin,
+          english
+        FROM words
+        WHERE is_active = true
+          AND part_of_speech = 'phrase'
+          AND length(simplified) >= 2
+        ORDER BY random()
+        LIMIT 10
+      `
+    )
+  ]);
+
+  const prompts = [...phrasesResult.rows, ...wordsResult.rows];
+
+  for (let index = prompts.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [prompts[index], prompts[swapIndex]] = [prompts[swapIndex], prompts[index]];
+  }
+
+  return { prompts: prompts.slice(0, 20) };
+};
+
+export const getHanziStrokes = async () => ({ characters: hanziStrokes });
+
+export const scoreShadowing = async ({ expectedText, audio, audioMimeType }) => {
+  const expected = getRequiredExpectedText(expectedText);
+  const sttResult = await transcribeForScoring({ audio, audioMimeType });
+  const score = scoreFromTranscription(expected, sttResult.text, sttResult.duration);
+
+  return { score };
+};
+
+export const checkPronunciation = async ({ audio, audioMimeType, expectedText }) => {
+  const expected = getRequiredExpectedText(expectedText);
+  const sttResult = await transcribeForScoring({ audio, audioMimeType });
+  const score = scoreFromTranscription(expected, sttResult.text, sttResult.duration);
+
+  return { transcribedText: sttResult.text, score };
+};
+
+export const __private__ = {
+  buildCharDiff,
+  normalizeChinese,
+  scoreFromTranscription
 };

@@ -29,7 +29,7 @@ const personalScenarios = [
   {
     id: 'personal-weak',
     title: 'Luyen diem yeu',
-    emoji: 'Target',
+    emoji: '🎯',
     description: 'Hoi thoai dung cac tu va ky nang ban hay sai.',
     initialMessage: {
       simplified: '我们来练习你的难点吧。',
@@ -40,7 +40,7 @@ const personalScenarios = [
   {
     id: 'personal-list',
     title: 'Luyen tu trong list',
-    emoji: 'List',
+    emoji: '📋',
     description: 'AI Tutor uu tien tu vung trong danh sach ban luu gan day.',
     initialMessage: {
       simplified: '请用你保存的词说一句话。',
@@ -51,7 +51,7 @@ const personalScenarios = [
   {
     id: 'personal-lesson',
     title: 'On bai vua hoc',
-    emoji: 'Brain',
+    emoji: '🧠',
     description: 'Luyen hoi thoai xoay quanh bai hoc gan nhat.',
     initialMessage: {
       simplified: '我们复习你刚学的内容。',

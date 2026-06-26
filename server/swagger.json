@@ -104,10 +104,11 @@
       },
       "ShadowingScorePayload": {
         "type": "object",
-        "required": ["promptId"],
+        "required": ["expectedText", "audio"],
         "properties": {
-          "promptId": { "type": "string", "example": "shadow_hello" },
-          "audioBase64": { "type": "string", "nullable": true }
+          "expectedText": { "type": "string", "example": "你好" },
+          "audio": { "type": "string", "nullable": true, "description": "Base64 data URL or raw base64 audio." },
+          "audioMimeType": { "type": "string", "example": "audio/webm;codecs=opus" }
         }
       }
     },

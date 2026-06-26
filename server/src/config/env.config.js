@@ -47,7 +47,10 @@ export const env = {
   TTS_EDGE_OUTPUT_FORMAT:
     process.env.TTS_EDGE_OUTPUT_FORMAT || 'audio-24khz-48kbitrate-mono-mp3',
   TTS_MAX_TEXT_LENGTH: Number(process.env.TTS_MAX_TEXT_LENGTH || 300),
-  TTS_TIMEOUT_MS: Number(process.env.TTS_TIMEOUT_MS || 12000)
+  TTS_TIMEOUT_MS: Number(process.env.TTS_TIMEOUT_MS || 12000),
+  STT_PROVIDER: process.env.STT_PROVIDER || 'groq',
+  STT_MODEL: process.env.STT_MODEL || 'whisper-large-v3-turbo',
+  STT_TIMEOUT_MS: Number(process.env.STT_TIMEOUT_MS || 15000)
 };
 
 export const isProduction = env.NODE_ENV === 'production';

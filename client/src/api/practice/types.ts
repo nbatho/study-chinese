@@ -41,9 +41,21 @@ export interface HanziStrokesResponse {
 }
 
 export interface ShadowingScorePayload {
-    promptId: string;
+    expectedText: string;
     audio?: string;
     audioMimeType?: string;
+}
+
+export interface CharDiffEntry {
+    char: string;
+    got: string;
+    status: 'correct' | 'wrong' | 'missing' | 'extra';
+}
+
+export interface ShadowingScoreDetails {
+    expected: string;
+    got: string;
+    charDiff: CharDiffEntry[];
 }
 
 export interface ShadowingScore {
@@ -52,8 +64,22 @@ export interface ShadowingScore {
     fluency: number;
     overall: number;
     tip: string;
+    transcribedText?: string;
+    details?: ShadowingScoreDetails;
 }
 
 export interface ShadowingScoreResponse {
     score: ShadowingScore;
 }
+
+export interface PronunciationCheckPayload {
+    audio?: string;
+    audioMimeType?: string;
+    expectedText: string;
+}
+
+export interface PronunciationCheckResponse {
+    transcribedText: string | null;
+    score: ShadowingScore;
+}
+

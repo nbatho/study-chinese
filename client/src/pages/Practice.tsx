@@ -13,7 +13,7 @@ import {
   useUserMistakesQuery,
   useVocabularyQuery,
 } from "../api";
-import type { HanziStrokeCharacter } from "../api/practice";
+import type { CharDiffEntry, HanziStrokeCharacter } from "../api/practice";
 import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../i18n";
@@ -820,6 +820,54 @@ function ListeningTool() {
   );
 }
 
+function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
+  if (!charDiff || charDiff.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {charDiff.map((entry, i) => {
+        const colorClass =
+          entry.status === "correct"
+            ? "bg-jade/15 text-jade border-jade/30"
+            : entry.status === "wrong"
+              ? "bg-primary/10 text-primary border-primary/30"
+              : entry.status === "missing"
+                ? "bg-gold/15 text-gold border-gold/30"
+                : "bg-muted text-muted-foreground border-border";
+        return (
+          <span
+            key={`${i}-${entry.char}`}
+            className={cn(
+              "inline-flex min-w-[2rem] items-center justify-center rounded-md border px-1.5 py-1 font-serif text-lg font-bold",
+              colorClass,
+            )}
+            title={
+              entry.status === "correct"
+                ? "Correct"
+                : entry.status === "wrong"
+                  ? `Expected "${entry.char}", got "${entry.got}"`
+                  : entry.status === "missing"
+                    ? `Missing: "${entry.char}"`
+                    : `Extra: "${entry.got}"`
+            }
+          >
+            {entry.status === "wrong" ? (
+              <span className="flex flex-col items-center leading-tight">
+                <span className="text-[0.65rem] font-semibold line-through opacity-60">{entry.got}</span>
+                <span>{entry.char}</span>
+              </span>
+            ) : entry.status === "missing" ? (
+              <span className="opacity-50">{entry.char}</span>
+            ) : (
+              entry.char
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function ShadowingTool() {
   const promptsQuery = useShadowingPromptsQuery();
   const scoreMutation = useScoreShadowingMutation();
@@ -886,7 +934,7 @@ function ShadowingTool() {
   const scoreRecordedAudio = async (audioBlob: Blob) => {
     const audio = await blobToDataUrl(audioBlob);
     const result = await scoreMutation.mutateAsync({
-      promptId: prompt.id,
+      expectedText: prompt.hanzi,
       audio,
       audioMimeType: audioBlob.type,
     });
@@ -901,7 +949,7 @@ function ShadowingTool() {
       mistake: result.score.overall < 80 ? {
         skill: "shadow",
         prompt: prompt.hanzi,
-        userAnswer: `${result.score.overall}%`,
+        userAnswer: result.score.transcribedText || `${result.score.overall}%`,
         correctAnswer: prompt.pinyin,
         simplified: prompt.hanzi,
         pinyin: prompt.pinyin,
@@ -986,6 +1034,20 @@ function ShadowingTool() {
     }
   };
 
+  const tryAgain = () => {
+    setScore(null);
+    setRecordingError(null);
+  };
+
+  const overallLabel =
+    score && score.overall >= 90
+      ? "Excellent"
+      : score && score.overall >= 75
+        ? "Great"
+        : score && score.overall >= 50
+          ? "Good effort"
+          : "Keep practicing";
+
   return (
     <div className={panelClass}>
       <h3 className="mb-4 text-[1.3rem] font-extrabold">Shadowing & Pronunciation</h3>
@@ -1003,6 +1065,12 @@ function ShadowingTool() {
           <span className="text-xs font-bold text-primary">RECORDING VOICE...</span>
         </div>
       )}
+      {scoreMutation.isPending && (
+        <div className="mb-5 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
+          <span className="inline-block size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          Analyzing pronunciation...
+        </div>
+      )}
       {recordingError && (
         <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm font-semibold text-primary">
           {recordingError}
@@ -1012,8 +1080,30 @@ function ShadowingTool() {
         <div className="anim-pop mb-6 text-left">
           <div className="rounded-lg border border-dashed border-jade bg-jade/5 p-5 shadow-sm">
             <h4 className="mb-3 flex gap-2 text-[1.1rem] font-extrabold text-jade">
-              <Sparkles size={20} /> Pronunciation: {score.overall >= 90 ? "Excellent" : "Great"}
+              <Sparkles size={20} /> Pronunciation: {overallLabel}
             </h4>
+
+            {score.transcribedText !== undefined && (
+              <div className="mb-4 rounded-lg border bg-card p-4">
+                <p className="mb-1.5 text-xs font-bold uppercase text-muted-foreground">You said:</p>
+                <p className="font-serif text-2xl font-bold text-foreground">
+                  {score.transcribedText || <span className="italic text-muted-foreground">No speech detected</span>}
+                </p>
+              </div>
+            )}
+
+            {score.details?.charDiff && score.details.charDiff.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Character breakdown:</p>
+                <CharDiffDisplay charDiff={score.details.charDiff} />
+                <div className="mt-2 flex flex-wrap gap-3 text-[0.7rem] font-semibold text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-jade/40" /> Correct</span>
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-primary/40" /> Wrong</span>
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-gold/40" /> Missing</span>
+                </div>
+              </div>
+            )}
+
             {[
               { label: "Accuracy", val: score.accuracy, cls: "bg-tone-1" },
               { label: "Tones", val: score.tones, cls: "bg-tone-3" },
@@ -1025,7 +1115,7 @@ function ShadowingTool() {
                   <span>{bar.val}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-[3px] bg-border">
-                  <div className={cn("h-full rounded-[3px]", bar.cls)} style={{ width: `${bar.val}%` }} />
+                  <div className={cn("h-full rounded-[3px] transition-all duration-500", bar.cls)} style={{ width: `${bar.val}%` }} />
                 </div>
               </div>
             ))}
@@ -1036,7 +1126,7 @@ function ShadowingTool() {
       <div className="flex gap-3">
         {!recording ? (
           <button className={cn(primaryButtonClass, "recording-pulse flex-1")} onClick={() => void startRecord()} disabled={scoreMutation.isPending}>
-            Start Speak
+            {score ? "Record Again" : "Start Speak"}
           </button>
         ) : (
           <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-jade px-6 py-3 text-sm font-semibold text-white transition hover:bg-jade/90" onClick={stopRecord}>
@@ -1044,9 +1134,14 @@ function ShadowingTool() {
           </button>
         )}
         {score && (
-          <button className={cn(secondaryButtonClass, "flex-[0.5]")} onClick={() => { setIdx((value) => value + 1); setScore(null); }}>
-            Next
-          </button>
+          <>
+            <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={tryAgain}>
+              Try Again
+            </button>
+            <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={() => { setIdx((value) => value + 1); setScore(null); }}>
+              Next
+            </button>
+          </>
         )}
       </div>
     </div>
