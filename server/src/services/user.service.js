@@ -31,6 +31,81 @@ const editableProfileFields = {
   timezone: 'timezone'
 };
 
+const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null } = {}) => {
+  const normalizedDailyMinutes = Number(dailyMinutes || 15);
+  const normalizedDueCount = Number(dueCount || 0);
+  const xpTarget = Math.max(normalizedDailyMinutes * 3, 45);
+  const steps = [];
+
+  if (normalizedDueCount > 0) {
+    steps.push({
+      id: 'srs-review',
+      kind: 'review',
+      title: 'Ôn SRS đến hạn',
+      description: `${normalizedDueCount} thẻ đang chờ ôn`,
+      estimateMinutes: Math.min(10, Math.max(3, Math.ceil(normalizedDueCount / 3))),
+      href: '/review',
+      status: 'current',
+      meta: { dueCount: normalizedDueCount }
+    });
+  }
+
+  if (weakSkill && Number(weakSkill.needs_practice || 0) > 0) {
+    steps.push({
+      id: 'weak-practice',
+      kind: 'practice',
+      title: 'Luyện điểm yếu',
+      description: `${weakSkill.needs_practice} lỗi cần luyện - ${weakSkill.skill}`,
+      estimateMinutes: 5,
+      href: '/practice?tool=weak',
+      status: steps.length === 0 ? 'current' : 'next',
+      meta: {
+        skill: weakSkill.skill,
+        needsPracticeCount: Number(weakSkill.needs_practice)
+      }
+    });
+  }
+
+  if (nextLesson) {
+    steps.push({
+      id: 'next-lesson',
+      kind: 'lesson',
+      title: 'Học bài tiếp theo',
+      description: `${nextLesson.title} - ${nextLesson.skill}`,
+      estimateMinutes: Number(nextLesson.estimated_minutes || nextLesson.estimatedMinutes || 5),
+      href: `/learn?lesson=${nextLesson.id}`,
+      status: steps.length === 0 ? 'current' : 'next',
+      meta: {
+        lessonId: nextLesson.id,
+        skill: nextLesson.skill
+      }
+    });
+  }
+
+  steps.push({
+    id: 'ai-warmup',
+    kind: 'ai',
+    title: 'Nói 3 câu với AI Tutor',
+    description: weakSkill ? `Dùng điểm yếu ${weakSkill.skill} trong hội thoại` : 'Khởi động hội thoại ngắn',
+    estimateMinutes: 4,
+    href: '/ai-tutor',
+    status: steps.length === 0 ? 'current' : 'next',
+    meta: {
+      focusSkill: weakSkill?.skill || null
+    }
+  });
+
+  return {
+    plan: {
+      dateKey: new Date().toISOString().slice(0, 10),
+      xpTarget,
+      todayXp: todayStats?.xp || 0,
+      dailyMinutes: normalizedDailyMinutes,
+      steps: steps.slice(0, 4)
+    }
+  };
+};
+
 export const getUserProfile = async (userId) => {
   const result = await query(
     `
@@ -161,81 +236,13 @@ export const getTodayPlan = async (userId) => {
     )
   ]);
 
-  const dailyMinutes = Number(profileResult.rows[0]?.daily_minutes || 15);
-  const dueCount = Number(dueResult.rows[0]?.due_count || 0);
-  const weakSkill = mistakesResult.rows[0] || null;
-  const nextLesson = lessonsResult.rows[0] || null;
-  const todayStats = statsResult.rows[0] ? mapDailyStats(statsResult.rows[0]) : null;
-  const xpTarget = Math.max(dailyMinutes * 3, 45);
-  const steps = [];
-
-  if (dueCount > 0) {
-    steps.push({
-      id: 'srs-review',
-      kind: 'review',
-      title: 'Ôn SRS đến hạn',
-      description: `${dueCount} thẻ đang chờ ôn`,
-      estimateMinutes: Math.min(10, Math.max(3, Math.ceil(dueCount / 3))),
-      href: '/review',
-      status: 'current',
-      meta: { dueCount }
-    });
-  }
-
-  if (weakSkill && Number(weakSkill.needs_practice || 0) > 0) {
-    steps.push({
-      id: 'weak-practice',
-      kind: 'practice',
-      title: 'Luyện điểm yếu',
-      description: `${weakSkill.needs_practice} lỗi cần làm nguội - ${weakSkill.skill}`,
-      estimateMinutes: 5,
-      href: '/practice?tool=weak',
-      status: steps.length === 0 ? 'current' : 'next',
-      meta: {
-        skill: weakSkill.skill,
-        needsPracticeCount: Number(weakSkill.needs_practice)
-      }
-    });
-  }
-
-  if (nextLesson) {
-    steps.push({
-      id: 'next-lesson',
-      kind: 'lesson',
-      title: 'Học bài tiếp theo',
-      description: `${nextLesson.title} - ${nextLesson.skill}`,
-      estimateMinutes: Number(nextLesson.estimated_minutes || 5),
-      href: `/learn?lesson=${nextLesson.id}`,
-      status: steps.length === 0 ? 'current' : 'next',
-      meta: {
-        lessonId: nextLesson.id,
-        skill: nextLesson.skill
-      }
-    });
-  }
-
-  steps.push({
-    id: 'ai-warmup',
-    kind: 'ai',
-    title: 'Nói 3 câu với AI Tutor',
-    description: weakSkill ? `Dùng điểm yếu ${weakSkill.skill} trong hội thoại` : 'Khởi động hội thoại ngắn',
-    estimateMinutes: 4,
-    href: '/ai-tutor',
-    status: steps.length === 0 ? 'current' : 'next',
-    meta: {
-      focusSkill: weakSkill?.skill || null
-    }
+  return buildTodayPlanResponse({
+    dailyMinutes: Number(profileResult.rows[0]?.daily_minutes || 15),
+    dueCount: Number(dueResult.rows[0]?.due_count || 0),
+    weakSkill: mistakesResult.rows[0] || null,
+    nextLesson: lessonsResult.rows[0] || null,
+    todayStats: statsResult.rows[0] ? mapDailyStats(statsResult.rows[0]) : null
   });
-
-  return {
-    plan: {
-      dateKey: new Date().toISOString().slice(0, 10),
-      xpTarget,
-      todayXp: todayStats?.xp || 0,
-      dailyMinutes,
-      steps: steps.slice(0, 4)
-    }
-  };
 };
 
 export const addUserActivity = async (userId, payload) => {
@@ -283,3 +290,8 @@ export const createUserMistake = async (userId, payload) =>
 
 export const recordMistakePractice = async (userId, mistakeId, payload) =>
   practiceMistake(userId, mistakeId, payload);
+
+export const __private__ = {
+  buildTodayPlanResponse,
+  mapProfile
+};

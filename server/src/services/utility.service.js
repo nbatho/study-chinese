@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
 import { AppError } from '../utils/http-error.js';
+import { notFound } from '../utils/http-error.js';
 import {
   getAchievements as getAchievementsForUser,
   unlockAchievement as unlockEarnedAchievement
@@ -353,10 +354,28 @@ const toSegment = (box, index) => ({
 const mapOcrHistoryEvent = (row) => ({
   id: row.id,
   provider: row.provider,
+  title: row.title,
+  note: row.note,
+  isFavorite: Boolean(row.is_favorite),
   detectedText: row.detected_text,
   matchedWordIds: row.matched_word_ids || [],
   metadata: row.metadata || {},
   createdAt: row.created_at
+});
+
+const normalizeOcrHistoryFilters = ({ limit = 20, keyword, date, from, to, favorite } = {}) => ({
+  limit: Math.min(Math.max(Number(limit) || 20, 1), 100),
+  keyword: asText(keyword),
+  date: asText(date),
+  from: asText(from),
+  to: asText(to),
+  favorite: favorite === true || favorite === 'true' || favorite === '1'
+});
+
+const normalizeNotebookPayload = (payload = {}) => ({
+  title: Object.prototype.hasOwnProperty.call(payload, 'title') ? asText(payload.title).slice(0, 150) || null : undefined,
+  note: Object.prototype.hasOwnProperty.call(payload, 'note') ? asText(payload.note) || null : undefined,
+  isFavorite: Object.prototype.hasOwnProperty.call(payload, 'isFavorite') ? Boolean(payload.isFavorite) : undefined
 });
 
 export const getAchievements = async (userId) => {
@@ -475,20 +494,117 @@ export const scanOcr = async (userId, payload) => {
   };
 };
 
-export const getOcrHistory = async (userId, { limit = 20 } = {}) => {
-  const normalizedLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+export const getOcrHistory = async (userId, options = {}) => {
+  const filters = normalizeOcrHistoryFilters(options);
+  const values = [userId];
+  const where = ['user_id = $1'];
+
+  if (filters.keyword) {
+    values.push(`%${filters.keyword}%`);
+    where.push(`(detected_text ILIKE $${values.length} OR title ILIKE $${values.length} OR note ILIKE $${values.length})`);
+  }
+
+  if (filters.date) {
+    values.push(filters.date);
+    where.push(`created_at::date = $${values.length}::date`);
+  } else {
+    if (filters.from) {
+      values.push(filters.from);
+      where.push(`created_at::date >= $${values.length}::date`);
+    }
+
+    if (filters.to) {
+      values.push(filters.to);
+      where.push(`created_at::date <= $${values.length}::date`);
+    }
+  }
+
+  if (filters.favorite) {
+    where.push('is_favorite = true');
+  }
+
+  values.push(filters.limit);
   const result = await query(
     `
       SELECT *
       FROM ocr_scan_events
-      WHERE user_id = $1
+      WHERE ${where.join(' AND ')}
       ORDER BY created_at DESC
-      LIMIT $2
+      LIMIT $${values.length}
     `,
-    [userId, normalizedLimit]
+    values
   );
 
   return {
     events: result.rows.map(mapOcrHistoryEvent)
   };
+};
+
+export const getOcrScanDetail = async (userId, scanId) => {
+  const result = await query(
+    `
+      SELECT *
+      FROM ocr_scan_events
+      WHERE user_id = $1 AND id = $2
+      LIMIT 1
+    `,
+    [userId, scanId]
+  );
+
+  if (result.rowCount === 0) {
+    throw notFound('Khong tim thay lich su OCR.');
+  }
+
+  return {
+    event: mapOcrHistoryEvent(result.rows[0])
+  };
+};
+
+export const updateOcrScanNotebook = async (userId, scanId, payload) => {
+  const notebook = normalizeNotebookPayload(payload);
+  const updates = [];
+  const values = [userId, scanId];
+
+  if (notebook.title !== undefined) {
+    values.push(notebook.title);
+    updates.push(`title = $${values.length}`);
+  }
+
+  if (notebook.note !== undefined) {
+    values.push(notebook.note);
+    updates.push(`note = $${values.length}`);
+  }
+
+  if (notebook.isFavorite !== undefined) {
+    values.push(notebook.isFavorite);
+    updates.push(`is_favorite = $${values.length}`);
+  }
+
+  if (updates.length === 0) {
+    return getOcrScanDetail(userId, scanId);
+  }
+
+  const result = await query(
+    `
+      UPDATE ocr_scan_events
+      SET ${updates.join(', ')}
+      WHERE user_id = $1 AND id = $2
+      RETURNING *
+    `,
+    values
+  );
+
+  if (result.rowCount === 0) {
+    throw notFound('Khong tim thay lich su OCR.');
+  }
+
+  return {
+    event: mapOcrHistoryEvent(result.rows[0])
+  };
+};
+
+export const __private__ = {
+  mapOcrHistoryEvent,
+  normalizeNotebookPayload,
+  normalizeOcrHistoryFilters
 };

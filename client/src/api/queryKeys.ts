@@ -30,7 +30,7 @@ export const queryKeys = {
     },
     ocr: {
         scan: ['ocr', 'scan'] as const,
-        history: (limit?: number) => ['ocr', 'history', limit ?? 20] as const,
+        history: (params?: unknown) => ['ocr', 'history', params ?? { limit: 20 }] as const,
     },
     achievements: {
         all: ['achievements'] as const,

@@ -9,6 +9,25 @@ const mapCustomList = (row) => ({
   wordIds: row.word_ids || []
 });
 
+const mapListWord = (row) => ({
+  id: row.id,
+  simplified: row.simplified,
+  traditional: row.traditional,
+  pinyin: row.pinyin,
+  tones: row.tones || [],
+  english: row.english,
+  partOfSpeech: row.part_of_speech,
+  hskLevel: Number(row.hsk_level),
+  category: row.category
+});
+
+const mapCustomListDetails = (list, wordRows) => ({
+  list: {
+    ...list,
+    words: wordRows.map(mapListWord)
+  }
+});
+
 const getListWordIds = async (client, listId, userId) => {
   const result = await client.query(
     `
@@ -110,22 +129,7 @@ export const getCustomListDetails = async (userId, listId) => {
     [listId, userId]
   );
 
-  return {
-    list: {
-      ...list,
-      words: wordsResult.rows.map((row) => ({
-        id: row.id,
-        simplified: row.simplified,
-        traditional: row.traditional,
-        pinyin: row.pinyin,
-        tones: row.tones || [],
-        english: row.english,
-        partOfSpeech: row.part_of_speech,
-        hskLevel: Number(row.hsk_level),
-        category: row.category
-      }))
-    }
-  };
+  return mapCustomListDetails(list, wordsResult.rows);
 };
 
 export const createCustomList = async (userId, { name, emoji }) => {
@@ -204,3 +208,9 @@ export const removeWordFromList = async (userId, listId, wordId) =>
       wordIds: list.wordIds
     };
   });
+
+export const __private__ = {
+  mapCustomList,
+  mapCustomListDetails,
+  mapListWord
+};

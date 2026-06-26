@@ -43,6 +43,9 @@ export interface OcrScanResponse {
 export interface OcrHistoryEvent {
     id: string;
     provider: string;
+    title?: string | null;
+    note?: string | null;
+    isFavorite: boolean;
     detectedText: string;
     matchedWordIds: string[];
     metadata: Record<string, unknown>;
@@ -52,3 +55,15 @@ export interface OcrHistoryEvent {
 export interface OcrHistoryResponse {
     events: OcrHistoryEvent[];
 }
+
+export interface OcrHistoryDetailResponse {
+    event: OcrHistoryEvent;
+}
+
+export interface UpdateOcrHistoryPayload {
+    title?: string | null;
+    note?: string | null;
+    isFavorite?: boolean;
+}
+
+export type UpdateOcrHistoryResponse = OcrHistoryDetailResponse;

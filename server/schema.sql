@@ -302,11 +302,18 @@ CREATE TABLE IF NOT EXISTS ocr_scan_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   provider VARCHAR(50) NOT NULL,
+  title VARCHAR(150),
+  note TEXT,
+  is_favorite BOOLEAN NOT NULL DEFAULT false,
   detected_text TEXT,
   matched_word_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
   metadata JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE ocr_scan_events ADD COLUMN IF NOT EXISTS title VARCHAR(150);
+ALTER TABLE ocr_scan_events ADD COLUMN IF NOT EXISTS note TEXT;
+ALTER TABLE ocr_scan_events ADD COLUMN IF NOT EXISTS is_favorite BOOLEAN NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS user_mistakes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -407,6 +414,7 @@ CREATE INDEX IF NOT EXISTS idx_custom_lists_user ON custom_lists (user_id, creat
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_updated ON chat_sessions (user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session_time ON chat_messages (session_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_time ON ocr_scan_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_favorite ON ocr_scan_events (user_id, is_favorite, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_user_last ON user_mistakes (user_id, last_mistake_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_word ON user_mistakes (word_id);
 

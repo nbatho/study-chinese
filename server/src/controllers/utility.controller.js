@@ -4,8 +4,10 @@ import {
   getAchievements,
   getDailyContent,
   getOcrHistory,
+  getOcrScanDetail,
   scanOcr,
-  unlockAchievement
+  unlockAchievement,
+  updateOcrScanNotebook
 } from '../services/utility.service.js';
 
 export const listAchievements = asyncHandler(async (req, res) => {
@@ -30,5 +32,15 @@ export const scanImage = asyncHandler(async (req, res) => {
 
 export const listOcrHistory = asyncHandler(async (req, res) => {
   const data = await getOcrHistory(req.user.id, req.query);
+  success(res, data);
+});
+
+export const showOcrScan = asyncHandler(async (req, res) => {
+  const data = await getOcrScanDetail(req.user.id, req.params.id);
+  success(res, data);
+});
+
+export const updateOcrScan = asyncHandler(async (req, res) => {
+  const data = await updateOcrScanNotebook(req.user.id, req.params.id, req.body);
   success(res, data);
 });

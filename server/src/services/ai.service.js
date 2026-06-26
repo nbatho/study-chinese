@@ -3,6 +3,7 @@ import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
 import { getAiTutorReply } from './ai-provider.service.js';
+import { recordMistake } from './mistake.service.js';
 
 const mapScenario = (row) => ({
   id: row.id,
@@ -112,6 +113,27 @@ const getLearningContext = async (client, userId) => {
     mistakes: mistakesResult.rows,
     listWords: listWordsResult.rows,
     recentLesson: lessonResult.rows[0] || null
+  };
+};
+
+const buildCorrectionMistakePayload = ({ correction, userText, sessionId, scenario }) => {
+  if (!correction?.improved || !correction?.original) {
+    return null;
+  }
+
+  return {
+    skill: 'ai-tutor',
+    prompt: correction.original || userText,
+    userAnswer: userText,
+    correctAnswer: correction.improved,
+    simplified: correction.improved,
+    english: correction.explanation,
+    context: {
+      source: 'ai-tutor',
+      sessionId,
+      scenarioId: scenario?.id || null,
+      explanation: correction.explanation || null
+    }
   };
 };
 
@@ -298,6 +320,16 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     );
 
     await client.query('UPDATE chat_sessions SET updated_at = now() WHERE id = $1', [sessionId]);
+    const correctionMistakePayload = buildCorrectionMistakePayload({
+      correction: reply.correction,
+      userText,
+      sessionId,
+      scenario: context.scenario
+    });
+
+    if (correctionMistakePayload) {
+      await recordMistake(client, userId, correctionMistakePayload);
+    }
 
     const activity = await recordActivity(client, userId, {
       xp: 10
@@ -319,4 +351,9 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
       unlockedAchievements
     };
   });
+};
+
+export const __private__ = {
+  buildCorrectionMistakePayload,
+  getLearningContext
 };

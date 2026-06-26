@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
+import type { OcrHistoryParams } from './index';
 import { ocrApi } from './index';
-import type { OcrScanPayload } from './types';
+import type { OcrScanPayload, UpdateOcrHistoryPayload } from './types';
 
 export const useOcrScanMutation = () => {
     const queryClient = useQueryClient();
@@ -15,8 +16,23 @@ export const useOcrScanMutation = () => {
     });
 };
 
-export const useOcrHistoryQuery = (limit = 20) =>
-    useQuery({
-        queryKey: queryKeys.ocr.history(limit),
-        queryFn: () => unwrapApiData(ocrApi.history({ limit })),
+export const useOcrHistoryQuery = (options: number | OcrHistoryParams = 20) => {
+    const params = typeof options === 'number' ? { limit: options } : options;
+
+    return useQuery({
+        queryKey: queryKeys.ocr.history(params),
+        queryFn: () => unwrapApiData(ocrApi.history(params)),
     });
+};
+
+export const useUpdateOcrHistoryMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ eventId, payload }: { eventId: string; payload: UpdateOcrHistoryPayload }) =>
+            unwrapApiData(ocrApi.update(eventId, payload)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ocr', 'history'] });
+        },
+    });
+};

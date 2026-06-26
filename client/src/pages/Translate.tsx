@@ -2,13 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera,
   BookmarkPlus,
+  CalendarDays,
   Clipboard,
   FileImage,
+  Heart,
   Languages,
   ListPlus,
   Loader2,
   RefreshCw,
+  Save,
   ScanLine,
+  Search,
   Upload,
   Volume2,
   X,
@@ -20,9 +24,8 @@ import {
   useEnrollWordMutation,
   useListsQuery,
 } from "../api";
-import { useOcrScanMutation } from "../api/ocr/queries";
-import { useOcrHistoryQuery } from "../api/ocr/queries";
-import type { OcrBox, OcrScanPayload, OcrSegment } from "../api/ocr";
+import { useOcrHistoryQuery, useOcrScanMutation, useUpdateOcrHistoryMutation } from "../api/ocr/queries";
+import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment } from "../api/ocr";
 import { Button } from "../components/ui/button";
 import { cn } from "../utils/cn";
 import { speakChinese } from "../utils/tts";
@@ -45,7 +48,20 @@ const getCombinedMeaning = (segments: OcrSegment[]) =>
 
 export default function Translate() {
   const scanMutation = useOcrScanMutation();
-  const ocrHistoryQuery = useOcrHistoryQuery(12);
+  const [historyKeyword, setHistoryKeyword] = useState("");
+  const [historyDate, setHistoryDate] = useState("");
+  const [historyFavoritesOnly, setHistoryFavoritesOnly] = useState(false);
+  const historyParams = useMemo(
+    () => ({
+      limit: 20,
+      keyword: historyKeyword.trim() || undefined,
+      date: historyDate || undefined,
+      favorite: historyFavoritesOnly || undefined,
+    }),
+    [historyDate, historyFavoritesOnly, historyKeyword],
+  );
+  const ocrHistoryQuery = useOcrHistoryQuery(historyParams);
+  const updateOcrHistoryMutation = useUpdateOcrHistoryMutation();
   const listsQuery = useListsQuery();
   const createListMutation = useCreateListMutation();
   const enrollMutation = useEnrollWordMutation();
@@ -64,6 +80,8 @@ export default function Translate() {
   const [cameraActive, setCameraActive] = useState(false);
   const [selectedOcrListId, setSelectedOcrListId] = useState("");
   const [newOcrListName, setNewOcrListName] = useState("OCR Saved");
+  const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null);
+  const [historyDraft, setHistoryDraft] = useState({ title: "", note: "" });
 
   const loading = scanMutation.isPending;
   const lists = listsQuery.data?.lists ?? [];
@@ -269,6 +287,39 @@ export default function Translate() {
     for (const segment of activeSegments) {
       await saveSegmentToSrs(segment);
     }
+  };
+
+  const openHistoryEvent = (event: OcrHistoryEvent) => {
+    setMode("text");
+    setSourceText(event.detectedText || "");
+    void runScan({ text: event.detectedText || "" });
+  };
+
+  const startEditingHistory = (event: OcrHistoryEvent) => {
+    setEditingHistoryId(event.id);
+    setHistoryDraft({
+      title: event.title || "",
+      note: event.note || "",
+    });
+  };
+
+  const saveHistoryNotebook = async (event: OcrHistoryEvent) => {
+    await updateOcrHistoryMutation.mutateAsync({
+      eventId: event.id,
+      payload: {
+        title: historyDraft.title.trim() || null,
+        note: historyDraft.note.trim() || null,
+      },
+    });
+    setEditingHistoryId(null);
+    toast.success("Da luu ghi chu OCR.");
+  };
+
+  const toggleHistoryFavorite = async (event: OcrHistoryEvent) => {
+    await updateOcrHistoryMutation.mutateAsync({
+      eventId: event.id,
+      payload: { isFavorite: !event.isFavorite },
+    });
   };
 
   useEffect(() => () => stopCamera(), []);
@@ -616,6 +667,36 @@ export default function Translate() {
               <h3 className="text-xs font-bold uppercase text-muted-foreground">Lịch sử OCR</h3>
               {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
             </div>
+            <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
+              <label className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+                <Search size={15} className="shrink-0 text-muted-foreground" />
+                <input
+                  value={historyKeyword}
+                  onChange={(event) => setHistoryKeyword(event.target.value)}
+                  placeholder="Filter scans"
+                  className="min-w-0 flex-1 bg-transparent outline-none"
+                />
+              </label>
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <label className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+                  <CalendarDays size={15} className="shrink-0 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={historyDate}
+                    onChange={(event) => setHistoryDate(event.target.value)}
+                    className="min-w-0 flex-1 bg-transparent outline-none"
+                  />
+                </label>
+                <Button
+                  type="button"
+                  variant={historyFavoritesOnly ? "default" : "outline"}
+                  onClick={() => setHistoryFavoritesOnly((value) => !value)}
+                >
+                  <Heart size={16} fill={historyFavoritesOnly ? "currentColor" : "none"} />
+                  Favorites
+                </Button>
+              </div>
+            </div>
             {historyEvents.length === 0 ? (
               <div className="rounded-lg border bg-background p-3 text-sm font-semibold text-muted-foreground">
                 Chưa có lịch sử quét.
@@ -640,6 +721,85 @@ export default function Translate() {
                       {new Date(event.createdAt).toLocaleString()} - {event.matchedWordIds.length} từ match
                     </span>
                   </button>
+                ))}
+              </div>
+            )}
+            {historyEvents.length > 0 && (
+              <div className="mt-3 grid gap-2">
+                {historyEvents.map((event) => (
+                  <div key={`notebook-${event.id}`} className="rounded-lg border bg-background p-3">
+                    <div className="flex items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openHistoryEvent(event)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <span className="line-clamp-1 text-sm font-extrabold">
+                          {event.title || "Notebook entry"}
+                        </span>
+                        <span className="mt-0.5 line-clamp-1 font-serif text-lg font-extrabold">
+                          {event.detectedText || "No text"}
+                        </span>
+                      </button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void toggleHistoryFavorite(event)}
+                        disabled={updateOcrHistoryMutation.isPending}
+                        aria-label="Toggle favorite"
+                        title="Toggle favorite"
+                      >
+                        <Heart size={17} fill={event.isFavorite ? "currentColor" : "none"} />
+                      </Button>
+                    </div>
+
+                    {event.note && editingHistoryId !== event.id && (
+                      <p className="mt-2 line-clamp-2 text-xs font-medium text-muted-foreground">{event.note}</p>
+                    )}
+
+                    {editingHistoryId === event.id ? (
+                      <div className="mt-3 grid gap-2">
+                        <input
+                          value={historyDraft.title}
+                          onChange={(inputEvent) =>
+                            setHistoryDraft((draft) => ({ ...draft, title: inputEvent.target.value }))
+                          }
+                          placeholder="Scan title"
+                          className="rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                        />
+                        <textarea
+                          value={historyDraft.note}
+                          onChange={(inputEvent) =>
+                            setHistoryDraft((draft) => ({ ...draft, note: inputEvent.target.value }))
+                          }
+                          placeholder="Reading note"
+                          className="min-h-20 resize-y rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setEditingHistoryId(null)}>
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => void saveHistoryNotebook(event)}
+                            disabled={updateOcrHistoryMutation.isPending}
+                          >
+                            <Save size={16} />
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => startEditingHistory(event)}
+                        className="mt-2 text-xs font-bold text-primary"
+                      >
+                        Edit note
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
