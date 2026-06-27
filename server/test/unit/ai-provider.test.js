@@ -11,6 +11,10 @@ test('extractJsonText strips fenced markdown wrappers', () => {
   );
 });
 
+test('Groq default model uses GPT OSS 20B', () => {
+  assert.equal(__private__.DEFAULT_GROQ_MODEL, 'openai/gpt-oss-20b');
+});
+
 test('normalizeProviderReply maps structured provider payload to chat reply contract', () => {
   const reply = __private__.normalizeProviderReply(
     {

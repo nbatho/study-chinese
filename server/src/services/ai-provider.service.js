@@ -40,6 +40,8 @@ const OFF_TOPIC_PATTERNS = [
   /(lập trình|viết code|sửa code|chứng khoán|crypto|bitcoin|đầu tư|thuế|pháp luật|y tế|bầu cử|chính trị|tin tức|bóng đá|thời tiết|nấu ăn)/i
 ];
 
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b';
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const now = () => Date.now();
@@ -381,7 +383,7 @@ const openAiConfig = (provider) => {
   if (provider === 'groq') {
     return {
       apiKey: requireApiKey(provider),
-      modelName: env.AI_MODEL || 'llama-3.1-8b-instant',
+      modelName: env.AI_MODEL || DEFAULT_GROQ_MODEL,
       url: env.AI_BASE_URL || 'https://api.groq.com/openai/v1/chat/completions'
     };
   }
@@ -521,5 +523,6 @@ export const __private__ = {
   hasPromptInjectionIntent,
   isLikelyBeginnerPractice,
   normalizeProviderReply,
-  parseJsonResponse
+  parseJsonResponse,
+  DEFAULT_GROQ_MODEL
 };
