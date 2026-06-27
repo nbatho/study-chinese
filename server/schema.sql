@@ -298,6 +298,31 @@ CREATE TABLE IF NOT EXISTS grammar_library (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS practice_minimal_pairs (
+  id VARCHAR(50) PRIMARY KEY,
+  word_a VARCHAR(100) NOT NULL,
+  word_b VARCHAR(100) NOT NULL,
+  char_a VARCHAR(20) NOT NULL,
+  char_b VARCHAR(20) NOT NULL,
+  tone_a INT NOT NULL CHECK (tone_a BETWEEN 1 AND 5),
+  tone_b INT NOT NULL CHECK (tone_b BETWEEN 1 AND 5),
+  label VARCHAR(150) NOT NULL,
+  order_num INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS practice_hanzi_strokes (
+  id VARCHAR(50) PRIMARY KEY,
+  character VARCHAR(20) NOT NULL,
+  strokes TEXT[] NOT NULL DEFAULT '{}',
+  order_num INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS ocr_scan_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -390,6 +415,14 @@ DROP TRIGGER IF EXISTS trg_grammar_library_updated_at ON grammar_library;
 CREATE TRIGGER trg_grammar_library_updated_at BEFORE UPDATE ON grammar_library
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_practice_minimal_pairs_updated_at ON practice_minimal_pairs;
+CREATE TRIGGER trg_practice_minimal_pairs_updated_at BEFORE UPDATE ON practice_minimal_pairs
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_practice_hanzi_strokes_updated_at ON practice_hanzi_strokes;
+CREATE TRIGGER trg_practice_hanzi_strokes_updated_at BEFORE UPDATE ON practice_hanzi_strokes
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_user_mistakes_updated_at ON user_mistakes;
 CREATE TRIGGER trg_user_mistakes_updated_at BEFORE UPDATE ON user_mistakes
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -417,5 +450,7 @@ CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_time ON ocr_scan_events (use
 CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_favorite ON ocr_scan_events (user_id, is_favorite, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_user_last ON user_mistakes (user_id, last_mistake_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_word ON user_mistakes (word_id);
+CREATE INDEX IF NOT EXISTS idx_practice_minimal_pairs_order ON practice_minimal_pairs (order_num, id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_practice_hanzi_strokes_order ON practice_hanzi_strokes (order_num, id) WHERE is_active = true;
 
 COMMIT;

@@ -26,45 +26,6 @@ const mapMessage = (row) => ({
   correction: row.correction
 });
 
-const personalScenarios = [
-  {
-    id: 'personal-weak',
-    title: 'Luyen diem yeu',
-    emoji: '🎯',
-    description: 'Hoi thoai dung cac tu va ky nang ban hay sai.',
-    initialMessage: {
-      simplified: '我们来练习你的难点吧。',
-      pinyin: 'Wǒmen lái liànxí nǐ de nándiǎn ba.',
-      english: 'Let us practice your weak spots.'
-    }
-  },
-  {
-    id: 'personal-list',
-    title: 'Luyen tu trong list',
-    emoji: '📋',
-    description: 'AI Tutor uu tien tu vung trong danh sach ban luu gan day.',
-    initialMessage: {
-      simplified: '请用你保存的词说一句话。',
-      pinyin: 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.',
-      english: 'Please make a sentence with a word you saved.'
-    }
-  },
-  {
-    id: 'personal-lesson',
-    title: 'On bai vua hoc',
-    emoji: '🧠',
-    description: 'Luyen hoi thoai xoay quanh bai hoc gan nhat.',
-    initialMessage: {
-      simplified: '我们复习你刚学的内容。',
-      pinyin: 'Wǒmen fùxí nǐ gāng xué de nèiróng.',
-      english: 'Let us review what you just learned.'
-    }
-  }
-];
-
-const getPersonalScenario = (scenarioId) =>
-  personalScenarios.find((scenario) => scenario.id === scenarioId) || null;
-
 const getLearningContext = async (client, userId) => {
   const [mistakesResult, listWordsResult, lessonResult] = await Promise.all([
     client.query(
@@ -148,15 +109,14 @@ export const getChatScenarios = async () => {
   );
 
   return {
-    scenarios: [...personalScenarios, ...result.rows.map(mapScenario)]
+    scenarios: result.rows.map(mapScenario)
   };
 };
 
-export const startChatSession = async (userId, { scenarioId }) =>
+export const startChatSession = async (userId, { scenarioId } = {}) =>
   withTransaction(async (client) => {
-    const personalScenario = getPersonalScenario(scenarioId);
-    const resolvedScenarioId = personalScenario ? null : scenarioId || 'general';
-    const scenarioResult = personalScenario ? { rowCount: 0, rows: [] } : await client.query(
+    const resolvedScenarioId = scenarioId || 'general';
+    const scenarioResult = await client.query(
       `
         SELECT *
         FROM chat_scenarios
@@ -165,59 +125,54 @@ export const startChatSession = async (userId, { scenarioId }) =>
       [resolvedScenarioId]
     );
 
-    if (scenarioResult.rowCount === 0 && scenarioId && !personalScenario) {
-      throw notFound('Không tìm thấy kịch bản trò chuyện.');
+    if (scenarioResult.rowCount === 0) {
+      throw notFound('Khong tim thay kich ban tro chuyen.');
     }
 
-    const scenario = personalScenario || scenarioResult.rows[0] || null;
+    const scenario = scenarioResult.rows[0];
     const sessionResult = await client.query(
       `
         INSERT INTO chat_sessions (user_id, scenario_id, title)
         VALUES ($1, $2, $3)
         RETURNING *
       `,
-      [userId, personalScenario ? null : scenarioId || null, scenario?.title || 'Free Talk']
+      [userId, resolvedScenarioId, scenario.title]
     );
 
-    const messages = [];
-
-    if (scenario) {
-      const messageResult = await client.query(
-        `
-          INSERT INTO chat_messages (
-            session_id,
-            role,
-            raw_text,
-            normalized_simplified,
-            pinyin,
-            english
-          )
-          VALUES ($1, 'tutor', $2, $2, $3, $4)
-          RETURNING *
-        `,
-        [
-          sessionResult.rows[0].id,
-          scenario.init_msg_simplified || scenario.initialMessage?.simplified,
-          scenario.init_msg_pinyin || scenario.initialMessage?.pinyin,
-          scenario.init_msg_english || scenario.initialMessage?.english
-        ]
-      );
-      messages.push(mapMessage(messageResult.rows[0]));
-    }
+    const messageResult = await client.query(
+      `
+        INSERT INTO chat_messages (
+          session_id,
+          role,
+          raw_text,
+          normalized_simplified,
+          pinyin,
+          english
+        )
+        VALUES ($1, 'tutor', $2, $2, $3, $4)
+        RETURNING *
+      `,
+      [
+        sessionResult.rows[0].id,
+        scenario.init_msg_simplified,
+        scenario.init_msg_pinyin,
+        scenario.init_msg_english
+      ]
+    );
 
     return {
       session: {
         id: sessionResult.rows[0].id,
         scenarioId: sessionResult.rows[0].scenario_id,
         createdAt: sessionResult.rows[0].created_at,
-        messages
+        messages: [mapMessage(messageResult.rows[0])]
       }
     };
   });
 
 export const sendChatMessage = async (userId, sessionId, { text }) => {
   if (!text || !String(text).trim()) {
-    throw badRequest('text không được để trống.');
+    throw badRequest('text khong duoc de trong.');
   }
 
   const userText = text.trim();
@@ -239,7 +194,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     );
 
     if (sessionResult.rowCount === 0) {
-      throw notFound('Không tìm thấy phiên trò chuyện.');
+      throw notFound('Khong tim thay phien tro chuyen.');
     }
 
     const userMessageResult = await client.query(

@@ -1,23 +1,4 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: study-chinese-postgres
-    profiles:
-      - local-db
-    environment:
-      POSTGRES_DB: study_chinese
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./server/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
-      - ./server/mock-data.sql:/docker-entrypoint-initdb.d/002-mock-data.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d study_chinese"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   server:
     container_name: study-chinese-server
     build:
@@ -29,42 +10,11 @@ services:
       PORT: 5000
       CLIENT_URL: http://localhost:5173
       API_BASE_URL: http://localhost:5173/api/v1
-      OCR_PROVIDER: paddle
-      OCR_BASE_URL: http://ocr:8000
-      OCR_API_KEY: ${OCR_API_KEY:-}
-      OCR_TIMEOUT_MS: 30000
-      TTS_PROVIDER: edge
-      TTS_EDGE_VOICE: zh-CN-XiaoxiaoNeural
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/v1/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       start_period: 20s
-      retries: 3
-    depends_on:
-      ocr:
-        condition: service_healthy
-    restart: unless-stopped
-
-  ocr:
-    container_name: study-chinese-ocr
-    build:
-      context: ./ocr-service
-    environment:
-      OCR_LANG: ch
-      OCR_DET_MODEL: PP-OCRv6_small_det
-      OCR_REC_MODEL: PP-OCRv6_small_rec
-      OCR_DEVICE: cpu
-      OCR_ENGINE: paddle_dynamic
-      OCR_ENABLE_MKLDNN: "false"
-      OCR_API_KEY: ${OCR_API_KEY:-}
-    volumes:
-      - paddle_models:/home/user/.paddlex
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
-      interval: 30s
-      timeout: 5s
-      start_period: 180s
       retries: 3
     restart: unless-stopped
 
@@ -78,7 +28,3 @@ services:
       server:
         condition: service_healthy
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-  paddle_models:

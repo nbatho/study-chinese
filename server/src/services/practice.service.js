@@ -2,29 +2,25 @@ import { query } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { transcribeAudio } from './stt-provider.service.js';
 
-const minimalPairs = [
-  { id: 'ma-1-3', wordA: 'mā', wordB: 'mǎ', charA: '妈', charB: '马', toneA: 1, toneB: 3, label: 'mother vs horse' },
-  { id: 'ma-1-2', wordA: 'mā', wordB: 'má', charA: '妈', charB: '麻', toneA: 1, toneB: 2, label: 'mother vs hemp' },
-  { id: 'ma-1-4', wordA: 'mā', wordB: 'mà', charA: '妈', charB: '骂', toneA: 1, toneB: 4, label: 'mother vs scold' },
-  { id: 'shu-1-3', wordA: 'shū', wordB: 'shǔ', charA: '书', charB: '鼠', toneA: 1, toneB: 3, label: 'book vs mouse' },
-  { id: 'cha-2-4', wordA: 'chá', wordB: 'chà', charA: '茶', charB: '差', toneA: 2, toneB: 4, label: 'tea vs poor' },
-  { id: 'mai-3-4', wordA: 'mǎi', wordB: 'mài', charA: '买', charB: '卖', toneA: 3, toneB: 4, label: 'buy vs sell' }
-];
-
-const hanziStrokes = [
-  { id: 'ren', character: '人', strokes: ['M50,20 L20,80', 'M50,20 L80,80'] },
-  { id: 'da', character: '大', strokes: ['M15,35 L85,35', 'M50,20 L25,80', 'M50,35 L80,80'] },
-  { id: 'zhong', character: '中', strokes: ['M25,20 L25,70', 'M75,20 L75,70', 'M25,20 L75,20', 'M50,10 L50,90'] },
-  { id: 'guo', character: '国', strokes: ['M15,10 L15,90', 'M85,10 L85,90', 'M15,10 L85,10', 'M15,90 L85,90', 'M35,30 L65,30', 'M35,50 L65,50', 'M35,70 L65,70', 'M50,25 L50,75'] },
-  { id: 'hao', character: '好', strokes: ['M30,20 L20,60', 'M20,60 L40,65', 'M20,45 L40,45', 'M60,20 L60,70', 'M55,35 L75,35', 'M55,55 L75,55'] },
-  { id: 'shui', character: '水', strokes: ['M50,15 L50,85', 'M30,35 L20,75', 'M25,55 L35,65', 'M50,55 L75,35', 'M50,55 L80,80'] },
-  { id: 'huo', character: '火', strokes: ['M30,25 L20,50', 'M70,25 L80,50', 'M50,15 L30,85', 'M50,15 L70,85'] },
-  { id: 'shan', character: '山', strokes: ['M15,85 L15,50', 'M50,85 L50,25', 'M85,85 L85,50', 'M15,85 L85,85'] },
-  { id: 'kou', character: '口', strokes: ['M25,20 L25,80', 'M75,20 L75,80', 'M25,20 L75,20', 'M25,80 L75,80'] }
-];
-
 const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
 const NO_SPEECH_PROBABILITY_THRESHOLD = 0.6;
+
+const mapMinimalPair = (row) => ({
+  id: row.id,
+  wordA: row.word_a,
+  wordB: row.word_b,
+  charA: row.char_a,
+  charB: row.char_b,
+  toneA: Number(row.tone_a),
+  toneB: Number(row.tone_b),
+  label: row.label
+});
+
+const mapHanziStroke = (row) => ({
+  id: row.id,
+  character: row.character,
+  strokes: row.strokes || []
+});
 
 const decodeAudioBytes = (audio) => {
   if (!audio || typeof audio !== 'string') {
@@ -100,9 +96,10 @@ const scoreFromTranscription = (expectedText, transcribedText, audioDuration = 0
   const accuracy = clampScore(rawAccuracy - Math.min(extraCount * 5, 15));
   const tones = clampScore(rawAccuracy * 0.9 + (audioDuration > 0.5 ? 10 : 0));
   const expectedDuration = expectedLen * 0.4;
-  const durationRatio = audioDuration > 0 && expectedDuration > 0
-    ? Math.min(audioDuration / expectedDuration, 1.5)
-    : 0;
+  const durationRatio =
+    audioDuration > 0 && expectedDuration > 0
+      ? Math.min(audioDuration / expectedDuration, 1.5)
+      : 0;
   const completeness = expectedLen > 0 ? Math.min(correctCount / expectedLen, 1) : 0;
   const fluency = clampScore(completeness * 70 + durationRatio * 20 + 10);
   const overall = Math.round((accuracy + tones + fluency) / 3);
@@ -165,12 +162,45 @@ const scoreFromSttResult = (expectedText, sttResult) => {
   return scoreFromTranscription(expectedText, transcribedText, sttResult?.duration);
 };
 
-export const getPracticeCatalog = async () => ({
-  minimalPairs,
-  hanziStrokes
-});
+export const getMinimalPairs = async () => {
+  const result = await query(
+    `
+      SELECT *
+      FROM practice_minimal_pairs
+      WHERE is_active = true
+      ORDER BY order_num, id
+    `
+  );
 
-export const getMinimalPairs = async () => ({ pairs: minimalPairs });
+  return { pairs: result.rows.map(mapMinimalPair) };
+};
+
+export const getHanziStrokes = async () => {
+  const result = await query(
+    `
+      SELECT *
+      FROM practice_hanzi_strokes
+      WHERE is_active = true
+      ORDER BY order_num, id
+    `
+  );
+
+  return { characters: result.rows.map(mapHanziStroke) };
+};
+
+export const getPracticeCatalog = async () => {
+  const [{ pairs }, { prompts }, { characters }] = await Promise.all([
+    getMinimalPairs(),
+    getShadowingPrompts(),
+    getHanziStrokes()
+  ]);
+
+  return {
+    minimalPairs: pairs,
+    shadowingPrompts: prompts,
+    hanziStrokes: characters
+  };
+};
 
 export const getShadowingPrompts = async () => {
   const [phrasesResult, wordsResult] = await Promise.all([
@@ -213,8 +243,6 @@ export const getShadowingPrompts = async () => {
 
   return { prompts: prompts.slice(0, 20) };
 };
-
-export const getHanziStrokes = async () => ({ characters: hanziStrokes });
 
 export const scoreShadowing = async ({ expectedText, audio, audioMimeType }) => {
   const expected = getRequiredExpectedText(expectedText);

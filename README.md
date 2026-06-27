@@ -81,7 +81,7 @@ URL mặc định:
 
 ## Docker Compose
 
-Docker Compose dựng OCR service, server và client. Server đọc cấu hình DB từ `server/.env`, nên có thể dùng `DATABASE_URL` hoặc nhóm `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` để trỏ tới prod/Supabase/PostgreSQL bên ngoài. Client được build static và serve bằng nginx ở `http://localhost:5173`; nginx proxy `/api/*` sang server trong mạng Docker.
+Docker Compose chỉ dựng server và client. Server đọc cấu hình DB, AI, OCR, STT từ `server/.env`, nên DB và OCR có thể trỏ tới dịch vụ đang deploy bên ngoài như Supabase hoặc Hugging Face Spaces. Client được build static và serve bằng nginx ở `http://localhost:5173`; nginx proxy `/api/*` sang server trong mạng Docker.
 
 ```bash
 docker compose up --build
@@ -91,22 +91,6 @@ URL mặc định khi chạy Docker:
 
 - Client: `http://localhost:5173`
 - API qua client nginx proxy: `http://localhost:5173/api/v1`
-- OCR service chạy nội bộ trong Docker network với hostname `ocr`.
-
-Nếu muốn chạy PostgreSQL local trong Docker thay vì DB trong `server/.env`, đổi `DATABASE_URL` thành `postgres://postgres:postgres@postgres:5432/study_chinese` và bật profile local DB:
-
-```bash
-docker compose --profile local-db up --build
-```
-
-Khi bật profile này, PostgreSQL chạy nội bộ trong Docker network với hostname `postgres`. Nếu cần truy cập DB từ host, thêm port mapping thủ công hoặc dùng `docker compose exec postgres psql -U postgres -d study_chinese`.
-
-PostgreSQL tự import `server/schema.sql` rồi `server/mock-data.sql` trong lần tạo volume đầu tiên. Nếu volume đã tồn tại và cần seed lại database từ đầu:
-
-```bash
-docker compose down -v
-docker compose up --build
-```
 
 ## Scripts
 
@@ -118,6 +102,7 @@ Root scripts:
 - `npm run lint`
 - `npm run test`
 - `npm run db:init`
+- `npm --prefix server run db:migrate -- migrations/<file>.sql`
 
 Client scripts:
 
@@ -132,6 +117,7 @@ Server scripts:
 - `npm --prefix server test`
 - `npm --prefix server run test:integration`
 - `npm --prefix server run db:init`
+- `npm --prefix server run db:migrate -- migrations/<file>.sql`
 
 ## API Chính
 
@@ -149,7 +135,7 @@ Tất cả endpoint chính nằm dưới `/api/v1`.
 | `GET/POST` | `/api/v1/srs/*` | Ôn tập SRS |
 | `GET/POST` | `/api/v1/practice/*` | Bộ công cụ luyện tập |
 | `GET` | `/api/v1/audio` | Tạo audio đọc tiếng Trung bằng Edge TTS |
-| `POST` | `/api/v1/ocr/scan` | OCR qua PaddleOCR local hoặc text mapping |
+| `POST` | `/api/v1/ocr/scan` | OCR qua provider PaddleOCR hoặc text mapping |
 | `GET/POST` | `/api/v1/ai-tutor/*` | AI tutor qua mock/dev hoặc provider thật |
 
 Các alias cũ `/api/health`, `/api/words`, `/api/profile`, `/api-docs` vẫn còn redirect để tương thích local cũ.
@@ -166,21 +152,15 @@ AI_MODEL=gemini-2.5-flash
 
 Các provider hỗ trợ: `gemini`, `openai`, `groq`, `openai-compatible`. Có thể dùng `AI_BASE_URL` cho endpoint OpenAI-compatible riêng. Server có timeout/retry, log token/cost và lưu `token_usage` vào `chat_messages`.
 
-## OCR Local
-
-Docker Compose mặc định dùng `OCR_PROVIDER=paddle` và gọi PaddleOCR local tại `http://ocr:8000`.
+## OCR Provider
 
 ```text
 OCR_PROVIDER=paddle
-OCR_BASE_URL=http://ocr:8000
+OCR_BASE_URL=https://your-ocr-service.example
 OCR_TIMEOUT_MS=30000
 ```
 
-Nếu chạy server ngoài Docker nhưng vẫn chạy OCR service riêng trên host, dùng:
-
-```text
-OCR_BASE_URL=http://localhost:8000
-```
+Docker Compose không còn chạy `ocr-service` local. Khi dùng `OCR_PROVIDER=paddle`, backend cần `OCR_BASE_URL` trỏ tới OCR service đang deploy bên ngoài.
 
 ### Deploy OCR to Hugging Face Spaces
 
@@ -217,7 +197,7 @@ OCR_DET_MODEL=PP-OCRv6_small_det
 OCR_REC_MODEL=PP-OCRv6_small_rec
 ```
 
-Lần đầu build OCR sẽ tải PaddleOCR/PaddlePaddle và model PP-OCRv6 small nên có thể chậm. Model cache nằm trong volume `paddle_models`.
+Lần đầu build OCR service trên host deploy sẽ tải PaddleOCR/PaddlePaddle và model PP-OCRv6 small nên có thể chậm.
 
 ## CC-CEDICT Dictionary
 

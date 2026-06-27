@@ -22,30 +22,6 @@ const mapGrammarLibrary = (row) => ({
   examples: row.examples || []
 });
 
-const legacyOcrSamples = [
-  {
-    id: 'sign',
-    label: 'Street Sign',
-    marker: 'S',
-    image: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80',
-    detectedText: '中国站'
-  },
-  {
-    id: 'menu',
-    label: 'Restaurant Menu',
-    marker: 'M',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
-    detectedText: '牛肉 茶'
-  },
-  {
-    id: 'book',
-    label: 'Library Book',
-    marker: 'B',
-    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80',
-    detectedText: '书 学习'
-  }
-];
-
 const supportedOcrProviders = new Set(['mock', 'paddle']);
 
 const getOcrProvider = () => String(env.OCR_PROVIDER || 'mock').toLowerCase();
@@ -60,10 +36,20 @@ const entryMatchesText = (text, entry) => {
   return compactText.includes(entry.simplified) || compactText.includes(entry.traditional);
 };
 
-const getSampleDetectedText = () => '';
-
 const getFallbackDetectedText = (payload) =>
-  asText(payload?.text || payload?.detectedText || getSampleDetectedText(payload) || '中国站');
+  asText(payload?.text || payload?.detectedText);
+
+const getOcrBaseUrl = () => {
+  const baseUrl = asText(env.OCR_BASE_URL);
+
+  if (!baseUrl) {
+    throw new AppError(500, 'OCR_PROVIDER_MISCONFIGURED', 'OCR_BASE_URL is required when OCR_PROVIDER=paddle.', {
+      provider: 'paddle'
+    });
+  }
+
+  return baseUrl.replace(/\/$/, '');
+};
 
 const callPaddleOcr = async (image) => {
   const controller = new AbortController();
@@ -77,7 +63,7 @@ const callPaddleOcr = async (image) => {
   }
 
   try {
-    const response = await fetch(`${env.OCR_BASE_URL.replace(/\/$/, '')}/scan`, {
+    const response = await fetch(`${getOcrBaseUrl()}/scan`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ image }),
@@ -87,7 +73,7 @@ const callPaddleOcr = async (image) => {
     const body = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new AppError(502, 'OCR_PROVIDER_ERROR', 'OCR local service returned an error.', {
+      throw new AppError(502, 'OCR_PROVIDER_ERROR', 'OCR provider returned an error.', {
         provider: 'paddle',
         statusCode: response.status,
         details: body
@@ -110,7 +96,7 @@ const callPaddleOcr = async (image) => {
       throw error;
     }
 
-    throw new AppError(502, 'OCR_PROVIDER_ERROR', 'Could not connect to OCR local service.', {
+    throw new AppError(502, 'OCR_PROVIDER_ERROR', 'Could not connect to OCR provider.', {
       provider: 'paddle',
       baseUrl: env.OCR_BASE_URL
     });

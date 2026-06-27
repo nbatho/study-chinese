@@ -707,7 +707,7 @@
                 "type": "object",
                 "properties": {
                   "image": { "type": "string" },
-                  "text": { "type": "string", "example": "中国站" }
+                  "text": { "type": "string" }
                 }
               }
             }
