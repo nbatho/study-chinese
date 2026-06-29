@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
   useAddActivityMutation,
   useEnrollWordMutation,
@@ -14,7 +13,7 @@ import {
   useVocabularyQuery,
 } from "../../../api";
 import type { CharDiffEntry, HanziStrokeCharacter } from "../../../api/practice";
-import { Activity, ArrowLeft, CheckCircle2, Ear, Keyboard, Mic, PencilLine, Sparkles, Target, Volume2, XCircle } from "lucide-react";
+import { CheckCircle2, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
@@ -22,7 +21,7 @@ import LoadingCard from "../../../components/LoadingCard";
 import TtsButton from "../../../components/TtsButton";
 import { speakChinese } from "../../../utils/tts";
 
-type Tool = "menu" | "weak" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening" | "list";
+export type Tool = "menu" | "weak" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening" | "list";
 type ListPracticeMode = "typing" | "listening" | "tone";
 
 const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm sm:p-7";
@@ -50,67 +49,7 @@ const normalizeAnswer = (value: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-export default function PracticeContent() {
-  const { t } = useI18n();
-  const [searchParams] = useSearchParams();
-  const initialTool = searchParams.get("tool");
-  const [activeTool, setActiveTool] = useState<Tool>(isPracticeTool(initialTool) ? initialTool : "menu");
-
-  return (
-    <div className="anim-slide">
-      {activeTool !== "menu" && (
-        <button onClick={() => setActiveTool("menu")} className="mb-5 inline-flex items-center gap-1.5 font-bold text-primary">
-          <ArrowLeft size={16} /> {t("practice.back")}
-        </button>
-      )}
-
-      {activeTool === "menu" && (
-        <div className="grid gap-4">
-          <div className="mb-2 text-left">
-            <h2 className="text-2xl font-extrabold">{t("practice.title")}</h2>
-            <p className="text-[0.9rem] text-muted-foreground">
-              {t("practice.subtitle")}
-            </p>
-          </div>
-          {[
-            { id: "tones", title: t("practice.tones"), desc: t("practice.tonesDesc"), icon: Activity, cls: "bg-tone-1" },
-            { id: "weak", title: "Weak Practice", desc: "Review words and skills you missed before.", icon: Target, cls: "bg-primary" },
-            { id: "list", title: "Practice List", desc: "Practice vocabulary from your saved word lists.", icon: Target, cls: "bg-tone-2" },
-            { id: "pairs", title: t("practice.pairs"), desc: t("practice.pairsDesc"), icon: Ear, cls: "bg-tone-4" },
-            { id: "typing", title: t("practice.typing"), desc: t("practice.typingDesc"), icon: Keyboard, cls: "bg-jade" },
-            { id: "listening", title: t("practice.listening"), desc: t("practice.listeningDesc"), icon: Volume2, cls: "bg-primary" },
-            { id: "shadow", title: t("practice.shadow"), desc: t("practice.shadowDesc"), icon: Mic, cls: "bg-tone-3" },
-            { id: "hanzi", title: t("practice.hanzi"), desc: t("practice.hanziDesc"), icon: PencilLine, cls: "bg-gold" },
-          ].map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <button key={tool.id} onClick={() => setActiveTool(tool.id as Tool)} className="flex cursor-pointer items-center gap-4 rounded-lg border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:gap-5 sm:p-5">
-                <span className={cn("flex size-[52px] shrink-0 items-center justify-center rounded-[14px] text-white", tool.cls)}>
-                  <Icon size={26} />
-                </span>
-                <span className="min-w-0">
-                  <strong className="block text-[1.1rem]">{tool.title}</strong>
-                  <span className="mt-0.5 block text-[0.85rem] text-muted-foreground">{tool.desc}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {activeTool === "weak" && <WeakPracticeTool />}
-      {activeTool === "list" && <ListPracticeTool />}
-      {activeTool === "tones" && <ToneDrillTool />}
-      {activeTool === "pairs" && <MinimalPairsTool />}
-      {activeTool === "typing" && <PinyinTypingTool />}
-      {activeTool === "listening" && <ListeningTool />}
-      {activeTool === "shadow" && <ShadowingTool />}
-      {activeTool === "hanzi" && <HanziDrawingTool />}
-    </div>
-  );
-}
-
-function isPracticeTool(value: string | null): value is Tool {
+export function isPracticeTool(value: string | null): value is Tool {
   return ["weak", "tones", "pairs", "typing", "shadow", "hanzi", "listening", "list"].includes(value || "");
 }
 
@@ -122,7 +61,7 @@ function usePracticeWords() {
   };
 }
 
-function WeakPracticeTool() {
+export function WeakPracticeTool() {
   const mistakesQuery = useUserMistakesQuery(50);
   const practiceMistake = usePracticeMistakeMutation();
   const addActivity = useAddActivityMutation();
@@ -253,7 +192,7 @@ function WeakPracticeTool() {
   );
 }
 
-function ListPracticeTool() {
+export function ListPracticeTool() {
   const listsQuery = useListsQuery();
   const lists = listsQuery.data?.lists ?? [];
   const [selectedListId, setSelectedListId] = useState("");
@@ -550,7 +489,7 @@ function ListPracticeControls({
   );
 }
 
-function ToneDrillTool() {
+export function ToneDrillTool() {
   const { words, isLoading } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const toneWords = useMemo(() => words.filter((word) => word.tones.length > 0).slice(0, 12), [words]);
@@ -618,7 +557,7 @@ function ToneDrillTool() {
   );
 }
 
-function MinimalPairsTool() {
+export function MinimalPairsTool() {
   const pairsQuery = useMinimalPairsQuery();
   const addActivity = useAddActivityMutation();
   const pairs = pairsQuery.data?.pairs ?? [];
@@ -695,7 +634,7 @@ function MinimalPairsTool() {
   );
 }
 
-function PinyinTypingTool() {
+export function PinyinTypingTool() {
   const { words, isLoading } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const typingWords = useMemo(() => words.filter((word) => word.pinyin.split(" ").length === 1), [words]);
@@ -760,7 +699,7 @@ function PinyinTypingTool() {
   );
 }
 
-function ListeningTool() {
+export function ListeningTool() {
   const { words, isLoading } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const [idx, setIdx] = useState(0);
@@ -873,7 +812,7 @@ function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
   );
 }
 
-function ShadowingTool() {
+export function ShadowingTool() {
   const promptsQuery = useShadowingPromptsQuery();
   const scoreMutation = useScoreShadowingMutation();
   const addActivity = useAddActivityMutation();
@@ -1282,7 +1221,7 @@ function ShadowingTool() {
   );
 }
 
-function HanziDrawingTool() {
+export function HanziDrawingTool() {
   const { t } = useI18n();
   const strokesQuery = useHanziStrokesQuery();
   const addActivity = useAddActivityMutation();
@@ -1400,3 +1339,4 @@ function drawSvgPathOnCanvas(ctx: CanvasRenderingContext2D, path: string, w: num
   });
   ctx.stroke();
 }
+
