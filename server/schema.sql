@@ -71,6 +71,20 @@ CREATE TABLE IF NOT EXISTS daily_stats (
   )
 );
 
+CREATE TABLE IF NOT EXISTS friendships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  addressee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_low_id UUID GENERATED ALWAYS AS (LEAST(requester_id, addressee_id)) STORED,
+  user_high_id UUID GENERATED ALWAYS AS (GREATEST(requester_id, addressee_id)) STORED,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'accepted')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT chk_friendships_distinct_users CHECK (requester_id <> addressee_id),
+  CONSTRAINT uq_friendships_user_pair UNIQUE (user_low_id, user_high_id)
+);
+
 CREATE TABLE IF NOT EXISTS words (
   id VARCHAR(50) PRIMARY KEY,
   release_id UUID REFERENCES content_releases(id) ON DELETE SET NULL,
@@ -392,6 +406,10 @@ DROP TRIGGER IF EXISTS trg_daily_stats_updated_at ON daily_stats;
 CREATE TRIGGER trg_daily_stats_updated_at BEFORE UPDATE ON daily_stats
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_friendships_updated_at ON friendships;
+CREATE TRIGGER trg_friendships_updated_at BEFORE UPDATE ON friendships
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_words_updated_at ON words;
 CREATE TRIGGER trg_words_updated_at BEFORE UPDATE ON words
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -454,6 +472,11 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_date ON daily_stats (user_id, date_key DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_stats_user_xp ON daily_stats (user_id) INCLUDE (xp, date_key);
+CREATE INDEX IF NOT EXISTS idx_daily_stats_date_user_xp ON daily_stats (date_key DESC, user_id) INCLUDE (xp);
+CREATE INDEX IF NOT EXISTS idx_friendships_requester_status ON friendships (requester_id, status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_friendships_addressee_status ON friendships (addressee_id, status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_friendships_pair_status ON friendships (user_low_id, user_high_id, status);
 CREATE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lesson_words_word ON lesson_words (word_id);
 CREATE INDEX IF NOT EXISTS idx_grammar_points_lesson_order ON grammar_points (lesson_id, order_num);

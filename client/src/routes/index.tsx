@@ -6,6 +6,7 @@ import { OptionalAuthRoute, PublicRoute } from "./AuthRoute";
 
 // Lazy loaded page components
 const Home = lazy(() => import("../pages/Home"));
+const Landing = lazy(() => import("../pages/Landing"));
 const Guide = lazy(() => import("../pages/Guide"));
 const Learn = lazy(() => import("../pages/Learn"));
 const Practice = lazy(() => import("../pages/Practice"));
@@ -18,9 +19,18 @@ const Onboarding = lazy(() => import("../pages/Onboarding"));
 const Auth = lazy(() => import("../pages/Auth"));
 const AITutor = lazy(() => import("../pages/AITutor"));
 const Admin = lazy(() => import("../pages/Admin"));
+const Community = lazy(() => import("../pages/Community"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const routes: RouteConfig[] = [
+  {
+    path: "/landing",
+    element: (
+      <OptionalAuthRoute>
+        <Landing />
+      </OptionalAuthRoute>
+    )
+  },
   {
     path: "/",
     element: (
@@ -68,6 +78,10 @@ export const routes: RouteConfig[] = [
       {
         path: "achievements",
         element: <Achievements />
+      },
+      {
+        path: "community",
+        element: <Community />
       },
       {
         path: "ai-tutor",

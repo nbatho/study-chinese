@@ -27,5 +27,6 @@ export * from './dashboard';
 export * from './dashboard/queries';
 export * from './practice';
 export * from './practice/queries';
+export * from './community';
 export * from './admin';
 export * from './admin/queries';

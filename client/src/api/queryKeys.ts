@@ -44,6 +44,11 @@ export const queryKeys = {
         shadowingPrompts: ['practice', 'shadowing-prompts'] as const,
         hanziStrokes: ['practice', 'hanzi-strokes'] as const,
     },
+    community: {
+        friends: ['community', 'friends'] as const,
+        leaderboard: (scope = 'global', timeframe = 'weekly') =>
+            ['community', 'leaderboard', scope, timeframe] as const,
+    },
     admin: {
         summary: ['admin', 'summary'] as const,
         lessons: (params?: unknown) => ['admin', 'lessons', params ?? {}] as const,
