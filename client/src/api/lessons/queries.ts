@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { lessonsApi } from './index';
-import type { CompleteLessonPayload } from './types';
+import type { CompleteLessonPayload, ReportLessonIssuePayload } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
 
 export const useLessonsQuery = () =>
@@ -35,3 +35,9 @@ export const useCompleteLessonMutation = (lessonId: string) => {
         },
     });
 };
+
+export const useReportLessonIssueMutation = (lessonId: string) =>
+    useMutation({
+        mutationFn: (payload: ReportLessonIssuePayload) =>
+            unwrapApiData(lessonsApi.reportIssue(lessonId, payload)),
+    });

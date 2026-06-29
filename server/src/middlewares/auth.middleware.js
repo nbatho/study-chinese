@@ -1,6 +1,7 @@
 import { query } from '../config/db.config.js';
+import { env } from '../config/env.config.js';
 import { asyncHandler } from '../utils/async-handler.js';
-import { unauthorized } from '../utils/http-error.js';
+import { forbidden, unauthorized } from '../utils/http-error.js';
 import { verifyAccessToken } from '../utils/auth.js';
 
 const getBearerToken = (req) => {
@@ -23,9 +24,9 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   const payload = verifyAccessToken(token);
   const result = await query(
     `
-      SELECT id, email, name, avatar, timezone
+      SELECT id, email, name, avatar, timezone, role, is_active
       FROM users
-      WHERE id = $1
+      WHERE id = $1 AND is_active = true
     `,
     [payload.sub]
   );
@@ -34,10 +35,27 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
     throw unauthorized('Tài khoản không còn tồn tại.');
   }
 
+  const user = result.rows[0];
+  const isEnvAdmin = adminEmails.has(String(user.email).toLowerCase());
+
   req.user = {
-    ...result.rows[0],
-    role: payload.role || 'student'
+    ...user,
+    role: isEnvAdmin ? 'admin' : user.role || payload.role || 'student'
   };
 
   next();
 });
+
+export const requireAdmin = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return next(forbidden('Chi admin moi co quyen thuc hien thao tac nay.'));
+  }
+
+  return next();
+};
+
+const adminEmails = new Set(
+  env.ADMIN_EMAILS.split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);

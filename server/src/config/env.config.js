@@ -4,6 +4,7 @@ export const env = {
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   CLIENT_URLS: process.env.CLIENT_URLS,
   API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000/api/v1',
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS || '',
 
   DATABASE_URL: process.env.DATABASE_URL,
   DB_HOST: process.env.DB_HOST,

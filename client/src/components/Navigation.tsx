@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Compass,
   Dumbbell,
+  Shield,
   Home,
   Languages,
   Lock,
@@ -33,6 +34,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const authUser = useAppSelector((state) => state.auth.user);
   const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
   const logoutMutation = useLogoutMutation();
   const { t } = useI18n();
@@ -48,6 +50,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
   else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/profile")) activeTab = "profile";
+  else if (path.startsWith("/admin")) activeTab = "admin";
 
   const tabs = [
     { id: "home", label: t("nav.home"), icon: Home },
@@ -56,9 +59,10 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },
     { id: "review", label: t("nav.review"), icon: RefreshCw, badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0, requiresAuth: true },
-    { id: "ai-tutor", label: "AI Tutor", icon: Sparkles, requiresAuth: true },
+    { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
     { id: "achievements", label: t("nav.achievements"), icon: Trophy, requiresAuth: true },
     { id: "profile", label: t("nav.profile"), icon: User, requiresAuth: true },
+    ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
   ];
 
   const handleLogout = async () => {

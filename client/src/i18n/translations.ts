@@ -182,8 +182,14 @@ export const translations = {
     "profile.appearanceDark": "Dark",
     "profile.appearanceSystem": "System",
     "profile.language": "Language",
+    "profile.languageEnglish": "English",
+    "profile.languageVietnamese": "Vietnamese",
     "profile.displayName": "Display Name",
     "profile.dailyGoal": "Daily Goal Minutes",
+    "profile.goalCasual": "Casual",
+    "profile.goalRegular": "Regular",
+    "profile.goalScholar": "Scholar",
+    "profile.goalIntensive": "Intensive",
     "profile.showPinyin": "Show Pinyin by Default",
     "profile.showPinyinBody": "Display pinyin above characters during lessons",
     "profile.audioAutoplay": "Audio Autoplay",
@@ -279,6 +285,9 @@ export const translations = {
     "learn.newWords": "New Words in This Lesson",
     "learn.srsWords": "Words enrolled in SRS reviews",
     "learn.targetGrammar": "Target Grammar Structures",
+    "learn.pathCompleted": "Done",
+    "learn.pathUnlocked": "Open",
+    "learn.pathLocked": "Locked",
     "learn.exerciseKind.arrangeSentence": "Sentence builder",
     "learn.exerciseKind.fillBlank": "Fill in the blank",
     "learn.exerciseKind.listening": "Listening",
@@ -445,8 +454,14 @@ export const translations = {
     "profile.appearanceDark": "Tối",
     "profile.appearanceSystem": "Theo hệ thống",
     "profile.language": "Ngôn ngữ",
+    "profile.languageEnglish": "Tiếng Anh",
+    "profile.languageVietnamese": "Tiếng Việt",
     "profile.displayName": "Tên hiển thị",
     "profile.dailyGoal": "Mục tiêu phút mỗi ngày",
+    "profile.goalCasual": "Nhẹ nhàng",
+    "profile.goalRegular": "Đều đặn",
+    "profile.goalScholar": "Chăm học",
+    "profile.goalIntensive": "Chuyên sâu",
     "profile.showPinyin": "Luôn hiện pinyin",
     "profile.showPinyinBody": "Hiển thị pinyin phía trên chữ Hán trong bài học",
     "profile.audioAutoplay": "Tự phát âm thanh",
@@ -542,6 +557,9 @@ export const translations = {
     "learn.newWords": "Từ mới trong bài",
     "learn.srsWords": "Từ đã thêm vào ôn SRS",
     "learn.targetGrammar": "Cấu trúc ngữ pháp trọng tâm",
+    "learn.pathCompleted": "Xong",
+    "learn.pathUnlocked": "Mở",
+    "learn.pathLocked": "Khóa",
     "learn.exerciseKind.arrangeSentence": "Sắp xếp câu",
     "learn.exerciseKind.fillBlank": "Điền vào chỗ trống",
     "learn.exerciseKind.listening": "Luyện nghe",
@@ -632,5 +650,12 @@ export const translations = {
   }
 } as const;
 
+type BaseTranslationKey = keyof typeof translations.en;
+type AssertNever<T extends never> = T;
+
+export type MissingViTranslationKey = Exclude<BaseTranslationKey, keyof typeof translations.vi>;
+export type ExtraViTranslationKey = Exclude<keyof typeof translations.vi, BaseTranslationKey>;
+export type AssertViTranslationKeysComplete = AssertNever<MissingViTranslationKey>;
+export type AssertViTranslationKeysExact = AssertNever<ExtraViTranslationKey>;
 export type Language = keyof typeof translations;
-export type TranslationKey = keyof typeof translations.en;
+export type TranslationKey = BaseTranslationKey;

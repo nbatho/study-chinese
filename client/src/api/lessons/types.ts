@@ -86,3 +86,21 @@ export interface CompleteLessonResponse {
     streak: UserStreak;
     unlockedAchievements?: Achievement[];
 }
+
+export interface ReportLessonIssuePayload {
+    category: 'content' | 'translation' | 'audio' | 'exercise' | 'technical' | 'other';
+    message: string;
+    wordId?: string | null;
+    exerciseId?: string | null;
+}
+
+export interface ReportLessonIssueResponse {
+    report: {
+        id: string;
+        lessonId: string;
+        category: string;
+        status: string;
+        message: string;
+        createdAt: string;
+    };
+}

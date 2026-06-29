@@ -12,6 +12,10 @@ interface AppState {
 }
 
 const APP_STATE_KEY = "study_chinese_app_state";
+const SUPPORTED_LANGUAGES: AppLanguage[] = ["en", "vi"];
+
+const isAppLanguage = (value: unknown): value is AppLanguage =>
+  typeof value === "string" && SUPPORTED_LANGUAGES.includes(value as AppLanguage);
 
 const loadPersistedAppState = (): Partial<AppState> => {
   try {
@@ -36,7 +40,7 @@ const initialState: AppState = {
   initialized: true,
   appAppearance: persistedState.appAppearance ?? "light",
   hasCompletedOnboarding: persistedState.hasCompletedOnboarding ?? false,
-  language: persistedState.language ?? "en",
+  language: isAppLanguage(persistedState.language) ? persistedState.language : "en",
 };
 
 const appSlice = createSlice({

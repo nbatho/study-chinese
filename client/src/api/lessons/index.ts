@@ -5,6 +5,8 @@ import type {
     CompleteLessonResponse,
     LessonDetailResponse,
     LessonsResponse,
+    ReportLessonIssuePayload,
+    ReportLessonIssueResponse,
 } from './types';
 
 export const lessonsApi = {
@@ -14,6 +16,9 @@ export const lessonsApi = {
 
     complete: (lessonId: string, payload: CompleteLessonPayload) =>
         apiRequest<CompleteLessonResponse>(beApi.post(`lessons/${lessonId}/complete`, payload)),
+
+    reportIssue: (lessonId: string, payload: ReportLessonIssuePayload) =>
+        apiRequest<ReportLessonIssueResponse>(beApi.post(`lessons/${lessonId}/reports`, payload)),
 };
 
 export * from './types';

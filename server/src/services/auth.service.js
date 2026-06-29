@@ -1,4 +1,5 @@
 import { query } from '../config/db.config.js';
+import { env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
 import {
   hashPassword,
@@ -9,19 +10,25 @@ import {
 } from '../utils/auth.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const adminEmails = new Set(
+  env.ADMIN_EMAILS.split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 const mapAuthUser = (row) => ({
   id: row.id,
   email: row.email,
   name: row.name,
-  avatar: row.avatar
+  avatar: row.avatar,
+  role: row.role || (adminEmails.has(String(row.email).toLowerCase()) ? 'admin' : 'student')
 });
 
 const createAccessToken = (user) =>
   signAccessToken({
     sub: user.id,
     email: user.email,
-    role: 'student'
+    role: user.role || 'student'
   });
 
 const createRefreshToken = (user) =>
@@ -49,14 +56,16 @@ export const registerUser = async ({ email, password, name }) => {
 
   const passwordHash = await hashPassword(password);
 
+  const role = adminEmails.has(normalizedEmail) ? 'admin' : 'student';
+
   try {
     const result = await query(
       `
-        INSERT INTO users (email, password_hash, name)
-        VALUES ($1, $2, COALESCE(NULLIF($3, ''), 'Learner'))
-        RETURNING id, email, name, avatar
+        INSERT INTO users (email, password_hash, name, role)
+        VALUES ($1, $2, COALESCE(NULLIF($3, ''), 'Learner'), $4)
+        RETURNING id, email, name, avatar, role
       `,
-      [normalizedEmail, passwordHash, name?.trim()]
+      [normalizedEmail, passwordHash, name?.trim(), role]
     );
 
     const user = mapAuthUser(result.rows[0]);
@@ -76,9 +85,9 @@ export const loginUser = async ({ email, password }) => {
 
   const result = await query(
     `
-      SELECT id, email, password_hash, name, avatar
+      SELECT id, email, password_hash, name, avatar, role, is_active
       FROM users
-      WHERE lower(email) = $1
+      WHERE lower(email) = $1 AND is_active = true
     `,
     [normalizedEmail]
   );
@@ -107,9 +116,9 @@ export const refreshAuth = async (refreshToken) => {
 
   const result = await query(
     `
-      SELECT id, email, name, avatar
+      SELECT id, email, name, avatar, role
       FROM users
-      WHERE id = $1
+      WHERE id = $1 AND is_active = true
     `,
     [payload.sub]
   );

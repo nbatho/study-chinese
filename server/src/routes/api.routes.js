@@ -10,6 +10,7 @@ import aiRoutes from './ai.routes.js';
 import practiceRoutes from './practice.routes.js';
 import utilityRoutes from './utility.routes.js';
 import audioRoutes from './audio.routes.js';
+import adminRoutes from './admin.routes.js';
 import docsRoutes from './docs.routes.js';
 import { healthCheck } from '../controllers/health.controller.js';
 
@@ -27,6 +28,7 @@ router.use('/lists', listRoutes);
 router.use('/ai-tutor', aiRoutes);
 router.use('/practice', practiceRoutes);
 router.use('/audio', audioRoutes);
+router.use('/admin', adminRoutes);
 router.use('/', utilityRoutes);
 
 export default router;

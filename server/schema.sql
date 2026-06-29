@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'student'
+    CHECK (role IN ('student', 'admin')),
+  is_active BOOLEAN NOT NULL DEFAULT true,
   name VARCHAR(100) NOT NULL DEFAULT 'Learner',
   avatar VARCHAR(255) DEFAULT '🐼',
   start_level VARCHAR(20) DEFAULT 'beginner'
@@ -363,6 +366,24 @@ CREATE TABLE IF NOT EXISTS user_mistakes (
   CONSTRAINT chk_user_mistakes_resolved CHECK (resolved_count <= mistake_count)
 );
 
+CREATE TABLE IF NOT EXISTS course_issue_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
+  word_id VARCHAR(50) REFERENCES words(id) ON DELETE SET NULL,
+  exercise_id VARCHAR(50),
+  category VARCHAR(30) NOT NULL DEFAULT 'content'
+    CHECK (category IN ('content', 'translation', 'audio', 'exercise', 'technical', 'other')),
+  status VARCHAR(20) NOT NULL DEFAULT 'open'
+    CHECK (status IN ('open', 'reviewing', 'resolved', 'dismissed')),
+  message TEXT NOT NULL,
+  admin_note TEXT,
+  resolved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -427,6 +448,10 @@ DROP TRIGGER IF EXISTS trg_user_mistakes_updated_at ON user_mistakes;
 CREATE TRIGGER trg_user_mistakes_updated_at BEFORE UPDATE ON user_mistakes
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_course_issue_reports_updated_at ON course_issue_reports;
+CREATE TRIGGER trg_course_issue_reports_updated_at BEFORE UPDATE ON course_issue_reports
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_date ON daily_stats (user_id, date_key DESC);
 CREATE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
@@ -450,6 +475,8 @@ CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_time ON ocr_scan_events (use
 CREATE INDEX IF NOT EXISTS idx_ocr_scan_events_user_favorite ON ocr_scan_events (user_id, is_favorite, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_user_last ON user_mistakes (user_id, last_mistake_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_mistakes_word ON user_mistakes (word_id);
+CREATE INDEX IF NOT EXISTS idx_course_issue_reports_status_created ON course_issue_reports (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_course_issue_reports_lesson ON course_issue_reports (lesson_id);
 CREATE INDEX IF NOT EXISTS idx_practice_minimal_pairs_order ON practice_minimal_pairs (order_num, id) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_practice_hanzi_strokes_order ON practice_hanzi_strokes (order_num, id) WHERE is_active = true;
 

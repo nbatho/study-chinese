@@ -17,6 +17,7 @@ const Achievements = lazy(() => import("../pages/Achievements"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const Auth = lazy(() => import("../pages/Auth"));
 const AITutor = lazy(() => import("../pages/AITutor"));
+const Admin = lazy(() => import("../pages/Admin"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const routes: RouteConfig[] = [
@@ -71,6 +72,10 @@ export const routes: RouteConfig[] = [
       {
         path: "ai-tutor",
         element: <AITutor />
+      },
+      {
+        path: "admin",
+        element: <Admin />
       },
       {
         path: "camera-translator",
