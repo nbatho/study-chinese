@@ -33,6 +33,7 @@ const mapExercise = (row) => ({
   promptHanzi: row.prompt_hanzi,
   promptPinyin: row.prompt_pinyin,
   promptEnglish: row.prompt_english,
+  stimulus: row.stimulus || {},
   options: row.options || [],
   correctIndex: row.correct_index,
   correctText: row.correct_text,

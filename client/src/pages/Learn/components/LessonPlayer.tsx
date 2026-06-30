@@ -16,8 +16,10 @@ const exerciseKindTranslationKeys: Record<string, TranslationKey> = {
   arrangeSentence: "learn.exerciseKind.arrangeSentence",
   fillBlank: "learn.exerciseKind.fillBlank",
   listening: "learn.exerciseKind.listening",
+  listeningComprehension: "learn.exerciseKind.listeningComprehension",
   matchPinyin: "learn.exerciseKind.matchPinyin",
   multipleChoice: "learn.exerciseKind.multipleChoice",
+  readingComprehension: "learn.exerciseKind.readingComprehension",
   tonePicker: "learn.exerciseKind.tonePicker",
   trueFalse: "learn.exerciseKind.trueFalse",
 };
@@ -185,6 +187,10 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             const kindLabelKey = exerciseKindTranslationKeys[currentExercise.kind];
             const isArrangeExercise = currentExercise.kind === "arrangeSentence";
             const isCheckDisabled = isArrangeExercise ? arrangedWords.length === 0 : selectedOptionIdx === null;
+            const isReadingComprehension = currentExercise.kind === "readingComprehension";
+            const isListeningComprehension = currentExercise.kind === "listeningComprehension";
+            const listeningAudioText = currentExercise.stimulus?.audioText ||
+              currentExercise.stimulus?.lines?.map((line) => line.simplified).join("");
 
             return (
               <>
@@ -205,10 +211,59 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
                 <Volume2 size={36} />
               </button>
             )}
+            {isListeningComprehension && (
+              <button
+                className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent"
+                onClick={() => speakChinese(listeningAudioText || currentExercise.correctText)}
+                aria-label={t("learn.playDialogue")}
+              >
+                <Volume2 size={36} />
+              </button>
+            )}
             {currentExercise.promptHanzi && <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">{currentExercise.promptHanzi}</h2>}
             {currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
             <h3 className="text-[1.2rem] font-bold">{currentExercise.prompt}</h3>
           </div>
+          {isReadingComprehension && currentExercise.stimulus?.text && (
+            <div className="mb-5 rounded-lg border bg-background p-4 text-left">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-xs font-bold uppercase text-muted-foreground">{t("learn.readingPassage")}</span>
+                {currentExercise.stimulus.title && <span className="text-xs font-bold text-primary">{currentExercise.stimulus.title}</span>}
+              </div>
+              <p className="font-serif text-2xl font-bold leading-relaxed">{currentExercise.stimulus.text}</p>
+              {currentExercise.stimulus.pinyin && <p className="mt-2 text-sm font-semibold text-muted-foreground">{currentExercise.stimulus.pinyin}</p>}
+              {currentExercise.stimulus.english && <p className="mt-2 border-t border-border pt-2 text-sm text-muted-foreground">{currentExercise.stimulus.english}</p>}
+              {!!currentExercise.stimulus.vocabulary?.length && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="text-xs font-bold uppercase text-muted-foreground">{t("learn.keyWords")}</span>
+                  {currentExercise.stimulus.vocabulary.map((word) => (
+                    <span key={word} className="rounded-md bg-card px-2 py-1 font-serif text-sm font-bold">{word}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {isListeningComprehension && currentExercise.stimulus?.title && (
+            <div className="mb-5 rounded-lg border bg-background p-4 text-left">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-bold uppercase text-muted-foreground">{t("learn.listeningDialogue")}</span>
+                <span className="text-xs font-bold text-primary">{currentExercise.stimulus.title}</span>
+              </div>
+              {isAnswerChecked && !!currentExercise.stimulus.lines?.length && (
+                <div className="mt-3 space-y-3 border-t border-border pt-3">
+                  <span className="text-xs font-bold uppercase text-muted-foreground">{t("learn.transcript")}</span>
+                  {currentExercise.stimulus.lines.map((line, idx) => (
+                    <div key={`${line.speaker}-${idx}`} className="rounded-md bg-card p-3">
+                      <div className="mb-1 text-xs font-extrabold text-muted-foreground">{line.speaker}</div>
+                      <div className="font-serif text-xl font-bold">{line.simplified}</div>
+                      {line.pinyin && <div className="text-sm font-semibold text-muted-foreground">{line.pinyin}</div>}
+                      {line.english && <div className="mt-1 text-sm text-muted-foreground">{line.english}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="mb-7 grid gap-2.5">
             {currentExercise.kind === "arrangeSentence" ? (
               <ArrangeExercise options={currentExercise.options || []} arrangedWords={arrangedWords} isAnswerChecked={isAnswerChecked} onToggle={handleWordArrangeToggle} />

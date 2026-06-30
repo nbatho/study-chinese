@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAddActivityMutation,
   useEnrollWordMutation,
@@ -20,8 +20,6 @@ import { cn } from "../../../utils/cn";
 import LoadingCard from "../../../components/LoadingCard";
 import TtsButton from "../../../components/TtsButton";
 import { speakChinese } from "../../../utils/tts";
-
-export type Tool = "menu" | "weak" | "tones" | "pairs" | "typing" | "shadow" | "hanzi" | "listening" | "list";
 type ListPracticeMode = "typing" | "listening" | "tone";
 
 const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm sm:p-7";
@@ -48,10 +46,6 @@ const normalizeAnswer = (value: string) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-
-export function isPracticeTool(value: string | null): value is Tool {
-  return ["weak", "tones", "pairs", "typing", "shadow", "hanzi", "listening", "list"].includes(value || "");
-}
 
 function usePracticeWords() {
   const vocabQuery = useVocabularyQuery({ hsk: 1 });
@@ -836,27 +830,27 @@ export function ShadowingTool() {
   const recordedAudioUrlRef = useRef<string | null>(null);
   const prompt = prompts[idx % Math.max(prompts.length, 1)];
 
-  const clearAutoStop = () => {
+  const clearAutoStop = useCallback(() => {
     if (autoStopRef.current) {
       window.clearTimeout(autoStopRef.current);
       autoStopRef.current = null;
     }
-  };
+  }, []);
 
-  const resetVoiceLevel = () => {
+  const resetVoiceLevel = useCallback(() => {
     voiceLevelRef.current = { frames: 0, peak: 0, maxRms: 0, voicedFrames: 0 };
-  };
+  }, []);
 
-  const closeAudioMeter = () => {
+  const closeAudioMeter = useCallback(() => {
     audioSourceRef.current?.disconnect();
     audioSourceRef.current = null;
     analyserRef.current = null;
     audioDataRef.current = null;
     void audioContextRef.current?.close().catch(() => undefined);
     audioContextRef.current = null;
-  };
+  }, []);
 
-  const setupAudioMeter = (stream: MediaStream) => {
+  const setupAudioMeter = useCallback((stream: MediaStream) => {
     closeAudioMeter();
     resetVoiceLevel();
 
@@ -882,9 +876,9 @@ export function ShadowingTool() {
     } catch {
       closeAudioMeter();
     }
-  };
+  }, [closeAudioMeter, resetVoiceLevel]);
 
-  const readVoiceLevel = () => {
+  const readVoiceLevel = useCallback(() => {
     const analyser = analyserRef.current;
     const audioData = audioDataRef.current;
 
@@ -909,7 +903,7 @@ export function ShadowingTool() {
     if (rms >= minVoiceRms && peak >= minVoicePeak) stats.voicedFrames += 1;
 
     return Math.max(rms, peak * 0.5);
-  };
+  }, []);
 
   const hasCapturedSpeech = () => {
     const stats = voiceLevelRef.current;
@@ -923,27 +917,27 @@ export function ShadowingTool() {
     );
   };
 
-  const releaseMicrophone = () => {
+  const releaseMicrophone = useCallback(() => {
     closeAudioMeter();
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
     mediaRecorderRef.current = null;
-  };
+  }, [closeAudioMeter]);
 
-  const clearRecordedAudio = (updateState = true) => {
+  const clearRecordedAudio = useCallback((updateState = true) => {
     if (recordedAudioUrlRef.current) {
       URL.revokeObjectURL(recordedAudioUrlRef.current);
       recordedAudioUrlRef.current = null;
     }
     if (updateState) setRecordedAudioUrl(null);
-  };
+  }, []);
 
-  const showRecordedAudio = (audioBlob: Blob) => {
+  const showRecordedAudio = useCallback((audioBlob: Blob) => {
     clearRecordedAudio();
     const url = URL.createObjectURL(audioBlob);
     recordedAudioUrlRef.current = url;
     setRecordedAudioUrl(url);
-  };
+  }, [clearRecordedAudio]);
 
   useEffect(() => {
     if (!recording || !canvasRef.current) {
@@ -970,14 +964,14 @@ export function ShadowingTool() {
       animationRef.current = requestAnimationFrame(draw);
     };
     draw();
-  }, [recording]);
+  }, [readVoiceLevel, recording]);
 
   useEffect(() => () => {
     clearAutoStop();
     releaseMicrophone();
     clearRecordedAudio(false);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
-  }, []);
+  }, [clearAutoStop, clearRecordedAudio, releaseMicrophone]);
 
   if (promptsQuery.isLoading || !prompt) return <LoadingCard label="Loading shadowing prompts from server..." />;
 

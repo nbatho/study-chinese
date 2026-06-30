@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS exercises (
   prompt_hanzi TEXT,
   prompt_pinyin TEXT,
   prompt_english TEXT,
+  stimulus JSONB NOT NULL DEFAULT '{}'::jsonb,
   options JSONB NOT NULL DEFAULT '[]'::jsonb,
   correct_index INT,
   correct_text TEXT NOT NULL,

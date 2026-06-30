@@ -292,7 +292,7 @@ export function UserManager() {
 
 export function AiLogViewer() {
   const logsQuery = useAdminAiLogsQuery({ limit: 40 });
-  const sessions = logsQuery.data?.sessions ?? [];
+  const sessions = useMemo(() => logsQuery.data?.sessions ?? [], [logsQuery.data?.sessions]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = useMemo(() => sessions.find((session) => session.id === selectedId) ?? sessions[0], [selectedId, sessions]);
 

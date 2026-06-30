@@ -510,7 +510,91 @@ DO UPDATE SET lesson_id = EXCLUDED.lesson_id,
               order_num = EXCLUDED.order_num;
 
 ALTER TABLE exercises
+ADD COLUMN IF NOT EXISTS stimulus JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+ALTER TABLE exercises
 ADD COLUMN IF NOT EXISTS answer_explanation TEXT;
+
+INSERT INTO exercises (
+  id, lesson_id, kind, prompt, prompt_hanzi, prompt_pinyin, prompt_english,
+  stimulus, options, correct_index, correct_text, answer_explanation,
+  audio_word_id, tone, order_num
+)
+VALUES
+(
+  'e1_8_4',
+  'l1_8',
+  'readingComprehension',
+  'What do the friends drink at the cafe?',
+  NULL,
+  NULL,
+  NULL,
+  $${
+    "type": "reading",
+    "title": "At a Small Cafe",
+    "text": "\u6211\u559d\u8336\u3002\u670b\u53cb\u559d\u5496\u5561\u3002\u6211\u4eec\u5403\u82f9\u679c\u3002",
+    "pinyin": "Wo he cha. Pengyou he kafei. Women chi pingguo.",
+    "english": "I drink tea. My friend drinks coffee. We eat apples.",
+    "vocabulary": ["\u8336", "\u5496\u5561", "\u82f9\u679c", "\u559d", "\u5403"]
+  }$$::jsonb,
+  '["tea and coffee", "water and juice", "milk and tea", "coffee and water"]'::jsonb,
+  0,
+  'tea and coffee',
+  'The passage says I drink tea and my friend drinks coffee.',
+  NULL,
+  NULL,
+  4
+),
+(
+  'e2_1_4',
+  'l2_1',
+  'listeningComprehension',
+  'Listen to the short dialogue. What should the person do?',
+  NULL,
+  NULL,
+  NULL,
+  $${
+    "type": "dialogue",
+    "title": "Finding the Subway",
+    "audioText": "\u8bf7\u95ee\uff0c\u5730\u94c1\u7ad9\u600e\u4e48\u8d70\uff1f\u76f4\u8d70\uff0c\u7136\u540e\u5de6\u8f6c\u3002",
+    "lines": [
+      {
+        "speaker": "A",
+        "simplified": "\u8bf7\u95ee\uff0c\u5730\u94c1\u7ad9\u600e\u4e48\u8d70\uff1f",
+        "pinyin": "Qingwen, ditie zhan zenme zou?",
+        "english": "Excuse me, how do I get to the subway station?"
+      },
+      {
+        "speaker": "B",
+        "simplified": "\u76f4\u8d70\uff0c\u7136\u540e\u5de6\u8f6c\u3002",
+        "pinyin": "Zhi zou, ranhou zuo zhuan.",
+        "english": "Go straight, then turn left."
+      }
+    ]
+  }$$::jsonb,
+  '["take a taxi", "go straight, then turn left", "turn right at the bus stop", "stop at the train station"]'::jsonb,
+  1,
+  'go straight, then turn left',
+  'The reply says zhi zou, ranhou zuo zhuan: go straight, then turn left.',
+  NULL,
+  NULL,
+  4
+)
+ON CONFLICT (id)
+DO UPDATE SET lesson_id = EXCLUDED.lesson_id,
+              kind = EXCLUDED.kind,
+              prompt = EXCLUDED.prompt,
+              prompt_hanzi = EXCLUDED.prompt_hanzi,
+              prompt_pinyin = EXCLUDED.prompt_pinyin,
+              prompt_english = EXCLUDED.prompt_english,
+              stimulus = EXCLUDED.stimulus,
+              options = EXCLUDED.options,
+              correct_index = EXCLUDED.correct_index,
+              correct_text = EXCLUDED.correct_text,
+              answer_explanation = EXCLUDED.answer_explanation,
+              audio_word_id = EXCLUDED.audio_word_id,
+              tone = EXCLUDED.tone,
+              order_num = EXCLUDED.order_num;
 
 UPDATE exercises AS e
 SET

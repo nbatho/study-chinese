@@ -52,6 +52,21 @@ export interface LessonDetail extends Omit<LessonSummary, 'completedAt' | 'bestA
         promptHanzi?: string;
         promptPinyin?: string;
         promptEnglish?: string;
+        stimulus?: {
+            type?: 'reading' | 'dialogue';
+            title?: string;
+            text?: string;
+            pinyin?: string;
+            english?: string;
+            vocabulary?: string[];
+            audioText?: string;
+            lines?: Array<{
+                speaker: string;
+                simplified: string;
+                pinyin?: string;
+                english?: string;
+            }>;
+        };
         options?: string[];
         correctIndex?: number;
         correctText: string;

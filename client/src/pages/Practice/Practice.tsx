@@ -5,7 +5,6 @@ import { useI18n } from "../../i18n";
 import { cn } from "../../utils/cn";
 import {
   HanziDrawingTool,
-  isPracticeTool,
   ListeningTool,
   ListPracticeTool,
   MinimalPairsTool,
@@ -14,7 +13,8 @@ import {
   ToneDrillTool,
   WeakPracticeTool,
 } from "./components/PracticeTools";
-import type { Tool } from "./components/PracticeTools";
+import { isPracticeTool } from "./components/practiceToolTypes";
+import type { Tool } from "./components/practiceToolTypes";
 
 export default function Practice() {
   const { t } = useI18n();
