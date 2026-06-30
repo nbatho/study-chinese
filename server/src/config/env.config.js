@@ -1,3 +1,10 @@
+const normalizePem = (value) => value?.replace(/\\n/g, '\n');
+const dbSslCa = normalizePem(process.env.DB_SSL_CA);
+const dbSslRejectUnauthorized =
+  process.env.DB_SSL_REJECT_UNAUTHORIZED === undefined
+    ? Boolean(dbSslCa)
+    : process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
+
 export const env = {
   PORT: Number(process.env.PORT || 5000),
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -18,7 +25,8 @@ export const env = {
   DB_USER: process.env.DB_USER,
   DB_PASSWORD: process.env.DB_PASSWORD,
   DB_SSL: process.env.DB_SSL === 'true',
-  DB_SSL_REJECT_UNAUTHORIZED: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+  DB_SSL_CA: dbSslCa,
+  DB_SSL_REJECT_UNAUTHORIZED: dbSslRejectUnauthorized,
   DB_MAX_CONNECTIONS: Number(process.env.DB_MAX_CONNECTIONS || 10),
   DB_IDLE_TIMEOUT_MS: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
   SKIP_DB_CONNECT: process.env.SKIP_DB_CONNECT === 'true',

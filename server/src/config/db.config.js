@@ -5,6 +5,17 @@ const { Pool } = pg;
 
 let pool;
 
+const createSslConfig = () => {
+  if (!env.DB_SSL) {
+    return undefined;
+  }
+
+  return {
+    rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED,
+    ...(env.DB_SSL_CA ? { ca: env.DB_SSL_CA } : {})
+  };
+};
+
 const createPoolConfig = () => {
   if (!hasDatabaseConfig()) {
     return null;
@@ -13,7 +24,7 @@ const createPoolConfig = () => {
   const common = {
     max: env.DB_MAX_CONNECTIONS,
     idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
-    ssl: env.DB_SSL ? { rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED } : undefined
+    ssl: createSslConfig()
   };
 
   if (env.DATABASE_URL) {
