@@ -1,30 +1,18 @@
 /**
- * LocalStorage utilities for access token management.
+ * In-memory access token storage. The refresh token lives in an httpOnly cookie,
+ * so a page reload can safely restore auth through /auth/refresh.
  */
 
-const ACCESS_TOKEN_KEY = 'access_token';
+let accessToken: string | null = null;
 
 export const getAccessToken = (): string | null => {
-  try {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
-  } catch (error) {
-    console.error('Error getting access token from localStorage', error);
-    return null;
-  }
+  return accessToken;
 };
 
 export const setAccessToken = (token: string): void => {
-  try {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
-  } catch (error) {
-    console.error('Error saving access token to localStorage', error);
-  }
+  accessToken = token;
 };
 
 export const removeAccessToken = (): void => {
-  try {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-  } catch (error) {
-    console.error('Error removing access token from localStorage', error);
-  }
+  accessToken = null;
 };

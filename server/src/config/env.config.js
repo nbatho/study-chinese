@@ -3,6 +3,11 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   CLIENT_URLS: process.env.CLIENT_URLS,
+  TRUST_PROXY:
+    process.env.TRUST_PROXY ??
+    ((process.env.NODE_ENV || 'development') === 'production'
+      ? 'loopback, linklocal, uniquelocal'
+      : false),
   API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000/api/v1',
   ADMIN_EMAILS: process.env.ADMIN_EMAILS || '',
 
@@ -13,12 +18,13 @@ export const env = {
   DB_USER: process.env.DB_USER,
   DB_PASSWORD: process.env.DB_PASSWORD,
   DB_SSL: process.env.DB_SSL === 'true',
+  DB_SSL_REJECT_UNAUTHORIZED: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
   DB_MAX_CONNECTIONS: Number(process.env.DB_MAX_CONNECTIONS || 10),
   DB_IDLE_TIMEOUT_MS: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
   SKIP_DB_CONNECT: process.env.SKIP_DB_CONNECT === 'true',
 
   JWT_SECRET: process.env.JWT_SECRET || 'change-this-dev-secret',
-  JWT_EXPIRES_IN_SECONDS: Number(process.env.JWT_EXPIRES_IN_SECONDS || 604800),
+  JWT_EXPIRES_IN_SECONDS: Number(process.env.JWT_EXPIRES_IN_SECONDS || 900),
   REFRESH_TOKEN_EXPIRES_IN_SECONDS: Number(
     process.env.REFRESH_TOKEN_EXPIRES_IN_SECONDS || 2592000
   ),
@@ -43,6 +49,7 @@ export const env = {
   OCR_BASE_URL: process.env.OCR_BASE_URL,
   OCR_API_KEY: process.env.OCR_API_KEY,
   OCR_TIMEOUT_MS: Number(process.env.OCR_TIMEOUT_MS || 30000),
+  OCR_MAX_IMAGE_BYTES: Number(process.env.OCR_MAX_IMAGE_BYTES || 5 * 1024 * 1024),
   TTS_PROVIDER: process.env.TTS_PROVIDER || 'edge',
   TTS_EDGE_VOICE: process.env.TTS_EDGE_VOICE || 'zh-CN-XiaoxiaoNeural',
   TTS_EDGE_OUTPUT_FORMAT:

@@ -32,3 +32,18 @@ test('today plan prioritizes SRS, weak practice, lesson, then AI warmup', () => 
   assert.equal(result.plan.steps[1].status, 'next');
   assert.equal(result.plan.steps[2].href, '/learn?lesson=hsk1-1');
 });
+
+test('activity numbers are bounded before recording client-provided stats', () => {
+  assert.equal(
+    __private__.normalizeActivityNumber('12.4', { field: 'minutes', max: 180 }),
+    12
+  );
+  assert.throws(
+    () => __private__.normalizeActivityNumber(181, { field: 'minutes', max: 180 }),
+    /minutes/
+  );
+  assert.throws(
+    () => __private__.normalizeActivityNumber(-1, { field: 'exercisesTotal', max: 200 }),
+    /exercisesTotal/
+  );
+});

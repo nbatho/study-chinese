@@ -1,4 +1,5 @@
-import { query } from '../config/db.config.js';
+import crypto from 'node:crypto';
+import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
 import {
@@ -31,17 +32,41 @@ const createAccessToken = (user) =>
     role: user.role || 'student'
   });
 
-const createRefreshToken = (user) =>
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('base64url');
+
+const createRefreshToken = (user, tokenId = crypto.randomUUID()) =>
   signRefreshToken({
     sub: user.id,
-    tokenUse: 'refresh'
+    tokenUse: 'refresh',
+    jti: tokenId
   });
 
-const createAuthResponse = (user) => ({
-  accessToken: createAccessToken(user),
-  refreshToken: createRefreshToken(user),
-  user
-});
+const storeRefreshToken = async (client, user, tokenId, refreshToken) => {
+  await client.query(
+    `
+      INSERT INTO auth_refresh_tokens (token_id, user_id, token_hash, expires_at)
+      VALUES ($1, $2, $3, $4)
+    `,
+    [
+      tokenId,
+      user.id,
+      hashToken(refreshToken),
+      new Date(Date.now() + env.REFRESH_TOKEN_EXPIRES_IN_SECONDS * 1000)
+    ]
+  );
+};
+
+const createAuthResponse = async (user, client = { query }) => {
+  const tokenId = crypto.randomUUID();
+  const refreshToken = createRefreshToken(user, tokenId);
+  await storeRefreshToken(client, user, tokenId, refreshToken);
+
+  return {
+    accessToken: createAccessToken(user),
+    refreshToken,
+    user
+  };
+};
 
 export const registerUser = async ({ email, password, name }) => {
   const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -114,18 +139,80 @@ export const refreshAuth = async (refreshToken) => {
     throw unauthorized('Refresh token khong hop le.');
   }
 
-  const result = await query(
-    `
-      SELECT id, email, name, avatar, role
-      FROM users
-      WHERE id = $1 AND is_active = true
-    `,
-    [payload.sub]
-  );
-
-  if (result.rowCount === 0) {
-    throw unauthorized('Tai khoan khong con ton tai.');
+  if (!payload.jti) {
+    throw unauthorized('Refresh token khong hop le.');
   }
 
-  return createAuthResponse(mapAuthUser(result.rows[0]));
+  return withTransaction(async (client) => {
+    const result = await client.query(
+      `
+        SELECT u.id, u.email, u.name, u.avatar, u.role
+        FROM auth_refresh_tokens rt
+        JOIN users u ON u.id = rt.user_id
+        WHERE rt.token_id = $1
+          AND rt.user_id = $2
+          AND rt.token_hash = $3
+          AND rt.revoked_at IS NULL
+          AND rt.expires_at > now()
+          AND u.is_active = true
+        FOR UPDATE OF rt
+      `,
+      [payload.jti, payload.sub, hashToken(refreshToken)]
+    );
+
+    if (result.rowCount === 0) {
+      throw unauthorized('Refresh token khong hop le hoac da bi thu hoi.');
+    }
+
+    const user = mapAuthUser(result.rows[0]);
+    const nextTokenId = crypto.randomUUID();
+    const nextRefreshToken = createRefreshToken(user, nextTokenId);
+    await storeRefreshToken(client, user, nextTokenId, nextRefreshToken);
+    await client.query(
+      `
+        UPDATE auth_refresh_tokens
+        SET revoked_at = now(),
+            replaced_by_token_id = $2
+        WHERE token_id = $1
+      `,
+      [payload.jti, nextTokenId]
+    );
+
+    return {
+      accessToken: createAccessToken(user),
+      refreshToken: nextRefreshToken,
+      user
+    };
+  });
+};
+
+export const revokeRefreshToken = async (refreshToken) => {
+  if (!refreshToken) {
+    return;
+  }
+
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+
+    if (payload.tokenUse !== 'refresh' || !payload.jti) {
+      return;
+    }
+
+    await query(
+      `
+        UPDATE auth_refresh_tokens
+        SET revoked_at = COALESCE(revoked_at, now())
+        WHERE token_id = $1
+          AND user_id = $2
+          AND token_hash = $3
+      `,
+      [payload.jti, payload.sub, hashToken(refreshToken)]
+    );
+  } catch {
+    // Logout should still clear the browser cookie even if the token is malformed.
+  }
+};
+
+export const __private__ = {
+  hashToken
 };

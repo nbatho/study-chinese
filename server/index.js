@@ -26,6 +26,7 @@ const corsOrigins = new Set(
 );
 
 app.disable('x-powered-by');
+app.set('trust proxy', env.TRUST_PROXY);
 app.use(requestId);
 app.use(securityHeaders);
 app.use(

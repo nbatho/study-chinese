@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { env, isProduction } from '../config/env.config.js';
 import { created, success } from '../utils/response.js';
-import { loginUser, refreshAuth, registerUser } from '../services/auth.service.js';
+import { loginUser, refreshAuth, registerUser, revokeRefreshToken } from '../services/auth.service.js';
 
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
@@ -62,6 +62,7 @@ export const refresh = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
+  await revokeRefreshToken(getRefreshToken(req));
   clearRefreshCookie(res);
   success(res, null);
 });

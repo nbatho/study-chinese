@@ -32,9 +32,7 @@ export const securityHeaders = (req, res, next) => {
 };
 
 const getClientKey = (req) => {
-  const forwardedFor = req.headers['x-forwarded-for'];
-  const forwardedIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(',')[0];
-  return forwardedIp?.trim() || req.ip || req.socket.remoteAddress || 'unknown';
+  return req.ip || req.socket.remoteAddress || 'unknown';
 };
 
 export const createRateLimiter = ({

@@ -39,6 +39,21 @@ const entryMatchesText = (text, entry) => {
 const getFallbackDetectedText = (payload) =>
   asText(payload?.text || payload?.detectedText);
 
+const assertImageWithinLimit = (image) => {
+  if (!image) {
+    return;
+  }
+
+  const encoded = String(image).split(',').pop() || '';
+  const estimatedBytes = Math.floor((encoded.length * 3) / 4);
+
+  if (estimatedBytes > env.OCR_MAX_IMAGE_BYTES) {
+    throw new AppError(413, 'OCR_IMAGE_TOO_LARGE', 'Image is too large for OCR.', {
+      maxBytes: env.OCR_MAX_IMAGE_BYTES
+    });
+  }
+};
+
 const getOcrBaseUrl = () => {
   const baseUrl = asText(env.OCR_BASE_URL);
 
@@ -52,6 +67,7 @@ const getOcrBaseUrl = () => {
 };
 
 const callPaddleOcr = async (image) => {
+  assertImageWithinLimit(image);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), env.OCR_TIMEOUT_MS);
   const headers = {
@@ -412,6 +428,7 @@ export const getOcrSamples = async () => ({
 });
 
 export const scanOcr = async (userId, payload) => {
+  assertImageWithinLimit(payload?.image);
   const { detectedText, regions, mode } = await getDetectedText(payload);
   const compactDetectedText = compactForLookup(detectedText);
 

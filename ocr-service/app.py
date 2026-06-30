@@ -7,11 +7,15 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
 from paddleocr import PaddleOCR
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel
 
 
 app = FastAPI(title="Study Chinese OCR Service")
+
+MAX_IMAGE_BYTES = int(os.getenv("OCR_MAX_IMAGE_BYTES", str(5 * 1024 * 1024)))
+MAX_IMAGE_PIXELS = int(os.getenv("OCR_MAX_IMAGE_PIXELS", str(12_000_000)))
+Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
 
 class ScanRequest(BaseModel):
@@ -43,13 +47,21 @@ def decode_image(image: str) -> bytes:
     encoded = payload if separator else image
 
     try:
-        return base64.b64decode(encoded, validate=True)
+        image_bytes = base64.b64decode(encoded, validate=True)
     except (binascii.Error, ValueError) as exc:
         raise HTTPException(status_code=400, detail="Invalid base64 image.") from exc
+
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Image is too large.")
+
+    return image_bytes
 
 
 def verify_api_key(x_ocr_api_key: str | None) -> None:
     expected_api_key = os.getenv("OCR_API_KEY")
+    require_api_key = os.getenv("OCR_REQUIRE_API_KEY", "false").lower() == "true"
+    if require_api_key and not expected_api_key:
+        raise HTTPException(status_code=500, detail="OCR API key is required but not configured.")
     if expected_api_key and x_ocr_api_key != expected_api_key:
         raise HTTPException(status_code=401, detail="Invalid OCR API key.")
 
@@ -162,8 +174,16 @@ def scan(payload: ScanRequest, x_ocr_api_key: str | None = Header(default=None))
         image_path = file.name
 
     try:
-        with Image.open(image_path) as image:
-            width, height = image.size
+        try:
+            with Image.open(image_path) as image:
+                width, height = image.size
+        except Image.DecompressionBombError as exc:
+            raise HTTPException(status_code=413, detail="Image dimensions are too large.") from exc
+        except UnidentifiedImageError as exc:
+            raise HTTPException(status_code=400, detail="Invalid image file.") from exc
+
+        if width <= 0 or height <= 0 or width * height > MAX_IMAGE_PIXELS:
+            raise HTTPException(status_code=413, detail="Image dimensions are too large.")
 
         try:
             results = ocr.predict(image_path)

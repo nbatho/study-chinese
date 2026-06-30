@@ -13,7 +13,7 @@ const createPoolConfig = () => {
   const common = {
     max: env.DB_MAX_CONNECTIONS,
     idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
-    ssl: env.DB_SSL ? { rejectUnauthorized: false } : undefined
+    ssl: env.DB_SSL ? { rejectUnauthorized: env.DB_SSL_REJECT_UNAUTHORIZED } : undefined
   };
 
   if (env.DATABASE_URL) {

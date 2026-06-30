@@ -50,3 +50,21 @@ test('rate limiter blocks after configured limit', () => {
   assert.equal(errors[1], undefined);
   assert.equal(errors[2].statusCode, 429);
 });
+
+test('rate limiter keys by trusted request ip instead of spoofable forwarded header', () => {
+  const limiter = createRateLimiter({ windowMs: 1000, max: 1, keyPrefix: 'spoof' });
+  const req = {
+    headers: { 'x-forwarded-for': '198.51.100.10' },
+    ip: '127.0.0.1',
+    socket: {}
+  };
+  const res = createResponse();
+  const errors = [];
+
+  limiter(req, res, (error) => errors.push(error));
+  req.headers['x-forwarded-for'] = '203.0.113.20';
+  limiter(req, res, (error) => errors.push(error));
+
+  assert.equal(errors[0], undefined);
+  assert.equal(errors[1].statusCode, 429);
+});

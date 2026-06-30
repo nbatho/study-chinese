@@ -31,6 +31,19 @@ const editableProfileFields = {
   timezone: 'timezone'
 };
 
+const MAX_ACTIVITY_MINUTES = 180;
+const MAX_ACTIVITY_EXERCISES = 200;
+
+const normalizeActivityNumber = (value, { max, field }) => {
+  const normalized = Number(value || 0);
+
+  if (!Number.isFinite(normalized) || normalized < 0 || normalized > max) {
+    throw badRequest(`${field} khong hop le.`);
+  }
+
+  return Math.round(normalized);
+};
+
 const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null } = {}) => {
   const normalizedDailyMinutes = Number(dailyMinutes || 15);
   const normalizedDueCount = Number(dueCount || 0);
@@ -245,20 +258,27 @@ export const getTodayPlan = async (userId) => {
   });
 };
 
-export const addUserActivity = async (userId, payload) => {
-  const xp = Number(payload.xp || 0);
-  const minutes = Number(payload.minutes || 0);
-  const exercisesCorrect = Number(payload.exercisesCorrect || 0);
-  const exercisesTotal = Number(payload.exercisesTotal || 0);
-  const skillScore = Number(payload.skillScore || 0);
+export const addUserActivity = async (userId, payload = {}) => {
+  const minutes = normalizeActivityNumber(payload.minutes, {
+    field: 'minutes',
+    max: MAX_ACTIVITY_MINUTES
+  });
+  const exercisesCorrect = normalizeActivityNumber(payload.exercisesCorrect, {
+    field: 'exercisesCorrect',
+    max: MAX_ACTIVITY_EXERCISES
+  });
+  const exercisesTotal = normalizeActivityNumber(payload.exercisesTotal, {
+    field: 'exercisesTotal',
+    max: MAX_ACTIVITY_EXERCISES
+  });
 
-  if ([xp, minutes, exercisesCorrect, exercisesTotal, skillScore].some((value) => value < 0)) {
-    throw badRequest('Các chỉ số hoạt động không được âm.');
+  if (exercisesCorrect > exercisesTotal) {
+    throw badRequest('exercisesCorrect khong duoc lon hon exercisesTotal.');
   }
 
   return withTransaction(async (client) => {
     const activity = await recordActivity(client, userId, {
-      xp,
+      xp: 0,
       minutesStudied: minutes,
       exercisesCorrect,
       exercisesTotal
@@ -266,8 +286,8 @@ export const addUserActivity = async (userId, payload) => {
     const unlockedAchievements = await evaluateAchievements(client, userId, {
       event: 'activity_recorded',
       skill: payload.skill,
-      skillScore,
-      xpEarned: xp,
+      skillScore: 0,
+      xpEarned: 0,
       exercisesCorrect,
       exercisesTotal
     });
@@ -293,5 +313,6 @@ export const recordMistakePractice = async (userId, mistakeId, payload) =>
 
 export const __private__ = {
   buildTodayPlanResponse,
+  normalizeActivityNumber,
   mapProfile
 };

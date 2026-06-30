@@ -48,6 +48,16 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
+  token_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(128) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ,
+  replaced_by_token_id UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS daily_stats (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   date_key DATE NOT NULL,
@@ -471,6 +481,8 @@ CREATE TRIGGER trg_course_issue_reports_updated_at BEFORE UPDATE ON course_issue
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user ON auth_refresh_tokens (user_id, expires_at DESC);
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_active ON auth_refresh_tokens (token_id, token_hash) WHERE revoked_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_date ON daily_stats (user_id, date_key DESC);
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_xp ON daily_stats (user_id) INCLUDE (xp, date_key);
 CREATE INDEX IF NOT EXISTS idx_daily_stats_date_user_xp ON daily_stats (date_key DESC, user_id) INCLUDE (xp);
