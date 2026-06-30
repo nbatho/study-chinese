@@ -1,4 +1,4 @@
-import { getDateKey, previousDateKey } from '../utils/date.js';
+import { daysBetweenDateKeys, getDateKey, previousDateKey } from '../utils/date.js';
 
 export const toDateKey = (value) => {
   if (!value) {
@@ -25,13 +25,14 @@ export const mapDailyStats = (row) => ({
 export const mapStreak = (row) => ({
   current: Number(row.current_streak),
   best: Number(row.best_streak),
-  lastStudyDateKey: toDateKey(row.last_study_date)
+  lastStudyDateKey: toDateKey(row.last_study_date),
+  streakFreezes: Number(row.streak_freezes || 0)
 });
 
 const updateStreak = async (client, userId, dateKey) => {
   const userResult = await client.query(
     `
-      SELECT current_streak, best_streak, last_study_date
+      SELECT current_streak, best_streak, last_study_date, streak_freezes
       FROM users
       WHERE id = $1
       FOR UPDATE
@@ -43,12 +44,20 @@ const updateStreak = async (client, userId, dateKey) => {
   const lastStudyDate = toDateKey(user.last_study_date);
 
   if (lastStudyDate === dateKey) {
-    return mapStreak(user);
+    return {
+      ...mapStreak(user),
+      freezeUsed: false
+    };
   }
 
+  const missedOneDay = lastStudyDate && daysBetweenDateKeys(lastStudyDate, dateKey) === 2;
+  const shouldUseFreeze = missedOneDay && Number(user.streak_freezes || 0) > 0;
   const currentStreak =
-    lastStudyDate === previousDateKey(dateKey) ? Number(user.current_streak) + 1 : 1;
+    lastStudyDate === previousDateKey(dateKey) || shouldUseFreeze ? Number(user.current_streak) + 1 : 1;
   const bestStreak = Math.max(Number(user.best_streak), currentStreak);
+  const streakFreezes = shouldUseFreeze
+    ? Math.max(Number(user.streak_freezes || 0) - 1, 0)
+    : Number(user.streak_freezes || 0);
 
   const updatedResult = await client.query(
     `
@@ -56,14 +65,18 @@ const updateStreak = async (client, userId, dateKey) => {
       SET current_streak = $2,
           best_streak = $3,
           last_study_date = $4,
+          streak_freezes = $5,
           updated_at = now()
       WHERE id = $1
-      RETURNING current_streak, best_streak, last_study_date
+      RETURNING current_streak, best_streak, last_study_date, streak_freezes
     `,
-    [userId, currentStreak, bestStreak, dateKey]
+    [userId, currentStreak, bestStreak, dateKey, streakFreezes]
   );
 
-  return mapStreak(updatedResult.rows[0]);
+  return {
+    ...mapStreak(updatedResult.rows[0]),
+    freezeUsed: shouldUseFreeze
+  };
 };
 
 export const recordActivity = async (client, userId, increments = {}) => {

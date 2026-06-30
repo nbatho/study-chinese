@@ -33,6 +33,15 @@ export interface ChatSession {
     messages: ChatMessage[];
 }
 
+export interface AiUsage {
+    used: number;
+    limit: number | null;
+    remaining: number | null;
+    isPremium: boolean;
+    premiumExpiresAt: string | null;
+    aiTutorSkin: string;
+}
+
 export interface ChatScenariosResponse {
     scenarios: ChatScenario[];
 }
@@ -43,6 +52,7 @@ export interface StartSessionPayload {
 
 export interface StartSessionResponse {
     session: ChatSession;
+    aiUsage: AiUsage;
 }
 
 export interface SendMessagePayload {
@@ -54,5 +64,6 @@ export interface SendMessageResponse {
     tutorMessage: ChatMessage;
     xpEarned: number;
     todayStats: Pick<DailyStat, 'xp' | 'minutesStudied'>;
+    aiUsage: AiUsage;
     unlockedAchievements?: Achievement[];
 }

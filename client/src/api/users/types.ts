@@ -15,6 +15,7 @@ export interface UserProfile {
     appAppearance: AppAppearance;
     hasCompletedOnboarding: boolean;
     timezone?: string;
+    aiTutorSkin?: string;
     joinDate: string;
 }
 
@@ -22,6 +23,23 @@ export interface UserStreak {
     current: number;
     best: number;
     lastStudyDateKey: string | null;
+    streakFreezes?: number;
+    freezeUsed?: boolean;
+}
+
+export interface UserWallet {
+    gemBalance: number;
+    streakFreezes: number;
+}
+
+export interface UserPremium {
+    isActive: boolean;
+    expiresAt: string | null;
+    aiDailyMessageLimit: number | null;
+}
+
+export interface UserCosmetics {
+    aiTutorSkin: string;
 }
 
 export interface DailyStat {
@@ -37,6 +55,9 @@ export interface DailyStat {
 export interface UserProfileResponse {
     profile: UserProfile;
     streak: UserStreak;
+    wallet: UserWallet;
+    premium: UserPremium;
+    cosmetics: UserCosmetics;
 }
 
 export interface UserStatsResponse {
@@ -79,6 +100,37 @@ export interface AddActivityResponse {
     streak: UserStreak;
     mistake?: MistakeItem | null;
     unlockedAchievements?: Achievement[];
+}
+
+export type ShopItemCategory = 'streak' | 'avatar' | 'ai_tutor' | 'premium';
+export type ShopGrantType = 'streak_freeze' | 'avatar' | 'ai_tutor_skin' | 'premium_days';
+
+export interface ShopItem {
+    id: string;
+    name: string;
+    description: string;
+    emoji: string;
+    category: ShopItemCategory;
+    priceGems: number;
+    grantType: ShopGrantType;
+    grantQuantity: number;
+    metadata: Record<string, unknown>;
+    ownedQuantity: number;
+    isOwned: boolean;
+    isEquipped: boolean;
+}
+
+export interface ShopResponse {
+    wallet: UserWallet;
+    premium: UserPremium;
+    cosmetics: UserCosmetics;
+    items: ShopItem[];
+}
+
+export interface PurchaseShopItemResponse extends ShopResponse {
+    purchased: boolean;
+    equipped: boolean;
+    item: ShopItem;
 }
 
 export interface MistakePayload {

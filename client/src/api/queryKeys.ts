@@ -7,6 +7,7 @@ export const queryKeys = {
         stats: (days?: number) => ['users', 'stats', days ?? 7] as const,
         mistakes: (limit?: number) => ['users', 'mistakes', limit ?? 30] as const,
         todayPlan: ['users', 'today-plan'] as const,
+        shop: ['users', 'shop'] as const,
     },
     lessons: {
         list: ['lessons'] as const,

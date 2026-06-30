@@ -6,7 +6,9 @@ import type {
     MistakesResponse,
     PracticeMistakePayload,
     PracticeMistakeResponse,
+    PurchaseShopItemResponse,
     RecordMistakeResponse,
+    ShopResponse,
     TodayPlanResponse,
     UserProfile,
     UserProfileResponse,
@@ -23,6 +25,11 @@ export const usersApi = {
     getStats: (params?: { days?: number }) => apiRequest<UserStatsResponse>(beApi.get('users/stats', { params })),
 
     getTodayPlan: () => apiRequest<TodayPlanResponse>(beApi.get('users/today-plan')),
+
+    getShop: () => apiRequest<ShopResponse>(beApi.get('users/shop')),
+
+    purchaseShopItem: (itemId: string) =>
+        apiRequest<PurchaseShopItemResponse>(beApi.post(`users/shop/${itemId}/purchase`)),
 
     getMistakes: (params?: { limit?: number }) =>
         apiRequest<MistakesResponse>(beApi.get('users/mistakes', { params })),

@@ -1,5 +1,5 @@
 import type { Achievement } from '../achievements';
-import type { UserStreak } from '../users';
+import type { UserStreak, UserWallet } from '../users';
 import type { Word } from '../vocabulary';
 
 export interface LessonSummary {
@@ -91,6 +91,8 @@ export interface CompleteLessonPayload {
 
 export interface CompleteLessonResponse {
     xpEarned: number;
+    gemsEarned: number;
+    wallet?: UserWallet | null;
     newWordsEnrolled: string[];
     progress: {
         lessonId: string;

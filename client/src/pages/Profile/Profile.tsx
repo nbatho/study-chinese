@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../../api/users/queries";
-import { ToggleLeft, ToggleRight, User } from "lucide-react";
+import { Crown, Gem, ShieldCheck, ToggleLeft, ToggleRight, User } from "lucide-react";
 import { useI18n } from "../../i18n";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance } from "../../store/modules/appSlice";
@@ -19,6 +19,8 @@ export default function Profile() {
   const updateProfileMutation = useUpdateProfileMutation();
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
+  const wallet = profileQuery.data?.wallet;
+  const premium = profileQuery.data?.premium;
   const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
 
   const [draftProfile, setDraftProfile] = useState<{
@@ -126,6 +128,15 @@ export default function Profile() {
           <div className="mt-2 flex flex-wrap gap-2.5">
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("profile.streakDays", { count: streak?.current ?? 0 })}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+              <Gem size={13} className="text-tone-1" /> {t("profile.gemsBadge", { count: wallet?.gemBalance ?? 0 })}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+              <ShieldCheck size={13} className="text-tone-3" /> {t("profile.freezeBadge", { count: wallet?.streakFreezes ?? 0 })}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+              <Crown size={13} className="text-gold" /> {premium?.isActive ? t("profile.premiumActive") : t("profile.premiumFree")}
             </span>
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("common.level")}: {(profile?.startLevel || "beginner").toUpperCase()}

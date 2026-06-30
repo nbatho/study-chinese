@@ -24,6 +24,7 @@ export const useSendChatMessageMutation = (sessionId: string) => {
             unwrapApiData(aiTutorApi.sendMessage(sessionId, payload)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
         },

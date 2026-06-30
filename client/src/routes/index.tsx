@@ -15,6 +15,7 @@ const Dictionary = lazy(() => import("../pages/Dictionary"));
 const Translate = lazy(() => import("../pages/Translate"));
 const Profile = lazy(() => import("../pages/Profile"));
 const Achievements = lazy(() => import("../pages/Achievements"));
+const Shop = lazy(() => import("../pages/Shop"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const Auth = lazy(() => import("../pages/Auth"));
 const AITutor = lazy(() => import("../pages/AITutor"));
@@ -78,6 +79,10 @@ export const routes: RouteConfig[] = [
       {
         path: "achievements",
         element: <Achievements />
+      },
+      {
+        path: "shop",
+        element: <Shop />
       },
       {
         path: "community",

@@ -2,6 +2,7 @@ import { query, withTransaction } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
+import { awardGems } from './gamification.service.js';
 import { mapWord } from './vocab.service.js';
 
 const mapLessonSummary = (row) => ({
@@ -157,6 +158,16 @@ export const completeLesson = async (userId, lessonId, payload) => {
     }
 
     const lesson = lessonResult.rows[0];
+    const previousProgressResult = await client.query(
+      `
+        SELECT completed_at
+        FROM user_lesson_progress
+        WHERE user_id = $1 AND lesson_id = $2
+        FOR UPDATE
+      `,
+      [userId, lessonId]
+    );
+    const isFirstCompletion = !previousProgressResult.rows[0]?.completed_at;
     const progressResult = await client.query(
       `
         INSERT INTO user_lesson_progress (
@@ -213,6 +224,12 @@ export const completeLesson = async (userId, lessonId, payload) => {
       minutesStudied: minutes,
       lessonsCompleted: 1
     });
+    const gemReward = isFirstCompletion ? Math.max(5, Math.round(Number(lesson.xp_reward) / 4)) : 0;
+    const gems = await awardGems(client, userId, gemReward, 'lesson_completed', {
+      lessonId,
+      xpEarned: Number(lesson.xp_reward),
+      firstCompletion: isFirstCompletion
+    });
     const unlockedAchievements = await evaluateAchievements(client, userId, {
       event: 'lesson_completed',
       lessonId,
@@ -227,6 +244,8 @@ export const completeLesson = async (userId, lessonId, payload) => {
 
     return {
       xpEarned: Number(lesson.xp_reward),
+      gemsEarned: gems.gemsEarned,
+      wallet: gems.wallet,
       newWordsEnrolled,
       progress: {
         lessonId: progress.lesson_id,

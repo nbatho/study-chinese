@@ -17,9 +17,12 @@ import {
   CheckCircle2,
   Clock3,
   Flame,
+  Gem,
   PencilLine,
   PlayCircle,
   RefreshCw,
+  ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Trophy,
@@ -46,6 +49,7 @@ export default function Home() {
 
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
+  const wallet = profileQuery.data?.wallet;
   const stats = statsQuery.data?.stats ?? [];
   const lessons = lessonsQuery.data?.lessons ?? [];
   const dueCount = dueCardsQuery.data?.cards.length ?? 0;
@@ -100,10 +104,12 @@ export default function Home() {
         <div className="mb-5 h-3 w-full overflow-hidden rounded-md border bg-background">
           <div className="h-full rounded-md bg-[linear-gradient(90deg,var(--primary-red),var(--accent-red))]" style={{ width: `${(xpProgress / xpTarget) * 100}%` }} />
         </div>
-        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4 sm:gap-2.5">
+        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3 lg:grid-cols-6 sm:gap-2.5">
           {[
             { label: t("home.xpTotal"), value: totalXp, icon: Star, cls: "text-tone-3" },
             { label: t("home.streak"), value: streak?.current ?? 0, icon: Flame, cls: "text-tone-4" },
+            { label: t("common.gems"), value: wallet?.gemBalance ?? 0, icon: Gem, cls: "text-tone-1" },
+            { label: t("common.freeze"), value: wallet?.streakFreezes ?? 0, icon: ShieldCheck, cls: "text-tone-2" },
             { label: t("home.lessons"), value: completedLessons, icon: BookOpen, cls: "text-tone-2" },
             { label: t("home.reviews"), value: todayStat.wordsReviewed, icon: Brain, cls: "text-tone-1" },
           ].map((item) => {
@@ -169,6 +175,7 @@ export default function Home() {
             { label: t("home.scanOcr"), icon: Camera, cls: "bg-jade", action: () => navigate("/translate") },
             { label: t("home.toneDrill"), icon: Activity, cls: "bg-tone-1", action: () => navigate("/practice") },
             { label: t("home.srsCards"), icon: RefreshCw, cls: "bg-primary", action: () => navigate("/review") },
+            { label: t("home.shop"), icon: ShoppingBag, cls: "bg-gold", action: () => navigate("/shop") },
             { label: t("home.writeHanzi"), icon: PencilLine, cls: "bg-gold", action: () => navigate("/practice") }
           ].map((act) => {
             const Icon = act.icon;

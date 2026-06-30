@@ -34,12 +34,14 @@ test('mapStreak coerces streak counters and date keys', () => {
   const streak = mapStreak({
     current_streak: '3',
     best_streak: '8',
-    last_study_date: new Date('2026-06-12T00:00:00.000Z')
+    last_study_date: new Date('2026-06-12T00:00:00.000Z'),
+    streak_freezes: '2'
   });
 
   assert.deepEqual(streak, {
     current: 3,
     best: 8,
-    lastStudyDateKey: '2026-06-12'
+    lastStudyDateKey: '2026-06-12',
+    streakFreezes: 2
   });
 });

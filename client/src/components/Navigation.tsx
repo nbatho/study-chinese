@@ -6,6 +6,7 @@ import {
   Compass,
   Dumbbell,
   Shield,
+  ShoppingBag,
   Home,
   Languages,
   Lock,
@@ -50,6 +51,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/translate") || path.startsWith("/camera-translator")) activeTab = "translate";
   else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
   else if (path.startsWith("/achievements")) activeTab = "achievements";
+  else if (path.startsWith("/shop")) activeTab = "shop";
   else if (path.startsWith("/community")) activeTab = "community";
   else if (path.startsWith("/profile")) activeTab = "profile";
   else if (path.startsWith("/admin")) activeTab = "admin";
@@ -63,7 +65,8 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
     { id: "review", label: t("nav.review"), icon: RefreshCw, badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0, requiresAuth: true },
     { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
     { id: "achievements", label: t("nav.achievements"), icon: Trophy, requiresAuth: true },
-    { id: "community", label: "Cộng đồng", icon: Users, requiresAuth: true },
+    { id: "shop", label: t("nav.shop"), icon: ShoppingBag, requiresAuth: true },
+    { id: "community", label: t("nav.community"), icon: Users, requiresAuth: true },
     { id: "profile", label: t("nav.profile"), icon: User, requiresAuth: true },
     ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
   ];

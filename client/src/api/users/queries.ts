@@ -37,6 +37,32 @@ export const useTodayPlanQuery = (enabled = true) =>
         enabled,
     });
 
+export const useShopQuery = (enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.users.shop,
+        queryFn: () => unwrapApiData(usersApi.getShop()),
+        enabled,
+    });
+
+export const usePurchaseShopItemMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (itemId: string) => unwrapApiData(usersApi.purchaseShopItem(itemId)),
+        onSuccess: (data) => {
+            queryClient.setQueryData(queryKeys.users.shop, {
+                wallet: data.wallet,
+                premium: data.premium,
+                cosmetics: data.cosmetics,
+                items: data.items,
+            });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.profile });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+};
+
 export const useUserMistakesQuery = (limit = 30) =>
     useQuery({
         queryKey: queryKeys.users.mistakes(limit),

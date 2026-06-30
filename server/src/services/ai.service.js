@@ -1,8 +1,9 @@
 import { query, withTransaction } from '../config/db.config.js';
-import { badRequest, notFound } from '../utils/http-error.js';
+import { badRequest, forbidden, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
 import { getAiTutorReply } from './ai-provider.service.js';
+import { getAiUsage } from './gamification.service.js';
 import { recordMistake } from './mistake.service.js';
 
 const mapScenario = (row) => ({
@@ -160,13 +161,16 @@ export const startChatSession = async (userId, { scenarioId } = {}) =>
       ]
     );
 
+    const aiUsage = await getAiUsage(client, userId);
+
     return {
       session: {
         id: sessionResult.rows[0].id,
         scenarioId: sessionResult.rows[0].scenario_id,
         createdAt: sessionResult.rows[0].created_at,
         messages: [mapMessage(messageResult.rows[0])]
-      }
+      },
+      aiUsage
     };
   });
 
@@ -177,6 +181,14 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
 
   const userText = text.trim();
   const context = await withTransaction(async (client) => {
+    const aiUsage = await getAiUsage(client, userId);
+
+    if (aiUsage.limit !== null && aiUsage.used >= aiUsage.limit) {
+      throw forbidden('Ban da dung het luot nhan AI Tutor mien phi hom nay. Hay mua Premium trong cua hang bang Gems.', {
+        aiUsage
+      });
+    }
+
     const sessionResult = await client.query(
       `
         SELECT
@@ -235,7 +247,8 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
             description: 'Personalized Chinese practice using current learning data.'
           },
       messages: historyResult.rows,
-      learningContext: await getLearningContext(client, userId)
+      learningContext: await getLearningContext(client, userId),
+      aiUsage
     };
   });
 
@@ -289,6 +302,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
     const activity = await recordActivity(client, userId, {
       xp: 10
     });
+    const aiUsage = await getAiUsage(client, userId);
     const unlockedAchievements = await evaluateAchievements(client, userId, {
       event: 'ai_message',
       skill: 'speaking',
@@ -303,6 +317,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
         xp: activity.todayStats.xp,
         minutesStudied: activity.todayStats.minutesStudied
       },
+      aiUsage,
       unlockedAchievements
     };
   });

@@ -11,14 +11,14 @@ export class AppError extends Error {
 export const badRequest = (message, details) =>
   new AppError(400, 'INVALID_INPUT', message, details);
 
-export const unauthorized = (message = 'Bạn cần đăng nhập để thực hiện thao tác này.') =>
+export const unauthorized = (message = 'Ban can dang nhap de thuc hien thao tac nay.') =>
   new AppError(401, 'UNAUTHORIZED', message);
 
-export const forbidden = (message = 'Bạn không có quyền thực hiện thao tác này.') =>
-  new AppError(403, 'FORBIDDEN', message);
+export const forbidden = (message = 'Ban khong co quyen thuc hien thao tac nay.', details) =>
+  new AppError(403, 'FORBIDDEN', message, details);
 
-export const notFound = (message = 'Không tìm thấy dữ liệu yêu cầu.') =>
+export const notFound = (message = 'Khong tim thay du lieu yeu cau.') =>
   new AppError(404, 'NOT_FOUND', message);
 
-export const conflict = (message = 'Dữ liệu bị xung đột.') =>
+export const conflict = (message = 'Du lieu bi xung dot.') =>
   new AppError(409, 'CONFLICT', message);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Award, CheckCircle2, Flag, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
+import { ArrowLeft, Award, CheckCircle2, Flag, Gem, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
 import { useLessonDetailQuery, useRecordMistakeMutation } from "../../../api";
 import { useCompleteLessonMutation, useReportLessonIssueMutation } from "../../../api/lessons/queries";
 import type { LessonDetail } from "../../../api/lessons";
@@ -42,6 +42,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportCategory, setReportCategory] = useState<"content" | "translation" | "audio" | "exercise" | "technical" | "other">("content");
   const [reportMessage, setReportMessage] = useState("");
+  const [gemsEarned, setGemsEarned] = useState(0);
 
   const currentExercise = lesson?.exercises[exerciseIdx];
   const exerciseCount = lesson?.exercises.length ?? 0;
@@ -90,7 +91,8 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
       initExerciseState();
       return;
     }
-    await completeLessonMutation.mutateAsync({ accuracy: finalAccuracy, minutes: lesson.estimatedMinutes });
+    const result = await completeLessonMutation.mutateAsync({ accuracy: finalAccuracy, minutes: lesson.estimatedMinutes });
+    setGemsEarned(result.gemsEarned ?? 0);
     setStage("completed");
   };
 
@@ -321,10 +323,16 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           <Award size={72} className="mx-auto mb-4 text-gold" />
           <h2 className="text-3xl font-extrabold">{t("learn.completed")}</h2>
           <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
-          <div className="mx-auto mb-9 grid max-w-80 grid-cols-2 gap-4">
+          <div className="mx-auto mb-9 grid max-w-[420px] grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.xpReward")}</span>
               <h3 className="mt-1 text-2xl font-extrabold text-gold">+{lesson.xpReward}</h3>
+            </div>
+            <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
+              <span className="text-xs font-bold text-muted-foreground">{t("learn.gemsReward")}</span>
+              <h3 className="mt-1 flex items-center justify-center gap-1 text-2xl font-extrabold text-tone-1">
+                <Gem size={20} /> +{gemsEarned}
+              </h3>
             </div>
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.accuracy")}</span>

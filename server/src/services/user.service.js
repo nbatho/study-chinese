@@ -2,6 +2,11 @@ import { query, withTransaction } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { mapDailyStats, mapStreak, recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
+import {
+  getShop,
+  getUserGamificationState,
+  purchaseShopItem
+} from './gamification.service.js';
 import { listMistakes, practiceMistake, recordMistake } from './mistake.service.js';
 
 const mapProfile = (row) => ({
@@ -15,6 +20,7 @@ const mapProfile = (row) => ({
   appAppearance: row.app_appearance,
   hasCompletedOnboarding: row.has_completed_onboarding,
   timezone: row.timezone,
+  aiTutorSkin: row.ai_tutor_skin || 'classic',
   joinDate: row.join_date
 });
 
@@ -130,10 +136,12 @@ export const getUserProfile = async (userId) => {
   );
 
   const user = result.rows[0];
+  const gamification = await getUserGamificationState(userId);
 
   return {
     profile: mapProfile(user),
-    streak: mapStreak(user)
+    streak: mapStreak(user),
+    ...gamification
   };
 };
 
@@ -165,7 +173,8 @@ export const updateUserProfile = async (userId, payload) => {
 
   return {
     profile: mapProfile(result.rows[0]),
-    streak: mapStreak(result.rows[0])
+    streak: mapStreak(result.rows[0]),
+    ...(await getUserGamificationState(userId))
   };
 };
 
@@ -310,6 +319,10 @@ export const createUserMistake = async (userId, payload) =>
 
 export const recordMistakePractice = async (userId, mistakeId, payload) =>
   practiceMistake(userId, mistakeId, payload);
+
+export const getUserShop = async (userId) => getShop(userId);
+
+export const buyUserShopItem = async (userId, itemId) => purchaseShopItem(userId, itemId);
 
 export const __private__ = {
   buildTodayPlanResponse,

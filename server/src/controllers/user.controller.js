@@ -2,7 +2,9 @@ import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
 import {
   addUserActivity,
+  buyUserShopItem,
   createUserMistake,
+  getUserShop,
   getTodayPlan,
   getUserMistakes,
   getUserProfile,
@@ -33,6 +35,16 @@ export const showTodayPlan = asyncHandler(async (req, res) => {
 
 export const addActivity = asyncHandler(async (req, res) => {
   const data = await addUserActivity(req.user.id, req.body);
+  success(res, data);
+});
+
+export const showShop = asyncHandler(async (req, res) => {
+  const data = await getUserShop(req.user.id);
+  success(res, data);
+});
+
+export const buyShopItem = asyncHandler(async (req, res) => {
+  const data = await buyUserShopItem(req.user.id, req.params.itemId);
   success(res, data);
 });
 

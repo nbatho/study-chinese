@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import {
   addActivity,
+  buyShopItem,
   createMistake,
   getProfile,
   getStats,
   listMistakes,
+  showShop,
   showTodayPlan,
   submitMistakePractice,
   updateProfile
@@ -20,6 +22,8 @@ router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.get('/stats', getStats);
 router.get('/today-plan', showTodayPlan);
+router.get('/shop', showShop);
+router.post('/shop/:itemId/purchase', buyShopItem);
 router.get('/mistakes', listMistakes);
 router.post('/mistakes', requireFields(['skill']), createMistake);
 router.post('/mistakes/:id/practice', submitMistakePractice);
