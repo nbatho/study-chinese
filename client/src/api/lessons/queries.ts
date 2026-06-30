@@ -5,10 +5,11 @@ import { lessonsApi } from './index';
 import type { CompleteLessonPayload, ReportLessonIssuePayload } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
 
-export const useLessonsQuery = () =>
+export const useLessonsQuery = (enabled = true) =>
     useQuery({
         queryKey: queryKeys.lessons.list,
         queryFn: () => unwrapApiData(lessonsApi.list()),
+        enabled,
     });
 
 export const useLessonDetailQuery = (lessonId: string, enabled = true) =>

@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useRefreshAuthQuery } from "../api/auth/queries";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setAuthLoading } from "../store/modules/authSlice";
+import { clearCredentials, setAuthLoading } from "../store/modules/authSlice";
+import { hasAuthSession } from "../utils/localStorage";
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -23,14 +24,19 @@ const RouteLoading = () => (
 const useAutoLogin = () => {
   const dispatch = useAppDispatch();
   const status = useAppSelector((state) => state.auth.status);
-  useRefreshAuthQuery(status === "loading");
+  useRefreshAuthQuery(status === "loading" && hasAuthSession());
 
   useEffect(() => {
     if (status !== "idle") {
       return;
     }
 
-    dispatch(setAuthLoading());
+    if (hasAuthSession()) {
+      dispatch(setAuthLoading());
+      return;
+    }
+
+    dispatch(clearCredentials());
   }, [dispatch, status]);
 
   return status;

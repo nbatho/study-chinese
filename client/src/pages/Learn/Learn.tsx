@@ -3,18 +3,21 @@ import { useOutletContext } from "react-router-dom";
 import { useDailyContentQuery, useLessonsQuery } from "../../api";
 import { Search } from "lucide-react";
 import { useI18n } from "../../i18n";
+import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
+import LoginPromptCard from "../../components/LoginPromptCard";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 
 export default function Learn() {
   const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const { selectedLessonId, setSelectedLessonId } = useOutletContext<{
     selectedLessonId: string | null;
     setSelectedLessonId: (lessonId: string | null) => void;
   }>();
-  const lessonsQuery = useLessonsQuery();
-  const dailyContentQuery = useDailyContentQuery();
+  const lessonsQuery = useLessonsQuery(isAuthenticated);
+  const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const [activeTab, setActiveTab] = useState<"curriculum" | "grammar">("curriculum");
   const [selectedHSK, setSelectedHSK] = useState<number>(1);
   const [grammarQuery, setGrammarQuery] = useState("");
@@ -26,6 +29,16 @@ export default function Learn() {
     entry.summary.toLowerCase().includes(grammarQuery.toLowerCase()) ||
     entry.pattern.toLowerCase().includes(grammarQuery.toLowerCase())
   );
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={Search}
+        title={t("loginPrompt.learnTitle")}
+        description={t("loginPrompt.learnBody")}
+      />
+    );
+  }
 
   return (
     <div className="anim-slide">

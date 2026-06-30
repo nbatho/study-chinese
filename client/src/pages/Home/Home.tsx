@@ -38,10 +38,10 @@ export default function Home() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const statsQuery = useUserStatsQuery(7, isAuthenticated);
-  const lessonsQuery = useLessonsQuery();
+  const lessonsQuery = useLessonsQuery(isAuthenticated);
   const dueCardsQuery = useDueSrsCardsQuery(20, isAuthenticated);
   const achievementsQuery = useAchievementsQuery(isAuthenticated);
-  const dailyContentQuery = useDailyContentQuery();
+  const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const todayPlanQuery = useTodayPlanQuery(isAuthenticated);
 
   const profile = profileQuery.data?.profile;

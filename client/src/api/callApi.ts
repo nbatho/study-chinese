@@ -5,7 +5,7 @@ import type {
     AxiosResponse,
 } from 'axios';
 import { toast } from 'sonner';
-import { getAccessToken, removeAccessToken, setAccessToken } from '../utils/localStorage';
+import { getAccessToken, hasAuthSession, removeAccessToken, setAccessToken } from '../utils/localStorage';
 import { ApiError, type ApiErrorPayload } from '../utils/errorUtils';
 
 interface RefreshResponse {
@@ -17,6 +17,31 @@ interface RefreshResponse {
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
     _retry?: boolean;
+};
+
+const PUBLIC_ENDPOINTS = [
+    'auth/login',
+    'auth/register',
+    'health',
+    'docs',
+];
+
+const normalizeUrl = (url?: string) => {
+    if (!url) {
+        return '';
+    }
+
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return parsed.pathname.replace(/^\/api\/v1\/?/, '').replace(/^\//, '');
+    } catch {
+        return url.replace(/^\/?api\/v1\/?/, '').replace(/^\//, '');
+    }
+};
+
+const isPublicEndpoint = (url?: string) => {
+    const normalizedUrl = normalizeUrl(url);
+    return PUBLIC_ENDPOINTS.some((endpoint) => normalizedUrl.startsWith(endpoint));
 };
 
 const STATUS_TOAST_MAP: Record<number, string> = {
@@ -67,6 +92,11 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
     instance.interceptors.request.use(
         (config: InternalAxiosRequestConfig) => {
             const token = getAccessToken();
+
+            if (!token && !hasAuthSession() && !isPublicEndpoint(config.url)) {
+                return Promise.reject(new axios.CanceledError('Auth session required'));
+            }
+
             if (token && config.headers) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
@@ -79,6 +109,10 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
         (response: AxiosResponse) => response.data,
 
         async (error: unknown) => {
+            if (axios.isCancel(error)) {
+                return Promise.reject(error);
+            }
+
             if (!axios.isAxiosError(error) || !error.response) {
                 const isTimeout = axios.isAxiosError(error) && error.code === 'ECONNABORTED';
                 toast.error(
@@ -101,7 +135,8 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
                 originalRequest &&
                 !originalRequest._retry &&
                 !isRefreshRequest &&
-                !originalRequest.url?.includes('auth/logout')
+                !originalRequest.url?.includes('auth/logout') &&
+                hasAuthSession()
             ) {
                 originalRequest._retry = true;
 

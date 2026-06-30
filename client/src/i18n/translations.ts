@@ -322,7 +322,9 @@ export const translations = {
     "loginPrompt.achievementsTitle": "Log in to see your achievements",
     "loginPrompt.achievementsBody": "Track every badge you've unlocked on your study path. Sign in to view your achievement gallery.",
     "loginPrompt.aiTutorTitle": "Log in to chat with AI Tutor",
-    "loginPrompt.aiTutorBody": "The AI tutor provides personalized Chinese conversation practice. Sign in to start a session."
+    "loginPrompt.aiTutorBody": "The AI tutor provides personalized Chinese conversation practice. Sign in to start a session.",
+    "loginPrompt.learnTitle": "Log in to continue your lessons",
+    "loginPrompt.learnBody": "Your curriculum, grammar notes, and lesson progress are tied to your account. Sign in to keep learning."
   },
   vi: {
     "nav.home": "Trang chủ",
@@ -646,7 +648,9 @@ export const translations = {
     "loginPrompt.achievementsTitle": "Đăng nhập để xem thành tựu",
     "loginPrompt.achievementsBody": "Theo dõi mọi huy hiệu đã đạt trên lộ trình học. Đăng nhập để xem bộ sưu tập thành tựu.",
     "loginPrompt.aiTutorTitle": "Đăng nhập để trò chuyện với AI Tutor",
-    "loginPrompt.aiTutorBody": "AI tutor cung cấp luyện hội thoại tiếng Trung cá nhân hóa. Đăng nhập để bắt đầu."
+    "loginPrompt.aiTutorBody": "AI tutor cung cấp luyện hội thoại tiếng Trung cá nhân hóa. Đăng nhập để bắt đầu.",
+    "loginPrompt.learnTitle": "Đăng nhập để tiếp tục bài học",
+    "loginPrompt.learnBody": "Lộ trình, ghi chú ngữ pháp và tiến độ bài học gắn với tài khoản của bạn. Đăng nhập để tiếp tục học."
   }
 } as const;
 
