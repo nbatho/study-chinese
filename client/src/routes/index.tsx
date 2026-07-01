@@ -2,7 +2,7 @@ import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import type { RouteConfig } from "../types/app";
 import App from "../App";
-import { OptionalAuthRoute, PublicRoute } from "./AuthRoute";
+import { OptionalAuthRoute, PrivateRoute, PublicRoute } from "./AuthRoute";
 
 // Lazy loaded page components
 const Home = lazy(() => import("../pages/Home"));
@@ -17,6 +17,7 @@ const Profile = lazy(() => import("../pages/Profile"));
 const Achievements = lazy(() => import("../pages/Achievements"));
 const Shop = lazy(() => import("../pages/Shop"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
+const PlacementTest = lazy(() => import("../pages/PlacementTest"));
 const Auth = lazy(() => import("../pages/Auth"));
 const AITutor = lazy(() => import("../pages/AITutor"));
 const Admin = lazy(() => import("../pages/Admin"));
@@ -120,6 +121,14 @@ export const routes: RouteConfig[] = [
       <PublicRoute>
         <Onboarding />
       </PublicRoute>
+    )
+  },
+  {
+    path: "/placement-test",
+    element: (
+      <PrivateRoute redirectTo="/auth">
+        <PlacementTest />
+      </PrivateRoute>
     )
   },
   {

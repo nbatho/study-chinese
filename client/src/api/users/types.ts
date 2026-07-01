@@ -1,6 +1,7 @@
 import type { Achievement } from '../achievements';
 
-export type SkillLevel = 'beginner' | 'elementary' | 'intermediate' | 'advanced';
+export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+export type SkillLevel = 'beginner' | 'elementary' | 'intermediate' | 'upper_intermediate' | 'advanced' | 'mastery';
 export type LearningGoal = 'travel' | 'business' | 'hskExam' | 'culture' | 'family' | 'casual';
 export type AppAppearance = 'light' | 'dark' | 'system';
 
@@ -8,6 +9,9 @@ export interface UserProfile {
     name: string;
     avatar: string;
     startLevel: SkillLevel;
+    cefrLevel: CefrLevel;
+    placementTestCompletedAt?: string | null;
+    placementTestScore?: number | null;
     goalPurpose: LearningGoal;
     dailyMinutes: number;
     showPinyin: boolean;

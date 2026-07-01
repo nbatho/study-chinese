@@ -1,3 +1,5 @@
+import type { CefrLevel } from '../users';
+
 export interface Word {
     id: string;
     simplified: string;
@@ -7,6 +9,7 @@ export interface Word {
     english: string;
     partOfSpeech: string;
     hskLevel: number;
+    cefrLevel: CefrLevel;
     category: string;
 }
 

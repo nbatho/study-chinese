@@ -13,6 +13,9 @@ export const queryKeys = {
         list: ['lessons'] as const,
         detail: (lessonId: string) => ['lessons', lessonId] as const,
     },
+    placement: {
+        questions: ['placement', 'questions'] as const,
+    },
     vocabulary: {
         search: (params?: unknown) => ['vocabulary', params ?? {}] as const,
     },

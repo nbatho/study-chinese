@@ -21,6 +21,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth/queries";
 import { useDueSrsCardsQuery } from "../api/srs/queries";
+import { useUserProfileQuery } from "../api/users/queries";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
 import { Badge } from "./ui/badge";
@@ -38,6 +39,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const authUser = useAppSelector((state) => state.auth.user);
   const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
+  const profileQuery = useUserProfileQuery(isAuthenticated);
   const logoutMutation = useLogoutMutation();
   const { t } = useI18n();
 
@@ -53,6 +55,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/shop")) activeTab = "shop";
   else if (path.startsWith("/community")) activeTab = "community";
+  else if (path.startsWith("/placement-test")) activeTab = "placement-test";
   else if (path.startsWith("/profile")) activeTab = "profile";
   else if (path.startsWith("/admin")) activeTab = "admin";
 
@@ -184,25 +187,43 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
 
       <div className="border-t p-3">
         {isAuthenticated ? (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleLogout}
-            disabled={logoutMutation.isPending}
-            className={cn(
-              "mb-3 h-11 w-full rounded-lg font-bold text-tone-4",
-              collapsed ? "px-0" : "justify-start px-3",
-            )}
-            aria-label={t("profile.logout")}
-            title={t("profile.logout")}
-          >
-            <LogOut className="size-5 shrink-0" />
-            {!collapsed && (
-              <span className="ml-3 truncate">
-                {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
-              </span>
-            )}
-          </Button>
+          <>
+            <button
+              type="button"
+              onClick={() => navigate("/placement-test")}
+              className={cn(
+                "mb-2 flex h-11 w-full items-center rounded-lg bg-secondary px-3 text-left text-sm font-bold transition hover:bg-secondary/80",
+                collapsed ? "justify-center px-0" : "justify-between",
+                activeTab === "placement-test" && "bg-primary text-primary-foreground hover:bg-primary",
+              )}
+              aria-label="CEFR placement"
+              title="CEFR placement"
+            >
+              {!collapsed && <span className="truncate">CEFR level</span>}
+              <Badge className={cn("rounded-md", activeTab === "placement-test" && "bg-primary-foreground text-primary")}>
+                {profileQuery.data?.profile.cefrLevel ?? "A1"}
+              </Badge>
+            </button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+              className={cn(
+                "mb-3 h-11 w-full rounded-lg font-bold text-tone-4",
+                collapsed ? "px-0" : "justify-start px-3",
+              )}
+              aria-label={t("profile.logout")}
+              title={t("profile.logout")}
+            >
+              <LogOut className="size-5 shrink-0" />
+              {!collapsed && (
+                <span className="ml-3 truncate">
+                  {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
+                </span>
+              )}
+            </Button>
+          </>
         ) : (
           <Button
             type="button"

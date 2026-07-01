@@ -4,9 +4,17 @@ import { useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 
-export default function LessonPath({ lessons, onSelectLesson }: { lessons: LessonSummary[]; onSelectLesson: (lessonId: string) => void }) {
+export default function LessonPath({
+  lessons,
+  onSelectLesson,
+  isLessonLocked,
+}: {
+  lessons: LessonSummary[];
+  onSelectLesson: (lessonId: string) => void;
+  isLessonLocked?: (lesson: LessonSummary) => boolean;
+}) {
   const { t } = useI18n();
-  const firstIncompleteIndex = lessons.findIndex((lesson) => !lesson.completedAt);
+  const firstIncompleteIndex = lessons.findIndex((lesson) => !lesson.completedAt && !isLessonLocked?.(lesson));
 
   if (!lessons.length) {
     return (
@@ -21,9 +29,10 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
       <div className="absolute bottom-10 left-8 top-10 w-1 -translate-x-1/2 rounded-full bg-border sm:left-1/2" />
       {lessons.map((lesson, index) => {
         const isCompleted = !!lesson.completedAt;
-        const isCurrent = firstIncompleteIndex === index || (firstIncompleteIndex === -1 && index === lessons.length - 1);
-        const isUnlocked = isCompleted || firstIncompleteIndex === -1 || index === firstIncompleteIndex;
-        const isLocked = !isUnlocked;
+        const isLockedByLevel = !isCompleted && Boolean(isLessonLocked?.(lesson));
+        const isCurrent = !isLockedByLevel && (firstIncompleteIndex === index || (firstIncompleteIndex === -1 && index === lessons.length - 1));
+        const isUnlockedByProgress = isCompleted || firstIncompleteIndex === -1 || index === firstIncompleteIndex;
+        const isLocked = isLockedByLevel || !isUnlockedByProgress;
         const isLeft = index % 2 === 0;
         const statusKey: TranslationKey = isCompleted
           ? "learn.pathCompleted"
@@ -48,7 +57,7 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
               type="button"
               disabled={isLocked}
               onClick={() => {
-                if (isUnlocked) onSelectLesson(lesson.id);
+                if (!isLocked) onSelectLesson(lesson.id);
               }}
               className={cn(
                 "ml-20 flex min-h-29.5 w-[calc(100%-5rem)] flex-col justify-between rounded-lg border bg-card p-4 text-left shadow-sm transition sm:w-[44%]",
@@ -84,6 +93,7 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
                   {lesson.estimatedMinutes} min
                 </span>
                 <span>+{lesson.xpReward} XP</span>
+                <span>CEFR {lesson.cefrLevel}</span>
                 {isCompleted && <span className="text-jade">{Math.round(lesson.bestAccuracy)}% Acc</span>}
               </div>
             </button>

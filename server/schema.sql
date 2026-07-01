@@ -30,7 +30,11 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(100) NOT NULL DEFAULT 'Learner',
   avatar VARCHAR(255) DEFAULT '🐼',
   start_level VARCHAR(20) DEFAULT 'beginner'
-    CHECK (start_level IN ('beginner', 'elementary', 'intermediate', 'advanced')),
+    CHECK (start_level IN ('beginner', 'elementary', 'intermediate', 'upper_intermediate', 'advanced', 'mastery')),
+  cefr_level VARCHAR(5) DEFAULT 'A1'
+    CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
+  placement_test_completed_at TIMESTAMPTZ,
+  placement_test_score INT,
   goal_purpose VARCHAR(20) DEFAULT 'casual'
     CHECK (goal_purpose IN ('travel', 'business', 'hskExam', 'culture', 'family', 'casual')),
   daily_minutes INT NOT NULL DEFAULT 15 CHECK (daily_minutes > 0),
@@ -56,6 +60,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS gem_balance INT NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_freezes INT NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS premium_expires_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_tutor_skin VARCHAR(50) NOT NULL DEFAULT 'classic';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS placement_test_completed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS placement_test_score INT;
 
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
   token_id UUID PRIMARY KEY,
@@ -116,6 +123,8 @@ CREATE TABLE IF NOT EXISTS words (
   part_of_speech VARCHAR(30) NOT NULL
     CHECK (part_of_speech IN ('noun', 'verb', 'adjective', 'adverb', 'pronoun', 'numeral', 'measure', 'phrase')),
   hsk_level INT NOT NULL DEFAULT 1,
+  cefr_level VARCHAR(5) DEFAULT 'A1'
+    CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
   category VARCHAR(50) NOT NULL,
   search_text TEXT NOT NULL,
   content_version INT NOT NULL DEFAULT 1,
@@ -145,6 +154,8 @@ CREATE TABLE IF NOT EXISTS lessons (
   title VARCHAR(150) NOT NULL,
   subtitle VARCHAR(150) NOT NULL,
   hsk_level INT NOT NULL DEFAULT 1,
+  cefr_level VARCHAR(5) DEFAULT 'A1'
+    CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
   order_num INT NOT NULL,
   skill VARCHAR(50) NOT NULL,
   estimated_minutes INT NOT NULL DEFAULT 5,
@@ -156,6 +167,9 @@ CREATE TABLE IF NOT EXISTS lessons (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE words ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
 
 CREATE TABLE IF NOT EXISTS lesson_words (
   lesson_id VARCHAR(50) NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -193,6 +207,24 @@ CREATE TABLE IF NOT EXISTS exercises (
   audio_word_id VARCHAR(50) REFERENCES words(id) ON DELETE SET NULL,
   tone INT,
   order_num INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS placement_questions (
+  id VARCHAR(50) PRIMARY KEY,
+  section VARCHAR(30) NOT NULL CHECK (section IN ('vocabulary', 'grammar', 'reading')),
+  cefr_level VARCHAR(5) NOT NULL CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
+  prompt TEXT NOT NULL,
+  prompt_hanzi TEXT,
+  prompt_pinyin TEXT,
+  options JSONB NOT NULL DEFAULT '[]'::jsonb,
+  correct_index INT NOT NULL,
+  correct_text TEXT NOT NULL,
+  explanation TEXT,
+  difficulty INT NOT NULL DEFAULT 1 CHECK (difficulty BETWEEN 1 AND 6),
+  order_num INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -483,6 +515,10 @@ DROP TRIGGER IF EXISTS trg_exercises_updated_at ON exercises;
 CREATE TRIGGER trg_exercises_updated_at BEFORE UPDATE ON exercises
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_placement_questions_updated_at ON placement_questions;
+CREATE TRIGGER trg_placement_questions_updated_at BEFORE UPDATE ON placement_questions
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_user_lesson_progress_updated_at ON user_lesson_progress;
 CREATE TRIGGER trg_user_lesson_progress_updated_at BEFORE UPDATE ON user_lesson_progress
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -559,6 +595,8 @@ CREATE INDEX IF NOT EXISTS idx_friendships_requester_status ON friendships (requ
 CREATE INDEX IF NOT EXISTS idx_friendships_addressee_status ON friendships (addressee_id, status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_friendships_pair_status ON friendships (user_low_id, user_high_id, status);
 CREATE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_lessons_cefr_order ON lessons (cefr_level, hsk_level, order_num) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_placement_questions_order ON placement_questions (section, difficulty, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lesson_words_word ON lesson_words (word_id);
 CREATE INDEX IF NOT EXISTS idx_grammar_points_lesson_order ON grammar_points (lesson_id, order_num);
 CREATE INDEX IF NOT EXISTS idx_exercises_lesson_order ON exercises (lesson_id, order_num);

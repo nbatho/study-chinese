@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import { useDailyContentQuery, useLessonsQuery } from "../../api";
-import { BookOpenCheck, CheckCircle2, Search, Trophy } from "lucide-react";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { useDailyContentQuery, useLessonsQuery, useUserProfileQuery } from "../../api";
+import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, Search, Trophy } from "lucide-react";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
@@ -11,17 +11,23 @@ import LessonPlayer from "./components/LessonPlayer";
 
 export default function Learn() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const { selectedLessonId, setSelectedLessonId } = useOutletContext<{
     selectedLessonId: string | null;
     setSelectedLessonId: (lessonId: string | null) => void;
   }>();
   const lessonsQuery = useLessonsQuery(isAuthenticated);
+  const profileQuery = useUserProfileQuery(isAuthenticated);
   const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const [activeTab, setActiveTab] = useState<"curriculum" | "grammar">("curriculum");
   const [selectedHSK, setSelectedHSK] = useState<number>(1);
   const [grammarQuery, setGrammarQuery] = useState("");
   const lessons = lessonsQuery.data?.lessons ?? [];
+  const userCefrLevel = profileQuery.data?.profile.cefrLevel ?? "A1";
+  const cefrRank = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
+  const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof cefrRank; completedAt?: string | null }) =>
+    cefrRank[lesson.cefrLevel ?? "A1"] > cefrRank[userCefrLevel];
   const hskLevels = Array.from(new Set(lessons.map((lesson) => lesson.hskLevel))).sort((a, b) => a - b);
   const visibleHskLevels = hskLevels.length ? hskLevels : [1, 2, 3];
   const hskStats = visibleHskLevels.map((level) => {
@@ -29,9 +35,13 @@ export default function Learn() {
     const completedCount = hskLessons.filter((lesson) => lesson.completedAt).length;
     const percent = Math.round(hskLessons.length ? (completedCount / hskLessons.length) * 100 : 0);
     const skills = Array.from(new Set(hskLessons.map((lesson) => lesson.skill))).slice(0, 3);
+    const cefrLevel = hskLessons[0]?.cefrLevel ?? (level === 1 ? "A1" : level === 2 ? "A2" : "B1");
+    const isLocked = cefrRank[cefrLevel] > cefrRank[userCefrLevel];
 
     return {
       level,
+      cefrLevel,
+      isLocked,
       completedCount,
       lessonCount: hskLessons.length,
       percent,
@@ -76,6 +86,25 @@ export default function Learn() {
 
           {activeTab === "curriculum" ? (
             <div>
+              <div className="mb-5 flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <ClipboardCheck size={20} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-extrabold">CEFR {userCefrLevel} path</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Lessons above your placement level stay visible but locked.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/placement-test")}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-secondary px-4 text-sm font-bold transition hover:bg-secondary/80"
+                >
+                  <ClipboardCheck size={16} />
+                  Retake placement
+                </button>
+              </div>
               <div className="mb-5 grid gap-3 sm:grid-cols-3">
                 {hskStats.map((levelStats) => (
                   <button
@@ -85,6 +114,7 @@ export default function Learn() {
                     className={cn(
                       "min-h-36 rounded-lg border-2 bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
                       selectedHSK === levelStats.level ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground",
+                      levelStats.isLocked && "border-dashed opacity-75",
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -92,8 +122,8 @@ export default function Learn() {
                         <span className="text-xs font-bold uppercase text-muted-foreground">Curriculum</span>
                         <h3 className="mt-1 text-2xl font-extrabold">HSK {levelStats.level}</h3>
                       </div>
-                      <span className={cn("flex size-9 items-center justify-center rounded-full", levelStats.percent === 100 ? "bg-jade/10 text-jade" : "bg-secondary text-muted-foreground")}>
-                        {levelStats.percent === 100 ? <CheckCircle2 size={19} /> : <BookOpenCheck size={19} />}
+                      <span className={cn("flex size-9 items-center justify-center rounded-full", levelStats.percent === 100 ? "bg-jade/10 text-jade" : levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground")}>
+                        {levelStats.percent === 100 ? <CheckCircle2 size={19} /> : levelStats.isLocked ? <Lock size={18} /> : <BookOpenCheck size={19} />}
                       </span>
                     </div>
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
@@ -104,6 +134,9 @@ export default function Learn() {
                       <span>{levelStats.percent}%</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
+                      <span className={cn("rounded-md px-2 py-1 text-[0.68rem] font-extrabold", levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
+                        CEFR {levelStats.cefrLevel}
+                      </span>
                       {levelStats.skills.map((skill) => (
                         <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold uppercase text-muted-foreground">
                           {skill}
@@ -122,7 +155,7 @@ export default function Learn() {
               <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
                 {t("learn.progress", { level: selectedHSK, percent: Math.round(levelLessons.length ? (levelLessons.filter((lesson) => lesson.completedAt).length / levelLessons.length) * 100 : 0) })}
               </div>
-              <LessonPath lessons={levelLessons} onSelectLesson={setSelectedLessonId} />
+              <LessonPath lessons={levelLessons} onSelectLesson={setSelectedLessonId} isLessonLocked={isLessonLockedByCefr} />
             </div>
           ) : (
             <div className="anim-slide">

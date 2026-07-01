@@ -1,5 +1,5 @@
 import type { Achievement } from '../achievements';
-import type { UserStreak, UserWallet } from '../users';
+import type { CefrLevel, UserStreak, UserWallet } from '../users';
 import type { Word } from '../vocabulary';
 
 export interface LessonSummary {
@@ -7,6 +7,7 @@ export interface LessonSummary {
     title: string;
     subtitle: string;
     hskLevel: number;
+    cefrLevel: CefrLevel;
     order: number;
     skill: string;
     estimatedMinutes: number;

@@ -11,6 +11,7 @@ export const mapWord = (row) => ({
   english: row.english,
   partOfSpeech: row.part_of_speech,
   hskLevel: Number(row.hsk_level),
+  cefrLevel: row.cefr_level || 'A1',
   category: row.category
 });
 

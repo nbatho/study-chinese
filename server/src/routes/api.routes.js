@@ -14,6 +14,7 @@ import adminRoutes from './admin.routes.js';
 import friendRoutes from './friend.routes.js';
 import leaderboardRoutes from './leaderboard.routes.js';
 import docsRoutes from './docs.routes.js';
+import placementRoutes from './placement.routes.js';
 import { healthCheck } from '../controllers/health.controller.js';
 
 const router = Router();
@@ -33,6 +34,7 @@ router.use('/audio', audioRoutes);
 router.use('/admin', adminRoutes);
 router.use('/friends', friendRoutes);
 router.use('/leaderboard', leaderboardRoutes);
+router.use('/placement', placementRoutes);
 router.use('/', utilityRoutes);
 
 export default router;

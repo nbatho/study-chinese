@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import type { LearningGoal, SkillLevel } from "../../api/users";
+import type { CefrLevel, LearningGoal, SkillLevel } from "../../api/users";
 import { useAddActivityMutation, useUpdateProfileMutation, useUserProfileQuery } from "../../api/users/queries";
-import { ArrowRight, BookOpen, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardCheck, Sparkles, Target } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../../store/modules/appSlice";
 import { useI18n } from "../../i18n";
 import { cn } from "../../utils/cn";
+import PlacementTest from "../PlacementTest/PlacementTest";
 
 export default function Onboarding() {
   const dispatch = useAppDispatch();
@@ -21,8 +22,10 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<SkillLevel>("beginner");
+  const [selectedCefrLevel, setSelectedCefrLevel] = useState<CefrLevel>("A1");
   const [selectedGoal, setSelectedGoal] = useState<LearningGoal>("travel");
   const [selectedAvatar, setSelectedAvatar] = useState("🐼");
+  const [isTakingPlacement, setIsTakingPlacement] = useState(false);
 
   useEffect(() => {
     const serverCompleted = profileQuery.data?.profile.hasCompletedOnboarding;
@@ -47,6 +50,20 @@ export default function Onboarding() {
     { id: "casual", title: t("onboarding.casual"), emoji: "☕", desc: t("onboarding.casualDesc") },
   ];
 
+  const cefrBySkillLevel: Record<SkillLevel, CefrLevel> = {
+    beginner: "A1",
+    elementary: "A2",
+    intermediate: "B1",
+    upper_intermediate: "B2",
+    advanced: "C1",
+    mastery: "C2",
+  };
+
+  const chooseLevel = (level: SkillLevel) => {
+    setSelectedLevel(level);
+    setSelectedCefrLevel(cefrBySkillLevel[level]);
+  };
+
   const handleNext = async () => {
     if (step < 4) {
       setStep(step + 1);
@@ -57,6 +74,7 @@ export default function Onboarding() {
       name: name.trim() || t("common.learner"),
       avatar: selectedAvatar,
       startLevel: selectedLevel,
+      cefrLevel: selectedCefrLevel,
       goalPurpose: selectedGoal,
       hasCompletedOnboarding: true,
       joinDate: new Date().toISOString(),
@@ -125,30 +143,75 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="anim-slide">
             <div className="mb-3 flex items-center gap-2">
-              <BookOpen className="text-tone-2" size={24} />
+              {isTakingPlacement ? <ClipboardCheck className="text-tone-2" size={24} /> : <BookOpen className="text-tone-2" size={24} />}
               <h2 className="text-2xl sm:text-[1.7rem]">{t("onboarding.levelTitle")}</h2>
             </div>
             <p className="mb-7 text-muted-foreground">
               {t("onboarding.levelBody")}
             </p>
-            <div className="mb-8 grid gap-3">
-              {levels.map((lvl) => (
-                <div
-                  key={lvl.id}
-                  onClick={() => setSelectedLevel(lvl.id)}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-4 rounded-[14px] border-2 bg-card p-4 transition",
-                    selectedLevel === lvl.id ? "border-primary bg-primary/5" : "border-border",
-                  )}
-                >
-                  <span className="text-[1.8rem]">{lvl.emoji}</span>
-                  <div className="text-left">
-                    <div className="font-bold">{lvl.title}</div>
-                    <div className="text-[0.8rem] text-muted-foreground">{lvl.sub}</div>
-                  </div>
+            {isTakingPlacement ? (
+              <div className="mb-8">
+                <PlacementTest
+                  embedded
+                  onComplete={(result) => {
+                    setSelectedLevel(result.startLevel);
+                    setSelectedCefrLevel(result.cefrLevel);
+                    setIsTakingPlacement(false);
+                    setStep(3);
+                  }}
+                  onSkip={() => {
+                    chooseLevel("beginner");
+                    setIsTakingPlacement(false);
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsTakingPlacement(true)}
+                    className="flex items-center gap-4 rounded-lg border-2 border-primary bg-primary/5 p-4 text-left transition hover:bg-primary/10"
+                  >
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                      <ClipboardCheck size={22} />
+                    </span>
+                    <span>
+                      <span className="block font-bold">Take a 5-minute placement test</span>
+                      <span className="block text-[0.8rem] text-muted-foreground">Recommended if you already know some Chinese.</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      chooseLevel("beginner");
+                      setStep(3);
+                    }}
+                    className="rounded-lg border bg-secondary px-4 py-3 text-left text-sm font-bold transition hover:bg-secondary/80"
+                  >
+                    I am new to Chinese, skip the test
+                  </button>
                 </div>
-              ))}
-            </div>
+                <div className="mb-8 grid gap-3">
+                  {levels.map((lvl) => (
+                    <div
+                      key={lvl.id}
+                      onClick={() => chooseLevel(lvl.id)}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-4 rounded-[14px] border-2 bg-card p-4 transition",
+                        selectedLevel === lvl.id ? "border-primary bg-primary/5" : "border-border",
+                      )}
+                    >
+                      <span className="text-[1.8rem]">{lvl.emoji}</span>
+                      <div className="text-left">
+                        <div className="font-bold">{lvl.title}</div>
+                        <div className="text-[0.8rem] text-muted-foreground">{lvl.sub}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -187,7 +250,7 @@ export default function Onboarding() {
               {t("onboarding.ready", { name: name || t("common.learner") })}
             </h2>
             <p className="mb-8 text-[0.95rem] text-muted-foreground">
-              {t("common.level")}: <strong className="text-foreground">{selectedLevel.toUpperCase()}</strong> · {t("common.goal")}: <strong className="text-foreground">{selectedGoal.toUpperCase()}</strong>
+              {t("common.level")}: <strong className="text-foreground">{selectedCefrLevel}</strong> / <strong className="text-foreground">{selectedLevel.toUpperCase()}</strong> · {t("common.goal")}: <strong className="text-foreground">{selectedGoal.toUpperCase()}</strong>
               <br />
               {t("onboarding.readyBody")}
             </p>
@@ -197,7 +260,7 @@ export default function Onboarding() {
           </div>
         )}
 
-        <div className={cn("flex gap-3", step > 1 ? "justify-between" : "justify-end")}>
+        {!isTakingPlacement && <div className={cn("flex gap-3", step > 1 ? "justify-between" : "justify-end")}>
           {step > 1 && (
             <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent" onClick={handleBack}>
               {t("common.back")}
@@ -207,7 +270,7 @@ export default function Onboarding() {
             {updateProfileMutation.isPending || addActivityMutation.isPending ? t("common.saving") : step === 4 ? t("onboarding.letsGo") : t("common.continue")}
             {step < 4 && <ArrowRight size={18} />}
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

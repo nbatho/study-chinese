@@ -792,4 +792,64 @@ DO UPDATE SET title = EXCLUDED.title,
               search_text = EXCLUDED.search_text,
               is_active = true;
 
+UPDATE lessons
+SET cefr_level = CASE
+  WHEN hsk_level <= 1 THEN 'A1'
+  WHEN hsk_level = 2 THEN 'A2'
+  WHEN hsk_level = 3 THEN 'B1'
+  WHEN hsk_level = 4 THEN 'B2'
+  WHEN hsk_level = 5 THEN 'C1'
+  ELSE 'C2'
+END;
+
+UPDATE words
+SET cefr_level = CASE
+  WHEN hsk_level <= 1 THEN 'A1'
+  WHEN hsk_level = 2 THEN 'A2'
+  WHEN hsk_level = 3 THEN 'B1'
+  WHEN hsk_level = 4 THEN 'B2'
+  WHEN hsk_level = 5 THEN 'C1'
+  ELSE 'C2'
+END;
+
+INSERT INTO placement_questions (
+  id, section, cefr_level, prompt, prompt_hanzi, prompt_pinyin,
+  options, correct_index, correct_text, explanation, difficulty, order_num
+)
+VALUES
+('placement_vocab_01', 'vocabulary', 'A1', '你好 means...', '你好', 'ni hao', '["hello", "goodbye", "teacher", "airport"]'::jsonb, 0, 'hello', '你好 is the common greeting for hello.', 1, 10),
+('placement_vocab_02', 'vocabulary', 'A1', '谢谢 means...', '谢谢', 'xie xie', '["thank you", "sorry", "water", "student"]'::jsonb, 0, 'thank you', '谢谢 is used to say thank you.', 1, 20),
+('placement_vocab_03', 'vocabulary', 'A1', '三 means...', '三', 'san', '["three", "five", "ten", "one"]'::jsonb, 0, 'three', '三 is the number three.', 1, 30),
+('placement_vocab_04', 'vocabulary', 'A2', '地铁 means...', '地铁', 'di tie', '["subway", "airport", "library", "contract"]'::jsonb, 0, 'subway', '地铁 means subway or metro.', 2, 40),
+('placement_vocab_05', 'vocabulary', 'A2', '机场 means...', '机场', 'ji chang', '["airport", "school", "apple", "meeting"]'::jsonb, 0, 'airport', '机场 means airport.', 2, 50),
+('placement_vocab_06', 'vocabulary', 'B1', '建议 means...', '建议', 'jian yi', '["to suggest", "to forget", "expensive", "history"]'::jsonb, 0, 'to suggest', '建议 means to suggest or suggestion.', 3, 60),
+('placement_vocab_07', 'vocabulary', 'B1', '经验 means...', '经验', 'jing yan', '["experience", "opportunity", "homework", "culture"]'::jsonb, 0, 'experience', '经验 means experience.', 3, 70),
+('placement_grammar_01', 'grammar', 'A1', 'Choose the word: 我___学生。', '我是学生。', 'wo shi xue sheng', '["是", "了", "比", "吧"]'::jsonb, 0, '是', '是 links the subject with a noun.', 1, 80),
+('placement_grammar_02', 'grammar', 'A1', 'Choose the word: 你叫什么___？', '你叫什么名字？', 'ni jiao shenme mingzi', '["名字", "学生", "地铁", "合同"]'::jsonb, 0, '名字', '名字 means name.', 1, 90),
+('placement_grammar_03', 'grammar', 'A2', 'Choose the completed-action marker: 我吃___苹果。', '我吃了苹果。', 'wo chi le pingguo', '["了", "吗", "比", "在"]'::jsonb, 0, '了', '了 can mark a completed action.', 2, 100),
+('placement_grammar_04', 'grammar', 'A2', 'Choose the word: 请问地铁站___走？', '请问地铁站怎么走？', 'qingwen ditie zhan zenme zou', '["怎么", "多少", "什么", "哪里"]'::jsonb, 0, '怎么', '怎么 asks how to do something.', 2, 110),
+('placement_grammar_05', 'grammar', 'B1', 'Choose the suggestion particle: 我们去图书馆___。', '我们去图书馆吧。', 'women qu tushuguan ba', '["吧", "了", "比", "是"]'::jsonb, 0, '吧', '吧 softens a sentence into a suggestion.', 3, 120),
+('placement_grammar_06', 'grammar', 'B1', 'Choose the comparison word: 今天___昨天冷。', '今天比昨天冷。', 'jintian bi zuotian leng', '["比", "吧", "了", "叫"]'::jsonb, 0, '比', '比 compares two things.', 3, 130),
+('placement_grammar_07', 'grammar', 'B1', 'Choose the opinion verb: 我___中文很有意思。', '我觉得中文很有意思。', 'wo juede zhongwen hen you yisi', '["觉得", "帮助", "决定", "练习"]'::jsonb, 0, '觉得', '觉得 introduces an opinion or feeling.', 3, 140),
+('placement_reading_01', 'reading', 'A1', '我叫安娜。我是学生。 Who is Anna?', '我叫安娜。我是学生。', 'wo jiao Anna. wo shi xue sheng', '["a student", "a teacher", "a doctor", "a driver"]'::jsonb, 0, 'a student', 'The passage says 我是学生.', 1, 150),
+('placement_reading_02', 'reading', 'A1', '今天早上我喝了茶。 What did the speaker drink?', '今天早上我喝了茶。', 'jintian zaoshang wo he le cha', '["tea", "coffee", "water", "juice"]'::jsonb, 0, 'tea', '茶 means tea.', 1, 160),
+('placement_reading_03', 'reading', 'A2', '请问，去地铁站怎么走？直走然后左转。 What is the direction?', '请问，去地铁站怎么走？直走然后左转。', 'qingwen, qu ditie zhan zenme zou? zhi zou ranhou zuo zhuan', '["go straight then turn left", "turn right immediately", "take a taxi", "go to the airport"]'::jsonb, 0, 'go straight then turn left', '直走然后左转 means go straight, then turn left.', 2, 170),
+('placement_reading_04', 'reading', 'A2', '这个苹果三十块，我买两个。 How much is one apple?', '这个苹果三十块，我买两个。', 'zhe ge pingguo sanshi kuai, wo mai liang ge', '["30 kuai", "2 kuai", "13 kuai", "20 kuai"]'::jsonb, 0, '30 kuai', '三十块 means 30 kuai.', 2, 180),
+('placement_reading_05', 'reading', 'B1', '我觉得中文考试有点难，但是很重要。 How does the speaker feel?', '我觉得中文考试有点难，但是很重要。', 'wo juede zhongwen kaoshi youdian nan, danshi hen zhongyao', '["difficult but important", "easy and unimportant", "fun but short", "expensive but useful"]'::jsonb, 0, 'difficult but important', '难 means difficult and 重要 means important.', 3, 190),
+('placement_reading_06', 'reading', 'B1', '我们讨论一下合同吧，这是一个好机会。 What do they want to discuss?', '我们讨论一下合同吧，这是一个好机会。', 'women taolun yixia hetong ba, zhe shi yi ge hao jihui', '["contract", "homework", "airport", "history"]'::jsonb, 0, 'contract', '合同 means contract.', 3, 200)
+ON CONFLICT (id)
+DO UPDATE SET section = EXCLUDED.section,
+              cefr_level = EXCLUDED.cefr_level,
+              prompt = EXCLUDED.prompt,
+              prompt_hanzi = EXCLUDED.prompt_hanzi,
+              prompt_pinyin = EXCLUDED.prompt_pinyin,
+              options = EXCLUDED.options,
+              correct_index = EXCLUDED.correct_index,
+              correct_text = EXCLUDED.correct_text,
+              explanation = EXCLUDED.explanation,
+              difficulty = EXCLUDED.difficulty,
+              order_num = EXCLUDED.order_num,
+              is_active = true,
+              updated_at = now();
+
 COMMIT;
