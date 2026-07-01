@@ -79,8 +79,8 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   return (
     <aside
       className={cn(
-        "sticky top-0 z-[900] flex h-screen shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
-        collapsed ? "w-[76px]" : "w-[264px]",
+        "sticky top-0 z-900 flex h-screen shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
+        collapsed ? "w-19" : "w-66",
       )}
     >
       <div className="flex h-20 items-center gap-3 border-b px-3">

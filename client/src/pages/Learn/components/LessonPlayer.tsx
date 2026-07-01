@@ -118,7 +118,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
   }
 
   return (
-    <div className="anim-pop mx-auto max-w-[640px] rounded-[20px] border bg-card p-4 shadow-sm sm:p-6">
+    <div className="anim-pop mx-auto max-w-160 rounded-[20px] border bg-card p-4 shadow-sm sm:p-6">
       {stage === "intro" && (
         <div className="anim-slide">
           <div className="mb-4 flex items-center gap-2.5">
@@ -154,7 +154,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
 
       {stage === "dialogue" && lesson.dialogue && (
         <div className="anim-slide">
-          <div className="mb-[18px] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-left text-[1.2rem] font-extrabold">{t("learn.dialogue")} {lesson.dialogue.title}</h3>
             <div className="flex flex-wrap gap-3">
               <button onClick={() => setShowPinyin(!showPinyin)} className={cn("flex items-center gap-1 text-xs font-semibold", showPinyin ? "text-primary" : "text-muted-foreground")}>
@@ -166,7 +166,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             </div>
           </div>
           <p className="mb-5 text-left text-[0.8rem] italic text-muted-foreground">{t("learn.scenario")} {lesson.dialogue.scenario}</p>
-          <div className="mb-8 flex max-h-[360px] flex-col gap-4 overflow-y-auto p-2.5">
+          <div className="mb-8 flex max-h-90 flex-col gap-4 overflow-y-auto p-2.5">
             {lesson.dialogue.lines.map((line) => (
               <div key={line.id} onClick={() => speakChinese(line.simplified)} className={cn("max-w-[88%] cursor-pointer border p-3 text-left sm:max-w-[80%] sm:px-4", line.isUser ? "self-end rounded-2xl rounded-tr bg-primary/10" : "self-start rounded-2xl rounded-tl bg-secondary")}>
                 <div className="mb-1 flex items-center justify-between">
@@ -196,7 +196,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
 
             return (
               <>
-          <div className="mb-[18px] flex items-center justify-between gap-3">
+          <div className="mb-4.5 flex items-center justify-between gap-3">
             <span className="text-[0.8rem] font-bold text-muted-foreground">{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setIsReportOpen(true)} className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition hover:text-primary">
@@ -206,7 +206,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
               <span className="text-[0.8rem] font-bold text-jade">{t("learn.score", { count: correctAnswersCount })}</span>
             </div>
           </div>
-          <div className="mb-6 rounded-lg border bg-card px-5 py-[30px] text-center shadow-sm">
+          <div className="mb-6 rounded-lg border bg-card px-5 py-7.5 text-center shadow-sm">
             <h4 className="mb-3 text-base uppercase text-muted-foreground">{kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
             {currentExercise.kind === "listening" && (
               <button className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" onClick={() => speakChinese(currentExercise.correctText)}>
@@ -323,7 +323,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           <Award size={72} className="mx-auto mb-4 text-gold" />
           <h2 className="text-3xl font-extrabold">{t("learn.completed")}</h2>
           <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
-          <div className="mx-auto mb-9 grid max-w-[420px] grid-cols-3 gap-3">
+          <div className="mx-auto mb-9 grid max-w-105 grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.xpReward")}</span>
               <h3 className="mt-1 text-2xl font-extrabold text-gold">+{lesson.xpReward}</h3>
@@ -345,7 +345,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
       )}
 
       {isReportOpen && (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/35 px-4">
+        <div className="fixed inset-0 z-1200 flex items-center justify-center bg-black/35 px-4">
           <div className="w-full max-w-md rounded-lg border bg-card p-4 text-left shadow-xl">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="font-extrabold">Báo lỗi nội dung</h3>

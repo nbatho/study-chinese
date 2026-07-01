@@ -8,12 +8,12 @@ export default function NotFound() {
 
   return (
     <div className="anim-slide flex min-h-[calc(100vh-140px)] items-center justify-center px-0 pb-10 pt-4">
-      <section className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,rgba(217,63,71,0.15),rgba(242,89,82,0.05))] px-6 py-8 text-center shadow-sm">
+      <section className="relative w-full max-w-140 overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,rgba(217,63,71,0.15),rgba(242,89,82,0.05))] px-6 py-8 text-center shadow-sm">
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-12 -right-8 font-serif text-9xl leading-none text-primary/10">
           404
         </div>
 
-        <div className="mx-auto mb-5 flex size-[76px] items-center justify-center rounded-[20px] border border-primary/20 bg-primary/10 text-primary">
+        <div className="mx-auto mb-5 flex size-19 items-center justify-center rounded-[20px] border border-primary/20 bg-primary/10 text-primary">
           <SearchX size={38} />
         </div>
 
@@ -25,11 +25,11 @@ export default function NotFound() {
         <h1 className="mb-2.5 text-3xl">
           {t("notFound.title")}
         </h1>
-        <p className="mx-auto mb-7 max-w-[420px] text-[0.95rem] text-muted-foreground">
+        <p className="mx-auto mb-7 max-w-105 text-[0.95rem] text-muted-foreground">
           {t("notFound.body")}
         </p>
 
-        <div className="relative z-[1] flex flex-wrap justify-center gap-3">
+        <div className="relative z-1 flex flex-wrap justify-center gap-3">
           <button className="inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent" onClick={() => navigate(-1)}>
             <ArrowLeft size={18} />
             {t("notFound.goBack")}

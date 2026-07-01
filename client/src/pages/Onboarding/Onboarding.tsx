@@ -75,7 +75,7 @@ export default function Onboarding() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,var(--bg-app),rgba(217,63,71,0.05))] p-4 sm:p-6">
-      <div className="anim-pop w-full max-w-[480px] rounded-3xl border bg-card p-5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] sm:p-9">
+      <div className="anim-pop w-full max-w-120 rounded-3xl border bg-card p-5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] sm:p-9">
         <div className="mb-8 flex gap-1.5">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className={cn("h-1.5 flex-1 rounded-[3px] transition", i <= step ? "bg-primary" : "bg-border")} />
@@ -98,7 +98,7 @@ export default function Onboarding() {
                 placeholder={t("onboarding.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border-2 bg-background px-[18px] py-3.5 text-base font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-xl border-2 bg-background px-4.5 py-3.5 text-base font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 

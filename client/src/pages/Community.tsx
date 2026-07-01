@@ -256,15 +256,15 @@ export default function Community() {
         </div>
 
         <div className="grid grid-cols-3 gap-2 rounded-lg border bg-card p-3 text-center shadow-sm">
-          <div className="min-w-[74px]">
+          <div className="min-w-18.5">
             <span className="block text-xs font-bold text-muted-foreground">Bạn bè</span>
             <strong className="text-xl text-primary">{friends.length}</strong>
           </div>
-          <div className="min-w-[74px]">
+          <div className="min-w-18.5">
             <span className="block text-xs font-bold text-muted-foreground">Chờ nhận</span>
             <strong className="text-xl text-tone-3">{received.length}</strong>
           </div>
-          <div className="min-w-[74px]">
+          <div className="min-w-18.5">
             <span className="block text-xs font-bold text-muted-foreground">Đã gửi</span>
             <strong className="text-xl text-jade">{sent.length}</strong>
           </div>

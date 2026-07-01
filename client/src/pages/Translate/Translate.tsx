@@ -388,7 +388,7 @@ export default function Translate() {
                 value={sourceText}
                 onChange={(event) => setSourceText(event.target.value)}
                 placeholder="Ví dụ: 你好，我想喝茶。"
-                className="min-h-[220px] resize-y rounded-lg border bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-55 resize-y rounded-lg border bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                 <Button
@@ -414,7 +414,7 @@ export default function Translate() {
             </div>
           ) : (
             <div className="grid gap-4">
-              <div className="relative flex aspect-[4/3] min-h-[260px] items-center justify-center overflow-hidden rounded-lg border bg-[#1e1e24]">
+              <div className="relative flex aspect-[4/3] min-h-65 items-center justify-center overflow-hidden rounded-lg border bg-[#1e1e24]">
                 {loading && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/45 text-white">
                     <RefreshCw className="recording-pulse" size={36} />
@@ -521,9 +521,9 @@ export default function Translate() {
             </Button>
           </div>
 
-          <div className="mb-4 min-h-[148px] rounded-lg border bg-background p-4">
+          <div className="mb-4 min-h-37 rounded-lg border bg-background p-4">
             {loading ? (
-              <div className="flex h-[116px] items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
+              <div className="flex h-29 items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
                 <Loader2 className="animate-spin" size={18} />
                 Đang xử lý...
               </div>
@@ -533,7 +533,7 @@ export default function Translate() {
                 {pinyinText && <p className="mt-3 text-sm font-bold text-primary">{pinyinText}</p>}
               </div>
             ) : (
-              <div className="flex h-[116px] items-center justify-center text-center text-sm font-semibold text-muted-foreground">
+              <div className="flex h-29 items-center justify-center text-center text-sm font-semibold text-muted-foreground">
                 Kết quả sẽ xuất hiện sau khi bạn dịch văn bản hoặc quét OCR.
               </div>
             )}
@@ -633,7 +633,7 @@ export default function Translate() {
                       type="button"
                       onClick={() => toggleSegment(segment.id)}
                       className={cn(
-                        "min-w-[72px] rounded-lg border px-3 py-2 text-left transition",
+                        "min-w-18 rounded-lg border px-3 py-2 text-left transition",
                         selected
                           ? "border-primary bg-primary text-primary-foreground"
                           : "bg-background hover:border-primary/60",
@@ -648,7 +648,7 @@ export default function Translate() {
                       {segment.english && (
                         <span
                           className={cn(
-                            "block max-w-[160px] truncate text-xs",
+                            "block max-w-40 truncate text-xs",
                             selected ? "text-white/75" : "text-muted-foreground",
                           )}
                         >
@@ -702,7 +702,7 @@ export default function Translate() {
                 Chưa có lịch sử quét.
               </div>
             ) : (
-              <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1">
+              <div className="grid max-h-65 gap-2 overflow-y-auto pr-1">
                 {historyEvents.map((event) => (
                   <button
                     key={event.id}

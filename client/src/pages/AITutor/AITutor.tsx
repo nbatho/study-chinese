@@ -119,7 +119,7 @@ export default function AITutor({ onClose }: AITutorProps) {
       className={cn(
         "flex flex-col overflow-hidden bg-background",
         isOverlay
-          ? "fixed inset-0 z-[1000]"
+          ? "fixed inset-0 z-1000"
           : "anim-slide h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)]",
       )}
     >
@@ -163,7 +163,7 @@ export default function AITutor({ onClose }: AITutorProps) {
       </header>
 
       {!selectedScenario ? (
-        <div className="anim-slide mx-auto w-full max-w-[600px] flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="anim-slide mx-auto w-full max-w-150 flex-1 overflow-y-auto p-4 sm:p-6">
           <h4 className="mb-4 text-left text-base font-bold uppercase text-muted-foreground">
             {t("ai.selectScenario")}
           </h4>
@@ -226,7 +226,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                 key={message.id}
                 className={cn("max-w-[88%] text-left sm:max-w-[80%]", message.role === "tutor" ? "self-start" : "self-end")}
               >
-                <div className={cn("rounded-2xl px-[18px] py-3.5", message.role === "tutor" ? "rounded-tl border bg-card text-foreground" : "rounded-tr bg-primary text-white")}>
+                <div className={cn("rounded-2xl px-4.5 py-3.5", message.role === "tutor" ? "rounded-tl border bg-card text-foreground" : "rounded-tr bg-primary text-white")}>
                   {message.role === "tutor" ? (
                     <div>
                       <div className="mb-1 flex items-center justify-between">
@@ -267,7 +267,7 @@ export default function AITutor({ onClose }: AITutorProps) {
             ))}
 
             {isThinking && (
-              <div className="self-start rounded-2xl border bg-secondary px-[18px] py-3 text-[0.85rem] font-semibold text-muted-foreground">
+              <div className="self-start rounded-2xl border bg-secondary px-4.5 py-3 text-[0.85rem] font-semibold text-muted-foreground">
                 {t("ai.thinking")}
               </div>
             )}
@@ -278,7 +278,7 @@ export default function AITutor({ onClose }: AITutorProps) {
             onSubmit={handleSend}
             className={cn(
               "flex gap-3 py-3",
-              isOverlay ? "border-t bg-card/90 px-3.5 backdrop-blur-xl sm:px-[18px]" : "pt-3",
+              isOverlay ? "border-t bg-card/90 px-3.5 backdrop-blur-xl sm:px-4.5" : "pt-3",
             )}
           >
             <input

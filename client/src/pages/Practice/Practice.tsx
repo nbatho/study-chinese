@@ -51,7 +51,7 @@ export default function Practice() {
             const Icon = tool.icon;
             return (
               <button key={tool.id} onClick={() => setActiveTool(tool.id as Tool)} className="flex cursor-pointer items-center gap-4 rounded-lg border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:gap-5 sm:p-5">
-                <span className={cn("flex size-[52px] shrink-0 items-center justify-center rounded-[14px] text-white", tool.cls)}>
+                <span className={cn("flex size-13 shrink-0 items-center justify-center rounded-[14px] text-white", tool.cls)}>
                   <Icon size={26} />
                 </span>
                 <span className="min-w-0">

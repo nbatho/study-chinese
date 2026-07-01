@@ -76,7 +76,7 @@ export default function Home() {
     <div className="anim-slide pb-8">
       <header className="mb-6 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border bg-card text-[2.25rem] sm:size-16 sm:text-[2.8rem]">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border bg-card text-4xl sm:size-16 sm:text-[2.8rem]">
             {profile?.avatar || "学"}
           </div>
           <div className="min-w-0">
@@ -180,7 +180,7 @@ export default function Home() {
           ].map((act) => {
             const Icon = act.icon;
             return (
-              <button key={act.label} onClick={act.action} className="flex w-[72px] flex-col items-center gap-1.5 text-foreground">
+              <button key={act.label} onClick={act.action} className="flex w-18 flex-col items-center gap-1.5 text-foreground">
                 <div className={cn("flex size-14 items-center justify-center rounded-full text-white", act.cls)}>
                   <Icon size={24} />
                 </div>
@@ -253,7 +253,7 @@ export default function Home() {
               {t("home.cardsDue", { count: dueCount })}
             </p>
           </div>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-[18px] py-2.5 text-[0.85rem] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => navigate("/review")}>
+          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4.5 py-2.5 text-[0.85rem] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => navigate("/review")}>
             {t("home.startReview", { count: dueCount })}
           </button>
         </div>

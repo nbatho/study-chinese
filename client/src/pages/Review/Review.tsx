@@ -72,7 +72,7 @@ export default function Review() {
           <div
             onClick={() => !flipped && setFlipped(true)}
             className={cn(
-              "mb-8 flex min-h-[300px] flex-col items-center justify-center rounded-3xl p-6 text-center shadow-sm transition sm:px-8 sm:py-12",
+              "mb-8 flex min-h-75 flex-col items-center justify-center rounded-3xl p-6 text-center shadow-sm transition sm:px-8 sm:py-12",
               flipped ? "cursor-default border bg-card" : "cursor-pointer border-2 border-dashed border-primary bg-primary/5",
             )}
           >
@@ -102,7 +102,7 @@ export default function Review() {
                 <p className="mt-5 text-lg font-semibold sm:text-xl">
                   {activeCard.english}
                 </p>
-                <div className="mt-[18px] text-[0.8rem] text-muted-foreground">
+                <div className="mt-4.5 text-[0.8rem] text-muted-foreground">
                   {t("review.mastery", { value: activeCard.dueCardDetails.masteryLevel })}
                 </div>
               </div>

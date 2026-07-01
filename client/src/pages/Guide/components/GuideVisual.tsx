@@ -58,7 +58,7 @@ export default function GuideVisual({ type }: { type: GuideVisualType }) {
 
 function VisualFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-[440px] rounded-lg border bg-background p-4">
+    <div className="min-h-110 rounded-lg border bg-background p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-1.5">
           <span className="size-2.5 rounded-full bg-tone-4" />
@@ -192,7 +192,7 @@ function PracticeVisual() {
 function ReviewVisual() {
   return (
     <VisualFrame>
-      <div className="mx-auto flex min-h-[230px] max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/5">
+      <div className="mx-auto flex min-h-57.5 max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/5">
         <div className="font-serif text-7xl font-extrabold">水</div>
         <div className="mt-3 text-sm font-bold text-primary">Chạm để xem đáp án</div>
       </div>
@@ -237,7 +237,7 @@ function TranslateVisual() {
             <Languages size={18} className="text-primary" />
             Văn bản / OCR
           </div>
-          <div className="flex min-h-[170px] items-center justify-center rounded-lg border bg-[#1e1e24] text-white/70">
+          <div className="flex min-h-42.5 items-center justify-center rounded-lg border bg-[#1e1e24] text-white/70">
             <Camera size={38} />
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2">

@@ -127,7 +127,7 @@ export default function Shop() {
             {t("shop.subtitle")}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
+        <div className="grid grid-cols-3 gap-2 text-center sm:min-w-90">
           <div className="rounded-lg border bg-background px-3 py-3">
             <Gem className="mx-auto mb-1 text-tone-1" size={20} />
             <strong className="block text-xl">{shop.wallet.gemBalance}</strong>
@@ -166,7 +166,7 @@ export default function Shop() {
                   const isEquipped = item.isOwned && item.isEquipped && (item.grantType === "avatar" || item.grantType === "ai_tutor_skin");
 
                   return (
-                    <article key={item.id} className="flex min-h-[180px] flex-col rounded-lg border bg-background p-4">
+                    <article key={item.id} className="flex min-h-45 flex-col rounded-lg border bg-background p-4">
                       <div className="mb-3 flex items-start gap-3">
                         <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-card text-3xl shadow-sm">
                           {item.emoji}

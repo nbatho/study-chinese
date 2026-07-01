@@ -158,7 +158,7 @@ export function WeakPracticeTool() {
           onChange={(event) => setAnswer(event.target.value)}
           disabled={checked !== null}
           placeholder="Type pinyin, meaning, or the corrected answer..."
-          className="rounded-xl border-2 bg-background p-4 text-center text-[1rem] font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+          className="rounded-xl border-2 bg-background p-4 text-center text-base font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
         />
 
         {checked !== null && (
@@ -375,7 +375,7 @@ export function ListPracticeTool() {
             onChange={(event) => setAnswer(event.target.value)}
             disabled={checked !== null}
             placeholder="Type pinyin, meaning, or hanzi..."
-            className="rounded-xl border-2 bg-background p-4 text-center text-[1rem] font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+            className="rounded-xl border-2 bg-background p-4 text-center text-base font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
           />
           {checked !== null && (
             <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
@@ -776,7 +776,7 @@ function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
           <span
             key={`${i}-${entry.char}`}
             className={cn(
-              "inline-flex min-w-[2rem] items-center justify-center rounded-md border px-1.5 py-1 font-serif text-lg font-bold",
+              "inline-flex min-w-8 items-center justify-center rounded-md border px-1.5 py-1 font-serif text-lg font-bold",
               colorClass,
             )}
             title={
@@ -1122,7 +1122,7 @@ export function ShadowingTool() {
       </div>
       {recording && (
         <div className="mb-5">
-          <canvas ref={canvasRef} width={280} height={60} className="h-[60px] w-full" />
+          <canvas ref={canvasRef} width={280} height={60} className="h-15 w-full" />
           <span className="text-xs font-bold text-primary">RECORDING VOICE...</span>
         </div>
       )}
@@ -1287,7 +1287,7 @@ export function HanziDrawingTool() {
         Character: <strong className="text-primary">{current.character}</strong> · Stroke {activeStrokeIdx + 1} of {current.strokes.length}
       </span>
       <div className="my-6 flex justify-center">
-        <canvas ref={canvasRef} width={280} height={280} onMouseDown={handleCanvasMouseDown} onMouseMove={handleCanvasMouseMove} onMouseUp={() => void handleCanvasMouseUp()} onMouseLeave={() => void handleCanvasMouseUp()} className="aspect-square w-full max-w-[280px] cursor-crosshair rounded-2xl border-2 bg-card" />
+        <canvas ref={canvasRef} width={280} height={280} onMouseDown={handleCanvasMouseDown} onMouseMove={handleCanvasMouseMove} onMouseUp={() => void handleCanvasMouseUp()} onMouseLeave={() => void handleCanvasMouseUp()} className="aspect-square w-full max-w-70 cursor-crosshair rounded-2xl border-2 bg-card" />
       </div>
       <div className="flex flex-col justify-center gap-3 sm:flex-row">
         <button className={secondaryButtonClass} onClick={() => { setActiveStrokeIdx(0); drawBackground(current, 0, canvasRef.current); }}>Reset Canvas</button>

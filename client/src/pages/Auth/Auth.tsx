@@ -104,12 +104,12 @@ export default function Auth() {
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_15%_10%,rgba(217,63,71,0.12),transparent_28%),var(--bg-app)] p-4 sm:p-6">
       <section
-        className="anim-slide grid w-full max-w-[980px] overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)] md:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]"
+        className="anim-slide grid w-full max-w-245 overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)] md:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]"
       >
-        <aside className="flex min-h-auto flex-col justify-between border-b bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-5 sm:p-7 md:min-h-[560px] md:border-b-0 md:border-r md:p-9">
+        <aside className="flex min-h-auto flex-col justify-between border-b bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-5 sm:p-7 md:min-h-140 md:border-b-0 md:border-r md:p-9">
           <div>
             <div className="mb-9 inline-flex items-center gap-2.5">
-              <span className="inline-flex size-[42px] items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <span className="inline-flex size-10.5 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <BookOpen size={21} />
               </span>
               <strong className="text-[1.05rem]">Study Chinese</strong>
@@ -118,7 +118,7 @@ export default function Auth() {
             <h1 className="mb-4 text-3xl leading-[1.1] sm:text-[2.4rem]">
               {t("auth.heroTitle")}
             </h1>
-            <p className="max-w-[360px] text-base text-muted-foreground">
+            <p className="max-w-90 text-base text-muted-foreground">
               {t("auth.heroSubtitle")}
             </p>
           </div>
@@ -148,7 +148,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("login")}
                   className={cn(
-                    "relative z-10 rounded-md px-[18px] py-[9px] font-extrabold transition hover:-translate-y-px",
+                    "relative z-10 rounded-md px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
                     mode === "login" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -158,7 +158,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("register")}
                   className={cn(
-                    "relative z-10 rounded-md px-[18px] py-[9px] font-extrabold transition hover:-translate-y-px",
+                    "relative z-10 rounded-md px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
                     mode === "register" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -177,7 +177,7 @@ export default function Auth() {
                 <label className="grid gap-2 overflow-hidden font-bold animate-[auth-field-in_0.3s_cubic-bezier(0.16,1,0.3,1)]">
                   {t("auth.name")}
                   <span className="relative">
-                    <UserRound className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                    <UserRound className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={name}
                       onChange={(event) => setName(event.target.value)}
@@ -192,7 +192,7 @@ export default function Auth() {
               <label className="grid gap-2 font-bold">
                 {t("auth.email")}
                 <span className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                  <Mail className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="email"
                     value={email}
@@ -207,7 +207,7 @@ export default function Auth() {
               <label className="grid gap-2 font-bold">
                 {t("auth.password")}
                 <span className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -241,12 +241,12 @@ export default function Auth() {
               type="submit"
               variant={canSubmit && !isSubmitting ? "default" : "secondary"}
               disabled={!canSubmit || isSubmitting}
-              className="mt-[22px] h-12 w-full"
+              className="mt-5.5 h-12 w-full"
             >
               {isSubmitting ? t("auth.wait") : submitLabel}
             </Button>
 
-            <p className="mt-[18px] text-center text-sm text-muted-foreground">
+            <p className="mt-4.5 text-center text-sm text-muted-foreground">
               {isRegister ? t("auth.hasAccount") : t("auth.newHere")}{" "}
               <button
                 type="button"

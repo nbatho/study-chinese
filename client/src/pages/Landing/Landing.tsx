@@ -196,7 +196,7 @@ export default function Landing() {
                         <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center relative group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
                            <Icon size={24} />
                            {index !== studyFlow.length - 1 && (
-                             <div className="absolute top-[3.5rem] left-1/2 -translate-x-1/2 w-0.5 h-10 bg-border group-hover:bg-primary/30 transition-colors"></div>
+                             <div className="absolute top-14 left-1/2 -translate-x-1/2 w-0.5 h-10 bg-border group-hover:bg-primary/30 transition-colors"></div>
                            )}
                         </div>
                         <div>
@@ -213,13 +213,13 @@ export default function Landing() {
               </div>
             </div>
             
-            <FadeIn direction="left" className="relative h-full min-h-[500px] lg:h-[600px] rounded-[2.5rem] bg-secondary/60 p-8 flex flex-col justify-center border overflow-hidden">
-                <div className="absolute -top-10 -right-10 p-8 opacity-[0.03] text-primary">
+            <FadeIn direction="left" className="relative h-full min-h-125 lg:h-150 rounded-[2.5rem] bg-secondary/60 p-8 flex flex-col justify-center border overflow-hidden">
+                <div className="absolute -top-10 -right-10 p-8 opacity-3 text-primary">
                    <Languages size={300} />
                 </div>
                 <div className="relative z-10 space-y-5">
                   {previewRows.map((row, index) => (
-                    <div key={row.hanzi} className="bg-card p-5 rounded-2xl shadow-sm border flex items-center gap-4 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md" style={{ transform: `translateX(${index * 24}px)` }}>
+                    <div key={row.hanzi} className="bg-card p-5 rounded-2xl shadow-sm border flex items-center gap-4 transform transition-all duration-300 hover:scale-102 hover:shadow-md" style={{ transform: `translateX(${index * 24}px)` }}>
                       <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center font-extrabold text-primary">
                         {index + 1}
                       </div>
@@ -230,7 +230,7 @@ export default function Landing() {
                     </div>
                   ))}
                   
-                  <div className="mt-10 bg-primary text-primary-foreground p-7 rounded-[2rem] shadow-xl relative overflow-hidden transform transition-all hover:-translate-y-1">
+                  <div className="mt-10 bg-primary text-primary-foreground p-7 rounded-4xl shadow-xl relative overflow-hidden transform transition-all hover:-translate-y-1">
                      <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
                      <div className="flex items-center gap-3 mb-3 relative z-10">
                        <Sparkles size={24} className="text-yellow-300" />

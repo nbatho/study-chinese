@@ -50,7 +50,7 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
       </div>
 
       <h2 className="line-clamp-2 text-base font-extrabold">{achievement.title}</h2>
-      <p className="mt-1 line-clamp-3 min-h-[3.75rem] text-sm text-muted-foreground">
+      <p className="mt-1 line-clamp-3 min-h-15 text-sm text-muted-foreground">
         {achievement.description}
       </p>
 

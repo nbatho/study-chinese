@@ -149,7 +149,7 @@ export default function Profile() {
         <h3 className="mb-1 text-base font-bold">{t("profile.weeklyXp")}</h3>
         <p className="mb-4 text-[0.8rem] text-muted-foreground">{t("profile.weeklyXpBody")}</p>
         <div className="flex justify-center">
-          <canvas ref={canvasRef} width={340} height={180} className="h-[180px] w-full max-w-[340px]" />
+          <canvas ref={canvasRef} width={340} height={180} className="h-45 w-full max-w-85" />
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2.5 border-t border-dashed pt-4 text-center">
           <div>

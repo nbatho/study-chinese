@@ -17,7 +17,7 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
   }
 
   return (
-    <div className="relative mx-auto max-w-[780px] py-1">
+    <div className="relative mx-auto max-w-195 py-1">
       <div className="absolute bottom-10 left-8 top-10 w-1 -translate-x-1/2 rounded-full bg-border sm:left-1/2" />
       {lessons.map((lesson, index) => {
         const isCompleted = !!lesson.completedAt;
@@ -33,7 +33,7 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
         const NodeIcon = isCompleted ? CheckCircle2 : isLocked ? Lock : PlayCircle;
 
         return (
-          <div key={lesson.id} className="relative mb-5 min-h-[118px] last:mb-0">
+          <div key={lesson.id} className="relative mb-5 min-h-29.5 last:mb-0">
             <div
               className={cn(
                 "absolute left-8 top-1/2 z-10 flex size-13 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-background shadow-sm sm:left-1/2",
@@ -51,7 +51,7 @@ export default function LessonPath({ lessons, onSelectLesson }: { lessons: Lesso
                 if (isUnlocked) onSelectLesson(lesson.id);
               }}
               className={cn(
-                "ml-20 flex min-h-[118px] w-[calc(100%-5rem)] flex-col justify-between rounded-lg border bg-card p-4 text-left shadow-sm transition sm:w-[44%]",
+                "ml-20 flex min-h-29.5 w-[calc(100%-5rem)] flex-col justify-between rounded-lg border bg-card p-4 text-left shadow-sm transition sm:w-[44%]",
                 isLeft ? "sm:ml-0 sm:mr-auto" : "sm:ml-auto sm:mr-0",
                 isCompleted && "border-jade/40 bg-jade/5",
                 isCurrent && !isCompleted && "border-primary/50 ring-2 ring-primary/10 hover:-translate-y-0.5 hover:shadow-md",
