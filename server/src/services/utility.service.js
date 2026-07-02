@@ -606,6 +606,39 @@ export const updateOcrScanNotebook = async (userId, scanId, payload) => {
   };
 };
 
+export const deleteOcrScan = async (userId, scanId) => {
+  const result = await query(
+    `
+      DELETE FROM ocr_scan_events
+      WHERE user_id = $1 AND id = $2
+      RETURNING id
+    `,
+    [userId, scanId]
+  );
+
+  if (result.rowCount === 0) {
+    throw notFound('Khong tim thay lich su OCR.');
+  }
+
+  return {
+    deletedId: result.rows[0].id
+  };
+};
+
+export const clearOcrHistory = async (userId) => {
+  const result = await query(
+    `
+      DELETE FROM ocr_scan_events
+      WHERE user_id = $1
+    `,
+    [userId]
+  );
+
+  return {
+    deletedCount: result.rowCount
+  };
+};
+
 export const __private__ = {
   mapOcrHistoryEvent,
   normalizeNotebookPayload,

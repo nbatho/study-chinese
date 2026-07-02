@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Filter,
   Plus,
   Search,
@@ -12,16 +14,26 @@ import {
   useEnrollWordMutation,
   useListsQuery,
   useToggleFavoriteMutation,
+  useVocabularyRadicalsQuery,
   useVocabularyQuery,
+  useVocabularyTopicsQuery,
 } from "../../api";
-import type { Word } from "../../api/vocabulary";
+import type { CefrLevel } from "../../api/users";
+import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 import LoadingCard from "../../components/LoadingCard";
 import WordCard from "./components/WordCard";
 
-const hskLevels = [1, 2, 3];
+const hskLevels = [1, 2, 3, 4, 5, 6, 7];
+const cefrLevels: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const sortOptions: Array<{ value: VocabularySort; label: string }> = [
+  { value: "hsk", label: "HSK level" },
+  { value: "frequency", label: "Frequency" },
+  { value: "alphabetical", label: "Alphabetical" },
+];
+const pageSize = 24;
 const listEmojis = ["📘", "⭐", "🧠", "✍️"];
 
 export default function Dictionary() {
@@ -29,6 +41,11 @@ export default function Dictionary() {
   const [query, setQuery] = useState("");
   const [selectedHsk, setSelectedHsk] = useState<number | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCefr, setSelectedCefr] = useState<CefrLevel | "all">("all");
+  const [selectedRadical, setSelectedRadical] = useState<string>("all");
+  const [selectedTopic, setSelectedTopic] = useState<string>("all");
+  const [sort, setSort] = useState<VocabularySort>("hsk");
+  const [page, setPage] = useState(1);
   const [selectedListId, setSelectedListId] = useState<string>("");
   const [newListName, setNewListName] = useState("");
   const [newListEmoji, setNewListEmoji] = useState(listEmojis[0]);
@@ -38,9 +55,17 @@ export default function Dictionary() {
     q: query.trim() || undefined,
     hsk: selectedHsk === "all" ? undefined : selectedHsk,
     category: selectedCategory === "all" ? undefined : selectedCategory,
+    cefr: selectedCefr === "all" ? undefined : selectedCefr,
+    radical: selectedRadical === "all" ? undefined : selectedRadical,
+    topic: selectedTopic === "all" ? undefined : selectedTopic,
+    sort,
+    page,
+    limit: pageSize,
   };
 
   const vocabularyQuery = useVocabularyQuery(searchParams);
+  const topicsQuery = useVocabularyTopicsQuery();
+  const radicalsQuery = useVocabularyRadicalsQuery();
   const listsQuery = useListsQuery();
   const favoriteMutation = useToggleFavoriteMutation();
   const enrollMutation = useEnrollWordMutation();
@@ -48,6 +73,9 @@ export default function Dictionary() {
   const addWordMutation = useAddWordToListMutation(selectedListId);
 
   const words = useMemo(() => vocabularyQuery.data?.vocab ?? [], [vocabularyQuery.data?.vocab]);
+  const pagination = vocabularyQuery.data?.pagination;
+  const topics = topicsQuery.data?.topics ?? [];
+  const radicals = radicalsQuery.data?.radicals ?? [];
   const lists = listsQuery.data?.lists ?? [];
   const selectedList = lists.find((list) => list.id === selectedListId);
   const selectedListWordIds = useMemo(() => new Set(selectedList?.wordIds ?? []), [selectedList]);
@@ -56,6 +84,10 @@ export default function Dictionary() {
     const values = new Set(words.map((word) => word.category).filter(Boolean));
     return Array.from(values).sort((a, b) => a.localeCompare(b));
   }, [words]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, selectedHsk, selectedCategory, selectedCefr, selectedRadical, selectedTopic, sort]);
 
   const handleCreateList = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -114,7 +146,7 @@ export default function Dictionary() {
           />
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
@@ -139,6 +171,65 @@ export default function Dictionary() {
               <option value="all">{t("dictionary.allCategories")}</option>
               {categories.map((category) => (
                 <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+            <Filter size={16} className="text-muted-foreground" />
+            <select
+              value={selectedCefr}
+              onChange={(event) => setSelectedCefr(event.target.value === "all" ? "all" : event.target.value as CefrLevel)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+            >
+              <option value="all">All CEFR</option>
+              {cefrLevels.map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+            <Filter size={16} className="text-muted-foreground" />
+            <select
+              value={selectedRadical}
+              onChange={(event) => setSelectedRadical(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+            >
+              <option value="all">All radicals</option>
+              {radicals.map((item) => (
+                <option key={item.radical} value={item.radical}>
+                  {item.radical} ({item.count})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+            <Filter size={16} className="text-muted-foreground" />
+            <select
+              value={selectedTopic}
+              onChange={(event) => setSelectedTopic(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+            >
+              <option value="all">All topics</option>
+              {topics.map((topic) => (
+                <option key={topic.id} value={topic.id}>
+                  {topic.emoji ? `${topic.emoji} ` : ""}{topic.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+            <Filter size={16} className="text-muted-foreground" />
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as VocabularySort)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
           </div>
@@ -211,9 +302,9 @@ export default function Dictionary() {
 
       <section className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-left text-base font-extrabold">
-          {t("dictionary.results", { count: words.length })}
+          {t("dictionary.results", { count: pagination?.total ?? words.length })}
         </h2>
-        {(vocabularyQuery.isFetching || listsQuery.isFetching) && (
+        {(vocabularyQuery.isFetching || listsQuery.isFetching || topicsQuery.isFetching || radicalsQuery.isFetching) && (
           <span className="text-xs font-semibold text-muted-foreground">{t("common.loading")}</span>
         )}
       </section>
@@ -249,6 +340,38 @@ export default function Dictionary() {
           ))}
         </div>
       )}
+
+      {pagination && pagination.totalPages > 1 && (
+        <nav className="mt-5 flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-sm font-semibold text-muted-foreground">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={!pagination.hasPreviousPage || vocabularyQuery.isFetching}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(pagination.totalPages, current + 1))}
+              disabled={!pagination.hasNextPage || vocabularyQuery.isFetching}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </nav>
+      )}
+
+      <footer className="mt-6 text-xs font-semibold text-muted-foreground">
+        Vocabulary data: HSK Official Standards · CC-CEDICT · MIT Licensed
+      </footer>
     </div>
   );
 }

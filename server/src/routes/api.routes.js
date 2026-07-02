@@ -25,6 +25,7 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/lessons', lessonRoutes);
 router.use('/vocab', vocabRoutes);
+router.use('/vocabulary', vocabRoutes);
 router.use('/srs', srsRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/lists', listRoutes);

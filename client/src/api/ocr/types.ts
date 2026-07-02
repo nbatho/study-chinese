@@ -67,3 +67,11 @@ export interface UpdateOcrHistoryPayload {
 }
 
 export type UpdateOcrHistoryResponse = OcrHistoryDetailResponse;
+
+export interface DeleteOcrHistoryResponse {
+    deletedId: string;
+}
+
+export interface ClearOcrHistoryResponse {
+    deletedCount: number;
+}

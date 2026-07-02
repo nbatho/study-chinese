@@ -1,6 +1,8 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
 import {
+  clearOcrHistory,
+  deleteOcrScan,
   getAchievements,
   getDailyContent,
   getOcrHistory,
@@ -42,5 +44,15 @@ export const showOcrScan = asyncHandler(async (req, res) => {
 
 export const updateOcrScan = asyncHandler(async (req, res) => {
   const data = await updateOcrScanNotebook(req.user.id, req.params.id, req.body);
+  success(res, data);
+});
+
+export const deleteOcrScanHistory = asyncHandler(async (req, res) => {
+  const data = await deleteOcrScan(req.user.id, req.params.id);
+  success(res, data);
+});
+
+export const clearOcrScanHistory = asyncHandler(async (req, res) => {
+  const data = await clearOcrHistory(req.user.id);
   success(res, data);
 });

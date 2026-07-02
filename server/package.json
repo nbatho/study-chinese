@@ -11,6 +11,7 @@
     "db:init": "node scripts/init-db.js",
     "db:migrate": "node scripts/apply-migration.js",
     "dict:import": "node scripts/import-cc-cedict.js",
+    "hsk:import": "node scripts/import-hsk-vocabulary.js",
     "test": "node --test",
     "test:integration": "node --test test/integration/*.test.js"
   },

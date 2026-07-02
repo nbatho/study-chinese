@@ -12,50 +12,215 @@ export const mapWord = (row) => ({
   partOfSpeech: row.part_of_speech,
   hskLevel: Number(row.hsk_level),
   cefrLevel: row.cefr_level || 'A1',
-  category: row.category
+  category: row.category,
+  radical: row.radical || null,
+  frequency: row.frequency === null || row.frequency === undefined ? null : Number(row.frequency),
+  topics: row.topics || []
 });
 
-export const searchVocabulary = async ({ q, hsk, category } = {}) => {
+const clampInt = (value, { min, max, fallback }) => {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const SORT_SQL = {
+  frequency: 'w.frequency ASC NULLS LAST, w.hsk_level ASC, w.simplified ASC',
+  alphabetical: 'w.pinyin_plain ASC, w.simplified ASC',
+  hsk: 'w.hsk_level ASC, w.frequency ASC NULLS LAST, w.simplified ASC'
+};
+
+export const searchVocabulary = async ({
+  q,
+  hsk,
+  category,
+  cefr,
+  radical,
+  topic,
+  sort = 'hsk',
+  page = 1,
+  limit = 24
+} = {}) => {
   const values = [];
-  const conditions = ['is_active = true'];
+  const conditions = ['w.is_active = true'];
 
   if (q) {
     values.push(`%${q}%`);
     conditions.push(`
       (
-        simplified ILIKE $${values.length}
-        OR traditional ILIKE $${values.length}
-        OR pinyin ILIKE $${values.length}
-        OR pinyin_plain ILIKE $${values.length}
-        OR english ILIKE $${values.length}
-        OR search_text ILIKE $${values.length}
+        w.simplified ILIKE $${values.length}
+        OR w.traditional ILIKE $${values.length}
+        OR w.pinyin ILIKE $${values.length}
+        OR w.pinyin_plain ILIKE $${values.length}
+        OR w.english ILIKE $${values.length}
+        OR w.search_text ILIKE $${values.length}
       )
     `);
   }
 
   if (hsk) {
     values.push(Number(hsk));
-    conditions.push(`hsk_level = $${values.length}`);
+    conditions.push(`w.hsk_level = $${values.length}`);
   }
 
   if (category) {
     values.push(category);
-    conditions.push(`category = $${values.length}`);
+    conditions.push(`w.category = $${values.length}`);
   }
 
-  const result = await query(
+  if (cefr) {
+    values.push(String(cefr).toUpperCase());
+    conditions.push(`w.cefr_level = $${values.length}`);
+  }
+
+  if (radical) {
+    values.push(radical);
+    conditions.push(`w.radical = $${values.length}`);
+  }
+
+  if (topic) {
+    values.push(topic);
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM word_topic_map wtm_filter
+        WHERE wtm_filter.word_id = w.id
+          AND wtm_filter.topic_id = $${values.length}
+      )
+    `);
+  }
+
+  const safePage = clampInt(page, { min: 1, max: 10000, fallback: 1 });
+  const safeLimit = clampInt(limit, { min: 1, max: 100, fallback: 24 });
+  const offset = (safePage - 1) * safeLimit;
+  const whereSql = conditions.join(' AND ');
+  const orderSql = SORT_SQL[sort] || SORT_SQL.hsk;
+
+  const countResult = await query(
     `
-      SELECT *
-      FROM words
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY hsk_level, category, simplified
-      LIMIT 100
+      SELECT COUNT(*)::int AS total
+      FROM words w
+      WHERE ${whereSql}
     `,
     values
   );
 
+  const dataValues = [...values, safeLimit, offset];
+  const result = await query(
+    `
+      SELECT
+        w.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', wt.id,
+              'nameEn', wt.name_en,
+              'nameZh', wt.name_zh,
+              'emoji', wt.emoji
+            )
+            ORDER BY wt.display_order, wt.name_en
+          ) FILTER (WHERE wt.id IS NOT NULL),
+          '[]'
+        ) AS topics
+      FROM words w
+      LEFT JOIN word_topic_map wtm ON wtm.word_id = w.id
+      LEFT JOIN word_topics wt ON wt.id = wtm.topic_id AND wt.is_active = true
+      WHERE ${whereSql}
+      GROUP BY w.id
+      ORDER BY ${orderSql}
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+    `,
+    dataValues
+  );
+
+  const total = Number(countResult.rows[0]?.total || 0);
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
   return {
-    vocab: result.rows.map(mapWord)
+    vocab: result.rows.map(mapWord),
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages,
+      hasNextPage: safePage < totalPages,
+      hasPreviousPage: safePage > 1
+    }
+  };
+};
+
+export const listVocabularyTopics = async () => {
+  const result = await query(
+    `
+      SELECT
+        wt.id,
+        wt.name_en AS "nameEn",
+        wt.name_zh AS "nameZh",
+        wt.emoji,
+        wt.display_order AS "displayOrder",
+        COUNT(wtm.word_id)::int AS "wordCount"
+      FROM word_topics wt
+      LEFT JOIN word_topic_map wtm ON wtm.topic_id = wt.id
+      WHERE wt.is_active = true
+      GROUP BY wt.id
+      ORDER BY wt.display_order, wt.name_en
+    `
+  );
+
+  return { topics: result.rows };
+};
+
+export const listVocabularyRadicals = async () => {
+  const result = await query(
+    `
+      SELECT radical, COUNT(*)::int AS count
+      FROM words
+      WHERE is_active = true
+        AND radical IS NOT NULL
+        AND radical <> ''
+      GROUP BY radical
+      ORDER BY count DESC, radical ASC
+    `
+  );
+
+  return { radicals: result.rows };
+};
+
+export const getVocabularyStats = async () => {
+  const [hskResult, cefrResult, topicResult] = await Promise.all([
+    query(`
+      SELECT hsk_level AS level, COUNT(*)::int AS count
+      FROM words
+      WHERE is_active = true
+      GROUP BY hsk_level
+      ORDER BY hsk_level
+    `),
+    query(`
+      SELECT cefr_level AS level, COUNT(*)::int AS count
+      FROM words
+      WHERE is_active = true
+      GROUP BY cefr_level
+      ORDER BY cefr_level
+    `),
+    query(`
+      SELECT wt.id, wt.name_en AS "nameEn", COUNT(wtm.word_id)::int AS count
+      FROM word_topics wt
+      LEFT JOIN word_topic_map wtm ON wtm.topic_id = wt.id
+      WHERE wt.is_active = true
+      GROUP BY wt.id
+      ORDER BY wt.display_order, wt.name_en
+    `)
+  ]);
+
+  return {
+    hsk: hskResult.rows,
+    cefr: cefrResult.rows,
+    topics: topicResult.rows
   };
 };
 

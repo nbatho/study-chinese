@@ -9,3 +9,21 @@ export const useVocabularyQuery = (params?: VocabularySearchParams) =>
         queryKey: queryKeys.vocabulary.search(params),
         queryFn: () => unwrapApiData(vocabularyApi.search(params)),
     });
+
+export const useVocabularyTopicsQuery = () =>
+    useQuery({
+        queryKey: queryKeys.vocabulary.topics,
+        queryFn: () => unwrapApiData(vocabularyApi.topics()),
+    });
+
+export const useVocabularyRadicalsQuery = () =>
+    useQuery({
+        queryKey: queryKeys.vocabulary.radicals,
+        queryFn: () => unwrapApiData(vocabularyApi.radicals()),
+    });
+
+export const useVocabularyStatsQuery = () =>
+    useQuery({
+        queryKey: queryKeys.vocabulary.stats,
+        queryFn: () => unwrapApiData(vocabularyApi.stats()),
+    });

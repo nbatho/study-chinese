@@ -18,6 +18,9 @@ export const queryKeys = {
     },
     vocabulary: {
         search: (params?: unknown) => ['vocabulary', params ?? {}] as const,
+        topics: ['vocabulary', 'topics'] as const,
+        radicals: ['vocabulary', 'radicals'] as const,
+        stats: ['vocabulary', 'stats'] as const,
     },
     srs: {
         due: (limit?: number) => ['srs', 'due', limit ?? 20] as const,

@@ -89,7 +89,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
       <div className="flex h-20 items-center gap-3 border-b px-3">
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/home")}
           className={cn(
             "flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition hover:bg-secondary",
             collapsed ? "justify-center p-2" : "px-2 py-2",

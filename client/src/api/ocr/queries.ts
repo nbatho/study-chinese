@@ -36,3 +36,25 @@ export const useUpdateOcrHistoryMutation = () => {
         },
     });
 };
+
+export const useDeleteOcrHistoryMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (eventId: string) => unwrapApiData(ocrApi.delete(eventId)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ocr', 'history'] });
+        },
+    });
+};
+
+export const useClearOcrHistoryMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: () => unwrapApiData(ocrApi.clearHistory()),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ocr', 'history'] });
+        },
+    });
+};

@@ -21,6 +21,7 @@ export default function App() {
   const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
   const language = useAppSelector((state) => state.app.language);
   const serverProfile = profileQuery.data?.profile;
+  const isHomePath = location.pathname === "/home";
 
   useEffect(() => {
     if (!serverProfile) return;
@@ -47,12 +48,12 @@ export default function App() {
   }, [language]);
 
   useEffect(() => {
-    if (isAuthenticated && !profileQuery.isLoading && !hasCompletedOnboarding && location.pathname !== "/onboarding") {
+    if (isAuthenticated && !profileQuery.isLoading && !hasCompletedOnboarding && !isHomePath && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [hasCompletedOnboarding, isAuthenticated, location.pathname, navigate, profileQuery.isLoading]);
+  }, [hasCompletedOnboarding, isAuthenticated, isHomePath, location.pathname, navigate, profileQuery.isLoading]);
 
-  if (isAuthenticated && (profileQuery.isLoading || !hasCompletedOnboarding)) {
+  if (isAuthenticated && !isHomePath && (profileQuery.isLoading || !hasCompletedOnboarding)) {
     return null;
   }
 

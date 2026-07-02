@@ -13,6 +13,7 @@ import {
   Save,
   ScanLine,
   Search,
+  Trash2,
   Upload,
   Volume2,
   X,
@@ -24,7 +25,13 @@ import {
   useEnrollWordMutation,
   useListsQuery,
 } from "../../api";
-import { useOcrHistoryQuery, useOcrScanMutation, useUpdateOcrHistoryMutation } from "../../api/ocr/queries";
+import {
+  useClearOcrHistoryMutation,
+  useDeleteOcrHistoryMutation,
+  useOcrHistoryQuery,
+  useOcrScanMutation,
+  useUpdateOcrHistoryMutation,
+} from "../../api/ocr/queries";
 import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment } from "../../api/ocr";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../utils/cn";
@@ -62,6 +69,8 @@ export default function Translate() {
   );
   const ocrHistoryQuery = useOcrHistoryQuery(historyParams);
   const updateOcrHistoryMutation = useUpdateOcrHistoryMutation();
+  const deleteOcrHistoryMutation = useDeleteOcrHistoryMutation();
+  const clearOcrHistoryMutation = useClearOcrHistoryMutation();
   const listsQuery = useListsQuery();
   const createListMutation = useCreateListMutation();
   const enrollMutation = useEnrollWordMutation();
@@ -320,6 +329,30 @@ export default function Translate() {
       eventId: event.id,
       payload: { isFavorite: !event.isFavorite },
     });
+  };
+
+  const deleteHistoryEvent = async (event: OcrHistoryEvent) => {
+    const confirmed = window.confirm("Xoa muc lich su OCR nay?");
+
+    if (!confirmed) return;
+
+    await deleteOcrHistoryMutation.mutateAsync(event.id);
+
+    if (editingHistoryId === event.id) {
+      setEditingHistoryId(null);
+    }
+
+    toast.success("Da xoa muc lich su OCR.");
+  };
+
+  const clearHistory = async () => {
+    const confirmed = window.confirm("Xoa toan bo lich su OCR cua ban?");
+
+    if (!confirmed) return;
+
+    const response = await clearOcrHistoryMutation.mutateAsync();
+    setEditingHistoryId(null);
+    toast.success(`Da xoa ${response.deletedCount} muc lich su OCR.`);
   };
 
   useEffect(() => () => stopCamera(), []);
@@ -665,7 +698,21 @@ export default function Translate() {
           <div className="mt-6 border-t pt-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-xs font-bold uppercase text-muted-foreground">Lịch sử OCR</h3>
-              {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
+              <div className="flex items-center gap-2">
+                {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
+                {historyEvents.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void clearHistory()}
+                    disabled={clearOcrHistoryMutation.isPending || deleteOcrHistoryMutation.isPending}
+                  >
+                    <Trash2 size={15} />
+                    Xoa tat ca
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
               <label className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
@@ -751,6 +798,17 @@ export default function Translate() {
                         title="Toggle favorite"
                       >
                         <Heart size={17} fill={event.isFavorite ? "currentColor" : "none"} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => void deleteHistoryEvent(event)}
+                        disabled={deleteOcrHistoryMutation.isPending || clearOcrHistoryMutation.isPending}
+                        aria-label="Delete history"
+                        title="Delete history"
+                      >
+                        <Trash2 size={17} />
                       </Button>
                     </div>
 

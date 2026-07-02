@@ -35,12 +35,25 @@ export default function WordCard({
             <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
               HSK {word.hskLevel}
             </span>
+            <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
+              {word.cefrLevel}
+            </span>
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
               {word.category}
             </span>
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
               {word.partOfSpeech}
             </span>
+            {word.radical && (
+              <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
+                Radical {word.radical}
+              </span>
+            )}
+            {word.frequency && (
+              <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
+                #{word.frequency}
+              </span>
+            )}
           </div>
           <h3 className="font-serif text-4xl font-extrabold text-foreground">{word.simplified}</h3>
           {word.traditional !== word.simplified && (

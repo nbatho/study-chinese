@@ -26,6 +26,10 @@ const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const routes: RouteConfig[] = [
   {
+    path: "/",
+    element: <Navigate to="/landing" replace />
+  },
+  {
     path: "/landing",
     element: (
       <OptionalAuthRoute>
@@ -34,7 +38,6 @@ export const routes: RouteConfig[] = [
     )
   },
   {
-    path: "/",
     element: (
       <OptionalAuthRoute>
         <App />
@@ -42,12 +45,8 @@ export const routes: RouteConfig[] = [
     ), // App serves as the global layout component
     children: [
       {
-        index: true,
-        element: <Home />
-      },
-      {
         path: "home",
-        element: <Navigate to="/" replace />
+        element: <Home />
       },
       {
         path: "guide",
@@ -110,7 +109,7 @@ export const routes: RouteConfig[] = [
   {
     path: "/auth",
     element: (
-      <PublicRoute redirectAuthenticatedTo="/">
+      <PublicRoute redirectAuthenticatedTo="/home">
         <Auth />
       </PublicRoute>
     )

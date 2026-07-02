@@ -100,7 +100,7 @@ const previewRows = [
 export default function Landing() {
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
-  const primaryTarget = isAuthenticated ? "/" : "/auth";
+  const primaryTarget = "/home";
 
   return (
     <div className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">

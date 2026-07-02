@@ -121,11 +121,16 @@ CREATE TABLE IF NOT EXISTS words (
   tones SMALLINT[] NOT NULL DEFAULT '{}',
   english TEXT NOT NULL,
   part_of_speech VARCHAR(30) NOT NULL
-    CHECK (part_of_speech IN ('noun', 'verb', 'adjective', 'adverb', 'pronoun', 'numeral', 'measure', 'phrase')),
+    CHECK (part_of_speech IN (
+      'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'numeral', 'measure', 'phrase',
+      'conjunction', 'preposition', 'particle', 'interjection', 'prefix', 'suffix', 'idiom', 'other'
+    )),
   hsk_level INT NOT NULL DEFAULT 1,
   cefr_level VARCHAR(5) DEFAULT 'A1'
     CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')),
   category VARCHAR(50) NOT NULL,
+  radical VARCHAR(10),
+  frequency INT,
   search_text TEXT NOT NULL,
   content_version INT NOT NULL DEFAULT 1,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -169,7 +174,30 @@ CREATE TABLE IF NOT EXISTS lessons (
 );
 
 ALTER TABLE words ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
+ALTER TABLE words ADD COLUMN IF NOT EXISTS radical VARCHAR(10);
+ALTER TABLE words ADD COLUMN IF NOT EXISTS frequency INT;
+ALTER TABLE words DROP CONSTRAINT IF EXISTS words_part_of_speech_check;
+ALTER TABLE words ADD CONSTRAINT words_part_of_speech_check
+  CHECK (part_of_speech IN (
+    'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'numeral', 'measure', 'phrase',
+    'conjunction', 'preposition', 'particle', 'interjection', 'prefix', 'suffix', 'idiom', 'other'
+  ));
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
+
+CREATE TABLE IF NOT EXISTS word_topics (
+  id VARCHAR(50) PRIMARY KEY,
+  name_en VARCHAR(100) NOT NULL,
+  name_zh VARCHAR(100),
+  emoji VARCHAR(10),
+  display_order INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS word_topic_map (
+  word_id VARCHAR(50) NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  topic_id VARCHAR(50) NOT NULL REFERENCES word_topics(id) ON DELETE CASCADE,
+  PRIMARY KEY (word_id, topic_id)
+);
 
 CREATE TABLE IF NOT EXISTS lesson_words (
   lesson_id VARCHAR(50) NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -545,6 +573,39 @@ CREATE TRIGGER trg_shop_items_updated_at BEFORE UPDATE ON shop_items
 
 CREATE INDEX IF NOT EXISTS idx_gem_transactions_user_time ON gem_transactions (user_id, created_at DESC);
 
+INSERT INTO word_topics (id, name_en, name_zh, emoji, display_order, is_active)
+VALUES
+  ('greetings', 'Greetings', NULL, U&'\+01F44B', 10, true),
+  ('numbers', 'Numbers', NULL, U&'\+01F522', 20, true),
+  ('food', 'Food & Drink', NULL, U&'\+01F35C', 30, true),
+  ('family', 'Family', NULL, U&'\+01F46A', 40, true),
+  ('body', 'Body & Health', NULL, U&'\+01F3E5', 50, true),
+  ('time', 'Time & Date', NULL, U&'\23F0', 60, true),
+  ('weather', 'Weather', NULL, U&'\2601', 70, true),
+  ('colors', 'Colors', NULL, U&'\+01F3A8', 80, true),
+  ('animals', 'Animals', NULL, U&'\+01F43C', 90, true),
+  ('clothing', 'Clothing', NULL, U&'\+01F454', 100, true),
+  ('transportation', 'Transportation', NULL, U&'\+01F687', 110, true),
+  ('shopping', 'Shopping', NULL, U&'\+01F6D2', 120, true),
+  ('education', 'Education', NULL, U&'\+01F4DA', 130, true),
+  ('work', 'Work & Career', NULL, U&'\+01F4BC', 140, true),
+  ('travel', 'Travel', NULL, U&'\2708', 150, true),
+  ('nature', 'Nature', NULL, U&'\+01F33F', 160, true),
+  ('technology', 'Technology', NULL, U&'\+01F4BB', 170, true),
+  ('sports', 'Sports', NULL, U&'\26BD', 180, true),
+  ('emotions', 'Emotions', NULL, U&'\+01F496', 190, true),
+  ('home', 'Home & Living', NULL, U&'\+01F3E0', 200, true),
+  ('geography', 'Geography', NULL, U&'\+01F30D', 210, true),
+  ('culture', 'Culture', NULL, U&'\+01F3EE', 220, true),
+  ('business', 'Business', NULL, U&'\+01F4CA', 230, true),
+  ('general', 'General', NULL, U&'\+01F4DD', 240, true)
+ON CONFLICT (id)
+DO UPDATE SET
+  name_en = EXCLUDED.name_en,
+  emoji = EXCLUDED.emoji,
+  display_order = EXCLUDED.display_order,
+  is_active = EXCLUDED.is_active;
+
 INSERT INTO shop_items (id, name, description, emoji, category, price_gems, grant_type, grant_quantity, metadata)
 VALUES
   ('streak_freeze_1', 'Streak Freeze', 'Bao ve chuoi ngay hoc neu ban bo lo 1 ngay.', '🧊', 'streak', 60, 'streak_freeze', 1, '{"label":"1 freeze"}'::jsonb),
@@ -604,7 +665,11 @@ CREATE INDEX IF NOT EXISTS idx_words_simplified ON words (simplified);
 CREATE INDEX IF NOT EXISTS idx_words_traditional ON words (traditional);
 CREATE INDEX IF NOT EXISTS idx_words_pinyin_plain ON words (pinyin_plain);
 CREATE INDEX IF NOT EXISTS idx_words_hsk_category ON words (hsk_level, category);
+CREATE INDEX IF NOT EXISTS idx_words_cefr ON words (cefr_level) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_words_radical ON words (radical) WHERE is_active = true AND radical IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_words_frequency ON words (frequency) WHERE is_active = true AND frequency IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_words_search_trgm ON words USING gin (search_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_word_topic_map_topic ON word_topic_map (topic_id, word_id);
 CREATE INDEX IF NOT EXISTS idx_dictionary_entries_simplified ON dictionary_entries (simplified);
 CREATE INDEX IF NOT EXISTS idx_dictionary_entries_traditional ON dictionary_entries (traditional);
 CREATE INDEX IF NOT EXISTS idx_dictionary_entries_pinyin_plain ON dictionary_entries (pinyin_plain);
