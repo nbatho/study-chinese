@@ -329,6 +329,11 @@
         "tags": ["Lessons"],
         "summary": "List lessons with learner progress",
         "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "skill", "in": "query", "schema": { "type": "string", "enum": ["listening", "speaking", "reading", "writing", "mixed"] } },
+          { "name": "topic", "in": "query", "schema": { "type": "string" } },
+          { "name": "hsk_level", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 9 } }
+        ],
         "responses": {
           "200": { "description": "Lesson summaries" },
           "401": { "$ref": "#/components/responses/Unauthorized" }
@@ -350,6 +355,66 @@
         ],
         "responses": {
           "200": { "description": "Lesson detail" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/lessons/{id}/modules": {
+      "get": {
+        "tags": ["Lessons"],
+        "summary": "List skill modules for a lesson",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "l1_3" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Lesson skill modules" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/dialogues/{id}": {
+      "get": {
+        "tags": ["Lessons"],
+        "summary": "Get a reusable dialogue",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "dlg_hsk3_shopping_01" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Dialogue detail" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/passages/{id}": {
+      "get": {
+        "tags": ["Lessons"],
+        "summary": "Get a reusable reading passage",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "passage_hsk3_shopping_01" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Reading passage detail" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       }

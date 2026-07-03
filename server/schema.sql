@@ -176,6 +176,10 @@ CREATE TABLE IF NOT EXISTS lessons (
 ALTER TABLE words ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
 ALTER TABLE words ADD COLUMN IF NOT EXISTS radical VARCHAR(10);
 ALTER TABLE words ADD COLUMN IF NOT EXISTS frequency INT;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS is_variant BOOLEAN DEFAULT false;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS level_sources JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS all_forms JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS classifiers TEXT[] DEFAULT '{}';
 ALTER TABLE words DROP CONSTRAINT IF EXISTS words_part_of_speech_check;
 ALTER TABLE words ADD CONSTRAINT words_part_of_speech_check
   CHECK (part_of_speech IN (
@@ -183,6 +187,15 @@ ALTER TABLE words ADD CONSTRAINT words_part_of_speech_check
     'conjunction', 'preposition', 'particle', 'interjection', 'prefix', 'suffix', 'idiom', 'other'
   ));
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS primary_skill VARCHAR(20)
+  CHECK (primary_skill IN ('listening', 'speaking', 'reading', 'writing', 'mixed'));
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS secondary_skills VARCHAR(20)[] DEFAULT '{}';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS topic VARCHAR(50);
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS learning_objectives JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS warm_up JSONB;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS review_summary JSONB;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS difficulty_score DECIMAL(3,1) DEFAULT 1.0;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
 
 CREATE TABLE IF NOT EXISTS word_topics (
   id VARCHAR(50) PRIMARY KEY,
@@ -235,6 +248,80 @@ CREATE TABLE IF NOT EXISTS exercises (
   audio_word_id VARCHAR(50) REFERENCES words(id) ON DELETE SET NULL,
   tone INT,
   order_num INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS skill VARCHAR(20)
+  CHECK (skill IN ('listening', 'speaking', 'reading', 'writing', 'mixed'));
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS bloom_level VARCHAR(20)
+  CHECK (bloom_level IN ('remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'));
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS ai_grading_enabled BOOLEAN DEFAULT false;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS acceptable_variants JSONB DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS lesson_modules (
+  id VARCHAR(80) PRIMARY KEY,
+  lesson_id VARCHAR(50) NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+  module_type VARCHAR(20) NOT NULL
+    CHECK (module_type IN ('listening', 'speaking', 'reading', 'writing')),
+  order_num INT NOT NULL DEFAULT 0,
+  phases JSONB NOT NULL DEFAULT '[]'::jsonb,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS dialogues (
+  id VARCHAR(80) PRIMARY KEY,
+  lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
+  title_zh VARCHAR(200),
+  title_en VARCHAR(200),
+  hsk_level INT NOT NULL DEFAULT 1,
+  topic VARCHAR(50),
+  lines JSONB NOT NULL DEFAULT '[]'::jsonb,
+  audio_full_ref VARCHAR(255),
+  word_count INT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS reading_passages (
+  id VARCHAR(80) PRIMARY KEY,
+  lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
+  title_zh VARCHAR(200),
+  title_en VARCHAR(200),
+  hsk_level INT NOT NULL DEFAULT 1,
+  topic VARCHAR(50),
+  content_zh TEXT NOT NULL,
+  content_pinyin TEXT,
+  content_en TEXT,
+  word_count INT NOT NULL,
+  new_word_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  grammar_point_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  questions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS content_generation_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content_type VARCHAR(30) NOT NULL
+    CHECK (content_type IN ('dialogue', 'passage', 'exercise', 'grammar_explanation', 'lesson')),
+  target_lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
+  hsk_level INT NOT NULL,
+  topic VARCHAR(50),
+  skill VARCHAR(20),
+  prompt_used TEXT NOT NULL,
+  model_name VARCHAR(100) NOT NULL,
+  raw_output JSONB NOT NULL,
+  validation_result JSONB,
+  ai_review_result JSONB,
+  human_reviewer_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'auto_validated', 'ai_reviewed', 'human_approved', 'rejected')),
+  revision_count INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -543,6 +630,22 @@ DROP TRIGGER IF EXISTS trg_exercises_updated_at ON exercises;
 CREATE TRIGGER trg_exercises_updated_at BEFORE UPDATE ON exercises
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_lesson_modules_updated_at ON lesson_modules;
+CREATE TRIGGER trg_lesson_modules_updated_at BEFORE UPDATE ON lesson_modules
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_dialogues_updated_at ON dialogues;
+CREATE TRIGGER trg_dialogues_updated_at BEFORE UPDATE ON dialogues
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_reading_passages_updated_at ON reading_passages;
+CREATE TRIGGER trg_reading_passages_updated_at BEFORE UPDATE ON reading_passages
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_content_generation_logs_updated_at ON content_generation_logs;
+CREATE TRIGGER trg_content_generation_logs_updated_at BEFORE UPDATE ON content_generation_logs
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_placement_questions_updated_at ON placement_questions;
 CREATE TRIGGER trg_placement_questions_updated_at BEFORE UPDATE ON placement_questions
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -657,10 +760,18 @@ CREATE INDEX IF NOT EXISTS idx_friendships_addressee_status ON friendships (addr
 CREATE INDEX IF NOT EXISTS idx_friendships_pair_status ON friendships (user_low_id, user_high_id, status);
 CREATE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lessons_cefr_order ON lessons (cefr_level, hsk_level, order_num) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_lessons_skill_topic ON lessons (primary_skill, topic, hsk_level) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_placement_questions_order ON placement_questions (section, difficulty, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lesson_words_word ON lesson_words (word_id);
 CREATE INDEX IF NOT EXISTS idx_grammar_points_lesson_order ON grammar_points (lesson_id, order_num);
 CREATE INDEX IF NOT EXISTS idx_exercises_lesson_order ON exercises (lesson_id, order_num);
+CREATE INDEX IF NOT EXISTS idx_lesson_modules_lesson ON lesson_modules (lesson_id, order_num);
+CREATE INDEX IF NOT EXISTS idx_dialogues_lesson ON dialogues (lesson_id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_dialogues_hsk_topic ON dialogues (hsk_level, topic) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_reading_passages_lesson ON reading_passages (lesson_id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_reading_passages_hsk_topic ON reading_passages (hsk_level, topic) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_content_generation_logs_target ON content_generation_logs (target_lesson_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_content_generation_logs_status ON content_generation_logs (status, hsk_level, skill);
 CREATE INDEX IF NOT EXISTS idx_words_simplified ON words (simplified);
 CREATE INDEX IF NOT EXISTS idx_words_traditional ON words (traditional);
 CREATE INDEX IF NOT EXISTS idx_words_pinyin_plain ON words (pinyin_plain);
@@ -668,6 +779,7 @@ CREATE INDEX IF NOT EXISTS idx_words_hsk_category ON words (hsk_level, category)
 CREATE INDEX IF NOT EXISTS idx_words_cefr ON words (cefr_level) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_words_radical ON words (radical) WHERE is_active = true AND radical IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_words_frequency ON words (frequency) WHERE is_active = true AND frequency IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_words_variant ON words (is_variant) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_words_search_trgm ON words USING gin (search_text gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_word_topic_map_topic ON word_topic_map (topic_id, word_id);
 CREATE INDEX IF NOT EXISTS idx_dictionary_entries_simplified ON dictionary_entries (simplified);

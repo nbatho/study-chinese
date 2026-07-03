@@ -16,6 +16,8 @@ import leaderboardRoutes from './leaderboard.routes.js';
 import docsRoutes from './docs.routes.js';
 import placementRoutes from './placement.routes.js';
 import { healthCheck } from '../controllers/health.controller.js';
+import { showDialogue, showReadingPassage } from '../controllers/lesson.controller.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -36,6 +38,8 @@ router.use('/admin', adminRoutes);
 router.use('/friends', friendRoutes);
 router.use('/leaderboard', leaderboardRoutes);
 router.use('/placement', placementRoutes);
+router.get('/dialogues/:id', requireAuth, showDialogue);
+router.get('/passages/:id', requireAuth, showReadingPassage);
 router.use('/', utilityRoutes);
 
 export default router;

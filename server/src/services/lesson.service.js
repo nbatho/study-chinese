@@ -12,7 +12,14 @@ const mapLessonSummary = (row) => ({
   hskLevel: Number(row.hsk_level),
   cefrLevel: row.cefr_level || 'A1',
   order: Number(row.order_num),
-  skill: row.skill,
+  skill: row.primary_skill || row.skill,
+  primarySkill: row.primary_skill || row.skill,
+  secondarySkills: row.secondary_skills || [],
+  topic: row.topic || null,
+  difficultyScore: row.difficulty_score === null || row.difficulty_score === undefined
+    ? null
+    : Number(row.difficulty_score),
+  tags: row.tags || [],
   estimatedMinutes: Number(row.estimated_minutes),
   xpReward: Number(row.xp_reward),
   completedAt: row.completed_at,
@@ -31,6 +38,8 @@ const mapGrammarPoint = (row) => ({
 const mapExercise = (row) => ({
   id: row.id,
   kind: row.kind,
+  skill: row.skill || null,
+  bloomLevel: row.bloom_level || null,
   prompt: row.prompt,
   promptHanzi: row.prompt_hanzi,
   promptPinyin: row.prompt_pinyin,
@@ -40,11 +49,76 @@ const mapExercise = (row) => ({
   correctIndex: row.correct_index,
   correctText: row.correct_text,
   answerExplanation: row.answer_explanation,
+  aiGradingEnabled: Boolean(row.ai_grading_enabled),
+  acceptableVariants: row.acceptable_variants || [],
   audioWordId: row.audio_word_id,
   tone: row.tone
 });
 
-export const getLessons = async (userId) => {
+const mapLessonModule = (row) => ({
+  id: row.id,
+  lessonId: row.lesson_id,
+  moduleType: row.module_type,
+  order: Number(row.order_num),
+  phases: row.phases || []
+});
+
+const mapDialogue = (row) => ({
+  id: row.id,
+  lessonId: row.lesson_id,
+  titleZh: row.title_zh,
+  titleEn: row.title_en,
+  hskLevel: Number(row.hsk_level),
+  topic: row.topic,
+  lines: row.lines || [],
+  audioFullRef: row.audio_full_ref,
+  wordCount: row.word_count === null || row.word_count === undefined ? null : Number(row.word_count)
+});
+
+const mapReadingPassage = (row) => ({
+  id: row.id,
+  lessonId: row.lesson_id,
+  titleZh: row.title_zh,
+  titleEn: row.title_en,
+  hskLevel: Number(row.hsk_level),
+  topic: row.topic,
+  contentZh: row.content_zh,
+  contentPinyin: row.content_pinyin,
+  contentEn: row.content_en,
+  wordCount: Number(row.word_count),
+  newWordIds: row.new_word_ids || [],
+  grammarPointIds: row.grammar_point_ids || [],
+  questions: row.questions || []
+});
+
+const buildLessonFilters = ({ skill, topic, hsk_level: hskLevel, hsk } = {}) => {
+  const values = [];
+  const conditions = ['l.is_active = true'];
+  const normalizedLevel = hskLevel || hsk;
+
+  if (skill) {
+    values.push(String(skill));
+    conditions.push(`COALESCE(l.primary_skill, l.skill) = $${values.length}`);
+  }
+
+  if (topic) {
+    values.push(String(topic));
+    conditions.push(`l.topic = $${values.length}`);
+  }
+
+  if (normalizedLevel) {
+    values.push(Number(normalizedLevel));
+    conditions.push(`l.hsk_level = $${values.length}`);
+  }
+
+  return {
+    values,
+    whereSql: conditions.join(' AND ')
+  };
+};
+
+export const getLessons = async (userId, filters = {}) => {
+  const { values, whereSql } = buildLessonFilters(filters);
   const result = await query(
     `
       SELECT
@@ -54,11 +128,11 @@ export const getLessons = async (userId) => {
         ulp.attempts
       FROM lessons l
       LEFT JOIN user_lesson_progress ulp
-        ON ulp.lesson_id = l.id AND ulp.user_id = $1
-      WHERE l.is_active = true
+        ON ulp.lesson_id = l.id AND ulp.user_id = $${values.length + 1}
+      WHERE ${whereSql}
       ORDER BY l.hsk_level, l.order_num
     `,
-    [userId]
+    [...values, userId]
   );
 
   return {
@@ -80,7 +154,7 @@ export const getLessonDetails = async (lessonId) => {
     throw notFound('Không tìm thấy bài học.');
   }
 
-  const [wordsResult, grammarResult, exercisesResult] = await Promise.all([
+  const [wordsResult, grammarResult, exercisesResult, modulesResult, dialoguesResult, passagesResult] = await Promise.all([
     query(
       `
         SELECT w.*
@@ -108,6 +182,33 @@ export const getLessonDetails = async (lessonId) => {
         ORDER BY order_num, id
       `,
       [lessonId]
+    ),
+    query(
+      `
+        SELECT *
+        FROM lesson_modules
+        WHERE lesson_id = $1 AND is_active = true
+        ORDER BY order_num, id
+      `,
+      [lessonId]
+    ),
+    query(
+      `
+        SELECT *
+        FROM dialogues
+        WHERE lesson_id = $1 AND is_active = true
+        ORDER BY created_at, id
+      `,
+      [lessonId]
+    ),
+    query(
+      `
+        SELECT *
+        FROM reading_passages
+        WHERE lesson_id = $1 AND is_active = true
+        ORDER BY created_at, id
+      `,
+      [lessonId]
     )
   ]);
 
@@ -121,15 +222,91 @@ export const getLessonDetails = async (lessonId) => {
       hskLevel: Number(lesson.hsk_level),
       cefrLevel: lesson.cefr_level || 'A1',
       order: Number(lesson.order_num),
-      skill: lesson.skill,
+      skill: lesson.primary_skill || lesson.skill,
+      primarySkill: lesson.primary_skill || lesson.skill,
+      secondarySkills: lesson.secondary_skills || [],
+      topic: lesson.topic || null,
+      learningObjectives: lesson.learning_objectives || [],
+      warmUp: lesson.warm_up || null,
+      reviewSummary: lesson.review_summary || null,
+      difficultyScore: lesson.difficulty_score === null || lesson.difficulty_score === undefined
+        ? null
+        : Number(lesson.difficulty_score),
+      tags: lesson.tags || [],
       estimatedMinutes: Number(lesson.estimated_minutes),
       xpReward: Number(lesson.xp_reward),
       intro: lesson.intro,
       newWords: wordsResult.rows.map(mapWord),
       grammar: grammarResult.rows.map(mapGrammarPoint),
       dialogue: lesson.dialogue,
+      modules: modulesResult.rows.map(mapLessonModule),
+      dialogues: dialoguesResult.rows.map(mapDialogue),
+      readingPassages: passagesResult.rows.map(mapReadingPassage),
       exercises: exercisesResult.rows.map(mapExercise)
     }
+  };
+};
+
+export const getLessonModules = async (lessonId) => {
+  const lessonResult = await query(
+    'SELECT id FROM lessons WHERE id = $1 AND is_active = true',
+    [lessonId]
+  );
+
+  if (lessonResult.rowCount === 0) {
+    throw notFound('Khong tim thay bai hoc.');
+  }
+
+  const result = await query(
+    `
+      SELECT *
+      FROM lesson_modules
+      WHERE lesson_id = $1 AND is_active = true
+      ORDER BY order_num, id
+    `,
+    [lessonId]
+  );
+
+  return {
+    modules: result.rows.map(mapLessonModule)
+  };
+};
+
+export const getDialogue = async (dialogueId) => {
+  const result = await query(
+    `
+      SELECT *
+      FROM dialogues
+      WHERE id = $1 AND is_active = true
+    `,
+    [dialogueId]
+  );
+
+  if (result.rowCount === 0) {
+    throw notFound('Khong tim thay hoi thoai.');
+  }
+
+  return {
+    dialogue: mapDialogue(result.rows[0])
+  };
+};
+
+export const getReadingPassage = async (passageId) => {
+  const result = await query(
+    `
+      SELECT *
+      FROM reading_passages
+      WHERE id = $1 AND is_active = true
+    `,
+    [passageId]
+  );
+
+  if (result.rowCount === 0) {
+    throw notFound('Khong tim thay bai doc.');
+  }
+
+  return {
+    passage: mapReadingPassage(result.rows[0])
   };
 };
 

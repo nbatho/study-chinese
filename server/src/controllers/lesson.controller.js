@@ -1,15 +1,37 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
-import { completeLesson, getLessonDetails, getLessons } from '../services/lesson.service.js';
+import {
+  completeLesson,
+  getDialogue,
+  getLessonDetails,
+  getLessonModules,
+  getLessons,
+  getReadingPassage
+} from '../services/lesson.service.js';
 import { createCourseIssueReport } from '../services/report.service.js';
 
 export const listLessons = asyncHandler(async (req, res) => {
-  const data = await getLessons(req.user.id);
+  const data = await getLessons(req.user.id, req.query);
   success(res, data);
 });
 
 export const showLesson = asyncHandler(async (req, res) => {
   const data = await getLessonDetails(req.params.id);
+  success(res, data);
+});
+
+export const listLessonModules = asyncHandler(async (req, res) => {
+  const data = await getLessonModules(req.params.id);
+  success(res, data);
+});
+
+export const showDialogue = asyncHandler(async (req, res) => {
+  const data = await getDialogue(req.params.id);
+  success(res, data);
+});
+
+export const showReadingPassage = asyncHandler(async (req, res) => {
+  const data = await getReadingPassage(req.params.id);
   success(res, data);
 });
 
