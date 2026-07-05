@@ -1,4 +1,5 @@
 import { query } from '../config/db.config.js';
+import { env } from '../config/env.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { transcribeAudio } from './stt-provider.service.js';
 
@@ -30,11 +31,36 @@ const decodeAudioBytes = (audio) => {
   const commaIndex = audio.indexOf(',');
   const encoded = commaIndex >= 0 ? audio.slice(commaIndex + 1) : audio;
 
+  if (!/^[A-Za-z0-9+/=_-]+$/.test(encoded)) {
+    throw badRequest('Audio khong hop le.');
+  }
+
+  const normalizedEncoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const estimatedBytes = Math.floor((normalizedEncoded.length * 3) / 4);
+
+  if (estimatedBytes > env.STT_MAX_AUDIO_BYTES) {
+    throw badRequest('Audio qua lon.', {
+      field: 'audio',
+      maxBytes: env.STT_MAX_AUDIO_BYTES
+    });
+  }
+
+  let buffer;
+
   try {
-    return Buffer.from(encoded, 'base64');
+    buffer = Buffer.from(normalizedEncoded, 'base64');
   } catch {
     throw badRequest('Audio khong hop le.');
   }
+
+  if (buffer.length > env.STT_MAX_AUDIO_BYTES) {
+    throw badRequest('Audio qua lon.', {
+      field: 'audio',
+      maxBytes: env.STT_MAX_AUDIO_BYTES
+    });
+  }
+
+  return buffer;
 };
 
 const normalizeChinese = (text) =>
@@ -262,6 +288,7 @@ export const checkPronunciation = async ({ audio, audioMimeType, expectedText })
 
 export const __private__ = {
   buildCharDiff,
+  decodeAudioBytes,
   normalizeChinese,
   scoreFromSttResult,
   scoreFromTranscription

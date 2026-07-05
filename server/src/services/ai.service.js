@@ -1,4 +1,5 @@
 import { query, withTransaction } from '../config/db.config.js';
+import { env } from '../config/env.config.js';
 import { badRequest, forbidden, notFound } from '../utils/http-error.js';
 import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
@@ -99,6 +100,23 @@ const buildCorrectionMistakePayload = ({ correction, userText, sessionId, scenar
   };
 };
 
+const validateChatText = (text) => {
+  if (!text || !String(text).trim()) {
+    throw badRequest('text khong duoc de trong.');
+  }
+
+  const userText = text.trim();
+
+  if ([...userText].length > env.AI_MAX_MESSAGE_CHARS) {
+    throw badRequest('text qua dai.', {
+      field: 'text',
+      maxLength: env.AI_MAX_MESSAGE_CHARS
+    });
+  }
+
+  return userText;
+};
+
 export const getChatScenarios = async () => {
   const result = await query(
     `
@@ -175,11 +193,7 @@ export const startChatSession = async (userId, { scenarioId } = {}) =>
   });
 
 export const sendChatMessage = async (userId, sessionId, { text }) => {
-  if (!text || !String(text).trim()) {
-    throw badRequest('text khong duoc de trong.');
-  }
-
-  const userText = text.trim();
+  const userText = validateChatText(text);
   const context = await withTransaction(async (client) => {
     const aiUsage = await getAiUsage(client, userId);
 
@@ -325,5 +339,6 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
 
 export const __private__ = {
   buildCorrectionMistakePayload,
-  getLearningContext
+  getLearningContext,
+  validateChatText
 };

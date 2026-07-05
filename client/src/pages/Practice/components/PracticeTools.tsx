@@ -12,11 +12,13 @@ import {
   useUserMistakesQuery,
   useVocabularyQuery,
 } from "../../../api";
-import type { CharDiffEntry, HanziStrokeCharacter } from "../../../api/practice";
+import type { MistakeItem } from "../../../api/users";
+import type { CharDiffEntry } from "../../../api/practice";
 import { CheckCircle2, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
+import HanziStrokePractice from "../../../components/HanziStrokePractice";
 import LoadingCard from "../../../components/LoadingCard";
 import TtsButton from "../../../components/TtsButton";
 import { speakChinese } from "../../../utils/tts";
@@ -31,6 +33,16 @@ const minVoicedFrames = 8;
 const minVoicedFrameRatio = 0.04;
 const minVoicePeak = 0.1;
 const minVoiceRms = 0.018;
+const TONE_LABELS: Record<number, { mark: string; name: string }> = {
+  1: { mark: "ˉ", name: "阴平 (flat)" },
+  2: { mark: "ˊ", name: "阳平 (rising)" },
+  3: { mark: "ˇ", name: "上声 (dip)" },
+  4: { mark: "ˋ", name: "去声 (falling)" },
+};
+
+const containsChinese = (value: string) => /[\u4e00-\u9fff]/.test(value);
+const containsPinyinTone = (value: string) =>
+  /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(value);
 
 const blobToDataUrl = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
@@ -46,6 +58,21 @@ const normalizeAnswer = (value: string) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+
+const shortenEnglish = (text: string, maxLen = 60): string => {
+  if (!text) return "";
+  const first = text.split(";")[0].trim();
+  if (first.length <= maxLen) return first;
+  return `${first.slice(0, maxLen)}...`;
+};
+
+const readHanziTotalMistakes = (summary: unknown, fallback: number) => {
+  const totalMistakes =
+    typeof summary === "object" && summary !== null && "totalMistakes" in summary
+      ? Number((summary as { totalMistakes?: unknown }).totalMistakes)
+      : fallback;
+  return Number.isFinite(totalMistakes) ? totalMistakes : fallback;
+};
 
 function usePracticeWords() {
   const vocabQuery = useVocabularyQuery({ hsk: 1 });
@@ -63,11 +90,13 @@ export function WeakPracticeTool() {
   const [idx, setIdx] = useState(0);
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState<null | boolean>(null);
+  const [lockedMistake, setLockedMistake] = useState<MistakeItem | null>(null);
   const activeMistake = mistakes[idx % Math.max(mistakes.length, 1)];
+  const displayedMistake = lockedMistake ?? activeMistake;
 
   if (mistakesQuery.isLoading) return <LoadingCard label="Loading weak spots..." />;
 
-  if (!activeMistake) {
+  if (!displayedMistake) {
     return (
       <div className={panelClass}>
         <Target className="mx-auto mb-4 text-jade" size={56} />
@@ -80,38 +109,44 @@ export function WeakPracticeTool() {
   }
 
   const acceptedAnswers = [
-    activeMistake.correctAnswer,
-    activeMistake.pinyin,
-    activeMistake.english,
+    displayedMistake.correctAnswer,
+    displayedMistake.pinyin,
+    displayedMistake.english,
   ]
     .filter(Boolean)
     .map((value) => normalizeAnswer(String(value)));
   const normalizedInput = normalizeAnswer(answer);
+  const trimmedInput = answer.trim();
+  const requiresChinese = ["list-typing", "typing", "hanzi"].includes(displayedMistake.skill);
+  const isValidLanguage =
+    !requiresChinese || containsChinese(trimmedInput) || containsPinyinTone(trimmedInput);
   const isCorrect =
     normalizedInput.length > 0 &&
-    acceptedAnswers.some((candidate) => candidate === normalizedInput || candidate.includes(normalizedInput));
+    isValidLanguage &&
+    acceptedAnswers.some((candidate) => candidate === normalizedInput);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!answer.trim() || checked !== null) return;
+    setLockedMistake(displayedMistake);
     setChecked(isCorrect);
-    await practiceMistake.mutateAsync({ mistakeId: activeMistake.id, correct: isCorrect });
+    await practiceMistake.mutateAsync({ mistakeId: displayedMistake.id, correct: isCorrect });
     await addActivity.mutateAsync({
       xp: isCorrect ? 8 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
       exercisesTotal: 1,
-      skill: `weak-${activeMistake.skill}`,
+      skill: `weak-${displayedMistake.skill}`,
       skillScore: isCorrect ? 100 : 0,
       mistake: !isCorrect
         ? {
-            wordId: activeMistake.wordId || undefined,
-            skill: activeMistake.skill,
-            prompt: activeMistake.prompt || activeMistake.simplified || undefined,
+            wordId: displayedMistake.wordId || undefined,
+            skill: displayedMistake.skill,
+            prompt: displayedMistake.prompt || displayedMistake.simplified || undefined,
             userAnswer: answer,
-            correctAnswer: activeMistake.correctAnswer || activeMistake.pinyin || activeMistake.english || undefined,
-            simplified: activeMistake.simplified || undefined,
-            pinyin: activeMistake.pinyin || undefined,
-            english: activeMistake.english || undefined,
+            correctAnswer: displayedMistake.correctAnswer || displayedMistake.pinyin || displayedMistake.english || undefined,
+            simplified: displayedMistake.simplified || undefined,
+            pinyin: displayedMistake.pinyin || undefined,
+            english: displayedMistake.english || undefined,
             context: { source: "weak-practice" },
           }
         : undefined,
@@ -122,6 +157,7 @@ export function WeakPracticeTool() {
     setIdx((value) => value + 1);
     setAnswer("");
     setChecked(null);
+    setLockedMistake(null);
   };
 
   return (
@@ -130,23 +166,23 @@ export function WeakPracticeTool() {
         <div>
           <h3 className="text-[1.3rem] font-extrabold">Weak Practice</h3>
           <p className="text-[0.85rem] text-muted-foreground">
-            {mistakes.length} active weak spots - {activeMistake.skill}
+            {mistakes.length} active weak spots - {displayedMistake.skill}
           </p>
         </div>
         <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-          x{activeMistake.needsPracticeCount}
+          x{displayedMistake.needsPracticeCount}
         </span>
       </div>
 
       <div className={cn(innerCardClass, "mb-6 p-7")}>
         <h1 className="font-serif text-6xl font-extrabold text-primary">
-          {activeMistake.simplified || activeMistake.prompt || "?"}
+          {displayedMistake.simplified || displayedMistake.prompt || "?"}
         </h1>
-        {activeMistake.prompt && activeMistake.prompt !== activeMistake.simplified && (
-          <p className="mt-3 text-[0.9rem] font-semibold text-muted-foreground">{activeMistake.prompt}</p>
+        {displayedMistake.prompt && displayedMistake.prompt !== displayedMistake.simplified && (
+          <p className="mt-3 text-[0.9rem] font-semibold text-muted-foreground">{displayedMistake.prompt}</p>
         )}
-        {activeMistake.simplified && (
-          <TtsButton text={activeMistake.simplified} className={cn(secondaryButtonClass, "mt-4 px-4 py-2")}>
+        {displayedMistake.simplified && (
+          <TtsButton text={displayedMistake.simplified} className={cn(secondaryButtonClass, "mt-4 px-4 py-2")}>
             Listen
           </TtsButton>
         )}
@@ -165,9 +201,9 @@ export function WeakPracticeTool() {
           <div className={cn("rounded-xl border p-4 text-left text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
             {checked ? "Correct. This weak spot is cooling down." : "Not yet. Review the target answer below."}
             <div className="mt-2 text-foreground">
-              {activeMistake.pinyin && <div>Pinyin: {activeMistake.pinyin}</div>}
-              {activeMistake.english && <div>Meaning: {activeMistake.english}</div>}
-              {activeMistake.correctAnswer && <div>Correct: {activeMistake.correctAnswer}</div>}
+              {displayedMistake.pinyin && <div>Pinyin: {displayedMistake.pinyin}</div>}
+              {displayedMistake.english && <div>Meaning: {displayedMistake.english}</div>}
+              {displayedMistake.correctAnswer && <div>Correct: {displayedMistake.correctAnswer}</div>}
             </div>
           </div>
         )}
@@ -185,7 +221,6 @@ export function WeakPracticeTool() {
     </div>
   );
 }
-
 export function ListPracticeTool() {
   const listsQuery = useListsQuery();
   const lists = listsQuery.data?.lists ?? [];
@@ -322,8 +357,8 @@ export function ListPracticeTool() {
         wordId: word.id,
         skill: "list-tone",
         prompt: word.simplified,
-        userAnswer: `Tone ${tone}`,
-        correctAnswer: `Tone ${correctTone}`,
+        userAnswer: TONE_LABELS[tone]?.mark ?? `Tone ${tone}`,
+        correctAnswer: TONE_LABELS[correctTone]?.mark ?? `Tone ${correctTone}`,
         simplified: word.simplified,
         pinyin: word.pinyin,
         english: word.english,
@@ -402,7 +437,7 @@ export function ListPracticeTool() {
                 className={cn("rounded-xl border-2 p-4 text-left font-bold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card")}
               >
                 <span className="font-serif text-2xl">{option.simplified}</span>
-                <span className="ml-3 text-sm text-muted-foreground">{option.english}</span>
+                <span className="ml-3 text-sm text-muted-foreground">{shortenEnglish(option.english)}</span>
               </button>
             );
           })}
@@ -420,9 +455,10 @@ export function ListPracticeTool() {
                   type="button"
                   onClick={() => chooseTone(tone)}
                   disabled={checked !== null}
-                  className={cn("rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : "border-border bg-card")}
+                  className={cn("flex min-h-24 flex-col items-center justify-center rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : "border-border bg-card")}
                 >
-                  Tone {tone}
+                  <span className="text-3xl leading-none">{TONE_LABELS[tone]?.mark}</span>
+                  <span className="mt-1 text-xs opacity-70">{TONE_LABELS[tone]?.name}</span>
                 </button>
               );
             })}
@@ -430,7 +466,7 @@ export function ListPracticeTool() {
           {checked !== null && (
             <div className="grid gap-3">
               <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-                {checked ? "Correct." : `Correct tone: ${word.tones[0] || 1}. ${word.pinyin}`}
+                {checked ? "Correct." : `Correct tone: ${TONE_LABELS[word.tones[0] || 1]?.mark} ${TONE_LABELS[word.tones[0] || 1]?.name}. ${word.pinyin}`}
               </div>
               <button className={primaryButtonClass} onClick={next}>Next</button>
             </div>
@@ -506,8 +542,8 @@ export function ToneDrillTool() {
         wordId: word.id,
         skill: "tones",
         prompt: word.simplified,
-        userAnswer: `Tone ${tone}`,
-        correctAnswer: `Tone ${correctTone}`,
+        userAnswer: TONE_LABELS[tone]?.mark ?? `Tone ${tone}`,
+        correctAnswer: TONE_LABELS[correctTone]?.mark ?? `Tone ${correctTone}`,
         simplified: word.simplified,
         pinyin: word.pinyin,
         english: word.english,
@@ -533,8 +569,9 @@ export function ToneDrillTool() {
           const isCorrect = checked && tone === correctTone;
           const isWrong = checked && selectedTone === tone && tone !== correctTone;
           return (
-            <button key={tone} onClick={() => check(tone)} disabled={checked} className={cn("rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card text-foreground")}>
-              Tone {tone}
+            <button key={tone} onClick={() => check(tone)} disabled={checked} className={cn("flex min-h-24 flex-col items-center justify-center rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card text-foreground")}>
+              <span className="text-3xl leading-none">{TONE_LABELS[tone]?.mark}</span>
+              <span className="mt-1 text-xs opacity-70">{TONE_LABELS[tone]?.name}</span>
             </button>
           );
         })}
@@ -542,7 +579,7 @@ export function ToneDrillTool() {
       {checked && (
         <div className="anim-pop">
           <p className={cn("mb-3.5 font-bold", selectedTone === correctTone ? "text-jade" : "text-tone-4")}>
-            {selectedTone === correctTone ? "Correct!" : `Correct tone is ${correctTone}.`} {word.pinyin}
+            {selectedTone === correctTone ? "Correct!" : `Correct tone is ${TONE_LABELS[correctTone]?.mark} ${TONE_LABELS[correctTone]?.name}.`} {word.pinyin}
           </p>
           <button className={primaryButtonClass} onClick={() => { setIdx((value) => value + 1); setSelectedTone(null); setChecked(false); }}>Next Word</button>
         </div>
@@ -746,7 +783,7 @@ export function ListeningTool() {
           const isWrong = checked && selected === option.id && option.id !== word.id;
           return (
             <button key={option.id} onClick={() => choose(option.id)} disabled={checked} className={cn("flex items-center justify-between rounded-xl border-2 p-4 font-bold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card text-foreground")}>
-              {option.english}
+              {shortenEnglish(option.english)}
               {isCorrect && <CheckCircle2 size={18} />}
               {isWrong && <XCircle size={18} />}
             </button>
@@ -1221,116 +1258,78 @@ export function HanziDrawingTool() {
   const addActivity = useAddActivityMutation();
   const characters = strokesQuery.data?.characters ?? [];
   const [charIdx, setCharIdx] = useState(0);
-  const [activeStrokeIdx, setActiveStrokeIdx] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const isDrawingRef = useRef(false);
+  const [mistakeCount, setMistakeCount] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const mistakeCountRef = useRef(0);
   const current = characters[charIdx % Math.max(characters.length, 1)];
+  const currentCharacter = current?.character ?? "";
 
-  useEffect(() => {
-    if (current) drawBackground(current, activeStrokeIdx, canvasRef.current);
-  }, [activeStrokeIdx, current]);
+  const handleMistake = useCallback((summary: unknown) => {
+    setMistakeCount((fallback) => {
+      const nextMistakeCount = readHanziTotalMistakes(summary, fallback);
+      mistakeCountRef.current = nextMistakeCount;
+      return nextMistakeCount;
+    });
+  }, []);
 
-  if (strokesQuery.isLoading || !current) return <LoadingCard label="Loading stroke data from server..." />;
+  const handleComplete = useCallback(async (summary: unknown) => {
+    const finalMistakes = readHanziTotalMistakes(summary, mistakeCountRef.current);
+    const score = Math.max(0, 100 - finalMistakes * 10);
+    mistakeCountRef.current = finalMistakes;
+    setMistakeCount(finalMistakes);
+    setCompleted(true);
+    await addActivity.mutateAsync({
+      xp: score >= 80 ? 10 : 5,
+      exercisesCorrect: score >= 80 ? 1 : 0,
+      exercisesTotal: 1,
+      skill: "hanzi",
+      skillScore: score,
+    });
+    if (score >= 80) {
+      toast.success(t("practice.hanziComplete", { character: currentCharacter }));
+    }
+  }, [addActivity, currentCharacter, t]);
 
   const handleNext = () => {
     setCharIdx((prev) => prev + 1);
-    setActiveStrokeIdx(0);
+    mistakeCountRef.current = 0;
+    setMistakeCount(0);
+    setCompleted(false);
   };
 
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    isDrawingRef.current = true;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.strokeStyle = "rgb(217, 63, 71)";
-    ctx.lineWidth = 8;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-  };
-
-  const handleCanvasMouseUp = async () => {
-    if (!isDrawingRef.current) return;
-    isDrawingRef.current = false;
-    if (activeStrokeIdx + 1 < current.strokes.length) {
-      setActiveStrokeIdx((prev) => prev + 1);
-      return;
-    }
-    await addActivity.mutateAsync({
-      xp: 10,
-      exercisesCorrect: 1,
-      exercisesTotal: 1,
-      skill: "hanzi",
-      skillScore: 100,
-    });
-    toast.success(t("practice.hanziComplete", { character: current.character }));
-    handleNext();
-  };
+  if (strokesQuery.isLoading || !current) return <LoadingCard label="Loading stroke data from server..." />;
 
   return (
     <div className={panelClass}>
       <h3 className="mb-1 text-[1.3rem] font-extrabold">Hanzi Stroke Writing</h3>
       <span className="text-[0.8rem] font-semibold text-muted-foreground">
-        Character: <strong className="text-primary">{current.character}</strong> · Stroke {activeStrokeIdx + 1} of {current.strokes.length}
+        Character: <strong className="text-primary">{current.character}</strong> - Quiz mode
       </span>
       <div className="my-6 flex justify-center">
-        <canvas ref={canvasRef} width={280} height={280} onMouseDown={handleCanvasMouseDown} onMouseMove={handleCanvasMouseMove} onMouseUp={() => void handleCanvasMouseUp()} onMouseLeave={() => void handleCanvasMouseUp()} className="aspect-square w-full max-w-70 cursor-crosshair rounded-2xl border-2 bg-card" />
+        <HanziStrokePractice
+          key={`${current.id}-${charIdx}`}
+          character={current.character}
+          mode="quiz"
+          size={280}
+          showOutline
+          onMistake={handleMistake}
+          onComplete={(summary) => {
+            void handleComplete(summary);
+          }}
+        />
       </div>
-      <div className="flex flex-col justify-center gap-3 sm:flex-row">
-        <button className={secondaryButtonClass} onClick={() => { setActiveStrokeIdx(0); drawBackground(current, 0, canvasRef.current); }}>Reset Canvas</button>
-        <button className={primaryButtonClass} onClick={handleNext}>Skip Word</button>
-      </div>
+      {completed ? (
+        <div className="grid gap-3">
+          <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", mistakeCount <= 2 ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
+            Mistakes: {mistakeCount}. Score: {Math.max(0, 100 - mistakeCount * 10)}.
+          </div>
+          <button className={primaryButtonClass} onClick={handleNext}>Next Character</button>
+        </div>
+      ) : (
+        <p className="text-[0.85rem] font-semibold text-muted-foreground">
+          Keep writing until every stroke is accepted.
+        </p>
+      )}
     </div>
   );
 }
-
-function drawBackground(character: HanziStrokeCharacter, activeStrokeIdx: number, canvas: HTMLCanvasElement | null) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "rgba(217, 63, 71, 0.1)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, 0); ctx.lineTo(canvas.width, canvas.height);
-  ctx.moveTo(canvas.width, 0); ctx.lineTo(0, canvas.height);
-  ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
-  ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2);
-  ctx.stroke();
-  ctx.strokeStyle = document.body.classList.contains("dark") ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-  ctx.lineWidth = 12;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  character.strokes.forEach((path) => drawSvgPathOnCanvas(ctx, path, canvas.width, canvas.height));
-  ctx.strokeStyle = "rgba(242, 191, 76, 0.35)";
-  drawSvgPathOnCanvas(ctx, character.strokes[activeStrokeIdx], canvas.width, canvas.height);
-}
-
-function drawSvgPathOnCanvas(ctx: CanvasRenderingContext2D, path: string, w: number, h: number) {
-  const tokens = path.split(" ");
-  ctx.beginPath();
-  tokens.forEach((tok) => {
-    if (tok.startsWith("M")) {
-      const [x, y] = tok.slice(1).split(",").map(Number);
-      ctx.moveTo((x / 100) * w, (y / 100) * h);
-    } else if (tok.startsWith("L")) {
-      const [x, y] = tok.slice(1).split(",").map(Number);
-      ctx.lineTo((x / 100) * w, (y / 100) * h);
-    }
-  });
-  ctx.stroke();
-}
-

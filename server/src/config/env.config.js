@@ -44,6 +44,7 @@ export const env = {
   AI_TIMEOUT_MS: Number(process.env.AI_TIMEOUT_MS || 12000),
   AI_RETRY_ATTEMPTS: Number(process.env.AI_RETRY_ATTEMPTS || 1),
   AI_RETRY_DELAY_MS: Number(process.env.AI_RETRY_DELAY_MS || 400),
+  AI_MAX_MESSAGE_CHARS: Number(process.env.AI_MAX_MESSAGE_CHARS || 2000),
   AI_FALLBACK_TO_MOCK:
     process.env.AI_FALLBACK_TO_MOCK === undefined
       ? (process.env.NODE_ENV || 'development') !== 'production'
@@ -66,7 +67,8 @@ export const env = {
   TTS_TIMEOUT_MS: Number(process.env.TTS_TIMEOUT_MS || 12000),
   STT_PROVIDER: process.env.STT_PROVIDER || 'groq',
   STT_MODEL: process.env.STT_MODEL || 'whisper-large-v3-turbo',
-  STT_TIMEOUT_MS: Number(process.env.STT_TIMEOUT_MS || 15000)
+  STT_TIMEOUT_MS: Number(process.env.STT_TIMEOUT_MS || 15000),
+  STT_MAX_AUDIO_BYTES: Number(process.env.STT_MAX_AUDIO_BYTES || 2 * 1024 * 1024)
 };
 
 export const isProduction = env.NODE_ENV === 'production';

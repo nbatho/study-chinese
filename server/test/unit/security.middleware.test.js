@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createRateLimiter, requestId, securityHeaders } from '../../src/middlewares/security.middleware.js';
+import {
+  createRateLimiter,
+  requestId,
+  requireTrustedOrigin,
+  securityHeaders
+} from '../../src/middlewares/security.middleware.js';
 
 const createResponse = () => {
   const headers = new Map();
@@ -22,6 +27,9 @@ test('securityHeaders adds baseline hardening headers', () => {
   assert.equal(calledNext, true);
   assert.equal(res.headers.get('X-Frame-Options'), 'DENY');
   assert.equal(res.headers.get('X-Content-Type-Options'), 'nosniff');
+  assert.match(res.headers.get('Content-Security-Policy'), /https:\/\/fonts\.googleapis\.com/);
+  assert.match(res.headers.get('Content-Security-Policy'), /https:\/\/fonts\.gstatic\.com/);
+  assert.match(res.headers.get('Content-Security-Policy'), /https:\/\/cdn\.jsdelivr\.net/);
 });
 
 test('requestId keeps incoming request id or creates one', () => {
@@ -32,6 +40,30 @@ test('requestId keeps incoming request id or creates one', () => {
 
   assert.equal(req.id, 'req_123');
   assert.equal(res.headers.get('X-Request-Id'), 'req_123');
+});
+
+test('requestId replaces malformed incoming values', () => {
+  const req = { headers: { 'x-request-id': 'bad\r\nheader' } };
+  const res = createResponse();
+
+  requestId(req, res, () => {});
+
+  assert.notEqual(req.id, 'bad\r\nheader');
+  assert.match(req.id, /^[0-9a-f-]{36}$/);
+  assert.equal(res.headers.get('X-Request-Id'), req.id);
+});
+
+test('trusted origin guard allows configured origins and rejects cross-site requests', () => {
+  const allowedReq = { headers: { origin: 'http://localhost:5173' } };
+  const blockedReq = { headers: { origin: 'https://evil.example' } };
+  const errors = [];
+
+  requireTrustedOrigin(allowedReq, createResponse(), (error) => errors.push(error));
+  requireTrustedOrigin(blockedReq, createResponse(), (error) => errors.push(error));
+
+  assert.equal(errors[0], undefined);
+  assert.equal(errors[1].statusCode, 403);
+  assert.equal(errors[1].errorCode, 'UNTRUSTED_ORIGIN');
 });
 
 test('rate limiter blocks after configured limit', () => {

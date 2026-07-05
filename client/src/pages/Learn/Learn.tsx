@@ -110,8 +110,8 @@ export default function Learn() {
                     <ClipboardCheck size={20} />
                   </span>
                   <div>
-                    <p className="text-sm font-extrabold">CEFR {userCefrLevel} path</p>
-                    <p className="text-xs font-semibold text-muted-foreground">Lessons above your placement level stay visible but locked.</p>
+                    <p className="text-sm font-extrabold">Trình độ đầu vào {userCefrLevel}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Lessons above your entry test level stay visible but locked.</p>
                   </div>
                 </div>
                 <button
@@ -120,7 +120,7 @@ export default function Learn() {
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-secondary px-4 text-sm font-bold transition hover:bg-secondary/80"
                 >
                   <ClipboardCheck size={16} />
-                  Retake placement
+                  Làm lại kiểm tra đầu vào
                 </button>
               </div>
               <div className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -153,7 +153,7 @@ export default function Learn() {
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <span className={cn("rounded-md px-2 py-1 text-[0.68rem] font-extrabold", levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
-                        CEFR {levelStats.cefrLevel}
+                        Mức {levelStats.cefrLevel}
                       </span>
                       {levelStats.skills.map((skill) => (
                         <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold uppercase text-muted-foreground">

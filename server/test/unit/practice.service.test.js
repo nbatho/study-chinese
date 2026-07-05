@@ -41,3 +41,17 @@ test('pronunciation score ignores hallucinated STT text flagged as no speech', (
   assert.equal(score.overall, 0);
   assert.ok(score.details.charDiff.every((entry) => entry.status === 'missing'));
 });
+
+test('audio decoder rejects malformed and oversized payloads before STT', () => {
+  assert.throws(
+    () => __private__.decodeAudioBytes('not valid base64!'),
+    /Audio khong hop le/
+  );
+
+  const oversized = Buffer.alloc(2 * 1024 * 1024 + 1).toString('base64');
+
+  assert.throws(
+    () => __private__.decodeAudioBytes(oversized),
+    (error) => error.statusCode === 400 && error.details.maxBytes === 2 * 1024 * 1024
+  );
+});

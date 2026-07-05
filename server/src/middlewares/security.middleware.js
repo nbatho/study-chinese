@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
+import { env } from '../config/env.config.js';
 import { AppError } from '../utils/http-error.js';
 
 const securityHeaderMap = {
-  'Content-Security-Policy': "default-src 'self'; frame-ancestors 'none'; base-uri 'self'",
+  'Content-Security-Policy':
+    "default-src 'self'; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-ancestors 'none'; base-uri 'self'",
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Resource-Policy': 'same-origin',
   'Origin-Agent-Cluster': '?1',
@@ -16,11 +18,46 @@ const securityHeaderMap = {
 
 export const requestId = (req, res, next) => {
   const incomingId = req.headers['x-request-id'];
-  const id = Array.isArray(incomingId) ? incomingId[0] : incomingId || crypto.randomUUID();
+  const candidate = Array.isArray(incomingId) ? incomingId[0] : incomingId;
+  const id =
+    typeof candidate === 'string' && /^[A-Za-z0-9._:-]{1,128}$/.test(candidate)
+      ? candidate
+      : crypto.randomUUID();
 
   req.id = id;
   res.setHeader('X-Request-Id', id);
   next();
+};
+
+const trustedOrigins = new Set(
+  [
+    env.CLIENT_URL,
+    ...(env.CLIENT_URLS ? env.CLIENT_URLS.split(',') : []),
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5174'
+  ]
+    .map((origin) => origin?.trim())
+    .filter(Boolean)
+);
+
+const getOriginFromReferer = (referer) => {
+  try {
+    return referer ? new URL(referer).origin : null;
+  } catch {
+    return null;
+  }
+};
+
+export const requireTrustedOrigin = (req, res, next) => {
+  const origin = req.headers.origin || getOriginFromReferer(req.headers.referer);
+
+  if (origin && trustedOrigins.has(origin)) {
+    return next();
+  }
+
+  return next(new AppError(403, 'UNTRUSTED_ORIGIN', 'Request origin is not allowed.'));
 };
 
 export const securityHeaders = (req, res, next) => {

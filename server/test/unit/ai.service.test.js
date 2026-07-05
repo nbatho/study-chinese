@@ -58,3 +58,10 @@ test('learning context is compact and empty-safe for a new user', async () => {
   assert.equal(calls.length, 3);
   assert.deepEqual(calls.map((call) => call.params), [['user-1'], ['user-1'], ['user-1']]);
 });
+
+test('AI message length is capped before opening a transaction', () => {
+  assert.throws(
+    () => __private__.validateChatText('x'.repeat(2001)),
+    (error) => error.statusCode === 400 && error.details.maxLength === 2000
+  );
+});

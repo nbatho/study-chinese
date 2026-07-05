@@ -93,7 +93,7 @@ export default function LessonPath({
                   {lesson.estimatedMinutes} min
                 </span>
                 <span>+{lesson.xpReward} XP</span>
-                <span>CEFR {lesson.cefrLevel}</span>
+                <span>Mức {lesson.cefrLevel}</span>
                 {isCompleted && <span className="text-jade">{Math.round(lesson.bestAccuracy)}% Acc</span>}
               </div>
             </button>

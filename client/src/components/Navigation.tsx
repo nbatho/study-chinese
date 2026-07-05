@@ -196,10 +196,10 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
                 collapsed ? "justify-center px-0" : "justify-between",
                 activeTab === "placement-test" && "bg-primary text-primary-foreground hover:bg-primary",
               )}
-              aria-label="CEFR placement"
-              title="CEFR placement"
+              aria-label="Kiểm tra đầu vào"
+              title="Kiểm tra đầu vào"
             >
-              {!collapsed && <span className="truncate">CEFR level</span>}
+              {!collapsed && <span className="truncate">Kiểm tra đầu vào</span>}
               <Badge className={cn("rounded-md", activeTab === "placement-test" && "bg-primary-foreground text-primary")}>
                 {profileQuery.data?.profile.cefrLevel ?? "A1"}
               </Badge>

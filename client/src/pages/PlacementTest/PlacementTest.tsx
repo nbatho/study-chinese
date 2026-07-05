@@ -41,6 +41,15 @@ const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
   C2: "mastery",
 };
 
+const startLevelLabels: Record<SkillLevel, string> = {
+  beginner: "mới bắt đầu",
+  elementary: "sơ cấp",
+  intermediate: "trung cấp",
+  upper_intermediate: "trung cấp cao",
+  advanced: "nâng cao",
+  mastery: "thành thạo",
+};
+
 const cefrDescriptions: Record<CefrLevel, string> = {
   A1: "Start with HSK 1 foundations: greetings, numbers, simple self-introduction.",
   A2: "HSK 1 stays open for review, and HSK 2 becomes your main path.",
@@ -191,7 +200,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
   };
 
   const goNext = async () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < activeQuestions.length - 1) {
       setCurrentIndex((index) => index + 1);
       return;
     }
@@ -201,7 +210,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
       setCurrentCeiling(nextLevel);
       setCurrentIndex(activeQuestions.length);
       toast.success("Bài kiểm tra đã cập nhật theo trình độ hiện tại của bạn.", {
-        description: `Độ khó hiện tại: CEFR ${nextLevel}`,
+        description: `Mức đang kiểm tra: ${nextLevel}`,
         duration: 5000,
       });
       return;
@@ -221,8 +230,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
     return (
       <LoginPromptCard
         icon={LockKeyhole}
-        title="Log in to take the placement test"
-        description="Your CEFR result is saved to your profile so lessons can unlock at the right level."
+        title="Log in to take the entry test"
+        description="Your entry test result is saved to your profile so lessons can unlock at the right level."
       />
     );
   }
@@ -235,7 +244,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
             <ArrowLeft size={18} />
             Back
           </Button>
-          <Badge className="rounded-md px-3 py-1">CEFR Placement</Badge>
+          <Badge className="rounded-md px-3 py-1">Kiểm tra đầu vào</Badge>
         </div>
       )}
 
@@ -245,8 +254,11 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-jade/10 text-jade">
               <CheckCircle2 size={28} />
             </div>
-            <p className="text-xs font-extrabold uppercase text-muted-foreground">Recommended level</p>
+            <p className="text-xs font-extrabold uppercase text-muted-foreground">Kết quả kiểm tra đầu vào</p>
             <h1 className="mt-1 text-4xl font-extrabold text-primary">{result.cefrLevel}</h1>
+            <p className="mt-2 text-sm font-bold text-foreground">
+              Bạn đang ở mức {result.cefrLevel} - {startLevelLabels[result.startLevel]}.
+            </p>
             <p className="mx-auto mt-3 max-w-120 text-sm text-muted-foreground">
               {cefrDescriptions[result.cefrLevel]}
             </p>
@@ -272,7 +284,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 Retake
               </Button>
               <Button type="button" onClick={() => navigate("/learn")} className="rounded-lg">
-                Start learning
+                Bắt đầu học
                 <ArrowRight size={18} />
               </Button>
             </div>
@@ -283,10 +295,10 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <ClipboardCheck className="text-primary" size={22} />
-                  <h1 className={cn("font-extrabold", embedded ? "text-xl" : "text-2xl")}>Quick placement test</h1>
+                  <h1 className={cn("font-extrabold", embedded ? "text-xl" : "text-2xl")}>Kiểm tra đầu vào</h1>
                 </div>
                 <p className="max-w-150 text-sm text-muted-foreground">
-                  Answer short questions across vocabulary, grammar, and reading. The test will raise the CEFR level when your answers show you are ready.
+                  Answer short questions across vocabulary, grammar, and reading. The test will raise the level when your answers show you are ready.
                 </p>
               </div>
               {onSkip && (
@@ -317,7 +329,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" className="rounded-md">{sectionLabels[currentQuestion.section]}</Badge>
                   <Badge className="rounded-md">{currentQuestion.cefrLevel}</Badge>
-                  <Badge variant="secondary" className="rounded-md">Adaptive to {currentCeiling}</Badge>
+                  <Badge variant="secondary" className="rounded-md">Mức đang kiểm tra {currentCeiling}</Badge>
                 </div>
 
                 <div className="rounded-lg border bg-background p-4">
