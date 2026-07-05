@@ -1,12 +1,13 @@
 FROM node:22-alpine
 
-WORKDIR /app
+WORKDIR /app/server
 ENV NODE_ENV=production
 
-COPY --chown=node:node package*.json ./
+COPY --chown=node:node server/package*.json ./
 RUN npm ci --omit=dev
 
-COPY --chown=node:node . .
+COPY --chown=node:node server ./
+COPY --chown=node:node data ../data
 
 EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

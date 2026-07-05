@@ -1,10 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { query as defaultQuery } from '../config/db.config.js';
+import { contentPath } from '../config/content-paths.js';
 
-const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const schemaPath = path.join(serverRoot, 'data', 'schemas', 'lesson-template.schema.json');
+const schemaPath = contentPath('schemas', 'lesson-template.schema.json');
 const HANZI_PATTERN = /[\u3400-\u9fff]+/g;
 const ALLOWED_SKILLS = new Set(['listening', 'speaking', 'reading', 'writing', 'mixed']);
 const ALLOWED_BLOOM_LEVELS = new Set([
@@ -74,8 +72,20 @@ const validateRequired = (value, fields, pathLabel, issues) => {
 };
 
 export class ContentValidator {
-  constructor({ query = defaultQuery } = {}) {
+  constructor({ query = defaultQuery, skipDatabaseChecks = false, requireDatabaseChecks = false } = {}) {
     this.query = query;
+    this.skipDatabaseChecks = skipDatabaseChecks;
+    this.requireDatabaseChecks = requireDatabaseChecks;
+  }
+
+  pushDatabaseUnavailableIssue(issues, code, message, error) {
+    pushIssue(
+      issues,
+      this.requireDatabaseChecks ? 'error' : 'warning',
+      code,
+      message,
+      error ? { reason: error.message } : undefined
+    );
   }
 
   async schemaValidate(lesson) {
@@ -148,6 +158,20 @@ export class ContentValidator {
 
   async vocabCheck(lesson, targetLevel = lesson?.metadata?.hsk_level) {
     const issues = [];
+
+    if (this.skipDatabaseChecks) {
+      if (this.requireDatabaseChecks) {
+        pushIssue(
+          issues,
+          'error',
+          'database_checks_disabled',
+          'Vocabulary DB checks are required for production lesson validation.'
+        );
+      }
+
+      return issues;
+    }
+
     const terms = extractHanziTerms(lesson);
 
     if (terms.length === 0) {
@@ -182,9 +206,12 @@ export class ContentValidator {
         });
       }
     } catch (error) {
-      pushIssue(issues, 'warning', 'vocab_check_skipped', 'Vocabulary check was skipped because the database was unavailable.', {
-        reason: error.message
-      });
+      this.pushDatabaseUnavailableIssue(
+        issues,
+        'vocab_check_skipped',
+        'Vocabulary check was skipped because the database was unavailable.',
+        error
+      );
     }
 
     return issues;
@@ -192,6 +219,20 @@ export class ContentValidator {
 
   async pinyinVerify(lesson) {
     const issues = [];
+
+    if (this.skipDatabaseChecks) {
+      if (this.requireDatabaseChecks) {
+        pushIssue(
+          issues,
+          'error',
+          'database_checks_disabled',
+          'Pinyin DB checks are required for production lesson validation.'
+        );
+      }
+
+      return issues;
+    }
+
     const focus = (lesson?.vocabulary_focus || []).filter((item) => item?.simplified && item?.pinyin);
 
     if (focus.length === 0) {
@@ -221,9 +262,12 @@ export class ContentValidator {
         });
       }
     } catch (error) {
-      pushIssue(issues, 'warning', 'pinyin_check_skipped', 'Pinyin check was skipped because the database was unavailable.', {
-        reason: error.message
-      });
+      this.pushDatabaseUnavailableIssue(
+        issues,
+        'pinyin_check_skipped',
+        'Pinyin check was skipped because the database was unavailable.',
+        error
+      );
     }
 
     return issues;
@@ -248,6 +292,20 @@ export class ContentValidator {
 
   async duplicateDetect(lesson) {
     const issues = [];
+
+    if (this.skipDatabaseChecks) {
+      if (this.requireDatabaseChecks) {
+        pushIssue(
+          issues,
+          'error',
+          'database_checks_disabled',
+          'Duplicate DB checks are required for production lesson validation.'
+        );
+      }
+
+      return issues;
+    }
+
     const title = lesson?.metadata?.title_zh || lesson?.metadata?.title_en || lesson?.lesson_id;
 
     if (!title) {
@@ -272,9 +330,12 @@ export class ContentValidator {
         });
       }
     } catch (error) {
-      pushIssue(issues, 'warning', 'duplicate_check_skipped', 'Duplicate check was skipped because the database was unavailable.', {
-        reason: error.message
-      });
+      this.pushDatabaseUnavailableIssue(
+        issues,
+        'duplicate_check_skipped',
+        'Duplicate check was skipped because the database was unavailable.',
+        error
+      );
     }
 
     return issues;

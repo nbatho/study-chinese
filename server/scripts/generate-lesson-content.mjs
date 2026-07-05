@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { ContentValidator } from '../src/services/content-validator.js';
+import { contentPath, resolveContentPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -13,6 +14,11 @@ const level = Number(args.find((arg) => arg.startsWith('--level='))?.split('=')[
 const topic = args.find((arg) => arg.startsWith('--topic='))?.split('=').slice(1).join('=') || 'daily_life';
 const skill = args.find((arg) => arg.startsWith('--skill='))?.split('=')[1] || 'reading';
 const maxRetries = Number(args.find((arg) => arg.startsWith('--retries='))?.split('=')[1] || 3);
+const SAVE = args.includes('--save');
+const outputDir = resolveContentPath(
+  args.find((arg) => arg.startsWith('--output-dir='))?.split('=').slice(1).join('='),
+  ['lessons', 'generated']
+);
 
 const promptBySkill = {
   listening: 'generate-dialogue.txt',
@@ -34,7 +40,7 @@ const requireValidArgs = () => {
 
 const loadPrompt = async () => {
   const promptName = promptBySkill[skill] || promptBySkill.mixed;
-  const prompt = await readFile(path.join(serverRoot, 'data', 'prompts', promptName), 'utf8');
+  const prompt = await readFile(contentPath('prompts', promptName), 'utf8');
 
   return prompt
     .replaceAll('{level}', String(level))
@@ -210,6 +216,17 @@ const saveGenerationLog = async ({ lesson, prompt, validation, modelName }) => {
   }
 };
 
+const saveLessonFile = async ({ lesson, validation }) => {
+  await mkdir(outputDir, { recursive: true });
+  const lessonPath = path.join(outputDir, `${lesson.lesson_id}.json`);
+  const reportPath = path.join(outputDir, `${lesson.lesson_id}.validation.json`);
+
+  await writeFile(lessonPath, `${JSON.stringify(lesson, null, 2)}\n`, 'utf8');
+  await writeFile(reportPath, `${JSON.stringify(validation, null, 2)}\n`, 'utf8');
+
+  return { lessonPath, reportPath };
+};
+
 const run = async () => {
   requireValidArgs();
   const prompt = await loadPrompt();
@@ -242,10 +259,13 @@ const run = async () => {
     await saveGenerationLog({ lesson, prompt, validation, modelName });
   }
 
+  const saved = SAVE ? await saveLessonFile({ lesson, validation }) : null;
+
   console.log(JSON.stringify({
     dryRun: DRY_RUN,
     modelName,
     validation,
+    saved,
     lesson
   }, null, 2));
 };

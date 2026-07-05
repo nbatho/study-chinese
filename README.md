@@ -6,6 +6,7 @@
 
 - `client/`: React 19, TypeScript, Vite, React Query, Redux Toolkit.
 - `server/`: Node.js, Express, PostgreSQL `pg`, ES Modules.
+- `data/`: shared content data, lesson prompts, schemas, generated lesson bundles, and dictionary source files.
 - `ocr-service/`: FastAPI + PaddleOCR local service cho OCR tieng Trung.
 - `docs/`: tài liệu API, backend, database và backlog.
 
@@ -212,7 +213,7 @@ Attribution: Dictionary fallback data can be imported from CC-CEDICT, maintained
 Tải CC-CEDICT từ MDBG rồi lưu file vào:
 
 ```text
-server/data/cedict_ts.u8
+data/cedict_ts.u8
 ```
 
 Import vào DB đang cấu hình trong `server/.env`:
@@ -230,7 +231,7 @@ npm --prefix server run dict:import -- data/cedict_ts.u8 --dry-run
 Nếu đang chạy bằng Docker và muốn import từ trong server container:
 
 ```bash
-docker compose cp server/data/cedict_ts.u8 server:/app/data/cedict_ts.u8
+docker compose cp data/cedict_ts.u8 server:/app/data/cedict_ts.u8
 docker compose exec server npm run dict:import -- data/cedict_ts.u8
 ```
 

@@ -2,12 +2,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import { contentPath, resolveContentPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
 
-const DEFAULT_INPUT = path.join(serverRoot, 'data', 'complete.json');
-const DEFAULT_REPORT = path.join(serverRoot, 'data', 'missing-hsk-vocab.report.json');
+const DEFAULT_INPUT = contentPath('complete.json');
+const DEFAULT_REPORT = contentPath('missing-hsk-vocab.report.json');
 const DEFAULT_SOURCE_URL =
   process.env.HSK30_SOURCE_URL ||
   'https://raw.githubusercontent.com/ivankra/hsk30/main/data/hsk30.csv';
@@ -25,7 +26,7 @@ const normalizePath = (value, fallback) => {
     return fallback;
   }
 
-  return path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
+  return path.isAbsolute(value) ? value : resolveContentPath(value);
 };
 
 const splitCsvLine = (line) => {
@@ -159,7 +160,7 @@ const createCompleteEntry = (row, dictionaryRow) => ({
 
 const run = async () => {
   const inputPath = normalizePath(inputArg, DEFAULT_INPUT);
-  const outputPath = normalizePath(outputArg, WRITE ? inputPath : path.join(serverRoot, 'data', 'complete.patched.json'));
+  const outputPath = normalizePath(outputArg, WRITE ? inputPath : contentPath('complete.patched.json'));
   const reportPath = normalizePath(reportArg, DEFAULT_REPORT);
   const source = sourceArg || DEFAULT_SOURCE_URL;
   const complete = JSON.parse(await readFile(inputPath, 'utf8'));

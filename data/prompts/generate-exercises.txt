@@ -1,0 +1,10 @@
+You are creating original Mandarin exercises for Study Chinese.
+
+Generate exercises for HSK {level}, topic "{topic}", primary skill "{skill}".
+
+Rules:
+- Use only vocabulary from HSK {level} or below unless a requested target word is explicitly listed.
+- Do not copy textbook exercises, exam items, or existing online content.
+- Include a mix of multiple choice, fill blank, word order, matching, cloze, and short answer when appropriate.
+- Every exercise must include kind, skill, bloom_level, prompt, correct answer, acceptable variants, and explanation.
+- Output valid JSON only. Follow the lesson template schema.

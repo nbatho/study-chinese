@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://study-chinese.local/schemas/lesson-manifest.schema.json",
+  "title": "Generated Lesson Manifest",
+  "type": "object",
+  "required": ["generated_at", "schema", "count", "lessons"],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "schema": {
+      "type": "string"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lessons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["lesson_id", "file", "hsk_level", "primary_skill", "topic", "title_zh", "title_en"],
+        "properties": {
+          "lesson_id": { "type": "string" },
+          "file": { "type": "string" },
+          "hsk_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+          "primary_skill": {
+            "type": "string",
+            "enum": ["listening", "speaking", "reading", "writing", "mixed"]
+          },
+          "topic": { "type": "string" },
+          "title_zh": { "type": "string" },
+          "title_en": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

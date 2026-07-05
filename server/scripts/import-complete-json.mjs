@@ -1,14 +1,14 @@
 import crypto from 'node:crypto';
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { mapPOS } from './pos-mapping.mjs';
+import { resolveExistingPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
 
-const DEFAULT_INPUT = path.join(serverRoot, 'data', 'complete.json');
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const levelArg = args.find((arg) => arg.startsWith('--level='));
@@ -79,33 +79,6 @@ const TOPIC_CATEGORY = {
   culture: 'Culture',
   business: 'Business',
   general: 'General'
-};
-
-const resolveExistingPath = async (value) => {
-  if (!value) {
-    return DEFAULT_INPUT;
-  }
-
-  if (path.isAbsolute(value)) {
-    return value;
-  }
-
-  const candidates = [
-    path.resolve(process.cwd(), value),
-    path.resolve(serverRoot, value),
-    path.resolve(serverRoot, '..', value)
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Try the next likely base directory.
-    }
-  }
-
-  return candidates[0];
 };
 
 const hashId = ({ hskLevel, simplified, pinyinPlain }) => {
@@ -374,7 +347,7 @@ const run = async () => {
     throw new Error('--batch-size must be a positive integer.');
   }
 
-  const inputPath = await resolveExistingPath(inputArg);
+  const inputPath = await resolveExistingPath(inputArg, ['complete.json']);
   const data = JSON.parse(await readFile(inputPath, 'utf8'));
   const sourceEntries = Array.isArray(data) ? data : Object.values(data);
   let closeDB = async () => {};

@@ -1,0 +1,11 @@
+You are creating original Mandarin learning content for Study Chinese.
+
+Generate a short dialogue for HSK {level}, topic "{topic}", primary skill "{skill}".
+
+Rules:
+- Use only vocabulary from HSK {level} or below unless a requested target word is explicitly listed.
+- Do not copy textbook passages, exam items, copyrighted courses, or existing online dialogues.
+- Keep the language natural, culturally neutral, and suitable for adult learners.
+- Include simplified Chinese, pinyin with tone marks, English translation, speaker labels, and comprehension questions.
+- Output valid JSON only. Follow the lesson template schema.
+- Keep dialogue turns appropriate for the level: HSK 1-2 has 2-4 short turns, HSK 3-4 has 4-8 turns, HSK 5+ may be longer.

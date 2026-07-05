@@ -1,8 +1,9 @@
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import { resolveExistingPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -14,35 +15,7 @@ const levelArg = args.find((arg) => arg.startsWith('--level='));
 const ONLY_LEVEL = levelArg ? Number(levelArg.split('=')[1]) : null;
 const batchSizeArg = args.find((arg) => arg.startsWith('--batch-size='));
 const BATCH_SIZE = Number(batchSizeArg?.split('=')[1] || process.env.HSK_IMPORT_BATCH_SIZE || 500);
-const DEFAULT_PATH = path.join(serverRoot, 'data', 'complete.json');
 const inputArg = args.find((arg) => !arg.startsWith('--'));
-
-const resolveExistingPath = async (value) => {
-  if (!value) {
-    return DEFAULT_PATH;
-  }
-
-  if (path.isAbsolute(value)) {
-    return value;
-  }
-
-  const candidates = [
-    path.resolve(process.cwd(), value),
-    path.resolve(serverRoot, value),
-    path.resolve(serverRoot, '..', value)
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Try the next likely base directory.
-    }
-  }
-
-  return candidates[0];
-};
 
 const POS_MAP = {
   n: 'noun',
@@ -318,7 +291,7 @@ const run = async () => {
     throw new Error('--batch-size must be a positive integer.');
   }
 
-  const inputPath = await resolveExistingPath(inputArg);
+  const inputPath = await resolveExistingPath(inputArg, ['complete.json']);
   const data = JSON.parse(await readFile(inputPath, 'utf8'));
   const sourceEntries = Array.isArray(data) ? data : Object.values(data);
   let closeDB = async () => {};

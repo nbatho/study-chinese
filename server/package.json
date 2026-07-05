@@ -12,6 +12,10 @@
     "db:migrate": "node scripts/apply-migration.js",
     "dict:import": "node scripts/import-cc-cedict.js",
     "hsk:import": "node scripts/import-hsk-vocabulary.js",
+    "lessons:generate:sample": "node scripts/generate-sample-lessons.mjs",
+    "lessons:generate": "node scripts/generate-real-lesson-content.mjs --save",
+    "lessons:generate:one": "node scripts/generate-real-lesson-content.mjs --save",
+    "lessons:review": "node scripts/review-lesson-content.mjs",
     "test": "node --test",
     "test:integration": "node --test test/integration/*.test.js"
   },

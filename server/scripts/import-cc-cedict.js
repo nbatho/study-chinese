@@ -4,6 +4,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import { resolveExistingPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -11,22 +12,13 @@ dotenv.config({ path: path.join(serverRoot, '.env') });
 
 const { closeDB, query } = await import('../src/config/db.config.js');
 
-const DEFAULT_PATH = path.join(serverRoot, 'data', 'cedict_ts.u8');
 const BATCH_SIZE = Number(process.env.CEDICT_BATCH_SIZE || 1000);
 const SOURCE = process.env.CEDICT_SOURCE || 'cc-cedict';
 const CONTENT_VERSION = process.env.CEDICT_VERSION || null;
 const DRY_RUN = process.argv.includes('--dry-run') || process.env.CEDICT_DRY_RUN === 'true';
 
-const resolveInputPath = (value) => {
-  if (!value) {
-    return DEFAULT_PATH;
-  }
-
-  return path.isAbsolute(value) ? value : path.join(serverRoot, value);
-};
-
 const inputArg = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
-const inputPath = resolveInputPath(inputArg || process.env.CEDICT_PATH);
+const inputPath = await resolveExistingPath(inputArg || process.env.CEDICT_PATH, ['cedict_ts.u8']);
 const schemaPath = path.join(serverRoot, 'scripts', 'dictionary-schema.sql');
 
 const stripToneNumbers = (value) =>

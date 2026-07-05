@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { synthesizeSpeech } from '../src/services/audio.service.js';
+import { resolveContentPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -10,9 +11,9 @@ dotenv.config({ path: path.join(serverRoot, '.env') });
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const limit = Number(args.find((arg) => arg.startsWith('--limit='))?.split('=')[1] || 20);
-const outputDir = path.resolve(
-  serverRoot,
-  args.find((arg) => arg.startsWith('--output='))?.split('=').slice(1).join('=') || 'data/audio'
+const outputDir = resolveContentPath(
+  args.find((arg) => arg.startsWith('--output='))?.split('=').slice(1).join('='),
+  ['audio']
 );
 
 const normalizeFilename = (value) => String(value).replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '');

@@ -1,0 +1,112 @@
+{
+  "lesson_id": "hsk3-l09-speaking-travel",
+  "metadata": {
+    "title_zh": "车站在哪里？",
+    "title_en": "Where Is the Station?",
+    "hsk_level": 3,
+    "cefr_level": "A2",
+    "primary_skill": "speaking",
+    "secondary_skills": [],
+    "topic": "travel",
+    "estimated_minutes": 12,
+    "xp_reward": 35,
+    "tags": [
+      "travel",
+      "speaking",
+      "hsk3"
+    ]
+  },
+  "learning_objectives": [
+    "Ask for a location while traveling.",
+    "Say where you want to go."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "火车",
+      "pinyin": "huǒ chē",
+      "english": "train",
+      "is_new": true
+    },
+    {
+      "simplified": "北京",
+      "pinyin": "Běi jīng",
+      "english": "Beijing",
+      "is_new": true
+    },
+    {
+      "simplified": "车站",
+      "pinyin": "chē zhàn",
+      "english": "station",
+      "is_new": true
+    },
+    {
+      "simplified": "请问",
+      "pinyin": "qǐng wèn",
+      "english": "excuse me; may I ask",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "请问...",
+      "explanation": "Use this polite opener before asking a question.",
+      "examples": [
+        {
+          "zh": "请问，车站在哪里？",
+          "pinyin": "Qǐng wèn, chē zhàn zài nǎ lǐ?",
+          "en": "Excuse me, where is the station?"
+        }
+      ]
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "请问",
+      "车站",
+      "火车"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "speaking",
+      "phases": [
+        {
+          "type": "role_play",
+          "scenario": "Ask a passerby where the train station is.",
+          "model_dialogue_zh": "我想坐火车去北京。请问，车站在哪里？",
+          "model_dialogue_pinyin": "Wǒ xiǎng zuò huǒ chē qù Běi jīng. Qǐng wèn, chē zhàn zài nǎ lǐ?",
+          "model_dialogue_en": "I want to take the train to Beijing. Excuse me, where is the station?"
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk3-l09-ex1",
+        "kind": "word_order",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Arrange the question: Excuse me, where is the station?",
+        "tokens": [
+          "请问",
+          "车站",
+          "在",
+          "哪里"
+        ],
+        "correct_answer": "请问 车站 在 哪里",
+        "acceptable_variants": [
+          "请问车站在哪里"
+        ],
+        "explanation": "Use 请问 first, then ask the location."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "请问 makes travel questions more polite."
+    ],
+    "srs_inject_word_ids": []
+  }
+}

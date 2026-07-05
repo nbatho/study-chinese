@@ -1,0 +1,111 @@
+{
+  "lesson_id": "hsk2-l06-writing-family",
+  "metadata": {
+    "title_zh": "我的家",
+    "title_en": "My Family",
+    "hsk_level": 2,
+    "cefr_level": "A1",
+    "primary_skill": "writing",
+    "secondary_skills": [],
+    "topic": "family",
+    "estimated_minutes": 10,
+    "xp_reward": 30,
+    "tags": [
+      "family",
+      "writing",
+      "hsk2"
+    ]
+  },
+  "learning_objectives": [
+    "Write a simple family sentence.",
+    "Use 有 to say what a family has."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "家",
+      "pinyin": "jiā",
+      "english": "family; home",
+      "is_new": true
+    },
+    {
+      "simplified": "爸爸",
+      "pinyin": "bà ba",
+      "english": "father",
+      "is_new": true
+    },
+    {
+      "simplified": "妈妈",
+      "pinyin": "mā ma",
+      "english": "mother",
+      "is_new": true
+    },
+    {
+      "simplified": "有",
+      "pinyin": "yǒu",
+      "english": "to have",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "我家有...",
+      "explanation": "Use 有 to say there is or someone has.",
+      "examples": [
+        {
+          "zh": "我家有三个人。",
+          "pinyin": "Wǒ jiā yǒu sān ge rén.",
+          "en": "There are three people in my family."
+        }
+      ]
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "家",
+      "爸爸",
+      "妈妈"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "writing",
+      "phases": [
+        {
+          "type": "sentence_building",
+          "prompt": "Write one sentence about your family.",
+          "model_answer_zh": "我家有爸爸和妈妈。",
+          "model_answer_pinyin": "Wǒ jiā yǒu bà ba hé mā ma.",
+          "model_answer_en": "My family has my father and mother."
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk2-l06-ex1",
+        "kind": "word_order",
+        "skill": "writing",
+        "bloom_level": "apply",
+        "prompt": "Arrange the sentence: My family has three people.",
+        "tokens": [
+          "我家",
+          "有",
+          "三个人"
+        ],
+        "correct_answer": "我家 有 三个人",
+        "acceptable_variants": [
+          "我家有三个人"
+        ],
+        "explanation": "Use place/person + 有 + noun phrase."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "我家有... is useful for family descriptions."
+    ],
+    "srs_inject_word_ids": []
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "lesson_id": "hsk2-l05-listening-transportation",
+  "metadata": {
+    "title_zh": "去学校",
+    "title_en": "Going to School",
+    "hsk_level": 2,
+    "cefr_level": "A1",
+    "primary_skill": "listening",
+    "secondary_skills": [
+      "speaking"
+    ],
+    "topic": "transportation",
+    "estimated_minutes": 10,
+    "xp_reward": 30,
+    "tags": [
+      "transportation",
+      "listening",
+      "hsk2"
+    ]
+  },
+  "learning_objectives": [
+    "Understand simple transport choices.",
+    "Identify destination words."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "去",
+      "pinyin": "qù",
+      "english": "to go",
+      "is_new": true
+    },
+    {
+      "simplified": "学校",
+      "pinyin": "xué xiào",
+      "english": "school",
+      "is_new": true
+    },
+    {
+      "simplified": "坐",
+      "pinyin": "zuò",
+      "english": "to ride; to sit",
+      "is_new": true
+    },
+    {
+      "simplified": "公共汽车",
+      "pinyin": "gōng gòng qì chē",
+      "english": "bus",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "坐 + transport + 去...",
+      "explanation": "Say how someone goes somewhere.",
+      "examples": [
+        {
+          "zh": "我坐公共汽车去学校。",
+          "pinyin": "Wǒ zuò gōng gòng qì chē qù xué xiào.",
+          "en": "I take the bus to school."
+        }
+      ]
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "去",
+      "学校",
+      "坐"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "listening",
+      "phases": [
+        {
+          "type": "dialogue_listen",
+          "dialogue": [
+            {
+              "speaker": "A",
+              "zh": "你怎么去学校？",
+              "pinyin": "Nǐ zěn me qù xué xiào?",
+              "en": "How do you go to school?"
+            },
+            {
+              "speaker": "B",
+              "zh": "我坐公共汽车去学校。",
+              "pinyin": "Wǒ zuò gōng gòng qì chē qù xué xiào.",
+              "en": "I take the bus to school."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk2-l05-ex1",
+        "kind": "multiple_choice",
+        "skill": "listening",
+        "bloom_level": "understand",
+        "prompt": "What transport does B use?",
+        "options": [
+          "bus",
+          "train",
+          "taxi"
+        ],
+        "correct_answer": "bus",
+        "acceptable_variants": [
+          "bus"
+        ],
+        "explanation": "公共汽车 means bus."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "Use 坐 before many transport words."
+    ],
+    "srs_inject_word_ids": []
+  }
+}
