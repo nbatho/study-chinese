@@ -46,6 +46,18 @@ const editableProfileFields = {
 const MAX_ACTIVITY_MINUTES = 180;
 const MAX_ACTIVITY_EXERCISES = 200;
 
+const CEFR_RANK_SQL = (expression) => `
+  CASE COALESCE(${expression}, 'A1')
+    WHEN 'A1' THEN 1
+    WHEN 'A2' THEN 2
+    WHEN 'B1' THEN 3
+    WHEN 'B2' THEN 4
+    WHEN 'C1' THEN 5
+    WHEN 'C2' THEN 6
+    ELSE 1
+  END
+`;
+
 const normalizeActivityNumber = (value, { max, field }) => {
   const normalized = Number(value || 0);
 
@@ -212,7 +224,7 @@ export const getTodayPlan = async (userId) => {
   ] = await Promise.all([
     query(
       `
-        SELECT daily_minutes
+        SELECT daily_minutes, cefr_level
         FROM users
         WHERE id = $1
       `,
@@ -243,10 +255,14 @@ export const getTodayPlan = async (userId) => {
     query(
       `
         SELECT l.id, l.title, l.skill, l.estimated_minutes
-        FROM lessons l
+        FROM users u
+        JOIN lessons l
+          ON l.is_active = true
         LEFT JOIN user_lesson_progress ulp
           ON ulp.lesson_id = l.id AND ulp.user_id = $1
-        WHERE l.is_active = true AND ulp.completed_at IS NULL
+        WHERE u.id = $1
+          AND ulp.completed_at IS NULL
+          AND ${CEFR_RANK_SQL('l.cefr_level')} <= ${CEFR_RANK_SQL('u.cefr_level')}
         ORDER BY l.hsk_level, l.order_num
         LIMIT 1
       `,

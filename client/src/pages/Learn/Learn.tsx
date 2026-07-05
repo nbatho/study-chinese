@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useDailyContentQuery, useLessonsQuery, useUserProfileQuery } from "../../api";
 import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, Search, Trophy } from "lucide-react";
@@ -8,6 +8,9 @@ import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
+
+const CEFR_RANK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
+const CEFR_RECOMMENDED_HSK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
 
 export default function Learn() {
   const { t } = useI18n();
@@ -22,12 +25,13 @@ export default function Learn() {
   const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const [activeTab, setActiveTab] = useState<"curriculum" | "grammar">("curriculum");
   const [selectedHSK, setSelectedHSK] = useState<number>(1);
+  const [appliedPlacementAt, setAppliedPlacementAt] = useState<string | null>(null);
   const [grammarQuery, setGrammarQuery] = useState("");
   const lessons = lessonsQuery.data?.lessons ?? [];
-  const userCefrLevel = profileQuery.data?.profile.cefrLevel ?? "A1";
-  const cefrRank = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
-  const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof cefrRank; completedAt?: string | null }) =>
-    cefrRank[lesson.cefrLevel ?? "A1"] > cefrRank[userCefrLevel];
+  const profile = profileQuery.data?.profile;
+  const userCefrLevel = profile?.cefrLevel ?? "A1";
+  const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null }) =>
+    CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
   const hskLevels = Array.from(new Set(lessons.map((lesson) => lesson.hskLevel))).sort((a, b) => a - b);
   const visibleHskLevels = hskLevels.length ? hskLevels : [1, 2, 3];
   const hskStats = visibleHskLevels.map((level) => {
@@ -36,7 +40,7 @@ export default function Learn() {
     const percent = Math.round(hskLessons.length ? (completedCount / hskLessons.length) * 100 : 0);
     const skills = Array.from(new Set(hskLessons.map((lesson) => lesson.skill))).slice(0, 3);
     const cefrLevel = hskLessons[0]?.cefrLevel ?? (level === 1 ? "A1" : level === 2 ? "A2" : "B1");
-    const isLocked = cefrRank[cefrLevel] > cefrRank[userCefrLevel];
+    const isLocked = CEFR_RANK[cefrLevel] > CEFR_RANK[userCefrLevel];
 
     return {
       level,
@@ -56,6 +60,20 @@ export default function Learn() {
     entry.summary.toLowerCase().includes(grammarQuery.toLowerCase()) ||
     entry.pattern.toLowerCase().includes(grammarQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const placementAt = profile?.placementTestCompletedAt ?? null;
+    if (!placementAt || placementAt === appliedPlacementAt || !visibleHskLevels.length) return;
+
+    const targetHsk = CEFR_RECOMMENDED_HSK[userCefrLevel];
+    const recommendedHsk = visibleHskLevels.reduce((best, level) => {
+      if (level <= targetHsk && level > best) return level;
+      return best;
+    }, visibleHskLevels[0]);
+
+    setSelectedHSK(recommendedHsk);
+    setAppliedPlacementAt(placementAt);
+  }, [appliedPlacementAt, profile?.placementTestCompletedAt, userCefrLevel, visibleHskLevels]);
 
   if (!isAuthenticated) {
     return (

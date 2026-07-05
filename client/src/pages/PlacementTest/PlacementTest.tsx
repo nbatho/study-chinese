@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ClipboardCheck, LockKeyhole, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 import { usePlacementQuestionsQuery, useSubmitPlacementMutation } from "../../api/placement/queries";
 import type { PlacementQuestion, PlacementResult, PlacementSection } from "../../api/placement";
 import type { CefrLevel, SkillLevel } from "../../api/users";
@@ -19,6 +20,11 @@ const CEFR_WEIGHTS: Record<CefrLevel, number> = {
   C1: 5,
   C2: 6,
 };
+
+const CEFR_LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const INITIAL_CEFR_CEILING: CefrLevel = "A2";
+const PASS_LEVEL_ACCURACY = 2 / 3;
+const ADVANCE_LEVEL_ACCURACY = 2 / 3;
 
 const sectionLabels: Record<PlacementSection, string> = {
   vocabulary: "Vocabulary",
@@ -46,19 +52,19 @@ const cefrDescriptions: Record<CefrLevel, string> = {
 
 const calculatePlacementResult = (
   questions: PlacementQuestion[],
-  answers: Array<number | null>,
+  answersByQuestionId: Record<string, number | null>,
 ): PlacementResult => {
   let score = 0;
   let correct = 0;
+  const answeredQuestions = questions.filter((question) => answersByQuestionId[question.id] !== null && answersByQuestionId[question.id] !== undefined);
 
   const breakdown = (["vocabulary", "grammar", "reading"] as PlacementSection[]).map((section) => {
-    const sectionQuestions = questions.filter((question) => question.section === section);
+    const sectionQuestions = answeredQuestions.filter((question) => question.section === section);
     let sectionScore = 0;
     let sectionCorrect = 0;
 
     sectionQuestions.forEach((question) => {
-      const questionIndex = questions.findIndex((item) => item.id === question.id);
-      if (answers[questionIndex] === question.correctIndex) {
+      if (answersByQuestionId[question.id] === question.correctIndex) {
         const weight = CEFR_WEIGHTS[question.cefrLevel] ?? 1;
         sectionScore += weight;
         sectionCorrect += 1;
@@ -76,16 +82,63 @@ const calculatePlacementResult = (
     };
   });
 
-  const cefrLevel: CefrLevel = score >= 27 ? "B2" : score >= 16 ? "B1" : score >= 7 ? "A2" : "A1";
+  let cefrLevel: CefrLevel = "A1";
+
+  for (const level of CEFR_LEVELS) {
+    const levelQuestions = answeredQuestions.filter((question) => question.cefrLevel === level);
+    if (!levelQuestions.length) continue;
+
+    const levelCorrect = levelQuestions.filter((question) => answersByQuestionId[question.id] === question.correctIndex).length;
+    const accuracy = levelCorrect / levelQuestions.length;
+
+    if (accuracy >= PASS_LEVEL_ACCURACY) {
+      cefrLevel = level;
+      continue;
+    }
+
+    if (level !== "A1") break;
+  }
 
   return {
     cefrLevel,
     startLevel: cefrToStartLevel[cefrLevel],
     score,
     correct,
-    total: questions.length,
+    total: answeredQuestions.length,
     breakdown,
   };
+};
+
+const getCefrRank = (level: CefrLevel) => CEFR_LEVELS.indexOf(level);
+
+const getNextAvailableLevel = (questions: PlacementQuestion[], currentCeiling: CefrLevel) => {
+  const currentRank = getCefrRank(currentCeiling);
+  return CEFR_LEVELS.find((level) =>
+    getCefrRank(level) > currentRank && questions.some((question) => question.cefrLevel === level)
+  ) ?? null;
+};
+
+const shouldAdvanceDifficulty = (
+  questions: PlacementQuestion[],
+  activeQuestions: PlacementQuestion[],
+  answersByQuestionId: Record<string, number | null>,
+  currentCeiling: CefrLevel,
+) => {
+  const nextLevel = getNextAvailableLevel(questions, currentCeiling);
+  if (!nextLevel) return null;
+
+  const answeredQuestions = activeQuestions.filter((question) => answersByQuestionId[question.id] !== null && answersByQuestionId[question.id] !== undefined);
+  if (answeredQuestions.length !== activeQuestions.length) return null;
+
+  const ceilingQuestions = activeQuestions.filter((question) => question.cefrLevel === currentCeiling);
+  if (!ceilingQuestions.length) return null;
+
+  const correctAtCeiling = ceilingQuestions.filter((question) => answersByQuestionId[question.id] === question.correctIndex).length;
+  const correctOverall = answeredQuestions.filter((question) => answersByQuestionId[question.id] === question.correctIndex).length;
+  const ceilingAccuracy = correctAtCeiling / ceilingQuestions.length;
+  const overallAccuracy = correctOverall / answeredQuestions.length;
+
+  return ceilingAccuracy >= ADVANCE_LEVEL_ACCURACY && overallAccuracy >= ADVANCE_LEVEL_ACCURACY ? nextLevel : null;
 };
 
 interface PlacementTestProps {
@@ -100,25 +153,34 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
   const questionsQuery = usePlacementQuestionsQuery(isAuthenticated);
   const submitMutation = useSubmitPlacementMutation();
   const questions = questionsQuery.data?.questions ?? [];
+  const [currentCeiling, setCurrentCeiling] = useState<CefrLevel>(INITIAL_CEFR_CEILING);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Array<number | null>>([]);
+  const [answersByQuestionId, setAnswersByQuestionId] = useState<Record<string, number | null>>({});
   const [result, setResult] = useState<PlacementResult | null>(null);
 
-  const currentQuestion = questions[currentIndex];
-  const currentAnswer = answers[currentIndex];
-  const progress = questions.length ? ((currentIndex + (result ? 1 : 0)) / questions.length) * 100 : 0;
-  const answeredCount = useMemo(() => answers.filter((answer) => answer !== null && answer !== undefined).length, [answers]);
+  const activeQuestions = useMemo(
+    () => questions.filter((question) => getCefrRank(question.cefrLevel) <= getCefrRank(currentCeiling)),
+    [currentCeiling, questions],
+  );
+  const currentQuestion = activeQuestions[currentIndex];
+  const currentAnswer = currentQuestion ? answersByQuestionId[currentQuestion.id] : null;
+  const answeredCount = useMemo(
+    () => activeQuestions.filter((question) => answersByQuestionId[question.id] !== null && answersByQuestionId[question.id] !== undefined).length,
+    [activeQuestions, answersByQuestionId],
+  );
+  const progress = activeQuestions.length ? (answeredCount / activeQuestions.length) * 100 : 0;
 
   const chooseAnswer = (optionIndex: number) => {
-    setAnswers((previous) => {
-      const next = [...previous];
-      next[currentIndex] = optionIndex;
-      return next;
-    });
+    if (!currentQuestion) return;
+
+    setAnswersByQuestionId((previous) => ({
+      ...previous,
+      [currentQuestion.id]: optionIndex,
+    }));
   };
 
   const finish = async () => {
-    const placementResult = calculatePlacementResult(questions, answers);
+    const placementResult = calculatePlacementResult(activeQuestions, answersByQuestionId);
     setResult(placementResult);
     await submitMutation.mutateAsync({
       cefrLevel: placementResult.cefrLevel,
@@ -134,12 +196,24 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
       return;
     }
 
+    const nextLevel = shouldAdvanceDifficulty(questions, activeQuestions, answersByQuestionId, currentCeiling);
+    if (nextLevel) {
+      setCurrentCeiling(nextLevel);
+      setCurrentIndex(activeQuestions.length);
+      toast.success("Bài kiểm tra đã cập nhật theo trình độ hiện tại của bạn.", {
+        description: `Độ khó hiện tại: CEFR ${nextLevel}`,
+        duration: 5000,
+      });
+      return;
+    }
+
     await finish();
   };
 
   const restart = () => {
-    setAnswers([]);
+    setAnswersByQuestionId({});
     setCurrentIndex(0);
+    setCurrentCeiling(INITIAL_CEFR_CEILING);
     setResult(null);
   };
 
@@ -212,7 +286,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                   <h1 className={cn("font-extrabold", embedded ? "text-xl" : "text-2xl")}>Quick placement test</h1>
                 </div>
                 <p className="max-w-150 text-sm text-muted-foreground">
-                  Answer {questions.length || 20} short questions across vocabulary, grammar, and reading.
+                  Answer short questions across vocabulary, grammar, and reading. The test will raise the CEFR level when your answers show you are ready.
                 </p>
               </div>
               {onSkip && (
@@ -234,8 +308,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
               <>
                 <div className="mb-5 space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
-                    <span>Question {currentIndex + 1} of {questions.length}</span>
-                    <span>{answeredCount}/{questions.length} answered</span>
+                    <span>Question {currentIndex + 1} of {activeQuestions.length}</span>
+                    <span>{answeredCount}/{activeQuestions.length} answered</span>
                   </div>
                   <Progress value={progress} />
                 </div>
@@ -243,6 +317,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" className="rounded-md">{sectionLabels[currentQuestion.section]}</Badge>
                   <Badge className="rounded-md">{currentQuestion.cefrLevel}</Badge>
+                  <Badge variant="secondary" className="rounded-md">Adaptive to {currentCeiling}</Badge>
                 </div>
 
                 <div className="rounded-lg border bg-background p-4">
@@ -287,7 +362,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                     disabled={currentAnswer === null || currentAnswer === undefined || submitMutation.isPending}
                     className="rounded-lg"
                   >
-                    {submitMutation.isPending ? "Saving..." : currentIndex === questions.length - 1 ? "See result" : "Next"}
+                    {submitMutation.isPending ? "Saving..." : currentIndex === activeQuestions.length - 1 ? "Continue" : "Next"}
                     <ArrowRight size={18} />
                   </Button>
                 </div>
