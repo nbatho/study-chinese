@@ -50,6 +50,7 @@ export default function LessonPath({
   const firstIncompleteIndex = flatEntries.findIndex(
     (entry) => entry.serverLesson && !entry.serverLesson.completedAt && !isLessonLocked?.(entry.serverLesson),
   );
+  const entryIndexByOrder = new Map(flatEntries.map((entry, index) => [entry.curriculumLesson.order, index]));
 
   if (!flatEntries.length) {
     return (
@@ -138,8 +139,6 @@ export default function LessonPath({
     );
   };
 
-  let globalIndex = 0;
-
   return (
     <div className="space-y-8">
       <div className="rounded-lg border bg-secondary/50 p-4 text-left">
@@ -160,9 +159,7 @@ export default function LessonPath({
                 curriculumLesson,
                 serverLesson: lessonsByOrder.get(curriculumLesson.order),
               };
-              const rendered = renderLesson(entry, globalIndex);
-              globalIndex += 1;
-              return rendered;
+              return renderLesson(entry, entryIndexByOrder.get(curriculumLesson.order) ?? 0);
             })}
           </div>
         </section>
@@ -180,7 +177,7 @@ export default function LessonPath({
               curriculumLesson: curriculum.endTest,
               serverLesson: lessonsByOrder.get(curriculum.endTest.order),
             },
-            globalIndex,
+            entryIndexByOrder.get(curriculum.endTest.order) ?? flatEntries.length - 1,
           )}
         </div>
       </section>

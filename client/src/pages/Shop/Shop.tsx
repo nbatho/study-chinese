@@ -115,10 +115,10 @@ export default function Shop() {
   );
 
   return (
-    <div className="anim-slide pb-10">
-      <header className="mb-5 flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <div className="app-page">
+      <header className="app-page-header mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-md bg-secondary px-2.5 py-1 text-xs font-extrabold uppercase text-muted-foreground">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-secondary px-2.5 py-1 text-xs font-extrabold text-muted-foreground">
             <ShoppingBag size={14} />
             {t("shop.badge")}
           </div>
@@ -128,17 +128,17 @@ export default function Shop() {
           </p>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center sm:min-w-90">
-          <div className="rounded-lg border bg-background px-3 py-3">
+          <div className="rounded-xl border bg-background px-3 py-3">
             <Gem className="mx-auto mb-1 text-tone-1" size={20} />
             <strong className="block text-xl">{shop.wallet.gemBalance}</strong>
             <span className="text-xs font-bold text-muted-foreground">{t("common.gems")}</span>
           </div>
-          <div className="rounded-lg border bg-background px-3 py-3">
+          <div className="rounded-xl border bg-background px-3 py-3">
             <ShieldCheck className="mx-auto mb-1 text-tone-3" size={20} />
             <strong className="block text-xl">{shop.wallet.streakFreezes}</strong>
             <span className="text-xs font-bold text-muted-foreground">{t("common.freeze")}</span>
           </div>
-          <div className="rounded-lg border bg-background px-3 py-3">
+          <div className="rounded-xl border bg-background px-3 py-3">
             <Crown className="mx-auto mb-1 text-gold" size={20} />
             <strong className="block text-sm">{shop.premium.isActive ? t("common.active") : t("common.free")}</strong>
             <span className="text-xs font-bold text-muted-foreground">{formatPremiumDate(shop.premium.expiresAt, t)}</span>
@@ -154,7 +154,7 @@ export default function Shop() {
           if (!items.length) return null;
 
           return (
-            <section key={category} className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <section key={category} className="app-surface-padded">
               <div className="mb-4 flex items-center gap-2">
                 <Icon size={19} className={config.tone} />
                 <h2 className="text-base font-extrabold">{t(config.labelKey)}</h2>
@@ -166,9 +166,9 @@ export default function Shop() {
                   const isEquipped = item.isOwned && item.isEquipped && (item.grantType === "avatar" || item.grantType === "ai_tutor_skin");
 
                   return (
-                    <article key={item.id} className="flex min-h-45 flex-col rounded-lg border bg-background p-4">
+                    <article key={item.id} className="flex min-h-45 flex-col rounded-2xl border bg-background/80 p-4 transition hover:border-primary/25 hover:shadow-sm">
                       <div className="mb-3 flex items-start gap-3">
-                        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-card text-3xl shadow-sm">
+                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-card text-3xl shadow-sm">
                           {item.emoji}
                         </span>
                         <div className="min-w-0 flex-1">
@@ -187,7 +187,7 @@ export default function Shop() {
                           variant={isEquipped ? "secondary" : "default"}
                           disabled={purchaseMutation.isPending || !canAfford || isEquipped}
                           onClick={() => buyItem(item)}
-                          className={cn("min-w-24 rounded-lg", !canAfford && "opacity-60")}
+                          className={cn("min-w-24 rounded-xl", !canAfford && "opacity-60")}
                         >
                           {purchaseMutation.isPending ? <RefreshCw className="animate-spin" /> : getActionLabel(item, t)}
                         </Button>

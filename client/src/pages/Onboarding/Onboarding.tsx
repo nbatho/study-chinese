@@ -92,8 +92,8 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,var(--bg-app),rgba(217,63,71,0.05))] p-4 sm:p-6">
-      <div className="anim-pop w-full max-w-120 rounded-3xl border bg-card p-5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] sm:p-9">
+    <div className="app-workspace-bg flex min-h-[100dvh] items-center justify-center p-4 sm:p-6">
+      <div className="anim-pop w-full max-w-120 rounded-2xl border bg-card p-5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] sm:p-9">
         <div className="mb-8 flex gap-1.5">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className={cn("h-1.5 flex-1 rounded-[3px] transition", i <= step ? "bg-primary" : "bg-border")} />
@@ -128,7 +128,7 @@ export default function Onboarding() {
                     key={av}
                     onClick={() => setSelectedAvatar(av)}
                     className={cn(
-                      "rounded-lg border-2 border-transparent bg-secondary p-2 text-center text-3xl transition hover:scale-105 sm:p-3 sm:text-4xl",
+                      "rounded-xl border-2 border-transparent bg-secondary p-2 text-center text-3xl transition hover:scale-105 sm:p-3 sm:text-4xl",
                       selectedAvatar === av && "border-primary bg-primary/10",
                     )}
                   >
@@ -171,9 +171,9 @@ export default function Onboarding() {
                   <button
                     type="button"
                     onClick={() => setIsTakingPlacement(true)}
-                    className="flex items-center gap-4 rounded-lg border-2 border-primary bg-primary/5 p-4 text-left transition hover:bg-primary/10"
+                    className="flex items-center gap-4 rounded-xl border-2 border-primary bg-primary/5 p-4 text-left transition hover:bg-primary/10 active:translate-y-px"
                   >
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                       <ClipboardCheck size={22} />
                     </span>
                     <span>
@@ -187,7 +187,7 @@ export default function Onboarding() {
                       chooseLevel("beginner");
                       setStep(3);
                     }}
-                    className="rounded-lg border bg-secondary px-4 py-3 text-left text-sm font-bold transition hover:bg-secondary/80"
+                    className="rounded-xl border bg-secondary px-4 py-3 text-left text-sm font-bold transition hover:bg-secondary/80 active:translate-y-px"
                   >
                     I am new to Chinese, skip the test
                   </button>
@@ -198,7 +198,7 @@ export default function Onboarding() {
                       key={lvl.id}
                       onClick={() => chooseLevel(lvl.id)}
                       className={cn(
-                        "flex cursor-pointer items-center gap-4 rounded-[14px] border-2 bg-card p-4 transition",
+                        "flex cursor-pointer items-center gap-4 rounded-xl border-2 bg-card p-4 transition",
                         selectedLevel === lvl.id ? "border-primary bg-primary/5" : "border-border",
                       )}
                     >
@@ -230,7 +230,7 @@ export default function Onboarding() {
                   key={goal.id}
                   onClick={() => setSelectedGoal(goal.id)}
                   className={cn(
-                    "flex cursor-pointer flex-col items-start rounded-[14px] border-2 bg-card p-4 text-left transition",
+                    "flex cursor-pointer flex-col items-start rounded-xl border-2 bg-card p-4 text-left transition",
                     selectedGoal === goal.id ? "border-primary bg-primary/5" : "border-border",
                   )}
                 >
@@ -262,11 +262,11 @@ export default function Onboarding() {
 
         {!isTakingPlacement && <div className={cn("flex gap-3", step > 1 ? "justify-between" : "justify-end")}>
           {step > 1 && (
-            <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent" onClick={handleBack}>
+            <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent active:translate-y-px" onClick={handleBack}>
               {t("common.back")}
             </button>
           )}
-          <button className={cn("inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground", step > 1 && "flex-1")} onClick={handleNext} disabled={updateProfileMutation.isPending || addActivityMutation.isPending}>
+          <button className={cn("inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground", step > 1 && "flex-1")} onClick={handleNext} disabled={updateProfileMutation.isPending || addActivityMutation.isPending}>
             {updateProfileMutation.isPending || addActivityMutation.isPending ? t("common.saving") : step === 4 ? t("onboarding.letsGo") : t("common.continue")}
             {step < 4 && <ArrowRight size={18} />}
           </button>

@@ -26,6 +26,7 @@ const CEFR_LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const INITIAL_CEFR_CEILING: CefrLevel = "A2";
 const PASS_LEVEL_ACCURACY = 2 / 3;
 const ADVANCE_LEVEL_ACCURACY = 2 / 3;
+const EMPTY_PLACEMENT_QUESTIONS: PlacementQuestion[] = [];
 
 const sectionLabels: Record<PlacementSection, string> = {
   vocabulary: "Vocabulary",
@@ -163,7 +164,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
   const profileQuery = useUserProfileQuery(isAuthenticated && !embedded);
   const questionsQuery = usePlacementQuestionsQuery(isAuthenticated);
   const submitMutation = useSubmitPlacementMutation();
-  const questions = questionsQuery.data?.questions ?? [];
+  const questions = questionsQuery.data?.questions ?? EMPTY_PLACEMENT_QUESTIONS;
   const [currentCeiling, setCurrentCeiling] = useState<CefrLevel>(INITIAL_CEFR_CEILING);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answersByQuestionId, setAnswersByQuestionId] = useState<Record<string, number | null>>({});
@@ -252,22 +253,22 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
   const body = (
     <div className={cn("anim-slide mx-auto w-full", embedded ? "max-w-120" : "max-w-4xl")}>
       {!embedded && (
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <Button type="button" variant="ghost" onClick={() => navigate(-1)} className="rounded-lg">
+        <div className="app-page-header mb-5 flex items-center justify-between gap-3">
+          <Button type="button" variant="ghost" onClick={() => navigate(-1)} className="rounded-xl">
             <ArrowLeft size={18} />
             Back
           </Button>
-          <Badge className="rounded-md px-3 py-1">Kiểm tra đầu vào</Badge>
+          <Badge className="rounded-lg px-3 py-1">Kiểm tra đầu vào</Badge>
         </div>
       )}
 
-      <div className="rounded-lg border bg-card p-5 shadow-sm sm:p-6">
+      <div className="app-surface p-5 sm:p-6">
         {result ? (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-jade/10 text-jade">
+            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-jade/10 text-jade">
               <CheckCircle2 size={28} />
             </div>
-            <p className="text-xs font-extrabold uppercase text-muted-foreground">Kết quả kiểm tra đầu vào</p>
+            <p className="text-xs font-extrabold text-muted-foreground">Kết quả kiểm tra đầu vào</p>
             <h1 className="mt-1 text-4xl font-extrabold text-primary">{result.cefrLevel}</h1>
             <p className="mt-2 text-sm font-bold text-foreground">
               Bạn đang ở mức {result.cefrLevel} - {startLevelLabels[result.startLevel]}.
@@ -278,25 +279,25 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {result.breakdown.map((item) => (
-                <div key={item.section} className="rounded-lg border bg-background p-4 text-left">
-                  <p className="text-xs font-extrabold uppercase text-muted-foreground">{sectionLabels[item.section]}</p>
+                <div key={item.section} className="rounded-xl border bg-background p-4 text-left">
+                  <p className="text-xs font-extrabold text-muted-foreground">{sectionLabels[item.section]}</p>
                   <p className="mt-2 text-2xl font-extrabold">{item.correct}/{item.total}</p>
                   <p className="text-xs font-semibold text-muted-foreground">{item.score} weighted points</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-lg bg-secondary p-4 text-sm font-semibold text-muted-foreground">
+            <div className="mt-6 rounded-xl bg-secondary p-4 text-sm font-semibold text-muted-foreground">
               Total score: <span className="text-foreground">{result.score}</span> · Correct answers:{" "}
               <span className="text-foreground">{result.correct}/{result.total}</span>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button type="button" variant="secondary" onClick={restart} className="rounded-lg">
+              <Button type="button" variant="secondary" onClick={restart} className="rounded-xl">
                 <RotateCcw size={18} />
                 Retake
               </Button>
-              <Button type="button" onClick={() => navigate("/learn")} className="rounded-lg">
+              <Button type="button" onClick={() => navigate("/learn")} className="rounded-xl">
                 Bắt đầu học
                 <ArrowRight size={18} />
               </Button>
@@ -315,18 +316,18 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 </p>
               </div>
               {onSkip && (
-                <Button type="button" variant="ghost" onClick={onSkip} className="rounded-lg">
+                <Button type="button" variant="ghost" onClick={onSkip} className="rounded-xl">
                   Skip
                 </Button>
               )}
             </div>
 
             {questionsQuery.isLoading ? (
-              <div className="rounded-lg bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
+              <div className="rounded-xl bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
                 Loading questions...
               </div>
             ) : !currentQuestion ? (
-              <div className="rounded-lg bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
+              <div className="rounded-xl bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
                 No placement questions are available yet.
               </div>
             ) : (
@@ -340,12 +341,12 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 </div>
 
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="rounded-md">{sectionLabels[currentQuestion.section]}</Badge>
-                  <Badge className="rounded-md">{currentQuestion.cefrLevel}</Badge>
-                  <Badge variant="secondary" className="rounded-md">Mức đang kiểm tra {currentCeiling}</Badge>
+                  <Badge variant="secondary" className="rounded-lg">{sectionLabels[currentQuestion.section]}</Badge>
+                  <Badge className="rounded-lg">{currentQuestion.cefrLevel}</Badge>
+                  <Badge variant="secondary" className="rounded-lg">Mức đang kiểm tra {currentCeiling}</Badge>
                 </div>
 
-                <div className="rounded-lg border bg-background p-4">
+                <div className="rounded-xl border bg-background p-4">
                   <p className="text-lg font-extrabold">{currentQuestion.prompt}</p>
                   {currentQuestion.promptHanzi && (
                     <p className="mt-3 font-serif text-3xl font-bold">{currentQuestion.promptHanzi}</p>
@@ -362,7 +363,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                       type="button"
                       onClick={() => chooseAnswer(optionIndex)}
                       className={cn(
-                        "min-h-12 rounded-lg border-2 bg-card px-4 py-3 text-left text-sm font-bold transition hover:border-primary/60 hover:bg-primary/5",
+                        "min-h-12 rounded-xl border-2 bg-card px-4 py-3 text-left text-sm font-bold transition hover:border-primary/60 hover:bg-primary/5 active:translate-y-px",
                         currentAnswer === optionIndex ? "border-primary bg-primary/10 text-primary" : "border-border",
                       )}
                     >
@@ -377,7 +378,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                     variant="secondary"
                     onClick={() => setCurrentIndex((index) => Math.max(0, index - 1))}
                     disabled={currentIndex === 0 || submitMutation.isPending}
-                    className="rounded-lg"
+                    className="rounded-xl"
                   >
                     Back
                   </Button>
@@ -385,7 +386,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                     type="button"
                     onClick={goNext}
                     disabled={currentAnswer === null || currentAnswer === undefined || submitMutation.isPending}
-                    className="rounded-lg"
+                    className="rounded-xl"
                   >
                     {submitMutation.isPending ? "Saving..." : currentIndex === activeQuestions.length - 1 ? "Continue" : "Next"}
                     <ArrowRight size={18} />
@@ -404,7 +405,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <div className="app-workspace-bg min-h-[100dvh] px-4 py-6 sm:px-6">
       {body}
     </div>
   );

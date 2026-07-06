@@ -46,49 +46,109 @@ function Avatar({
   );
 }
 
-function LanguageToggle({
+function LanguageDropdown({
   language,
   label,
-  onToggle,
+  englishLabel,
+  vietnameseLabel,
+  onSelect,
 }: {
   language: "en" | "vi";
   label: string;
-  onToggle: () => void;
+  englishLabel: string;
+  vietnameseLabel: string;
+  onSelect: (language: "en" | "vi") => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const languageOptions: Array<{ code: string; label: string; value: "en" | "vi" }> = [
+    { code: "EN", label: englishLabel, value: "en" },
+    { code: "VI", label: vietnameseLabel, value: "vi" },
+  ];
+  const currentLanguage = languageOptions.find((option) => option.value === language) ?? languageOptions[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!dropdownRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs font-extrabold text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-      aria-label={label}
-      title={label}
-    >
-      <Globe2 size={16} className="text-primary" />
-      <span className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-0.5">
-        <span
-          className={cn(
-            "rounded px-1.5 py-0.5 transition",
-            language === "en" && "bg-background text-foreground",
-          )}
-        >
-          EN
+    <div ref={dropdownRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border bg-background/70 px-2.5 text-xs font-extrabold text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground active:translate-y-px"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-label={`${label}: ${currentLanguage.label}`}
+        title={`${label}: ${currentLanguage.label}`}
+      >
+        <Globe2 size={16} className="text-primary" />
+        <span className="min-w-18 text-left leading-none">
+          <span className="mt-1 block text-xs font-extrabold text-foreground">{currentLanguage.label}</span>
         </span>
-        <span
-          className={cn(
-            "rounded px-1.5 py-0.5 transition",
-            language === "vi" && "bg-background text-foreground",
-          )}
+        <ChevronDown size={15} className={cn("text-muted-foreground transition", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-48 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-xl"
         >
-          VI
-        </span>
-      </span>
-    </button>
+          {languageOptions.map((option) => {
+            const isSelected = option.value === language;
+
+            return (
+              <div key={option.value} className={cn("rounded-xl p-1", isSelected && "bg-primary")}>
+                <button
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isSelected}
+                  onClick={() => {
+                    onSelect(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm font-extrabold transition",
+                    isSelected
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                >
+                  <span className={cn("w-7 text-xs", isSelected ? "text-primary-foreground/80" : "text-primary")}>
+                    {option.code}
+                  </span>
+                  <span>{option.label}</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { language, t, toggleLanguage } = useI18n();
+  const { language, setLanguage, t } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const authUser = useAppSelector((state) => state.auth.user);
   const profileQuery = useUserProfileQuery(isAuthenticated);
@@ -136,7 +196,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/95 shadow-[0_8px_24px_rgba(0,0,0,0.03)] backdrop-blur-xl">
-      <div className="flex min-h-18 items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-7">
+      <div className="flex h-20 items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {isAuthenticated && (
             <div className="hidden min-w-0 max-w-md flex-1 items-center gap-3 md:flex">
@@ -160,86 +220,85 @@ export default function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <LanguageToggle
+          <LanguageDropdown
             language={language}
             label={t("navbar.languageToggle")}
-            onToggle={toggleLanguage}
+            englishLabel={t("profile.languageEnglish")}
+            vietnameseLabel={t("profile.languageVietnamese")}
+            onSelect={setLanguage}
           />
 
           {isAuthenticated ? (
             <div ref={menuRef} className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsUserMenuOpen((value) => !value)}
-              className="inline-flex h-11 items-center gap-2 rounded-lg px-2 pr-3 transition hover:bg-secondary"
-              aria-expanded={isUserMenuOpen}
-              aria-haspopup="menu"
-              aria-label={t("navbar.openUserMenu")}
-              title={t("navbar.openUserMenu")}
-            >
-              <Avatar avatar={avatar} name={displayName} />
-              <span className="hidden min-w-0 text-left sm:block">
-                <span className="block max-w-32 truncate text-sm font-extrabold">{displayName}</span>
-                <span className="block max-w-32 truncate text-xs font-semibold text-muted-foreground">
-                  {profile?.cefrLevel ?? "A1"} · {progressPercent}%
-                </span>
-              </span>
-              <ChevronDown
-                size={16}
-                className={cn("text-muted-foreground transition", isUserMenuOpen && "rotate-180")}
-              />
-            </button>
-
-            {isUserMenuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 w-72 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((value) => !value)}
+                className="inline-flex h-11 items-center gap-2 rounded-lg px-2 pr-3 transition hover:bg-secondary"
+                aria-expanded={isUserMenuOpen}
+                aria-haspopup="menu"
+                aria-label={t("navbar.openUserMenu")}
+                title={t("navbar.openUserMenu")}
               >
-                <div className="flex items-center gap-3 border-b p-3">
-                  <Avatar avatar={avatar} name={displayName} className="size-12 text-xl" />
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-extrabold">{displayName}</div>
-                    <div className="truncate text-xs font-semibold text-muted-foreground">{displayEmail}</div>
+                <Avatar avatar={avatar} name={displayName} />
+                <span className="hidden min-w-0 text-left sm:block">
+                  <span className="block max-w-32 truncate text-sm font-extrabold">{displayName}</span>
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={cn("text-muted-foreground transition", isUserMenuOpen && "rotate-180")}
+                />
+              </button>
+
+              {isUserMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-72 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
+                >
+                  <div className="flex items-center gap-3 border-b p-3">
+                    <Avatar avatar={avatar} name={displayName} className="size-12 text-xl" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-extrabold">{displayName}</div>
+                      <div className="truncate text-xs font-semibold text-muted-foreground">{displayEmail}</div>
+                    </div>
+                  </div>
+                  <div className="grid gap-1 p-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        navigate("/profile");
+                      }}
+                      className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold transition hover:bg-secondary"
+                    >
+                      <User size={16} className="text-primary" />
+                      {t("nav.profile")}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        navigate("/settings");
+                      }}
+                      className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold transition hover:bg-secondary"
+                    >
+                      <Settings size={16} className="text-primary" />
+                      {t("navbar.settings")}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      disabled={logoutMutation.isPending}
+                      className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold text-tone-4 transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <LogOut size={16} />
+                      {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
+                    </button>
                   </div>
                 </div>
-                <div className="grid gap-1 p-2">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate("/profile");
-                    }}
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold transition hover:bg-secondary"
-                  >
-                    <User size={16} className="text-primary" />
-                    {t("nav.profile")}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate("/profile#settings");
-                    }}
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold transition hover:bg-secondary"
-                  >
-                    <Settings size={16} className="text-primary" />
-                    {t("navbar.settings")}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold text-tone-4 transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <LogOut size={16} />
-                    {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
             </div>
           ) : (
             <Button type="button" onClick={() => navigate("/auth")} className="h-11 shrink-0 rounded-lg px-4">

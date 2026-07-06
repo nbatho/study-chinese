@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, Search, Trophy } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
@@ -24,14 +24,20 @@ export default function Learn() {
   }>();
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const profileQuery = useUserProfileQuery(isAuthenticated);
-  const [selectedHSK, setSelectedHSK] = useState<number>(1);
-  const [appliedPlacementAt, setAppliedPlacementAt] = useState<string | null>(null);
+  const [manualHskSelection, setManualHskSelection] = useState<{ placementAt: string | null; level: number } | null>(null);
   const lessons = lessonsQuery.data?.lessons ?? [];
   const profile = profileQuery.data?.profile;
   const userCefrLevel = profile?.cefrLevel ?? "A1";
+  const placementAt = profile?.placementTestCompletedAt ?? null;
   const needsPlacementTest = !profile?.placementTestCompletedAt;
-  const selectedCurriculum = HSK_CURRICULUM.find((level) => level.hskLevel === selectedHSK) ?? HSK_CURRICULUM[0];
   const visibleHskLevels = VISIBLE_HSK_LEVELS;
+  const targetHsk = CEFR_RECOMMENDED_HSK[userCefrLevel];
+  const recommendedHsk = visibleHskLevels.reduce((best, level) => {
+    if (level <= targetHsk && level > best) return level;
+    return best;
+  }, visibleHskLevels[0]);
+  const selectedHSK = manualHskSelection?.placementAt === placementAt ? manualHskSelection.level : recommendedHsk;
+  const selectedCurriculum = HSK_CURRICULUM.find((level) => level.hskLevel === selectedHSK) ?? HSK_CURRICULUM[0];
 
   const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null }) =>
     CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
@@ -70,20 +76,6 @@ export default function Learn() {
   const selectedCompletedCount = levelLessons.filter((lesson) => selectedCurriculumOrders.has(lesson.order) && lesson.completedAt).length;
   const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
 
-  useEffect(() => {
-    const placementAt = profile?.placementTestCompletedAt ?? null;
-    if (!placementAt || placementAt === appliedPlacementAt || !visibleHskLevels.length) return;
-
-    const targetHsk = CEFR_RECOMMENDED_HSK[userCefrLevel];
-    const recommendedHsk = visibleHskLevels.reduce((best, level) => {
-      if (level <= targetHsk && level > best) return level;
-      return best;
-    }, visibleHskLevels[0]);
-
-    setSelectedHSK(recommendedHsk);
-    setAppliedPlacementAt(placementAt);
-  }, [appliedPlacementAt, profile?.placementTestCompletedAt, userCefrLevel, visibleHskLevels]);
-
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -95,15 +87,15 @@ export default function Learn() {
   }
 
   return (
-    <div className="anim-slide">
+    <div className="app-page">
       {selectedLessonId ? (
         <LessonPlayer lessonId={selectedLessonId} onClose={() => setSelectedLessonId(null)} />
       ) : (
         <div>
           {needsPlacementTest && (
-            <div className="mb-5 flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="app-surface-padded mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <ClipboardCheck size={20} />
                 </span>
                 <div>
@@ -114,7 +106,7 @@ export default function Learn() {
               <button
                 type="button"
                 onClick={() => navigate("/placement-test")}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-secondary px-4 text-sm font-bold transition hover:bg-secondary/80"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border bg-secondary px-4 text-sm font-bold transition hover:bg-secondary/80 active:translate-y-px"
               >
                 <ClipboardCheck size={16} />
                 {t("placement.startTest")}
@@ -127,9 +119,9 @@ export default function Learn() {
               <button
                 key={levelStats.level}
                 type="button"
-                onClick={() => setSelectedHSK(levelStats.level)}
+                onClick={() => setManualHskSelection({ placementAt, level: levelStats.level })}
                 className={cn(
-                  "min-h-36 rounded-lg border-2 bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                  "min-h-36 rounded-2xl border-2 bg-card/95 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
                   selectedHSK === levelStats.level ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground",
                   levelStats.isLocked && "border-dashed opacity-75",
                 )}
@@ -139,7 +131,7 @@ export default function Learn() {
                     <span className="text-xs font-bold uppercase text-muted-foreground">Curriculum</span>
                     <h3 className="mt-1 text-2xl font-extrabold">HSK {levelStats.level}</h3>
                   </div>
-                  <span className={cn("flex size-9 items-center justify-center rounded-full", levelStats.percent === 100 ? "bg-jade/10 text-jade" : levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground")}>
+                  <span className={cn("flex size-9 items-center justify-center rounded-xl", levelStats.percent === 100 ? "bg-jade/10 text-jade" : levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground")}>
                     {levelStats.percent === 100 ? <CheckCircle2 size={19} /> : levelStats.isLocked ? <Lock size={18} /> : <BookOpenCheck size={19} />}
                   </span>
                 </div>
@@ -157,7 +149,7 @@ export default function Learn() {
                     Level {levelStats.cefrLevel}
                   </span>
                   {levelStats.skills.map((skill) => (
-                    <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold uppercase text-muted-foreground">
+                    <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold text-muted-foreground">
                       {skill}
                     </span>
                   ))}

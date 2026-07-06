@@ -66,8 +66,8 @@ export function OverviewPanel() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {stats.map((stat) => (
-        <div key={stat.label} className="rounded-lg border bg-card p-4 text-left shadow-sm">
-          <div className="text-xs font-bold uppercase text-muted-foreground">{stat.label}</div>
+        <div key={stat.label} className="rounded-2xl border bg-card/95 p-4 text-left shadow-sm">
+          <div className="text-xs font-bold text-muted-foreground">{stat.label}</div>
           <div className="mt-2 text-3xl font-extrabold text-primary">{stat.value}</div>
           <div className="mt-1 text-xs font-semibold text-muted-foreground">{stat.note}</div>
         </div>
@@ -111,7 +111,7 @@ export function LessonManager() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+      <section className="app-surface-padded text-left">
         <PanelTitle icon={Plus} title={editingId ? "Sửa bài học" : "Thêm bài học"} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
@@ -129,12 +129,12 @@ export function LessonManager() {
           <TextArea label="Intro" value={draft.intro} onChange={(value) => setDraft({ ...draft, intro: value })} />
           <ToggleRow label="Active" value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
           <div className="flex gap-2">
-            <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-lg font-bold">
+            <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-xl font-bold">
               <Save size={16} />
               Lưu
             </Button>
             {editingId && (
-              <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyLesson); }} className="h-10 rounded-lg font-bold">
+              <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyLesson); }} className="h-10 rounded-xl font-bold">
                 Hủy
               </Button>
             )}
@@ -142,11 +142,11 @@ export function LessonManager() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+      <section className="app-surface-padded text-left">
         <Toolbar q={q} setQ={setQ} includeInactive={includeInactive} setIncludeInactive={setIncludeInactive} />
         <div className="grid gap-2">
           {(lessonsQuery.data?.lessons ?? []).map((lesson) => (
-            <div key={lesson.id} className="flex flex-col gap-3 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div key={lesson.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => edit(lesson)} className="min-w-0 text-left">
                 <div className="truncate font-extrabold">{lesson.title}</div>
                 <div className="text-xs font-semibold text-muted-foreground">
@@ -188,7 +188,7 @@ export function WordManager() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+      <section className="app-surface-padded text-left">
         <PanelTitle icon={Plus} title={editingId ? "Sửa từ vựng" : "Thêm từ vựng"} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
@@ -213,12 +213,12 @@ export function WordManager() {
           />
           <ToggleRow label="Active" value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
           <div className="flex gap-2">
-            <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-lg font-bold">
+            <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-xl font-bold">
               <Save size={16} />
               Lưu
             </Button>
             {editingId && (
-              <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyWord); }} className="h-10 rounded-lg font-bold">
+              <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyWord); }} className="h-10 rounded-xl font-bold">
                 Hủy
               </Button>
             )}
@@ -226,11 +226,11 @@ export function WordManager() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+      <section className="app-surface-padded text-left">
         <Toolbar q={q} setQ={setQ} includeInactive={includeInactive} setIncludeInactive={setIncludeInactive} />
         <div className="grid gap-2">
           {(wordsQuery.data?.words ?? []).map((word) => (
-            <div key={word.id} className="flex flex-col gap-3 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div key={word.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => edit(word)} className="min-w-0 text-left">
                 <div className="truncate font-serif text-xl font-bold">{word.simplified}</div>
                 <div className="text-xs font-semibold text-muted-foreground">
@@ -255,14 +255,14 @@ export function UserManager() {
   const updateMutation = useUpdateAdminUserMutation();
 
   return (
-    <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
-      <div className="mb-4 flex items-center gap-2 rounded-lg border bg-background px-3 py-2">
+    <section className="app-surface-padded text-left">
+      <div className="mb-4 flex items-center gap-2 rounded-xl border bg-background px-3 py-2">
         <Search size={16} className="text-muted-foreground" />
         <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder="Tìm email hoặc tên..." />
       </div>
       <div className="grid gap-2">
         {(usersQuery.data?.users ?? []).map((user) => (
-          <div key={user.id} className="grid gap-3 rounded-lg border bg-background p-3 lg:grid-cols-[1fr_150px_150px] lg:items-center">
+          <div key={user.id} className="grid gap-3 rounded-xl border bg-background p-3 lg:grid-cols-[1fr_150px_150px] lg:items-center">
             <div className="min-w-0">
               <div className="truncate font-extrabold">{user.name}</div>
               <div className="truncate text-xs font-semibold text-muted-foreground">{user.email}</div>
@@ -270,7 +270,7 @@ export function UserManager() {
             <select
               value={user.role}
               onChange={(event) => updateMutation.mutate({ userId: user.id, payload: { role: event.target.value as "student" | "admin" } })}
-              className="h-10 rounded-lg border bg-card px-3 text-sm font-semibold"
+              className="h-10 rounded-xl border bg-card px-3 text-sm font-semibold"
             >
               <option value="student">student</option>
               <option value="admin">admin</option>
@@ -278,7 +278,7 @@ export function UserManager() {
             <select
               value={user.isActive ? "active" : "inactive"}
               onChange={(event) => updateMutation.mutate({ userId: user.id, payload: { isActive: event.target.value === "active" } })}
-              className="h-10 rounded-lg border bg-card px-3 text-sm font-semibold"
+              className="h-10 rounded-xl border bg-card px-3 text-sm font-semibold"
             >
               <option value="active">active</option>
               <option value="inactive">inactive</option>
@@ -298,7 +298,7 @@ export function AiLogViewer() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      <section className="rounded-lg border bg-card p-3 text-left shadow-sm">
+      <section className="app-surface p-3 text-left">
         <PanelTitle icon={Bot} title="Phiên AI gần đây" />
         <div className="grid gap-2">
           {sessions.map((session) => (
@@ -307,7 +307,7 @@ export function AiLogViewer() {
               type="button"
               onClick={() => setSelectedId(session.id)}
               className={cn(
-                "rounded-lg border p-3 text-left transition",
+                "rounded-xl border p-3 text-left transition",
                 selected?.id === session.id ? "border-primary bg-primary/5" : "bg-background hover:bg-secondary",
               )}
             >
@@ -320,7 +320,7 @@ export function AiLogViewer() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+      <section className="app-surface-padded text-left">
         {selected ? (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
@@ -330,12 +330,12 @@ export function AiLogViewer() {
                   Model: {selected.lastModelName || "mock"} · Tokens: {selected.totalInputTokens + selected.totalOutputTokens}
                 </p>
               </div>
-              <Badge className="rounded-md">{new Date(selected.updatedAt).toLocaleString()}</Badge>
+              <Badge className="rounded-lg">{new Date(selected.updatedAt).toLocaleString()}</Badge>
             </div>
             <div className="grid gap-3">
               {selected.messages.map((message) => (
-                <div key={message.id} className={cn("rounded-lg border p-3", message.role === "user" ? "bg-background" : "bg-secondary")}>
-                  <div className="mb-1 text-xs font-extrabold uppercase text-muted-foreground">{message.role}</div>
+                <div key={message.id} className={cn("rounded-xl border p-3", message.role === "user" ? "bg-background" : "bg-secondary")}>
+                  <div className="mb-1 text-xs font-extrabold text-muted-foreground">{message.role}</div>
                   <p className="whitespace-pre-wrap text-sm font-semibold">{message.rawText || message.simplified}</p>
                   {message.english && <p className="mt-1 text-sm text-muted-foreground">{message.english}</p>}
                   {message.correction && (
@@ -366,7 +366,7 @@ export function ReportManager() {
   };
 
   return (
-    <section className="rounded-lg border bg-card p-4 text-left shadow-sm">
+    <section className="app-surface-padded text-left">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <SelectInput label="Status" value={status} options={["", "open", "reviewing", "resolved", "dismissed"]} onChange={setStatus} />
       </div>
@@ -383,7 +383,7 @@ function ReportCard({ report, onUpdate }: { report: AdminReport; onUpdate: (repo
   const [note, setNote] = useState(report.adminNote || "");
 
   return (
-    <div className="rounded-lg border bg-background p-4">
+    <div className="rounded-xl border bg-background p-4">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="font-extrabold">{report.lessonTitle || report.lessonId || "Bài học đã bị ẩn"}</div>
@@ -391,23 +391,23 @@ function ReportCard({ report, onUpdate }: { report: AdminReport; onUpdate: (repo
             {report.userEmail || "anonymous"} · {report.category} · {new Date(report.createdAt).toLocaleString()}
           </div>
         </div>
-        <Badge className="rounded-md">{report.status}</Badge>
+        <Badge className="rounded-lg">{report.status}</Badge>
       </div>
       <p className="whitespace-pre-wrap text-sm">{report.message}</p>
       <textarea
         value={note}
         onChange={(event) => setNote(event.target.value)}
-        className="mt-3 min-h-20 w-full rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="mt-3 min-h-20 w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         placeholder="Ghi chú xử lý..."
       />
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" className="h-9 rounded-lg font-bold" onClick={() => onUpdate(report, "reviewing", note)}>
+        <Button type="button" variant="secondary" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "reviewing", note)}>
           Đang xử lý
         </Button>
-        <Button type="button" className="h-9 rounded-lg font-bold" onClick={() => onUpdate(report, "resolved", note)}>
+        <Button type="button" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "resolved", note)}>
           Resolved
         </Button>
-        <Button type="button" variant="ghost" className="h-9 rounded-lg font-bold" onClick={() => onUpdate(report, "dismissed", note)}>
+        <Button type="button" variant="ghost" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "dismissed", note)}>
           Dismiss
         </Button>
       </div>
@@ -418,7 +418,7 @@ function ReportCard({ report, onUpdate }: { report: AdminReport; onUpdate: (repo
 function PanelTitle({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
   return (
     <div className="mb-4 flex items-center gap-2">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-secondary text-primary">
+      <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-primary">
         <Icon size={18} />
       </span>
       <h2 className="font-extrabold">{title}</h2>
@@ -439,7 +439,7 @@ function Toolbar({
 }) {
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+      <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
         <Search size={16} className="text-muted-foreground" />
         <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder="Tìm kiếm..." />
       </div>
@@ -451,12 +451,12 @@ function Toolbar({
 function TextInput({ label, value, onChange, disabled = false }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-xs font-bold uppercase text-muted-foreground">{label}</span>
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <input
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 rounded-lg border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+        className="h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
     </label>
   );
@@ -465,12 +465,12 @@ function TextInput({ label, value, onChange, disabled = false }: { label: string
 function NumberInput({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-xs font-bold uppercase text-muted-foreground">{label}</span>
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <input
         type="number"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 rounded-lg border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );
@@ -479,11 +479,11 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
 function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-xs font-bold uppercase text-muted-foreground">{label}</span>
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-24 rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="min-h-24 rounded-xl border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );
@@ -492,8 +492,8 @@ function TextArea({ label, value, onChange }: { label: string; value: string; on
 function SelectInput({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   return (
     <label className="grid min-w-40 gap-1.5">
-      <span className="text-xs font-bold uppercase text-muted-foreground">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 rounded-lg border bg-background px-3 text-sm font-semibold outline-none">
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm font-semibold outline-none">
         {options.map((option) => (
           <option key={option} value={option}>
             {option || "all"}
@@ -509,7 +509,7 @@ function ToggleRow({ label, value, onChange, compact = false }: { label: string;
     <button
       type="button"
       onClick={() => onChange(!value)}
-      className={cn("flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 text-sm font-bold", compact ? "h-10" : "w-full")}
+      className={cn("flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2 text-sm font-bold", compact ? "h-10" : "w-full")}
     >
       <span>{label}</span>
       <span className={cn("h-5 w-9 rounded-full p-0.5 transition", value ? "bg-primary" : "bg-muted")}>
@@ -521,7 +521,7 @@ function ToggleRow({ label, value, onChange, compact = false }: { label: string;
 
 function StatusPill({ active }: { active: boolean }) {
   return (
-    <span className={cn("rounded-md px-2 py-1 text-xs font-extrabold", active ? "bg-jade/10 text-jade" : "bg-muted text-muted-foreground")}>
+    <span className={cn("rounded-lg px-2 py-1 text-xs font-extrabold", active ? "bg-jade/10 text-jade" : "bg-muted text-muted-foreground")}>
       {active ? "active" : "inactive"}
     </span>
   );
@@ -529,7 +529,7 @@ function StatusPill({ active }: { active: boolean }) {
 
 function IconButton({ title, onClick, icon: Icon }: { title: string; onClick: () => void; icon: LucideIcon }) {
   return (
-    <button type="button" onClick={onClick} title={title} className="flex size-9 items-center justify-center rounded-lg border bg-card text-muted-foreground transition hover:text-primary">
+    <button type="button" onClick={onClick} title={title} className="flex size-9 items-center justify-center rounded-xl border bg-card text-muted-foreground transition hover:text-primary active:translate-y-px">
       <Icon size={16} />
     </button>
   );

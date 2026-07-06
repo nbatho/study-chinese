@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BookOpen,
@@ -85,9 +85,7 @@ export default function Dictionary() {
     return Array.from(values).sort((a, b) => a.localeCompare(b));
   }, [words]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [query, selectedHsk, selectedCategory, selectedCefr, selectedRadical, selectedTopic, sort]);
+  const resetPage = () => setPage(1);
 
   const handleCreateList = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -126,8 +124,8 @@ export default function Dictionary() {
   };
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-5 text-left">
+    <div className="app-page">
+      <header className="app-page-header mb-5">
         <div className="mb-2 flex items-center gap-2">
           <BookOpen size={24} className="text-primary" />
           <h1 className="text-2xl font-extrabold">{t("dictionary.title")}</h1>
@@ -135,23 +133,29 @@ export default function Dictionary() {
         <p className="text-[0.9rem] text-muted-foreground">{t("dictionary.subtitle")}</p>
       </header>
 
-      <section className="mb-4 rounded-lg border bg-card p-4 shadow-sm">
-        <div className="mb-3 flex items-center gap-2 rounded-lg border bg-background px-3 py-2.5">
+      <section className="app-surface-padded mb-4">
+        <div className="mb-3 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
           <Search size={18} className="shrink-0 text-muted-foreground" />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              resetPage();
+            }}
             placeholder={t("dictionary.searchPlaceholder")}
             className="min-w-0 flex-1 bg-transparent text-[0.95rem] outline-none placeholder:text-muted-foreground"
           />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={selectedHsk}
-              onChange={(event) => setSelectedHsk(event.target.value === "all" ? "all" : Number(event.target.value))}
+              onChange={(event) => {
+                setSelectedHsk(event.target.value === "all" ? "all" : Number(event.target.value));
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               <option value="all">{t("dictionary.allHsk")}</option>
@@ -161,11 +165,14 @@ export default function Dictionary() {
             </select>
           </div>
 
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
+              onChange={(event) => {
+                setSelectedCategory(event.target.value);
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               <option value="all">{t("dictionary.allCategories")}</option>
@@ -175,11 +182,14 @@ export default function Dictionary() {
             </select>
           </div>
 
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={selectedCefr}
-              onChange={(event) => setSelectedCefr(event.target.value === "all" ? "all" : event.target.value as CefrLevel)}
+              onChange={(event) => {
+                setSelectedCefr(event.target.value === "all" ? "all" : event.target.value as CefrLevel);
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               <option value="all">All CEFR</option>
@@ -189,11 +199,14 @@ export default function Dictionary() {
             </select>
           </div>
 
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={selectedRadical}
-              onChange={(event) => setSelectedRadical(event.target.value)}
+              onChange={(event) => {
+                setSelectedRadical(event.target.value);
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               <option value="all">All radicals</option>
@@ -205,11 +218,14 @@ export default function Dictionary() {
             </select>
           </div>
 
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={selectedTopic}
-              onChange={(event) => setSelectedTopic(event.target.value)}
+              onChange={(event) => {
+                setSelectedTopic(event.target.value);
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               <option value="all">All topics</option>
@@ -221,11 +237,14 @@ export default function Dictionary() {
             </select>
           </div>
 
-          <div className="flex flex-1 items-center gap-2 rounded-lg border bg-background px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
             <Filter size={16} className="text-muted-foreground" />
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as VocabularySort)}
+              onChange={(event) => {
+                setSort(event.target.value as VocabularySort);
+                resetPage();
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             >
               {sortOptions.map((option) => (
@@ -236,7 +255,7 @@ export default function Dictionary() {
         </div>
       </section>
 
-      <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm">
+      <section className="app-surface-padded mb-5">
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-left">
             <h2 className="text-base font-extrabold">{t("dictionary.myLists")}</h2>
@@ -249,7 +268,7 @@ export default function Dictionary() {
 
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           {lists.length === 0 ? (
-            <span className="rounded-lg border border-dashed px-3 py-2 text-sm font-semibold text-muted-foreground">
+            <span className="rounded-xl border border-dashed px-3 py-2 text-sm font-semibold text-muted-foreground">
               {t("dictionary.noLists")}
             </span>
           ) : (
@@ -259,7 +278,7 @@ export default function Dictionary() {
                 type="button"
                 onClick={() => setSelectedListId(list.id)}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-bold transition",
+                  "flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition",
                   selectedListId === list.id ? "border-primary bg-primary text-primary-foreground" : "bg-background",
                 )}
               >
@@ -277,7 +296,7 @@ export default function Dictionary() {
           <select
             value={newListEmoji}
             onChange={(event) => setNewListEmoji(event.target.value)}
-            className="rounded-lg border bg-background px-3 py-2 text-sm font-semibold outline-none"
+            className="app-control text-sm font-semibold"
           >
             {listEmojis.map((emoji) => (
               <option key={emoji} value={emoji}>{emoji}</option>
@@ -287,12 +306,12 @@ export default function Dictionary() {
             value={newListName}
             onChange={(event) => setNewListName(event.target.value)}
             placeholder={t("dictionary.newListPlaceholder")}
-            className="rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            className="app-control text-sm"
           />
           <button
             type="submit"
             disabled={!newListName.trim() || createListMutation.isPending}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >
             <Plus size={16} />
             {t("dictionary.createList")}
@@ -312,7 +331,7 @@ export default function Dictionary() {
       {vocabularyQuery.isLoading ? (
         <LoadingCard label={t("dictionary.loading")} />
       ) : words.length === 0 ? (
-        <div className="rounded-lg border bg-card px-5 py-10 text-center shadow-sm">
+        <div className="app-surface px-5 py-10 text-center">
           <Search className="mx-auto mb-3 text-muted-foreground" size={36} />
           <h3 className="font-extrabold">{t("dictionary.emptyTitle")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t("dictionary.emptyBody")}</p>
@@ -342,7 +361,7 @@ export default function Dictionary() {
       )}
 
       {pagination && pagination.totalPages > 1 && (
-        <nav className="mt-5 flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <nav className="app-surface mt-5 flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-semibold text-muted-foreground">
             Page {pagination.page} of {pagination.totalPages}
           </span>
@@ -351,7 +370,7 @@ export default function Dictionary() {
               type="button"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={!pagination.hasPreviousPage || vocabularyQuery.isFetching}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ChevronLeft size={16} />
               Previous
@@ -360,7 +379,7 @@ export default function Dictionary() {
               type="button"
               onClick={() => setPage((current) => Math.min(pagination.totalPages, current + 1))}
               disabled={!pagination.hasNextPage || vocabularyQuery.isFetching}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
               <ChevronRight size={16} />
@@ -370,7 +389,7 @@ export default function Dictionary() {
       )}
 
       <footer className="mt-6 text-xs font-semibold text-muted-foreground">
-        Vocabulary data: HSK Official Standards · CC-CEDICT · MIT Licensed
+        Vocabulary data: HSK Official Standards / CC-CEDICT / MIT Licensed
       </footer>
     </div>
   );

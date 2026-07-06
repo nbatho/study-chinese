@@ -28,8 +28,8 @@ export default function Grammar() {
   }
 
   return (
-    <div className="anim-slide">
-      <div className="mb-5 flex items-center gap-2.5 rounded-lg border bg-card px-4 py-2 shadow-sm">
+    <div className="app-page">
+      <div className="app-surface mb-5 flex items-center gap-2.5 px-4 py-2">
         <Search size={18} className="text-muted-foreground" />
         <input
           type="text"
@@ -41,14 +41,14 @@ export default function Grammar() {
       </div>
       <div className="grid gap-4">
         {filteredGrammar.map((entry) => (
-          <div key={entry.id} className="rounded-lg border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <div key={entry.id} className="app-card-button p-5">
             <h4 className="text-[1.1rem] font-extrabold text-primary">{entry.title}</h4>
-            <div className="my-2 rounded-lg bg-background px-3 py-2 text-[0.85rem] font-semibold">
+            <div className="my-2 rounded-xl bg-background px-3 py-2 text-[0.85rem] font-semibold">
               {t("learn.pattern")} {entry.pattern}
             </div>
             <p className="mb-3 text-[0.9rem] text-muted-foreground">{entry.summary}</p>
             <div className="border-t border-dashed pt-2.5">
-              <label className="text-xs font-bold uppercase text-muted-foreground">{t("learn.example")}</label>
+              <label className="text-xs font-bold text-muted-foreground">{t("learn.example")}</label>
               {entry.examples.map((ex, index) => (
                 <div key={`${entry.id}-${index}`} className="mt-1">
                   <span className="font-serif text-xl font-bold">{ex.simplified}</span>

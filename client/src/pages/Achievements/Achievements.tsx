@@ -77,7 +77,7 @@ export default function Achievements() {
 
   if (achievementsQuery.isError) {
     return (
-      <div className="rounded-lg border bg-card p-6 text-center shadow-sm">
+      <div className="app-surface p-6 text-center">
         <Trophy className="mx-auto mb-3 size-10 text-muted-foreground" />
         <h2 className="text-xl font-extrabold">{t("achievements.errorTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("achievements.errorBody")}</p>
@@ -86,10 +86,10 @@ export default function Achievements() {
   }
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="app-page">
+      <header className="app-page-header mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-gold/30 bg-gold/10 px-2.5 py-1 text-xs font-bold uppercase text-gold">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1 text-xs font-bold text-gold">
             <Trophy size={14} />
             {t("achievements.badge")}
           </div>
@@ -98,8 +98,8 @@ export default function Achievements() {
             {t("achievements.subtitle")}
           </p>
         </div>
-        <div className="rounded-lg border bg-card px-4 py-3 shadow-sm">
-          <span className="text-xs font-semibold uppercase text-muted-foreground">
+        <div className="rounded-xl border bg-background px-4 py-3">
+          <span className="text-xs font-semibold text-muted-foreground">
             {t("achievements.progress")}
           </span>
           <div className="mt-1 flex items-end gap-2">
@@ -117,7 +117,7 @@ export default function Achievements() {
         <SummaryStat icon={LockKeyhole} label={t("achievements.locked")} value={lockedCount} />
       </section>
 
-      <section className="mb-5 rounded-lg border bg-card p-3 shadow-sm">
+      <section className="app-surface mb-5 p-3">
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           {statusFilters.map((filter) => (
             <Button
@@ -147,7 +147,7 @@ export default function Achievements() {
       </section>
 
       {filteredAchievements.length === 0 ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground shadow-sm">
+        <div className="app-surface p-8 text-center text-muted-foreground">
           {t("achievements.empty")}
         </div>
       ) : (

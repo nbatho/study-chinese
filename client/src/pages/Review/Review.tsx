@@ -51,10 +51,10 @@ export default function Review() {
   }
 
   return (
-    <div className="anim-slide">
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="app-page">
+      <div className="app-page-header mb-5 flex items-center justify-between gap-3">
         <h2 className="text-left text-2xl font-extrabold">{t("review.title")}</h2>
-        <span className="flex items-center gap-1.5 rounded-lg bg-gold/10 px-3 py-1.5 text-[0.8rem] font-bold text-gold">
+        <span className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-1.5 text-[0.8rem] font-bold text-gold">
           <Layers size={14} /> {t("review.due", { count: dueCards.length })}
         </span>
       </div>
@@ -81,7 +81,7 @@ export default function Review() {
                 <h1 className="font-serif text-7xl font-extrabold tracking-[2px] sm:text-8xl">
                   {activeCard.simplified}
                 </h1>
-                <span className="mt-4 inline-block text-[0.8rem] font-bold uppercase text-primary">
+                <span className="mt-4 inline-block text-[0.8rem] font-bold text-primary">
                   {t("review.tap")}
                 </span>
               </div>
@@ -117,20 +117,20 @@ export default function Review() {
                 { id: "good", label: t("review.good"), hint: "10m", cls: "border-tone-1 text-tone-1" },
                 { id: "easy", label: t("review.easy"), hint: "4d", cls: "border-tone-2 text-tone-2" },
               ].map((btn) => (
-                <button key={btn.id} onClick={() => handleQualitySelect(btn.id as ReviewQuality)} disabled={reviewMutation.isPending} className={cn("flex flex-col items-center rounded-xl border-[1.5px] px-1.5 py-3 disabled:opacity-60", btn.cls)}>
+                <button key={btn.id} onClick={() => handleQualitySelect(btn.id as ReviewQuality)} disabled={reviewMutation.isPending} className={cn("flex flex-col items-center rounded-xl border-[1.5px] bg-card/80 px-1.5 py-3 transition hover:-translate-y-0.5 disabled:opacity-60", btn.cls)}>
                   <span className="text-[0.95rem] font-bold">{btn.label}</span>
                   <span className="mt-0.5 text-[0.7rem] text-muted-foreground">{btn.hint}</span>
                 </button>
               ))}
             </div>
           ) : (
-            <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => setFlipped(true)}>
+            <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px" onClick={() => setFlipped(true)}>
               {t("review.reveal")}
             </button>
           )}
         </div>
       ) : !dueCardsQuery.isLoading && (
-        <div className="anim-pop rounded-lg border bg-card px-6 py-12 text-center shadow-sm">
+        <div className="app-surface anim-pop px-6 py-12 text-center">
           <div className="mb-4 text-7xl">✓</div>
           <h2 className="text-2xl font-extrabold">{t("review.done")}</h2>
           <p className="mt-2 inline-block max-w-80 text-[0.9rem] text-muted-foreground">

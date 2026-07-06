@@ -15,7 +15,7 @@ const Review = lazy(() => import("../pages/Review"));
 const Dictionary = lazy(() => import("../pages/Dictionary"));
 const Translate = lazy(() => import("../pages/Translate"));
 const Profile = lazy(() => import("../pages/Profile"));
-const Achievements = lazy(() => import("../pages/Achievements"));
+const Settings = lazy(() => import("../pages/Profile/Settings"));
 const Shop = lazy(() => import("../pages/Shop"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const PlacementTest = lazy(() => import("../pages/PlacementTest"));
@@ -82,8 +82,12 @@ export const routes: RouteConfig[] = [
         element: <Profile />
       },
       {
+        path: "settings",
+        element: <Settings />
+      },
+      {
         path: "achievements",
-        element: <Achievements />
+        element: <Navigate to="/profile#achievements" replace />
       },
       {
         path: "shop",

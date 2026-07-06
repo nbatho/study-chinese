@@ -28,7 +28,7 @@ export default function WordCard({
   const { t } = useI18n();
 
   return (
-    <article className="rounded-lg border bg-card p-4 text-left shadow-sm">
+    <article className="app-card-button p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -67,7 +67,7 @@ export default function WordCard({
         <button
           type="button"
           onClick={onSpeak}
-          className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-secondary text-primary transition hover:bg-accent"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-secondary text-primary transition hover:bg-accent active:translate-y-px"
           aria-label={t("common.listen")}
         >
           <Volume2 size={20} />
@@ -79,7 +79,7 @@ export default function WordCard({
           type="button"
           onClick={onFavorite}
           disabled={busy}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary active:translate-y-px disabled:opacity-60"
         >
           <Heart size={16} className={favorite ? "fill-primary text-primary" : "text-primary"} />
           {favorite ? t("dictionary.favorited") : t("dictionary.favorite")}
@@ -88,7 +88,7 @@ export default function WordCard({
           type="button"
           onClick={onEnroll}
           disabled={busy}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-semibold transition hover:border-primary active:translate-y-px disabled:opacity-60"
         >
           <BookmarkPlus size={16} className="text-primary" />
           {t("dictionary.review")}
@@ -97,7 +97,7 @@ export default function WordCard({
           type="button"
           onClick={onAddToList}
           disabled={busy || !hasSelectedList || inSelectedList}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
         >
           {inSelectedList ? <Check size={16} /> : <ListPlus size={16} />}
           {inSelectedList ? t("dictionary.inList") : t("dictionary.addToList")}

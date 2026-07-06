@@ -169,6 +169,42 @@ body.dark {
   .landing-drift {
     animation: landing-drift 6.5s ease-in-out infinite;
   }
+
+  .app-workspace-bg {
+    background:
+      radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 30rem),
+      radial-gradient(circle at 96% 18%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 28rem),
+      var(--background);
+  }
+
+  .app-page {
+    @apply min-w-0 pb-8;
+    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .app-page-header {
+    @apply rounded-2xl border bg-card/95 p-4 text-left shadow-sm sm:p-5;
+  }
+
+  .app-surface {
+    @apply rounded-2xl border bg-card/95 shadow-sm;
+  }
+
+  .app-surface-padded {
+    @apply rounded-2xl border bg-card/95 p-4 shadow-sm sm:p-5;
+  }
+
+  .app-muted-panel {
+    @apply rounded-xl border bg-background/80;
+  }
+
+  .app-card-button {
+    @apply rounded-2xl border bg-card/95 text-left shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg active:translate-y-px;
+  }
+
+  .app-control {
+    @apply rounded-xl border bg-background px-3 py-2 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
 }
 
 ::-webkit-scrollbar {

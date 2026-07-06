@@ -66,19 +66,19 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="app-workspace-bg flex h-[100dvh] overflow-hidden">
       <Navigation
         collapsed={isSidebarCollapsed}
         onToggleCollapsed={() => setIsSidebarCollapsed((value) => !value)}
       />
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-background">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         <Navbar />
         <div className="flex w-full min-w-0 flex-1 justify-center overflow-x-hidden">
           <div
             className={cn(
-              "box-border w-full min-w-0 px-3 py-4 sm:px-5 sm:py-6 lg:px-7",
-              isHomePath ? "max-w-none" : "max-w-7xl",
+              "box-border w-full min-w-0 px-3 py-4 sm:px-5 sm:py-6 lg:px-8",
+              isHomePath ? "max-w-[1500px]" : "max-w-7xl",
             )}
           >
             <ErrorBoundary resetKey={location.pathname}>

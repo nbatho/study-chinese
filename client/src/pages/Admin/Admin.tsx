@@ -34,8 +34,8 @@ export default function Admin() {
 
   if (user?.role !== "admin") {
     return (
-      <section className="rounded-lg border bg-card p-6 text-left shadow-sm">
-        <div className="mb-3 flex size-12 items-center justify-center rounded-lg bg-secondary text-primary">
+      <section className="app-surface-padded text-left">
+        <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-secondary text-primary">
           <Shield size={24} />
         </div>
         <h1 className="text-xl font-extrabold">Không có quyền truy cập</h1>
@@ -56,10 +56,10 @@ export default function Admin() {
   ];
 
   return (
-    <div className="anim-slide pb-10">
-      <header className="mb-5 flex flex-col gap-3 text-left sm:flex-row sm:items-end sm:justify-between">
+    <div className="app-page">
+      <header className="app-page-header mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Badge className="mb-2 rounded-md">Admin CMS</Badge>
+          <Badge className="mb-2 rounded-lg">Admin CMS</Badge>
           <h1 className="text-2xl font-extrabold">Quản trị nội dung</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Thêm sửa bài học, từ vựng, người dùng, log AI và báo lỗi khóa học.
@@ -68,7 +68,7 @@ export default function Admin() {
         <div className="text-sm font-semibold text-muted-foreground">{user.email}</div>
       </header>
 
-      <div className="mb-5 flex gap-1 overflow-x-auto rounded-lg border bg-card p-1">
+      <div className="app-surface mb-5 flex gap-1 overflow-x-auto p-1">
         {tabs.map((item) => {
           const Icon = item.icon;
           return (
@@ -77,7 +77,7 @@ export default function Admin() {
               type="button"
               onClick={() => setTab(item.id)}
               className={cn(
-                "inline-flex h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-extrabold transition",
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-extrabold transition",
                 tab === item.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary",
               )}
             >

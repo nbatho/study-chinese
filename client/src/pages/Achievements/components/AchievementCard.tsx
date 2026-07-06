@@ -23,14 +23,14 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
   return (
     <article
       className={cn(
-        "relative overflow-hidden rounded-lg border bg-card p-4 shadow-sm transition",
+        "relative overflow-hidden rounded-2xl border bg-card/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
         isUnlocked ? "border-gold/25" : "opacity-75",
       )}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div
           className={cn(
-            "flex size-14 shrink-0 items-center justify-center rounded-lg border text-3xl",
+            "flex size-14 shrink-0 items-center justify-center rounded-xl border text-3xl",
             isUnlocked ? "border-gold/30 bg-gold/10" : "bg-secondary grayscale",
           )}
         >

@@ -46,7 +46,7 @@ function DashboardAvatar({ avatar, name }: { avatar?: string | null; name: strin
   const isImage = Boolean(avatar && /^(https?:|data:image|blob:)/.test(avatar));
 
   return (
-    <span className="flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/25 bg-white/20 text-6xl font-extrabold shadow-lg backdrop-blur sm:size-[6.5rem]">
+    <span className="flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/25 bg-white/20 text-6xl font-extrabold shadow-lg backdrop-blur sm:size-[6.5rem]">
       {isImage ? (
         <img src={avatar ?? ""} alt={name} className="size-full object-cover" />
       ) : (
@@ -165,10 +165,10 @@ export default function Home() {
   };
 
   return (
-    <div className="anim-slide min-w-0 pb-10">
+    <div className="app-page">
       <div className="grid min-w-0 gap-5 lg:grid-cols-12">
         <div className="grid min-w-0 gap-5 lg:col-span-8">
-          <section className="overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red)_54%,var(--gold))] p-5 text-white shadow-lg sm:p-6">
+          <section className="overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red))] p-5 text-white shadow-lg shadow-primary/15 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <Badge className="mb-4 bg-white/20 text-white shadow-none backdrop-blur hover:bg-white/25">
@@ -181,15 +181,15 @@ export default function Home() {
                   {t("home.dashboardSubtitle")}
                 </p>
                 <div className="mt-5 grid max-w-lg grid-cols-3 gap-2">
-                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                  <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
                     <span className="block text-xs font-bold text-white/75">XP</span>
                     <strong className="text-xl text-white">{formatNumber(totalXp)}</strong>
                   </div>
-                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                  <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
                     <span className="block text-xs font-bold text-white/75">{t("home.lessons")}</span>
                     <strong className="text-xl text-white">{completedLessons}</strong>
                   </div>
-                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                  <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
                     <span className="block text-xs font-bold text-white/75">{t("home.reviews")}</span>
                     <strong className="text-xl text-white">{todayStat.wordsReviewed}</strong>
                   </div>
@@ -199,13 +199,13 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.continueLearning")}</h2>
                 <p className="text-sm font-medium text-muted-foreground">{t("home.nextLessonHint")}</p>
               </div>
-              <Button type="button" variant="ghost" onClick={() => navigate("/learn")} className="shrink-0 rounded-lg">
+              <Button type="button" variant="ghost" onClick={() => navigate("/learn")} className="shrink-0 rounded-xl">
                 {t("home.allLessons")}
                 <ArrowRight size={16} />
               </Button>
@@ -215,11 +215,11 @@ export default function Home() {
               <button
                 type="button"
                 onClick={handleLessonStart}
-                className="group grid w-full gap-4 rounded-lg border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg sm:grid-cols-[minmax(0,1fr)_auto]"
+                className="group grid w-full gap-4 rounded-xl border bg-background/80 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg sm:grid-cols-[minmax(0,1fr)_auto]"
               >
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="rounded-md">
+                    <Badge variant="secondary" className="rounded-lg">
                       HSK {nextLesson.hskLevel}
                     </Badge>
                     <span className="text-xs font-bold text-muted-foreground">
@@ -229,18 +229,18 @@ export default function Home() {
                   <h3 className="truncate text-xl font-extrabold">{nextLesson.title}</h3>
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{nextLesson.subtitle}</p>
                 </div>
-                <span className="flex size-16 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_0_0_rgba(217,63,71,0)] transition group-hover:scale-105 group-hover:shadow-[0_0_28px_rgba(217,63,71,0.45)]">
+                <span className="flex size-16 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_0_rgba(217,63,71,0)] transition group-hover:scale-105 group-hover:shadow-[0_0_28px_rgba(217,63,71,0.35)]">
                   <Play size={28} fill="currentColor" />
                 </span>
               </button>
             ) : (
-              <div className="rounded-lg border border-dashed bg-background p-6 text-center font-bold text-muted-foreground">
+              <div className="rounded-xl border border-dashed bg-background p-6 text-center font-bold text-muted-foreground">
                 {isAuthenticated ? t("home.noLessons") : t("home.loginToPersonalize")}
               </div>
             )}
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.todayPlan")}</h2>
@@ -268,11 +268,11 @@ export default function Home() {
                       key={step.id}
                       type="button"
                       onClick={() => handlePlanStep(step.href, step.meta?.lessonId)}
-                      className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-background px-3 py-3 text-left transition hover:border-primary/50 hover:bg-secondary/60"
+                      className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border bg-background/80 px-3 py-3 text-left transition hover:border-primary/50 hover:bg-secondary/60"
                     >
                       <span
                         className={cn(
-                          "flex size-9 items-center justify-center rounded-lg text-xs font-extrabold",
+                          "flex size-9 items-center justify-center rounded-xl text-xs font-extrabold",
                           isDone && "bg-tone-2/12 text-tone-2",
                           isCurrent && "bg-primary text-primary-foreground",
                           !isDone && !isCurrent && "bg-secondary text-muted-foreground",
@@ -292,13 +292,13 @@ export default function Home() {
                 })}
               </div>
             ) : (
-              <Button type="button" onClick={() => navigate("/auth")} className="w-full rounded-lg">
+              <Button type="button" onClick={() => navigate("/auth")} className="w-full rounded-xl">
                 {t("auth.login")}
               </Button>
             )}
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <h2 className="mb-4 text-lg font-extrabold">{t("home.phrase")}</h2>
             {currentPhrase ? (
               <div>
@@ -317,7 +317,7 @@ export default function Home() {
                 </TtsButton>
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
+              <div className="rounded-xl border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
                 {isAuthenticated ? t("common.loading") : t("home.loginToPersonalize")}
               </div>
             )}
@@ -325,28 +325,28 @@ export default function Home() {
         </div>
 
         <aside className="grid min-w-0 content-start gap-5 lg:col-span-4">
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.goalsWallet")}</h2>
                 <p className="text-sm font-medium text-muted-foreground">{t("home.todayGoal")}</p>
               </div>
-              <span className="flex size-14 items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--tone-4),var(--gold))] text-white shadow-lg">
+              <span className="flex size-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                 <Flame size={30} fill="currentColor" />
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-secondary/70 p-3">
+              <div className="rounded-xl bg-secondary/70 p-3">
                 <Flame className="mx-auto mb-1 text-tone-4" size={20} />
                 <strong className="block text-xl">{streak?.current ?? 0}</strong>
                 <span className="text-xs font-bold text-muted-foreground">{t("home.streak")}</span>
               </div>
-              <div className="rounded-lg bg-secondary/70 p-3">
+              <div className="rounded-xl bg-secondary/70 p-3">
                 <Gem className="mx-auto mb-1 text-tone-1" size={20} />
                 <strong className="block text-xl">{wallet?.gemBalance ?? 0}</strong>
                 <span className="text-xs font-bold text-muted-foreground">{t("common.gems")}</span>
               </div>
-              <div className="rounded-lg bg-secondary/70 p-3">
+              <div className="rounded-xl bg-secondary/70 p-3">
                 <ShieldCheck className="mx-auto mb-1 text-tone-3" size={20} />
                 <strong className="block text-xl">{wallet?.streakFreezes ?? 0}</strong>
                 <span className="text-xs font-bold text-muted-foreground">{t("common.freeze")}</span>
@@ -356,19 +356,19 @@ export default function Home() {
               type="button"
               onClick={handleBuyFreeze}
               disabled={purchaseMutation.isPending}
-              className="mt-4 w-full rounded-lg"
+              className="mt-4 w-full rounded-xl"
             >
               {purchaseMutation.isPending ? <RefreshCw className="animate-spin" /> : <ShieldCheck size={17} />}
               {t("home.buyFreeze")}
             </Button>
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold">{t("home.leaderboard")}</h2>
               <Trophy size={21} className="text-gold" />
             </div>
-            <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg border bg-background p-1">
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border bg-background p-1">
               {(["global", "friends"] as LeaderboardScope[]).map((scope) => (
                 <button
                   key={scope}
@@ -422,7 +422,7 @@ export default function Home() {
             )}
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <h2 className="mb-4 text-lg font-extrabold">{t("home.dailyChallenges")}</h2>
             <div className="grid gap-3">
               {dailyChallenges.map((challenge) => {
@@ -430,7 +430,7 @@ export default function Home() {
                 const percent = clampPercent(challenge.current, challenge.goal);
 
                 return (
-                  <div key={challenge.title} className="rounded-lg border bg-background p-3">
+                  <div key={challenge.title} className="rounded-xl border bg-background/80 p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-2">
                         <Icon className={cn("size-4 shrink-0", challenge.tone)} />
@@ -447,7 +447,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="app-surface-padded min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold">{t("home.badges")}</h2>
               <Button type="button" variant="ghost" size="sm" onClick={() => navigate("/achievements")}>

@@ -196,11 +196,11 @@ export default function Guide() {
   };
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-5 rounded-lg border bg-card p-5 shadow-sm sm:p-6">
+    <div className="app-page">
+      <header className="app-page-header mb-5 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="text-left">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
               <Compass size={18} />
               {t("guide.badge")}
             </div>
@@ -209,22 +209,22 @@ export default function Guide() {
               Mỗi bước tương ứng với một mục trong ứng dụng. Dùng Trước/Tiếp để đi qua tour và mở màn hình tương ứng khi đã sẵn sàng.
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-bold">
+          <div className="flex items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold">
             <ActiveIcon className="size-4 text-primary" />
             Bước {activeIndex + 1}/{sidebarSteps.length}: {activeStep.sidebarLabel}
           </div>
         </div>
       </header>
 
-      <section className="overflow-hidden rounded-lg border bg-card shadow-sm">
+      <section className="app-surface overflow-hidden">
         <div className="border-b bg-secondary/35 p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3 text-left">
-              <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-lg text-white", activeStep.tone)}>
+              <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl text-white", activeStep.tone)}>
                 <ActiveIcon size={22} />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-extrabold uppercase tracking-wide text-primary">
+                <div className="text-xs font-extrabold text-primary">
                   Bước {activeIndex + 1}/{sidebarSteps.length}
                 </div>
                 <h2 className="truncate text-xl font-extrabold sm:text-2xl">{activeStep.title}</h2>
@@ -235,7 +235,7 @@ export default function Guide() {
                 type="button"
                 onClick={() => goToStep(activeIndex - 1)}
                 disabled={activeIndex === 0}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft size={18} />
                 Trước
@@ -244,7 +244,7 @@ export default function Guide() {
                 type="button"
                 onClick={() => goToStep(activeIndex + 1)}
                 disabled={activeIndex === sidebarSteps.length - 1}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px disabled:pointer-events-none disabled:opacity-40"
               >
                 Tiếp
                 <ChevronRight size={18} />
@@ -262,7 +262,7 @@ export default function Guide() {
           </div>
 
           <div className="border-t bg-secondary/20 p-5 text-left lg:border-l lg:border-t-0">
-            <div className="text-sm font-extrabold uppercase tracking-wide text-primary">
+            <div className="text-sm font-extrabold text-primary">
               {activeStep.sidebarLabel}
             </div>
             <h3 className="mt-2 text-2xl font-extrabold">{activeStep.title}</h3>
@@ -283,7 +283,7 @@ export default function Guide() {
               <button
                 type="button"
                 onClick={() => navigate(activeStep.route)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px"
               >
                 <MousePointerClick size={18} />
                 {t("guide.open")}
@@ -293,7 +293,7 @@ export default function Guide() {
                   type="button"
                   onClick={() => goToStep(activeIndex - 1)}
                   disabled={activeIndex === 0}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px disabled:pointer-events-none disabled:opacity-40"
                 >
                   <ChevronLeft size={18} />
                   Trước
@@ -302,7 +302,7 @@ export default function Guide() {
                   type="button"
                   onClick={() => goToStep(activeIndex + 1)}
                   disabled={activeIndex === sidebarSteps.length - 1}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px disabled:pointer-events-none disabled:opacity-40"
                 >
                   Tiếp
                   <ChevronRight size={18} />

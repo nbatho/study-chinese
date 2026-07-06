@@ -41,7 +41,7 @@ function Avatar({ avatar, name, className }: { avatar?: string; name: string; cl
   return (
     <span
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-xl font-extrabold",
+        "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-xl font-extrabold",
         className,
       )}
     >
@@ -69,7 +69,7 @@ function SegmentButton({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-md px-3 text-sm font-extrabold transition",
+        "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg px-3 text-sm font-extrabold transition",
         active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-secondary",
       )}
     >
@@ -95,7 +95,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         entry.isCurrentUser && "bg-primary/5",
       )}
     >
-      <span className={cn("flex size-9 items-center justify-center rounded-lg text-sm font-extrabold", rankClass)}>
+      <span className={cn("flex size-9 items-center justify-center rounded-xl text-sm font-extrabold", rankClass)}>
         {entry.rank <= 3 ? <Medal size={17} /> : entry.rank}
       </span>
 
@@ -242,10 +242,10 @@ export default function Community() {
   }
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="app-page">
+      <header className="app-page-header mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-bold uppercase text-primary">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
             <Users size={14} />
             Community
           </div>
@@ -255,7 +255,7 @@ export default function Community() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 rounded-lg border bg-card p-3 text-center shadow-sm">
+        <div className="grid grid-cols-3 gap-2 rounded-xl border bg-background p-3 text-center">
           <div className="min-w-18.5">
             <span className="block text-xs font-bold text-muted-foreground">Bạn bè</span>
             <strong className="text-xl text-primary">{friends.length}</strong>
@@ -271,7 +271,7 @@ export default function Community() {
         </div>
       </header>
 
-      <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg border bg-card p-1 shadow-sm sm:max-w-md">
+      <div className="app-surface mb-5 grid grid-cols-2 gap-2 p-1 sm:max-w-md">
         <SegmentButton active={tab === "leaderboard"} onClick={() => setTab("leaderboard")}>
           <Trophy size={16} />
           Bảng xếp hạng
@@ -283,14 +283,14 @@ export default function Community() {
       </div>
 
       {tab === "leaderboard" ? (
-        <section className="rounded-lg border bg-card shadow-sm">
+        <section className="app-surface overflow-hidden">
           <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-base font-extrabold">Bảng xếp hạng XP</h2>
               <p className="text-xs text-muted-foreground">Top 50 theo XP tích lũy trong phạm vi đã chọn.</p>
             </div>
             <div className="grid gap-2 sm:grid-cols-[220px_190px]">
-              <div className="grid grid-cols-2 gap-1 rounded-lg border bg-background p-1">
+              <div className="grid grid-cols-2 gap-1 rounded-xl border bg-background p-1">
                 <SegmentButton active={scope === "global"} onClick={() => setScope("global")}>
                   <Globe2 size={15} />
                   Global
@@ -300,7 +300,7 @@ export default function Community() {
                   Friends
                 </SegmentButton>
               </div>
-              <div className="grid grid-cols-2 gap-1 rounded-lg border bg-background p-1">
+              <div className="grid grid-cols-2 gap-1 rounded-xl border bg-background p-1">
                 <SegmentButton active={timeframe === "weekly"} onClick={() => setTimeframe("weekly")}>
                   Tuần
                 </SegmentButton>
@@ -333,7 +333,7 @@ export default function Community() {
         </section>
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="rounded-lg border bg-card shadow-sm">
+          <section className="app-surface overflow-hidden">
             <div className="border-b p-3">
               <h2 className="text-base font-extrabold">Bạn bè</h2>
               <p className="text-xs text-muted-foreground">Những người đã chấp nhận kết nối với bạn.</p>
@@ -362,7 +362,7 @@ export default function Community() {
           </section>
 
           <aside className="grid gap-5">
-            <section className="rounded-lg border bg-card p-4 shadow-sm">
+            <section className="app-surface-padded">
               <h2 className="mb-3 text-base font-extrabold">Tìm bạn học</h2>
               <form onSubmit={handleSendRequest} className="grid gap-3">
                 <div className="relative">
@@ -381,7 +381,7 @@ export default function Community() {
               </form>
             </section>
 
-            <section className="rounded-lg border bg-card shadow-sm">
+            <section className="app-surface overflow-hidden">
               <div className="border-b p-3">
                 <h2 className="text-base font-extrabold">Lời mời đang chờ</h2>
                 <p className="text-xs text-muted-foreground">
@@ -391,7 +391,7 @@ export default function Community() {
 
               {received.length > 0 && (
                 <div>
-                  <div className="border-b bg-secondary/60 px-3 py-2 text-xs font-extrabold uppercase text-muted-foreground">
+                  <div className="border-b bg-secondary/60 px-3 py-2 text-xs font-extrabold text-muted-foreground">
                     Chờ phản hồi
                   </div>
                   <ul>
@@ -411,7 +411,7 @@ export default function Community() {
 
               {sent.length > 0 && (
                 <div>
-                  <div className="border-b bg-secondary/60 px-3 py-2 text-xs font-extrabold uppercase text-muted-foreground">
+                  <div className="border-b bg-secondary/60 px-3 py-2 text-xs font-extrabold text-muted-foreground">
                     Đã gửi
                   </div>
                   <ul>

@@ -1,52 +1,75 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { toast } from "sonner";
-import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../../api/users/queries";
-import { Crown, Gem, ShieldCheck, ToggleLeft, ToggleRight, User } from "lucide-react";
-import { useI18n } from "../../i18n";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { setAppearance } from "../../store/modules/appSlice";
-import type { AppAppearance } from "../../store/modules/appSlice";
+import { Award, BookOpen, CheckCircle2, Crown, Gem, LockKeyhole, ShieldCheck, Trophy, User } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAchievementsQuery, useLessonsQuery } from "../../api";
+import type { Achievement } from "../../api/achievements";
+import { useUserProfileQuery, useUserStatsQuery } from "../../api/users/queries";
 import LoginPromptCard from "../../components/LoginPromptCard";
-import { cn } from "../../utils/cn";
+import { Button } from "../../components/ui/button";
+import { CircularProgress } from "../../components/ui/circular-progress";
+import { Progress } from "../../components/ui/progress";
+import { useI18n } from "../../i18n";
+import type { TranslationKey } from "../../i18n/translations";
+import AchievementCard from "../Achievements/components/AchievementCard";
+import { categoryLabelKeys } from "../Achievements/components/achievementConfig";
+import SummaryStat from "../Achievements/components/SummaryStat";
+import { useAppSelector } from "../../store/hooks";
+
+type StatusFilter = "all" | "unlocked" | "locked";
+type CategoryFilter = Achievement["category"] | "all";
+
+const statusFilters: Array<{ id: StatusFilter; labelKey: TranslationKey }> = [
+  { id: "all", labelKey: "achievements.filterAll" },
+  { id: "unlocked", labelKey: "achievements.unlocked" },
+  { id: "locked", labelKey: "achievements.locked" },
+];
+
+const categoryFilters: Array<{ id: CategoryFilter; labelKey: TranslationKey }> = [
+  { id: "all", labelKey: "achievements.filterAllTypes" },
+  ...Object.entries(categoryLabelKeys).map(([id, labelKey]) => ({
+    id: id as Achievement["category"],
+    labelKey,
+  })),
+];
 
 export default function Profile() {
-  const dispatch = useAppDispatch();
   const location = useLocation();
-  const { language, setLanguage, t } = useI18n();
+  const navigate = useNavigate();
+  const { t } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
-  const appAppearance = useAppSelector((state) => state.app.appAppearance);
-  const profileQuery = useUserProfileQuery();
-  const statsQuery = useUserStatsQuery(7);
-  const updateProfileMutation = useUpdateProfileMutation();
+  const profileQuery = useUserProfileQuery(isAuthenticated);
+  const statsQuery = useUserStatsQuery(7, isAuthenticated);
+  const lessonsQuery = useLessonsQuery(isAuthenticated);
+  const achievementsQuery = useAchievementsQuery(isAuthenticated);
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
   const wallet = profileQuery.data?.wallet;
   const premium = profileQuery.data?.premium;
   const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
-
-  const [draftProfile, setDraftProfile] = useState<{
-    name?: string;
-    dailyMinutes?: number;
-    showPinyin?: boolean;
-    audioAutoPlay?: boolean;
-  }>({});
+  const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
+  const achievements = useMemo(
+    () => achievementsQuery.data?.achievements ?? [],
+    [achievementsQuery.data?.achievements],
+  );
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const settingsRef = useRef<HTMLElement | null>(null);
-  const name = draftProfile.name ?? profile?.name ?? "";
-  const dailyMinutes = draftProfile.dailyMinutes ?? profile?.dailyMinutes ?? 15;
-  const showPinyin = draftProfile.showPinyin ?? profile?.showPinyin ?? true;
-  const audioAutoPlay = draftProfile.audioAutoPlay ?? profile?.audioAutoPlay ?? true;
-  const saveProfileSettings = async () => {
-    await updateProfileMutation.mutateAsync({
-      name: name.trim() || t("common.learner"),
-      dailyMinutes: Number(dailyMinutes) || 15,
-      showPinyin,
-      audioAutoPlay,
-      appAppearance,
-    });
-    toast.success(t("profile.saved"));
-  };
+  const achievementsRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (location.hash === "#settings") {
+      navigate("/settings", { replace: true });
+    }
+  }, [location.hash, navigate]);
+
+  useEffect(() => {
+    if (location.hash !== "#achievements") return;
+
+    window.setTimeout(() => {
+      achievementsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      achievementsRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, [location.hash, achievements.length]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -98,15 +121,6 @@ export default function Profile() {
     });
   }, [stats]);
 
-  useEffect(() => {
-    if (location.hash !== "#settings") return;
-
-    window.setTimeout(() => {
-      settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      settingsRef.current?.focus({ preventScroll: true });
-    }, 0);
-  }, [location.hash]);
-
   const today = stats[stats.length - 1] ?? {
     xp: 0,
     minutesStudied: 0,
@@ -117,6 +131,37 @@ export default function Profile() {
   const accuracy = today.exercisesTotal
     ? Math.round((today.exercisesCorrect / today.exercisesTotal) * 100)
     : 0;
+  const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
+  const totalLessons = lessons.length;
+  const learningProgressPercent = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const hskProgress = Array.from(new Set(lessons.map((lesson) => lesson.hskLevel)))
+    .sort((a, b) => a - b)
+    .map((level) => {
+      const levelLessons = lessons.filter((lesson) => lesson.hskLevel === level);
+      const levelCompleted = levelLessons.filter((lesson) => lesson.completedAt).length;
+
+      return {
+        level,
+        completed: levelCompleted,
+        total: levelLessons.length,
+        percent: levelLessons.length ? Math.round((levelCompleted / levelLessons.length) * 100) : 0,
+      };
+    });
+  const unlockedCount = achievements.filter((achievement) => achievement.unlockedAt).length;
+  const lockedCount = achievements.length - unlockedCount;
+  const achievementProgressPercent = achievements.length
+    ? Math.round((unlockedCount / achievements.length) * 100)
+    : 0;
+  const filteredAchievements = achievements.filter((achievement) => {
+    const isUnlocked = Boolean(achievement.unlockedAt);
+    const statusMatches =
+      statusFilter === "all" ||
+      (statusFilter === "unlocked" && isUnlocked) ||
+      (statusFilter === "locked" && !isUnlocked);
+    const categoryMatches = categoryFilter === "all" || achievement.category === categoryFilter;
+
+    return statusMatches && categoryMatches;
+  });
 
   if (!isAuthenticated) {
     return (
@@ -129,8 +174,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="anim-slide pb-10">
-      <section className="mb-5 flex items-center gap-4 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+    <div className="app-page">
+      <section className="app-page-header mb-5 flex items-center gap-4">
         <div className="text-5xl sm:text-[3.2rem]">{profile?.avatar || "学"}</div>
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-xl font-extrabold sm:text-[1.35rem]">{profile?.name || t("common.learner")}</h2>
@@ -138,31 +183,72 @@ export default function Profile() {
             {t("profile.memberSince", { date: profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString() : t("common.today") })}
           </span>
           <div className="mt-2 flex flex-wrap gap-2.5">
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+            <span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("profile.streakDays", { count: streak?.current ?? 0 })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               <Gem size={13} className="text-tone-1" /> {t("profile.gemsBadge", { count: wallet?.gemBalance ?? 0 })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               <ShieldCheck size={13} className="text-tone-3" /> {t("profile.freezeBadge", { count: wallet?.streakFreezes ?? 0 })}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               <Crown size={13} className="text-gold" /> {premium?.isActive ? t("profile.premiumActive") : t("profile.premiumFree")}
             </span>
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
+            <span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
               {t("common.level")}: {(profile?.startLevel || "beginner").toUpperCase()}
             </span>
           </div>
         </div>
       </section>
 
-      <section
-        id="settings"
-        ref={settingsRef}
-        tabIndex={-1}
-        className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/30 sm:p-5"
-      >
+      <section className="app-surface-padded mb-5 text-left">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="mb-1 text-base font-bold">{t("navbar.curriculumProgress")}</h3>
+            <p className="text-[0.8rem] text-muted-foreground">
+              {t("navbar.lessonsComplete", { completed: completedLessons, total: totalLessons })}
+            </p>
+          </div>
+          <CircularProgress progress={learningProgressPercent} size={62} strokeWidth={5} />
+        </div>
+        <Progress value={learningProgressPercent} className="mb-4 h-2.5" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border bg-background p-3">
+            <BookOpen className="mb-2 size-5 text-primary" />
+            <strong className="block text-xl font-extrabold">{completedLessons}/{totalLessons}</strong>
+            <span className="text-xs text-muted-foreground">{t("learn.curriculum")}</span>
+          </div>
+          <div className="rounded-xl border bg-background p-3">
+            <CheckCircle2 className="mb-2 size-5 text-jade" />
+            <strong className="block text-xl font-extrabold">{learningProgressPercent}%</strong>
+            <span className="text-xs text-muted-foreground">{t("achievements.progress")}</span>
+          </div>
+          <div className="rounded-xl border bg-background p-3">
+            <Trophy className="mb-2 size-5 text-gold" />
+            <strong className="block text-xl font-extrabold">{profile?.cefrLevel ?? "A1"}</strong>
+            <span className="text-xs text-muted-foreground">{t("common.level")}</span>
+          </div>
+        </div>
+        {hskProgress.length > 0 && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {hskProgress.map((item) => (
+              <div key={item.level} className="rounded-xl bg-secondary p-3">
+                <div className="mb-2 flex items-center justify-between gap-3 text-sm font-extrabold">
+                  <span>HSK {item.level}</span>
+                  <span className="text-primary">{item.percent}%</span>
+                </div>
+                <Progress value={item.percent} />
+                <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                  {t("navbar.lessonsComplete", { completed: item.completed, total: item.total })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="app-surface-padded mb-5 text-left">
         <h3 className="mb-1 text-base font-bold">{t("profile.weeklyXp")}</h3>
         <p className="mb-4 text-[0.8rem] text-muted-foreground">{t("profile.weeklyXpBody")}</p>
         <div className="flex justify-center">
@@ -184,88 +270,93 @@ export default function Profile() {
         </div>
       </section>
 
-      <section className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
-        <h3 className="mb-4 text-base font-bold">{t("profile.appSettings")}</h3>
-        <div className="grid gap-4">
+      <section
+        id="achievements"
+        ref={achievementsRef}
+        tabIndex={-1}
+        className="scroll-mt-24 outline-none"
+      >
+        <header className="app-page-header mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.displayName")}</label>
-            <input type="text" value={name} onChange={(e) => setDraftProfile((draft) => ({ ...draft, name: e.target.value }))} className="w-full rounded-lg border bg-background px-3.5 py-2.5 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-2.5 py-1 text-xs font-bold text-gold">
+              <Trophy size={14} />
+              {t("achievements.badge")}
+            </div>
+            <h3 className="text-xl font-extrabold sm:text-2xl">{t("achievements.title")}</h3>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {t("achievements.subtitle")}
+            </p>
           </div>
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.dailyGoal")}</label>
-            <select value={dailyMinutes} onChange={(e) => setDraftProfile((draft) => ({ ...draft, dailyMinutes: Number(e.target.value) }))} className="w-full rounded-lg border bg-background px-3.5 py-2.5 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-              <option value="5">5 {t("common.minutes")} ({t("profile.goalCasual")})</option>
-              <option value="15">15 {t("common.minutes")} ({t("profile.goalRegular")})</option>
-              <option value="30">30 {t("common.minutes")} ({t("profile.goalScholar")})</option>
-              <option value="60">60 {t("common.minutes")} ({t("profile.goalIntensive")})</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.appearance")}</label>
-            <div role="group" aria-label={t("profile.appearance")} className="flex gap-1 rounded-[10px] border bg-background p-1">
-              {(["light", "dark", "system"] as AppAppearance[]).map((appearance) => (
-                <button
-                  key={appearance}
-                  type="button"
-                  aria-pressed={appAppearance === appearance}
-                  onClick={() => dispatch(setAppearance(appearance))}
-                  className={cn(
-                    "flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition",
-                    appAppearance === appearance && "bg-primary text-white",
-                  )}
-                >
-                  {appearance === "light" && t("profile.appearanceLight")}
-                  {appearance === "dark" && t("profile.appearanceDark")}
-                  {appearance === "system" && t("profile.appearanceSystem")}
-                </button>
-              ))}
+          <div className="rounded-xl border bg-background px-4 py-3">
+            <span className="text-xs font-semibold text-muted-foreground">
+              {t("achievements.progress")}
+            </span>
+            <div className="mt-1 flex items-end gap-2">
+              <strong className="text-3xl leading-none">{achievementProgressPercent}%</strong>
+              <span className="text-sm text-muted-foreground">
+                {unlockedCount}/{achievements.length}
+              </span>
             </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.language")}</label>
-            <div role="group" aria-label={t("profile.language")} className="flex gap-1 rounded-[10px] border bg-background p-1">
-              <button
-                type="button"
-                aria-pressed={language === "en"}
-                onClick={() => setLanguage("en")}
-                className={cn("flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "en" && "bg-primary text-white")}
+        </header>
+
+        <div className="mb-5 grid grid-cols-3 gap-3">
+          <SummaryStat icon={Award} label={t("achievements.total")} value={achievements.length} />
+          <SummaryStat icon={CheckCircle2} label={t("achievements.unlocked")} value={unlockedCount} />
+          <SummaryStat icon={LockKeyhole} label={t("achievements.locked")} value={lockedCount} />
+        </div>
+
+        <div className="app-surface mb-5 p-3">
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+            {statusFilters.map((filter) => (
+              <Button
+                key={filter.id}
+                variant={statusFilter === filter.id ? "default" : "secondary"}
+                size="sm"
+                onClick={() => setStatusFilter(filter.id)}
+                className="shrink-0"
               >
-                {t("profile.languageEnglish")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={language === "vi"}
-                onClick={() => setLanguage("vi")}
-                className={cn("flex-1 rounded-md px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "vi" && "bg-primary text-white")}
+                {t(filter.labelKey)}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categoryFilters.map((filter) => (
+              <Button
+                key={filter.id}
+                variant={categoryFilter === filter.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCategoryFilter(filter.id)}
+                className="shrink-0"
               >
-                {t("profile.languageVietnamese")}
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <div>
-              <span className="text-[0.95rem] font-semibold">{t("profile.showPinyin")}</span>
-              <p className="text-xs text-muted-foreground">{t("profile.showPinyinBody")}</p>
-            </div>
-            <button onClick={() => setDraftProfile((draft) => ({ ...draft, showPinyin: !showPinyin }))} className="text-primary">
-              {showPinyin ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-            </button>
-          </div>
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <div>
-              <span className="text-[0.95rem] font-semibold">{t("profile.audioAutoplay")}</span>
-              <p className="text-xs text-muted-foreground">{t("profile.audioAutoplayBody")}</p>
-            </div>
-            <button onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} className="text-primary">
-              {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-            </button>
+                {t(filter.labelKey)}
+              </Button>
+            ))}
           </div>
         </div>
-        <button className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" onClick={saveProfileSettings} disabled={updateProfileMutation.isPending}>
-          {updateProfileMutation.isPending ? t("common.saving") : t("profile.save")}
-        </button>
-      </section>
 
+        {achievementsQuery.isLoading ? (
+          <div className="app-surface p-8 text-center text-muted-foreground">
+            {t("achievements.loading")}
+          </div>
+        ) : achievementsQuery.isError ? (
+          <div className="app-surface p-8 text-center">
+            <Trophy className="mx-auto mb-3 size-10 text-muted-foreground" />
+            <h3 className="text-xl font-extrabold">{t("achievements.errorTitle")}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t("achievements.errorBody")}</p>
+          </div>
+        ) : filteredAchievements.length === 0 ? (
+          <div className="app-surface p-8 text-center text-muted-foreground">
+            {t("achievements.empty")}
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredAchievements.map((achievement) => (
+              <AchievementCard key={achievement.id} achievement={achievement} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

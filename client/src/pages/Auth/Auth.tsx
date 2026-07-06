@@ -102,14 +102,14 @@ export default function Auth() {
   };
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_15%_10%,rgba(217,63,71,0.12),transparent_28%),var(--bg-app)] p-4 sm:p-6">
+    <main className="app-workspace-bg grid min-h-[100dvh] place-items-center p-4 sm:p-6">
       <section
-        className="anim-slide grid w-full max-w-245 overflow-hidden rounded-lg border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)] md:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]"
+        className="anim-slide grid w-full max-w-245 overflow-hidden rounded-2xl border bg-card shadow-[0_18px_60px_rgba(26,26,30,0.08)] md:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]"
       >
-        <aside className="flex min-h-auto flex-col justify-between border-b bg-[linear-gradient(145deg,rgba(217,63,71,0.14),rgba(16,185,129,0.08))] p-5 sm:p-7 md:min-h-140 md:border-b-0 md:border-r md:p-9">
+        <aside className="flex min-h-auto flex-col justify-between border-b bg-primary/10 p-5 sm:p-7 md:min-h-140 md:border-b-0 md:border-r md:p-9">
           <div>
             <div className="mb-9 inline-flex items-center gap-2.5">
-              <span className="inline-flex size-10.5 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <span className="inline-flex size-10.5 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <BookOpen size={21} />
               </span>
               <strong className="text-[1.05rem]">Study Chinese</strong>
@@ -136,10 +136,10 @@ export default function Auth() {
           <form onSubmit={handleSubmit} className="w-full">
             <div className="mb-7">
               <div
-                className="relative isolate mb-6 inline-flex rounded-lg border bg-secondary p-1"
+                className="relative isolate mb-6 inline-flex rounded-xl border bg-secondary p-1"
               >
                 <span
-                  className="absolute bottom-1 left-1 top-1 z-0 w-[calc(50%-4px)] rounded-[9px] bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red))] shadow-[0_6px_18px_rgba(217,63,71,0.24)] transition-transform duration-300 ease-out"
+                  className="absolute bottom-1 left-1 top-1 z-0 w-[calc(50%-4px)] rounded-lg bg-primary shadow-[0_6px_18px_rgba(217,63,71,0.24)] transition-transform duration-300 ease-out"
                   style={{
                     transform: mode === "register" ? "translateX(100%)" : "translateX(0)",
                   }}
@@ -148,7 +148,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("login")}
                   className={cn(
-                    "relative z-10 rounded-md px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
+                    "relative z-10 rounded-lg px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
                     mode === "login" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -158,7 +158,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => switchMode("register")}
                   className={cn(
-                    "relative z-10 rounded-md px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
+                    "relative z-10 rounded-lg px-4.5 py-2.25 font-extrabold transition hover:-translate-y-px",
                     mode === "register" ? "text-white" : "text-muted-foreground",
                   )}
                 >
@@ -231,7 +231,7 @@ export default function Auth() {
             {formError && (
               <div
                 role="alert"
-                className="mt-4 rounded-lg border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive"
+                className="mt-4 rounded-xl border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive"
               >
                 {formError}
               </div>
@@ -241,7 +241,7 @@ export default function Auth() {
               type="submit"
               variant={canSubmit && !isSubmitting ? "default" : "secondary"}
               disabled={!canSubmit || isSubmitting}
-              className="mt-5.5 h-12 w-full"
+              className="mt-5.5 h-12 w-full rounded-xl"
             >
               {isSubmitting ? t("auth.wait") : submitLabel}
             </Button>

@@ -23,16 +23,16 @@ export default function Practice() {
   const [activeTool, setActiveTool] = useState<Tool>(isPracticeTool(initialTool) ? initialTool : "menu");
 
   return (
-    <div className="anim-slide">
+    <div className="app-page">
       {activeTool !== "menu" && (
-        <button onClick={() => setActiveTool("menu")} className="mb-5 inline-flex items-center gap-1.5 font-bold text-primary">
+        <button onClick={() => setActiveTool("menu")} className="mb-5 inline-flex items-center gap-1.5 rounded-xl border bg-card/90 px-3 py-2 font-bold text-primary shadow-sm transition hover:bg-secondary active:translate-y-px">
           <ArrowLeft size={16} /> {t("practice.back")}
         </button>
       )}
 
       {activeTool === "menu" && (
         <div className="grid gap-4">
-          <div className="mb-2 text-left">
+          <div className="app-page-header mb-2">
             <h2 className="text-2xl font-extrabold">{t("practice.title")}</h2>
             <p className="text-[0.9rem] text-muted-foreground">
               {t("practice.subtitle")}
@@ -50,8 +50,8 @@ export default function Practice() {
           ].map((tool) => {
             const Icon = tool.icon;
             return (
-              <button key={tool.id} onClick={() => setActiveTool(tool.id as Tool)} className="flex cursor-pointer items-center gap-4 rounded-lg border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:gap-5 sm:p-5">
-                <span className={cn("flex size-13 shrink-0 items-center justify-center rounded-[14px] text-white", tool.cls)}>
+              <button key={tool.id} onClick={() => setActiveTool(tool.id as Tool)} className="app-card-button flex cursor-pointer items-center gap-4 p-4 sm:gap-5 sm:p-5">
+                <span className={cn("flex size-13 shrink-0 items-center justify-center rounded-xl text-white", tool.cls)}>
                   <Icon size={26} />
                 </span>
                 <span className="min-w-0">

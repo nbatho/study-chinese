@@ -15,7 +15,7 @@ import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import TtsButton from "../../components/TtsButton";
 
-const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
+const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 
 interface AITutorProps {
   onClose?: () => void;
@@ -120,19 +120,19 @@ export default function AITutor({ onClose }: AITutorProps) {
         "flex flex-col overflow-hidden bg-background",
         isOverlay
           ? "fixed inset-0 z-1000"
-          : "anim-slide h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)]",
+          : "anim-slide min-w-0 h-[calc(100dvh-7rem)] sm:h-[calc(100dvh-8rem)]",
       )}
     >
       <header
         className={cn(
           "flex items-center gap-4",
-          isOverlay ? "border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl" : "mb-5",
+          isOverlay ? "border-b bg-card/90 p-4 shadow-sm backdrop-blur-xl" : "app-page-header mb-5",
         )}
       >
         <button
           type="button"
           onClick={handleClose}
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-secondary hover:text-foreground active:translate-y-px"
         >
           <ArrowLeft size={20} />
         </button>
@@ -149,7 +149,7 @@ export default function AITutor({ onClose }: AITutorProps) {
           <button
             type="button"
             onClick={() => navigate("/shop")}
-            className="ml-auto hidden shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-xs font-extrabold text-muted-foreground transition hover:bg-secondary hover:text-foreground sm:flex"
+            className="ml-auto hidden shrink-0 items-center gap-2 rounded-xl border bg-card px-3 py-2 text-xs font-extrabold text-muted-foreground transition hover:bg-secondary hover:text-foreground active:translate-y-px sm:flex"
           >
             {visibleAiUsage.isPremium ? <Crown size={15} className="text-gold" /> : <ShoppingBag size={15} className="text-primary" />}
             {visibleAiUsage.isPremium
@@ -164,11 +164,11 @@ export default function AITutor({ onClose }: AITutorProps) {
 
       {!selectedScenario ? (
         <div className="anim-slide mx-auto w-full max-w-150 flex-1 overflow-y-auto p-4 sm:p-6">
-          <h4 className="mb-4 text-left text-base font-bold uppercase text-muted-foreground">
+          <h4 className="mb-4 text-left text-base font-bold text-muted-foreground">
             {t("ai.selectScenario")}
           </h4>
           {visibleAiUsage && !visibleAiUsage.isPremium && (
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border bg-card p-3 shadow-sm">
+            <div className="app-surface mb-4 flex items-center justify-between gap-3 p-3">
               <div className="min-w-0">
                 <div className="text-sm font-extrabold">{t("ai.freeCardTitle")}</div>
                 <p className="truncate text-xs text-muted-foreground">
@@ -181,7 +181,7 @@ export default function AITutor({ onClose }: AITutorProps) {
               <button
                 type="button"
                 onClick={() => navigate("/shop")}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px"
               >
                 <ShoppingBag size={14} />
                 {t("ai.premiumCta")}
@@ -190,12 +190,12 @@ export default function AITutor({ onClose }: AITutorProps) {
           )}
           <div className="grid gap-3">
             {scenariosQuery.isLoading && (
-              <div className="rounded-lg border bg-card p-4 text-muted-foreground shadow-sm">
+              <div className="app-surface p-4 text-muted-foreground">
                 {t("ai.loadingScenarios")}
               </div>
             )}
             {scenariosQuery.isError && (
-              <div className="rounded-lg border bg-card p-4 text-primary shadow-sm">
+              <div className="app-surface p-4 text-primary">
                 {t("ai.loadError")}
               </div>
             )}
@@ -204,7 +204,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                 key={scenario.id}
                 type="button"
                 onClick={() => selectScenario(scenario)}
-                className="flex items-center gap-4 rounded-lg border bg-card p-4 text-left text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-wait disabled:opacity-70"
+                className="app-card-button flex items-center gap-4 p-4 text-foreground disabled:cursor-wait disabled:opacity-70"
                 disabled={startSessionMutation.isPending}
               >
                 <span className="text-[2.2rem]">{scenario.emoji}</span>
@@ -226,7 +226,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                 key={message.id}
                 className={cn("max-w-[88%] text-left sm:max-w-[80%]", message.role === "tutor" ? "self-start" : "self-end")}
               >
-                <div className={cn("rounded-2xl px-4.5 py-3.5", message.role === "tutor" ? "rounded-tl border bg-card text-foreground" : "rounded-tr bg-primary text-white")}>
+                <div className={cn("rounded-2xl px-4.5 py-3.5 shadow-sm", message.role === "tutor" ? "rounded-tl border bg-card text-foreground" : "rounded-tr bg-primary text-white")}>
                   {message.role === "tutor" ? (
                     <div>
                       <div className="mb-1 flex items-center justify-between">
@@ -287,12 +287,12 @@ export default function AITutor({ onClose }: AITutorProps) {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               disabled={isThinking || isAiQuotaExhausted}
-              className="min-w-0 flex-1 rounded-[10px] border bg-background px-4 py-3 text-[0.95rem] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+              className="min-w-0 flex-1 rounded-xl border bg-background px-4 py-3 text-[0.95rem] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={!userInput.trim() || isThinking || isAiQuotaExhausted}
-              className={cn(primaryButtonClass, "size-12 shrink-0 rounded-[10px] p-0")}
+              className={cn(primaryButtonClass, "size-12 shrink-0 p-0")}
             >
               <Send size={18} />
             </button>

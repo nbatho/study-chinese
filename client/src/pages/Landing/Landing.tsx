@@ -12,7 +12,7 @@ import {
   Rocket,
   Sparkles,
   Users,
-  WandSparkles
+  WandSparkles,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useAppSelector } from "../../store/hooks";
@@ -22,71 +22,65 @@ import { FadeIn } from "../../components/ui/FadeIn";
 const featureCards = [
   {
     title: "Lộ trình HSK rõ ràng",
-    description: "Học theo bài, theo cấp độ và tiếp tục đúng nơi bạn đang dừng.",
+    description: "Theo dõi bài học, cấp độ và tiến độ trong một mạch học dễ quay lại.",
     icon: BookOpen,
-    color: "text-primary",
-    bg: "bg-primary/10",
     href: "/learn",
+    className: "lg:col-span-2",
   },
   {
     title: "Luyện nói và phản xạ",
-    description: "Luyện phát âm, sắp xếp câu, nghe hiểu và ghi nhớ mặt chữ trong một nơi.",
+    description: "Nghe, nói, sắp xếp câu và ghi nhớ mặt chữ bằng bài tập ngắn.",
     icon: Mic2,
-    color: "text-tone-1",
-    bg: "bg-tone-1/10",
     href: "/practice",
+    className: "lg:row-span-2",
   },
   {
     title: "Từ điển trong ngữ cảnh",
-    description: "Tra từ, xem pinyin, nghĩa, ví dụ và lưu lại những từ cần học tiếp.",
+    description: "Tra pinyin, nghĩa, ví dụ và lưu từ cần ôn tiếp.",
     icon: BookMarked,
-    color: "text-jade",
-    bg: "bg-jade/10",
     href: "/dictionary",
+    className: "",
   },
   {
     title: "Dịch văn bản và hình ảnh",
-    description: "Nhập câu, chụp ảnh chữ Hán và nhận giải thích để hiểu nhanh hơn.",
+    description: "Nhập câu hoặc chụp chữ Hán để nhận giải thích nhanh.",
     icon: Camera,
-    color: "text-tone-3",
-    bg: "bg-tone-3/10",
     href: "/translate",
+    className: "",
   },
   {
     title: "Gia sư AI",
-    description: "Hỏi cách dùng từ, nhờ sửa câu và luyện hội thoại theo tình huống.",
+    description: "Hỏi ngữ pháp, sửa câu và luyện hội thoại theo tình huống.",
     icon: Sparkles,
-    color: "text-tone-4",
-    bg: "bg-tone-4/10",
     href: "/ai-tutor",
+    className: "lg:col-span-2",
   },
   {
     title: "Cộng đồng học tập",
-    description: "Chia sẻ câu hỏi, mẹo học và những ghi chú hữu ích với người cùng học.",
+    description: "Chia sẻ câu hỏi, mẹo học và ghi chú hữu ích với người cùng học.",
     icon: Users,
-    color: "text-tone-2",
-    bg: "bg-tone-2/10",
     href: "/community",
+    className: "",
   },
 ];
 
 const studyFlow = [
   {
-    label: "Khởi động",
-    title: "Chọn mục tiêu và cấp độ",
+    label: "Đặt mục tiêu",
+    title: "Chọn cấp độ phù hợp",
     description: "Bắt đầu từ nền tảng hiện tại để bài học vừa sức.",
     icon: WandSparkles,
   },
   {
-    label: "Học mới",
-    title: "Đi qua bài học ngắn",
-    description: "Mỗi bài kết hợp từ vựng, mẫu câu, pinyin và ví dụ.",
+    label: "Học theo bài",
+    title: "Đi qua nội dung ngắn",
+    description: "Từ vựng, mẫu câu, pinyin và ví dụ được gom thành từng phiên học.",
     icon: BookOpen,
   },
   {
-    label: "Thực hành",
+    label: "Ôn có nhịp",
     title: "Biến kiến thức thành phản xạ",
-    description: "Nghe, nói, viết, dịch và ôn lại bằng bài tập tương tác.",
+    description: "Luyện nghe, nói, viết, dịch và ôn lại bằng bài tập tương tác.",
     icon: RefreshCw,
   },
 ];
@@ -97,184 +91,278 @@ const previewRows = [
   { hanzi: "今天很忙", pinyin: "jīn tiān hěn máng", meaning: "Hôm nay rất bận" },
 ];
 
+const productStats = [
+  { label: "Phiên học", value: "18m" },
+  { label: "Từ mới", value: "12" },
+  { label: "Ôn lại", value: "24" },
+];
+
 export default function Landing() {
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const primaryTarget = "/home";
+  const primaryCta = isAuthenticated ? "Vào học ngay" : "Bắt đầu học miễn phí";
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-28 sm:pt-32 sm:pb-36 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto flex flex-col items-center text-center">
-        <FadeIn direction="up" delay={100} className="z-10 w-full flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6">
-            <Sparkles size={16} />
-            <span>Nền tảng học tiếng Trung toàn diện</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-foreground tracking-tight mb-6">
-            Làm chủ tiếng Trung <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">
-              dễ dàng hơn bao giờ hết
+    <div className="min-h-[100dvh] overflow-hidden bg-background selection:bg-primary/20">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/88 backdrop-blur-xl">
+        <nav className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <button
+            type="button"
+            onClick={() => navigate("/landing")}
+            className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition hover:text-primary"
+            title="Study Chinese"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary font-serif text-2xl font-extrabold text-primary-foreground shadow-sm">
+              学
             </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Học theo lộ trình bài bản, luyện phản xạ tự nhiên, tra từ điển thông minh và nhận sự hỗ trợ 24/7 từ Gia sư AI.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-            <Button size="lg" className="rounded-full w-full sm:w-auto text-base h-14 px-10 shadow-md hover:shadow-lg transition-shadow" onClick={() => navigate(primaryTarget)}>
-              {isAuthenticated ? "Vào học ngay" : "Bắt đầu học miễn phí"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="rounded-full w-full sm:w-auto text-base h-14 px-10 border-2 hover:bg-secondary transition-colors" onClick={() => navigate("/guide")}>
-              <Play className="mr-2 h-5 w-5" />
-              Xem hướng dẫn
-            </Button>
-          </div>
-        </FadeIn>
-      </section>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-extrabold">Study Chinese</span>
+              <span className="block truncate text-xs font-semibold text-muted-foreground">HSK Learning</span>
+            </span>
+          </button>
 
-      {/* Features Section */}
-      <section className="py-24 bg-secondary/40 px-4 sm:px-6 lg:px-8 border-y">
-        <div className="max-w-7xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 text-foreground">Hệ sinh thái công cụ học tập</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Mọi tính năng bạn cần để thành thạo tiếng Trung đều được tích hợp trong một nền tảng duy nhất, giúp việc học mượt mà và tập trung hơn.
+          <div className="hidden items-center gap-7 text-sm font-bold text-muted-foreground md:flex">
+            <button type="button" onClick={() => navigate("/learn")} className="transition hover:text-foreground">
+              Lộ trình
+            </button>
+            <button type="button" onClick={() => navigate("/practice")} className="transition hover:text-foreground">
+              Luyện tập
+            </button>
+            <button type="button" onClick={() => navigate("/translate")} className="transition hover:text-foreground">
+              Dịch nhanh
+            </button>
+          </div>
+
+          <Button className="h-11 rounded-full px-5" onClick={() => navigate(primaryTarget)}>
+            {primaryCta}
+            <ArrowRight className="size-4" />
+          </Button>
+        </nav>
+      </header>
+
+      <main>
+        <section className="relative mx-auto grid min-h-[100dvh] max-w-7xl items-center gap-10 px-4 pb-16 pt-24 sm:px-6 sm:pt-28 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:px-8">
+          <div className="pointer-events-none absolute inset-x-0 top-[4.5rem] h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+          <FadeIn direction="up" delay={80} className="relative z-10 max-w-3xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
+              <Sparkles size={16} />
+              <span>Nền tảng học tiếng Trung toàn diện</span>
+            </div>
+            <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.04] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              Học tiếng Trung có nhịp, có lộ trình
+            </h1>
+            <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground sm:text-lg">
+              Bài học HSK, luyện phản xạ, từ điển và AI tutor cùng nằm trong một không gian học rõ ràng.
             </p>
+            <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button
+                size="lg"
+                className="h-14 rounded-full px-8 text-base font-extrabold shadow-lg shadow-primary/20 active:translate-y-px"
+                onClick={() => navigate(primaryTarget)}
+              >
+                {primaryCta}
+                <ArrowRight className="size-5" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 rounded-full border-2 bg-background/70 px-8 text-base font-extrabold active:translate-y-px"
+                onClick={() => navigate("/guide")}
+              >
+                <Play className="size-5" />
+                Xem hướng dẫn
+              </Button>
+            </div>
           </FadeIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {featureCards.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <FadeIn key={feature.title} delay={index * 100}>
-                  <div 
-                    onClick={() => navigate(feature.href)}
-                    className="group h-full bg-card p-8 rounded-3xl border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col"
-                  >
-                    <div className={cn("w-14 h-14 rounded-2xl mb-6 flex items-center justify-center transition-transform duration-300 group-hover:scale-110", feature.bg, feature.color)}>
-                      <Icon size={28} />
+          <FadeIn direction="left" delay={160} className="relative z-10">
+            <div className="relative mx-auto max-w-xl">
+              <div className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-3xl" />
+              <div className="relative overflow-hidden rounded-[2rem] border bg-card shadow-2xl shadow-primary/10">
+                <div className="border-b bg-secondary/50 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                        <Languages size={22} />
+                      </span>
+                      <div>
+                        <p className="text-sm font-extrabold text-foreground">Phiên học hôm nay</p>
+                        <p className="text-xs font-semibold text-muted-foreground">HSK 2 - Giao tiếp thường ngày</p>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-extrabold mb-3 text-foreground">{feature.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed mb-6 flex-1">
-                      {feature.description}
-                    </p>
-                    <div className="flex items-center text-primary font-bold text-sm group-hover:gap-2 transition-all">
-                      <span>Khám phá ngay</span>
-                      <ArrowRight size={16} className="ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                    <CheckCircle2 className="size-6 text-primary" />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 p-5 sm:p-6">
+                  <div className="grid grid-cols-3 gap-3">
+                    {productStats.map((stat) => (
+                      <div key={stat.label} className="rounded-2xl border bg-background p-3">
+                        <span className="block text-xs font-bold text-muted-foreground">{stat.label}</span>
+                        <strong className="mt-1 block text-2xl text-foreground">{stat.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-[1.5rem] border bg-background p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <h2 className="text-sm font-extrabold text-foreground">Từ cần nhớ</h2>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Đang học</span>
+                    </div>
+                    <div className="grid gap-3">
+                      {previewRows.map((row) => (
+                        <div key={row.hanzi} className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-3 rounded-2xl bg-card p-3 shadow-sm">
+                          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 font-serif text-2xl font-bold text-primary">
+                            {row.hanzi.slice(0, 1)}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-serif text-2xl font-bold text-foreground">{row.hanzi}</span>
+                            <span className="block truncate text-sm font-medium text-muted-foreground">
+                              {row.pinyin} / {row.meaning}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </FadeIn>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
-      {/* How it works Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <FadeIn>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-jade/10 text-jade text-xs font-extrabold uppercase tracking-widest mb-6">
-                  <CheckCircle2 size={14} />
-                  <span>Cách thức hoạt động</span>
+                  <div className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-lg shadow-primary/20">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Sparkles size={20} />
+                      <span className="font-extrabold">Gia sư AI sẵn sàng hỗ trợ</span>
+                    </div>
+                    <p className="text-sm font-medium leading-relaxed text-primary-foreground/90">
+                      Hỏi cách dùng từ, nhờ sửa câu hoặc tạo tình huống luyện nói ngay trong bài học.
+                    </p>
+                  </div>
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 text-foreground">Học tập theo một lộ trình khoa học</h2>
-                <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
-                  Chúng tôi thiết kế một quy trình học tập tối ưu, đi từ bước nhận diện, ghi nhớ đến việc biến nó thành phản xạ tự nhiên thông qua luyện tập.
-                </p>
-              </FadeIn>
-              
-              <div className="space-y-6">
-                {studyFlow.map((step, index) => {
-                  const Icon = step.icon;
-                  return (
-                    <FadeIn key={step.title} delay={index * 150} direction="right">
-                      <div className="flex gap-5 p-5 rounded-3xl bg-card border shadow-sm hover:border-primary/40 transition-colors group">
-                        <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center relative group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                           <Icon size={24} />
-                           {index !== studyFlow.length - 1 && (
-                             <div className="absolute top-14 left-1/2 -translate-x-1/2 w-0.5 h-10 bg-border group-hover:bg-primary/30 transition-colors"></div>
-                           )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-xs font-extrabold text-primary uppercase tracking-[0.08em]">{step.label}</span>
-                          </div>
-                          <h3 className="text-lg font-extrabold text-foreground mb-1.5">{step.title}</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-                        </div>
-                      </div>
-                    </FadeIn>
-                  );
-                })}
               </div>
             </div>
-            
-            <FadeIn direction="left" className="relative h-full min-h-125 lg:h-150 rounded-[2.5rem] bg-secondary/60 p-8 flex flex-col justify-center border overflow-hidden">
-                <div className="absolute -top-10 -right-10 p-8 opacity-3 text-primary">
-                   <Languages size={300} />
-                </div>
-                <div className="relative z-10 space-y-5">
-                  {previewRows.map((row, index) => (
-                    <div key={row.hanzi} className="bg-card p-5 rounded-2xl shadow-sm border flex items-center gap-4 transform transition-all duration-300 hover:scale-102 hover:shadow-md" style={{ transform: `translateX(${index * 24}px)` }}>
-                      <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center font-extrabold text-primary">
-                        {index + 1}
+          </FadeIn>
+        </section>
+
+        <section className="border-y bg-secondary/40 px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <FadeIn className="mb-12 max-w-3xl">
+              <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Một bộ công cụ đủ gọn để học mỗi ngày
+              </h2>
+              <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground">
+                Các tính năng chính được nối với nhau theo hành trình học, không tách thành những màn rời rạc.
+              </p>
+            </FadeIn>
+
+            <div className="grid auto-rows-fr gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {featureCards.map((feature, index) => {
+                const Icon = feature.icon;
+
+                return (
+                  <FadeIn key={feature.title} delay={index * 60}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(feature.href)}
+                      className={cn(
+                        "group flex h-full w-full flex-col justify-between rounded-[1.5rem] border bg-card p-6 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/10 active:translate-y-px",
+                        feature.className,
+                      )}
+                    >
+                      <span className="mb-8 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+                        <Icon size={24} />
+                      </span>
+                      <span>
+                        <span className="block text-xl font-extrabold text-foreground">{feature.title}</span>
+                        <span className="mt-3 block text-sm font-medium leading-relaxed text-muted-foreground">
+                          {feature.description}
+                        </span>
+                      </span>
+                      <span className="mt-8 inline-flex items-center gap-2 text-sm font-extrabold text-primary">
+                        Mở công cụ
+                        <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+                      </span>
+                    </button>
+                  </FadeIn>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <FadeIn>
+              <div className="sticky top-28">
+                <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                  Học theo một nhịp dễ duy trì
+                </h2>
+                <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-muted-foreground">
+                  Mỗi phiên học được chia nhỏ để bạn biết nên bắt đầu ở đâu, cần ôn gì và khi nào nên luyện phản xạ.
+                </p>
+              </div>
+            </FadeIn>
+
+            <div className="grid gap-4">
+              {studyFlow.map((step, index) => {
+                const Icon = step.icon;
+
+                return (
+                  <FadeIn key={step.title} delay={index * 90} direction="right">
+                    <div className="grid gap-4 rounded-[1.5rem] border bg-card p-5 shadow-sm transition hover:border-primary/30 sm:grid-cols-[64px_minmax(0,1fr)]">
+                      <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <Icon size={25} />
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-2xl font-serif font-bold text-foreground truncate">{row.hanzi}</div>
-                        <div className="text-sm font-medium text-muted-foreground mt-0.5 truncate">{row.pinyin} • {row.meaning}</div>
+                      <div>
+                        <span className="text-sm font-extrabold text-primary">{step.label}</span>
+                        <h3 className="mt-1 text-xl font-extrabold text-foreground">{step.title}</h3>
+                        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">{step.description}</p>
                       </div>
                     </div>
-                  ))}
-                  
-                  <div className="mt-10 bg-primary text-primary-foreground p-7 rounded-4xl shadow-xl relative overflow-hidden transform transition-all hover:-translate-y-1">
-                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
-                     <div className="flex items-center gap-3 mb-3 relative z-10">
-                       <Sparkles size={24} className="text-yellow-300" />
-                       <span className="text-lg font-extrabold">Gia sư AI luôn sẵn sàng</span>
-                     </div>
-                     <p className="text-primary-foreground/90 text-sm leading-relaxed relative z-10 font-medium">
-                       Bạn có thể hỏi bất kỳ ngữ pháp nào, nhờ giải thích đoạn hội thoại, hoặc tự tạo tình huống để luyện nói trực tiếp với AI.
-                     </p>
-                  </div>
-                </div>
-            </FadeIn>
+                  </FadeIn>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 mb-10">
-        <FadeIn direction="up">
-          <div className="max-w-5xl mx-auto bg-card rounded-[3rem] border shadow-2xl overflow-hidden relative">
-             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/15 via-background to-background"></div>
-             
-             <div className="relative z-10 p-12 sm:p-20 text-center">
-               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-8">
-                 <Rocket size={32} />
-               </div>
-               <h2 className="text-3xl sm:text-5xl font-extrabold mb-6 text-foreground tracking-tight">Sẵn sàng nâng cao trình độ?</h2>
-               <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-                 Tham gia cùng hàng ngàn học viên khác. Bắt đầu hành trình chinh phục tiếng Trung của bạn với các công cụ học tập thông minh nhất.
-               </p>
-               
-               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                 <Button size="lg" className="rounded-full text-base font-bold h-14 px-10 w-full sm:w-auto shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" onClick={() => navigate(primaryTarget)}>
-                   {isAuthenticated ? "Tiếp tục học ngay" : "Tạo tài khoản miễn phí"}
-                   <ArrowRight className="ml-2 h-5 w-5" />
-                 </Button>
-                 <Button size="lg" variant="secondary" className="rounded-full text-base font-bold h-14 px-10 w-full sm:w-auto border transition-all hover:-translate-y-0.5" onClick={() => navigate("/translate")}>
-                   <Camera className="mr-2 h-5 w-5" />
-                   Thử dịch văn bản
-                 </Button>
-               </div>
-             </div>
-          </div>
-        </FadeIn>
-      </section>
+        <section className="px-4 pb-20 sm:px-6 lg:px-8">
+          <FadeIn direction="up">
+            <div className="mx-auto grid max-w-7xl gap-8 overflow-hidden rounded-[2rem] border bg-card p-6 shadow-2xl shadow-primary/10 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div>
+                <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Rocket size={28} />
+                </div>
+                <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                  Sẵn sàng học một phiên ngắn hôm nay?
+                </h2>
+                <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground">
+                  Bắt đầu với lộ trình đang chờ sẵn, hoặc thử dịch nhanh một đoạn tiếng Trung bạn gặp trong ngày.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+                <Button
+                  size="lg"
+                  className="h-14 rounded-full px-8 text-base font-extrabold shadow-lg shadow-primary/20 active:translate-y-px"
+                  onClick={() => navigate(primaryTarget)}
+                >
+                  {primaryCta}
+                  <ArrowRight className="size-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-14 rounded-full border px-8 text-base font-extrabold active:translate-y-px"
+                  onClick={() => navigate("/translate")}
+                >
+                  <Camera className="size-5" />
+                  Thử dịch văn bản
+                </Button>
+              </div>
+            </div>
+          </FadeIn>
+        </section>
+      </main>
     </div>
   );
 }

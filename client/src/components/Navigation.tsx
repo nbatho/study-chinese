@@ -13,7 +13,6 @@ import {
   Shield,
   ShoppingBag,
   Sparkles,
-  Trophy,
   Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -47,7 +46,6 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/dictionary")) activeTab = "dictionary";
   else if (path.startsWith("/translate") || path.startsWith("/camera-translator")) activeTab = "translate";
   else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
-  else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/shop")) activeTab = "shop";
   else if (path.startsWith("/community")) activeTab = "community";
   else if (path.startsWith("/admin")) activeTab = "admin";
@@ -67,7 +65,6 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
       requiresAuth: true,
     },
     { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
-    { id: "achievements", label: t("nav.achievements"), icon: Trophy, requiresAuth: true },
     { id: "shop", label: t("nav.shop"), icon: ShoppingBag, requiresAuth: true },
     { id: "community", label: t("nav.community"), icon: Users, requiresAuth: true },
     ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
@@ -76,27 +73,27 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   return (
     <aside
       className={cn(
-        "sticky top-0 z-40 flex h-screen shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
+        "sticky top-0 z-40 flex h-[100dvh] shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
         collapsed ? "w-19" : "w-66",
       )}
     >
-      <div className="flex h-20 items-center gap-3 border-b px-3">
+      <div className="grid h-20 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-3">
         <button
           type="button"
           onClick={() => navigate("/home")}
           className={cn(
-            "flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition hover:bg-secondary",
-            collapsed ? "justify-center p-2" : "px-2 py-2",
+            "flex h-14 min-w-0 items-center gap-3 rounded-xl text-left transition hover:bg-secondary active:translate-y-px",
+            collapsed ? "justify-center px-0" : "px-2.5",
           )}
           title="Study Chinese"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary font-serif text-2xl font-extrabold text-primary-foreground shadow-sm">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary font-serif text-3xl font-extrabold leading-none text-primary-foreground shadow-sm">
             学
           </span>
           {!collapsed && (
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-extrabold">Study Chinese</span>
-              <span className="block truncate text-xs font-semibold text-muted-foreground">HSK Learning</span>
+            <span className="min-w-0 pt-0.5">
+              <span className="block truncate text-[0.95rem] font-extrabold leading-5">Study Chinese</span>
+              <span className="block truncate text-xs font-semibold leading-4 text-muted-foreground">HSK Learning</span>
             </span>
           )}
         </button>
@@ -107,7 +104,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
             variant="ghost"
             size="icon"
             onClick={onToggleCollapsed}
-            className="size-9 shrink-0 rounded-lg"
+            className="size-10 shrink-0 rounded-xl"
             aria-label={t("nav.collapse")}
             title={t("nav.collapse")}
           >
@@ -123,7 +120,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
             variant="ghost"
             size="icon"
             onClick={onToggleCollapsed}
-            className="size-10 rounded-lg"
+            className="size-10 rounded-xl"
             aria-label={t("nav.expand")}
             title={t("nav.expand")}
           >

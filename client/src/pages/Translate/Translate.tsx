@@ -358,8 +358,8 @@ export default function Translate() {
   useEffect(() => () => stopCamera(), []);
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="app-page">
+      <header className="app-page-header mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="text-left">
           <div className="mb-2 flex items-center gap-2">
             <Languages size={24} className="text-primary" />
@@ -370,12 +370,12 @@ export default function Translate() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 rounded-lg border bg-card p-1 shadow-sm">
+        <div className="grid grid-cols-2 gap-2 rounded-xl border bg-background p-1">
           <Button
             type="button"
             variant={mode === "text" ? "default" : "ghost"}
             onClick={() => setMode("text")}
-            className="rounded-md"
+            className="rounded-lg"
           >
             <Languages size={16} />
             Văn bản
@@ -384,7 +384,7 @@ export default function Translate() {
             type="button"
             variant={mode === "camera" ? "default" : "ghost"}
             onClick={() => setMode("camera")}
-            className="rounded-md"
+            className="rounded-lg"
           >
             <Camera size={16} />
             OCR
@@ -393,7 +393,7 @@ export default function Translate() {
       </header>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.92fr)]">
-        <section className="rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <section className="app-surface-padded text-left">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-extrabold">Nguồn tiếng Trung</h2>
@@ -421,7 +421,7 @@ export default function Translate() {
                 value={sourceText}
                 onChange={(event) => setSourceText(event.target.value)}
                 placeholder="Ví dụ: 你好，我想喝茶。"
-                className="min-h-55 resize-y rounded-lg border bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-55 resize-y rounded-xl border bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                 <Button
@@ -447,7 +447,7 @@ export default function Translate() {
             </div>
           ) : (
             <div className="grid gap-4">
-              <div className="relative flex aspect-[4/3] min-h-65 items-center justify-center overflow-hidden rounded-lg border bg-[#1e1e24]">
+              <div className="relative flex aspect-[4/3] min-h-65 items-center justify-center overflow-hidden rounded-2xl border bg-[#1e1e24]">
                 {loading && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/45 text-white">
                     <RefreshCw className="recording-pulse" size={36} />
@@ -533,7 +533,7 @@ export default function Translate() {
           )}
         </section>
 
-        <section className="rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+        <section className="app-surface-padded text-left">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-extrabold">Kết quả dịch</h2>
@@ -554,7 +554,7 @@ export default function Translate() {
             </Button>
           </div>
 
-          <div className="mb-4 min-h-37 rounded-lg border bg-background p-4">
+          <div className="mb-4 min-h-37 rounded-xl border bg-background p-4">
             {loading ? (
               <div className="flex h-29 items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
                 <Loader2 className="animate-spin" size={18} />
@@ -573,15 +573,15 @@ export default function Translate() {
           </div>
 
           {detectedText && (
-            <div className="mb-4 rounded-lg border bg-secondary/60 p-3">
-              <h3 className="mb-1 text-xs font-bold uppercase text-muted-foreground">Văn bản nhận diện</h3>
+            <div className="mb-4 rounded-xl border bg-secondary/60 p-3">
+              <h3 className="mb-1 text-xs font-bold text-muted-foreground">Văn bản nhận diện</h3>
               <p className="break-words font-serif text-2xl font-extrabold">{detectedText}</p>
             </div>
           )}
 
           {selectedBox && (
-            <div className="mb-4 rounded-lg border border-jade/30 bg-jade/10 p-3">
-              <h3 className="mb-1 text-xs font-bold uppercase text-jade">Vùng đang chọn</h3>
+            <div className="mb-4 rounded-xl border border-jade/30 bg-jade/10 p-3">
+              <h3 className="mb-1 text-xs font-bold text-jade">Vùng đang chọn</h3>
               <p className="font-serif text-3xl font-extrabold">{selectedBox.text}</p>
               {selectedBox.pinyin && <p className="mt-1 text-sm font-bold text-primary">{selectedBox.pinyin}</p>}
               <p className="mt-2 text-sm font-semibold">
@@ -593,7 +593,7 @@ export default function Translate() {
           {segments.length > 0 && (
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
-                <h3 className="text-xs font-bold uppercase text-muted-foreground">Từ/cụm đã tách</h3>
+                <h3 className="text-xs font-bold text-muted-foreground">Từ/cụm đã tách</h3>
                 {selectedSegmentIds.length > 0 && (
                   <button
                     type="button"
@@ -604,12 +604,12 @@ export default function Translate() {
                   </button>
                 )}
               </div>
-              <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
+              <div className="mb-3 grid gap-2 rounded-xl border bg-background p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <select
                     value={activeOcrListId}
                     onChange={(event) => setSelectedOcrListId(event.target.value)}
-                    className="min-w-0 rounded-lg border bg-card px-3 py-2 text-sm font-semibold outline-none"
+                    className="min-w-0 rounded-xl border bg-card px-3 py-2 text-sm font-semibold outline-none"
                   >
                     <option value="">Chon danh sach</option>
                     {lists.map((list) => (
@@ -632,7 +632,7 @@ export default function Translate() {
                   value={newOcrListName}
                   onChange={(event) => setNewOcrListName(event.target.value)}
                   placeholder="Ten list OCR"
-                  className="rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -666,7 +666,7 @@ export default function Translate() {
                       type="button"
                       onClick={() => toggleSegment(segment.id)}
                       className={cn(
-                        "min-w-18 rounded-lg border px-3 py-2 text-left transition",
+                        "min-w-18 rounded-xl border px-3 py-2 text-left transition",
                         selected
                           ? "border-primary bg-primary text-primary-foreground"
                           : "bg-background hover:border-primary/60",
@@ -697,7 +697,7 @@ export default function Translate() {
 
           <div className="mt-6 border-t pt-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xs font-bold uppercase text-muted-foreground">Lịch sử OCR</h3>
+              <h3 className="text-xs font-bold text-muted-foreground">Lịch sử OCR</h3>
               <div className="flex items-center gap-2">
                 {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
                 {historyEvents.length > 0 && (
@@ -714,8 +714,8 @@ export default function Translate() {
                 )}
               </div>
             </div>
-            <div className="mb-3 grid gap-2 rounded-lg border bg-background p-3">
-              <label className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+            <div className="mb-3 grid gap-2 rounded-xl border bg-background p-3">
+              <label className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
                 <Search size={15} className="shrink-0 text-muted-foreground" />
                 <input
                   value={historyKeyword}
@@ -725,7 +725,7 @@ export default function Translate() {
                 />
               </label>
               <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                <label className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+                <label className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
                   <CalendarDays size={15} className="shrink-0 text-muted-foreground" />
                   <input
                     type="date"
@@ -745,7 +745,7 @@ export default function Translate() {
               </div>
             </div>
             {historyEvents.length === 0 ? (
-              <div className="rounded-lg border bg-background p-3 text-sm font-semibold text-muted-foreground">
+              <div className="rounded-xl border bg-background p-3 text-sm font-semibold text-muted-foreground">
                 Chưa có lịch sử quét.
               </div>
             ) : (
@@ -759,7 +759,7 @@ export default function Translate() {
                       setSourceText(event.detectedText || "");
                       void runScan({ text: event.detectedText || "" });
                     }}
-                    className="rounded-lg border bg-background p-3 text-left transition hover:border-primary/60"
+                    className="rounded-xl border bg-background p-3 text-left transition hover:border-primary/60"
                   >
                     <span className="line-clamp-1 font-serif text-xl font-extrabold">
                       {event.detectedText || "Không có text"}
@@ -774,7 +774,7 @@ export default function Translate() {
             {historyEvents.length > 0 && (
               <div className="mt-3 grid gap-2">
                 {historyEvents.map((event) => (
-                  <div key={`notebook-${event.id}`} className="rounded-lg border bg-background p-3">
+                  <div key={`notebook-${event.id}`} className="rounded-xl border bg-background p-3">
                     <div className="flex items-start gap-2">
                       <button
                         type="button"
