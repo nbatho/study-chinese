@@ -17,7 +17,7 @@ import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Progress } from "./ui/progress";
+import { CircularProgress } from "./ui/circular-progress";
 
 function Avatar({
   avatar,
@@ -43,6 +43,46 @@ function Avatar({
         <span aria-hidden="true">{avatar || name.slice(0, 1).toUpperCase() || "学"}</span>
       )}
     </span>
+  );
+}
+
+function LanguageToggle({
+  language,
+  label,
+  onToggle,
+}: {
+  language: "en" | "vi";
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg px-2.5 text-xs font-extrabold text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+      aria-label={label}
+      title={label}
+    >
+      <Globe2 size={16} className="text-primary" />
+      <span className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-0.5">
+        <span
+          className={cn(
+            "rounded px-1.5 py-0.5 transition",
+            language === "en" && "bg-background text-foreground",
+          )}
+        >
+          EN
+        </span>
+        <span
+          className={cn(
+            "rounded px-1.5 py-0.5 transition",
+            language === "vi" && "bg-background text-foreground",
+          )}
+        >
+          VI
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -95,65 +135,43 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b bg-card/95 shadow-[0_8px_24px_rgba(0,0,0,0.03)] backdrop-blur-xl">
       <div className="flex min-h-18 items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-7">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <button
-            type="button"
-            onClick={toggleLanguage}
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border bg-card px-2.5 text-xs font-extrabold text-muted-foreground shadow-sm transition hover:border-primary/40 hover:text-foreground"
-            aria-label={t("navbar.languageToggle")}
-            title={t("navbar.languageToggle")}
-          >
-            <Globe2 size={16} className="text-primary" />
-            <span className="grid grid-cols-2 gap-1 rounded-md bg-secondary p-0.5">
-              <span
-                className={cn(
-                  "rounded px-1.5 py-0.5 transition",
-                  language === "en" && "bg-card text-foreground shadow-sm",
-                )}
-              >
-                EN
-              </span>
-              <span
-                className={cn(
-                  "rounded px-1.5 py-0.5 transition",
-                  language === "vi" && "bg-card text-foreground shadow-sm",
-                )}
-              >
-                VI
-              </span>
-            </span>
-          </button>
-
           {isAuthenticated && (
-            <div className="hidden min-w-0 max-w-md flex-1 items-center gap-3 rounded-lg border bg-card px-3 py-2 shadow-sm md:flex">
-              <Badge className="rounded-md px-2.5 py-1 text-xs">
-                {profile?.cefrLevel ?? "A1"}
-              </Badge>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between gap-3 text-xs font-bold text-muted-foreground">
-                  <span className="inline-flex min-w-0 items-center gap-1.5">
-                    <BookOpen size={14} className="shrink-0 text-primary" />
-                    <span className="truncate">{t("navbar.curriculumProgress")}</span>
-                  </span>
-                  <span className="shrink-0">{progressPercent}%</span>
+            <div className="hidden min-w-0 max-w-md flex-1 items-center gap-3 md:flex">
+              <CircularProgress progress={progressPercent} size={46} strokeWidth={4.5} />
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2 text-xs font-bold text-muted-foreground">
+                  <BookOpen size={14} className="shrink-0 text-primary" />
+                  <span className="truncate">{t("navbar.curriculumProgress")}</span>
                 </div>
-                <Progress value={progressPercent} className="h-2" />
+                <div className="mt-1 flex min-w-0 items-center gap-2">
+                  <Badge className="rounded-md px-2.5 py-1 text-xs">
+                    {profile?.cefrLevel ?? "A1"}
+                  </Badge>
+                  <span className="truncate text-xs font-semibold text-muted-foreground">
+                    {t("navbar.lessonsComplete", { completed: completedLessons, total: totalLessons })}
+                  </span>
+                </div>
               </div>
-              <span className="hidden shrink-0 text-xs font-semibold text-muted-foreground xl:inline">
-                {t("navbar.lessonsComplete", { completed: completedLessons, total: totalLessons })}
-              </span>
             </div>
           )}
         </div>
 
-        {isAuthenticated ? (
-          <div ref={menuRef} className="relative shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <LanguageToggle
+            language={language}
+            label={t("navbar.languageToggle")}
+            onToggle={toggleLanguage}
+          />
+
+          {isAuthenticated ? (
+            <div ref={menuRef} className="relative shrink-0">
             <button
               type="button"
               onClick={() => setIsUserMenuOpen((value) => !value)}
-              className="inline-flex h-11 items-center gap-2 rounded-lg border bg-card px-2 pr-3 shadow-sm transition hover:border-primary/40 hover:bg-secondary/50"
+              className="inline-flex h-11 items-center gap-2 rounded-lg px-2 pr-3 transition hover:bg-secondary"
               aria-expanded={isUserMenuOpen}
               aria-haspopup="menu"
               aria-label={t("navbar.openUserMenu")}
@@ -222,13 +240,14 @@ export default function Navbar() {
                 </div>
               </div>
             )}
-          </div>
-        ) : (
-          <Button type="button" onClick={() => navigate("/auth")} className="h-11 shrink-0 rounded-lg px-4">
-            <LogIn size={17} />
-            {t("auth.login")}
-          </Button>
-        )}
+            </div>
+          ) : (
+            <Button type="button" onClick={() => navigate("/auth")} className="h-11 shrink-0 rounded-lg px-4">
+              <LogIn size={17} />
+              {t("auth.login")}
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );

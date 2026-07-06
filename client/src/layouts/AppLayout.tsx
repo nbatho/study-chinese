@@ -7,6 +7,7 @@ import Navigation from "../components/Navigation";
 import { useUserProfileQuery } from "../api/users/queries";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice";
+import { cn } from "../utils/cn";
 
 export default function AppLayout() {
   const dispatch = useAppDispatch();
@@ -71,12 +72,19 @@ export default function AppLayout() {
         onToggleCollapsed={() => setIsSidebarCollapsed((value) => !value)}
       />
 
-      <main className="min-w-0 flex-1 overflow-y-auto bg-background">
+      <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-background">
         <Navbar />
-        <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-5 sm:py-6 lg:px-7">
-          <ErrorBoundary resetKey={location.pathname}>
-            <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
-          </ErrorBoundary>
+        <div className="flex w-full min-w-0 flex-1 justify-center overflow-x-hidden">
+          <div
+            className={cn(
+              "box-border w-full min-w-0 px-3 py-4 sm:px-5 sm:py-6 lg:px-7",
+              isHomePath ? "max-w-none" : "max-w-7xl",
+            )}
+          >
+            <ErrorBoundary resetKey={location.pathname}>
+              <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
+            </ErrorBoundary>
+          </div>
         </div>
       </main>
 

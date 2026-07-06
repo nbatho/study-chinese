@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ClipboardCheck, LockKeyhole, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { usePlacementQuestionsQuery, useSubmitPlacementMutation } from "../../api/placement/queries";
+import { useUserProfileQuery } from "../../api/users/queries";
 import type { PlacementQuestion, PlacementResult, PlacementSection } from "../../api/placement";
 import type { CefrLevel, SkillLevel } from "../../api/users";
 import { useAppSelector } from "../../store/hooks";
@@ -159,6 +160,7 @@ interface PlacementTestProps {
 export default function PlacementTest({ embedded = false, onComplete, onSkip }: PlacementTestProps) {
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const profileQuery = useUserProfileQuery(isAuthenticated && !embedded);
   const questionsQuery = usePlacementQuestionsQuery(isAuthenticated);
   const submitMutation = useSubmitPlacementMutation();
   const questions = questionsQuery.data?.questions ?? [];
@@ -178,6 +180,13 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
     [activeQuestions, answersByQuestionId],
   );
   const progress = activeQuestions.length ? (answeredCount / activeQuestions.length) * 100 : 0;
+  const hasCompletedPlacement = Boolean(profileQuery.data?.profile.placementTestCompletedAt);
+
+  useEffect(() => {
+    if (!embedded && hasCompletedPlacement) {
+      navigate("/learn", { replace: true });
+    }
+  }, [embedded, hasCompletedPlacement, navigate]);
 
   const chooseAnswer = (optionIndex: number) => {
     if (!currentQuestion) return;
@@ -234,6 +243,10 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
         description="Your entry test result is saved to your profile so lessons can unlock at the right level."
       />
     );
+  }
+
+  if (!embedded && hasCompletedPlacement) {
+    return null;
   }
 
   const body = (

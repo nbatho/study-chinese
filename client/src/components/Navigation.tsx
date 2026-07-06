@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Compass,
   Dumbbell,
+  FileText,
   Home,
   Languages,
   Lock,
@@ -40,6 +41,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   let activeTab = "home";
   if (path.startsWith("/guide")) activeTab = "guide";
   else if (path.startsWith("/learn")) activeTab = "learn";
+  else if (path.startsWith("/grammar")) activeTab = "grammar";
   else if (path.startsWith("/practice")) activeTab = "practice";
   else if (path.startsWith("/review")) activeTab = "review";
   else if (path.startsWith("/dictionary")) activeTab = "dictionary";
@@ -52,7 +54,8 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
 
   const tabs = [
     { id: "home", label: t("nav.home"), icon: Home },
-    { id: "learn", label: t("nav.learn"), icon: BookOpen },
+    { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
+    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },

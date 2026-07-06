@@ -9,6 +9,7 @@ const Home = lazy(() => import("../pages/Home"));
 const Landing = lazy(() => import("../pages/Landing"));
 const Guide = lazy(() => import("../pages/Guide"));
 const Learn = lazy(() => import("../pages/Learn"));
+const Grammar = lazy(() => import("../pages/Grammar"));
 const Practice = lazy(() => import("../pages/Practice"));
 const Review = lazy(() => import("../pages/Review"));
 const Dictionary = lazy(() => import("../pages/Dictionary"));
@@ -55,6 +56,10 @@ export const routes: RouteConfig[] = [
       {
         path: "learn",
         element: <Learn />
+      },
+      {
+        path: "grammar",
+        element: <Grammar />
       },
       {
         path: "practice",

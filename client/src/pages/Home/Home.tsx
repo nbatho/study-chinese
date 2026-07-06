@@ -2,10 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  Activity,
   ArrowRight,
   BookOpen,
-  Camera,
   CheckCircle2,
   Circle,
   Clock3,
@@ -15,8 +13,6 @@ import {
   Play,
   RefreshCw,
   ShieldCheck,
-  ShoppingBag,
-  Sparkles,
   Star,
   Trophy,
 } from "lucide-react";
@@ -134,14 +130,6 @@ export default function Home() {
     },
   ];
 
-  const quickTools = [
-    { label: t("home.aiTutor"), icon: Sparkles, href: "/ai-tutor", tone: "bg-tone-3 text-white" },
-    { label: t("home.scanOcr"), icon: Camera, href: "/translate", tone: "bg-jade text-white" },
-    { label: t("home.toneDrill"), icon: Activity, href: "/practice", tone: "bg-tone-1 text-white" },
-    { label: t("home.srsCards"), icon: RefreshCw, href: "/review", tone: "bg-primary text-primary-foreground" },
-    { label: t("home.shop"), icon: ShoppingBag, href: "/shop", tone: "bg-gold text-white" },
-  ];
-
   const handleLessonStart = () => {
     if (!nextLesson) {
       navigate("/learn");
@@ -177,9 +165,9 @@ export default function Home() {
   };
 
   return (
-    <div className="anim-slide pb-10">
-      <div className="grid gap-5 lg:grid-cols-12">
-        <div className="grid gap-5 lg:col-span-8">
+    <div className="anim-slide min-w-0 pb-10">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-12">
+        <div className="grid min-w-0 gap-5 lg:col-span-8">
           <section className="overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red)_54%,var(--gold))] p-5 text-white shadow-lg sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -211,7 +199,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.continueLearning")}</h2>
@@ -252,7 +240,7 @@ export default function Home() {
             )}
           </section>
 
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.todayPlan")}</h2>
@@ -310,64 +298,34 @@ export default function Home() {
             )}
           </section>
 
-          <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
-              <h2 className="mb-4 text-lg font-extrabold">{t("home.phrase")}</h2>
-              {currentPhrase ? (
-                <div>
-                  <div className="font-serif text-5xl font-extrabold text-primary sm:text-6xl">
-                    {currentPhrase.simplified}
-                  </div>
-                  <div className="mt-2 text-base font-semibold text-muted-foreground">{currentPhrase.pinyin}</div>
-                  <p className="mt-3 text-base font-bold">
-                    {language === "vi" && currentPhrase.note ? currentPhrase.note : currentPhrase.english}
-                  </p>
-                  <p className="mt-2 border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground">
-                    {currentPhrase.english}
-                  </p>
-                  <TtsButton text={currentPhrase.simplified} className="mt-4">
-                    {t("common.listen")}
-                  </TtsButton>
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-lg font-extrabold">{t("home.phrase")}</h2>
+            {currentPhrase ? (
+              <div>
+                <div className="font-serif text-5xl font-extrabold text-primary sm:text-6xl">
+                  {currentPhrase.simplified}
                 </div>
-              ) : (
-                <div className="rounded-lg border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
-                  {isAuthenticated ? t("common.loading") : t("home.loginToPersonalize")}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
-              <h2 className="mb-4 text-lg font-extrabold">{t("home.quickTools")}</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {quickTools.map((tool) => {
-                  const Icon = tool.icon;
-
-                  return (
-                    <button
-                      key={tool.href}
-                      type="button"
-                      onClick={() => navigate(tool.href)}
-                      className="group flex min-h-24 flex-col items-center justify-center rounded-lg border bg-background p-3 text-center transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                    >
-                      <span
-                        className={cn(
-                          "mb-2 flex size-11 items-center justify-center rounded-lg shadow-sm transition group-hover:scale-105",
-                          tool.tone,
-                        )}
-                      >
-                        <Icon size={21} />
-                      </span>
-                      <span className="text-xs font-extrabold">{tool.label}</span>
-                    </button>
-                  );
-                })}
+                <div className="mt-2 text-base font-semibold text-muted-foreground">{currentPhrase.pinyin}</div>
+                <p className="mt-3 text-base font-bold">
+                  {language === "vi" && currentPhrase.note ? currentPhrase.note : currentPhrase.english}
+                </p>
+                <p className="mt-2 border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground">
+                  {currentPhrase.english}
+                </p>
+                <TtsButton text={currentPhrase.simplified} className="mt-4">
+                  {t("common.listen")}
+                </TtsButton>
               </div>
-            </div>
+            ) : (
+              <div className="rounded-lg border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
+                {isAuthenticated ? t("common.loading") : t("home.loginToPersonalize")}
+              </div>
+            )}
           </section>
         </div>
 
-        <aside className="grid content-start gap-5 lg:col-span-4">
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+        <aside className="grid min-w-0 content-start gap-5 lg:col-span-4">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold">{t("home.goalsWallet")}</h2>
@@ -405,7 +363,7 @@ export default function Home() {
             </Button>
           </section>
 
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold">{t("home.leaderboard")}</h2>
               <Trophy size={21} className="text-gold" />
@@ -464,7 +422,7 @@ export default function Home() {
             )}
           </section>
 
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <h2 className="mb-4 text-lg font-extrabold">{t("home.dailyChallenges")}</h2>
             <div className="grid gap-3">
               {dailyChallenges.map((challenge) => {
@@ -489,7 +447,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold">{t("home.badges")}</h2>
               <Button type="button" variant="ghost" size="sm" onClick={() => navigate("/achievements")}>
