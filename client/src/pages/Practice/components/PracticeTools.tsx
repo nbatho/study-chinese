@@ -14,7 +14,7 @@ import {
 } from "../../../api";
 import type { MistakeItem } from "../../../api/users";
 import type { CharDiffEntry } from "../../../api/practice";
-import { CheckCircle2, Sparkles, Target, Volume2, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
@@ -1261,8 +1261,22 @@ export function HanziDrawingTool() {
   const [mistakeCount, setMistakeCount] = useState(0);
   const [completed, setCompleted] = useState(false);
   const mistakeCountRef = useRef(0);
-  const current = characters[charIdx % Math.max(characters.length, 1)];
+  const currentIndex = characters.length ? charIdx % characters.length : 0;
+  const current = characters[currentIndex];
   const currentCharacter = current?.character ?? "";
+
+  const resetPracticeProgress = () => {
+    mistakeCountRef.current = 0;
+    setMistakeCount(0);
+    setCompleted(false);
+  };
+
+  const selectCharacter = (nextIndex: number) => {
+    if (!characters.length) return;
+    const normalizedIndex = (nextIndex + characters.length) % characters.length;
+    setCharIdx(normalizedIndex);
+    resetPracticeProgress();
+  };
 
   const handleMistake = useCallback((summary: unknown) => {
     setMistakeCount((fallback) => {
@@ -1291,10 +1305,7 @@ export function HanziDrawingTool() {
   }, [addActivity, currentCharacter, t]);
 
   const handleNext = () => {
-    setCharIdx((prev) => prev + 1);
-    mistakeCountRef.current = 0;
-    setMistakeCount(0);
-    setCompleted(false);
+    selectCharacter(currentIndex + 1);
   };
 
   if (strokesQuery.isLoading || !current) return <LoadingCard label="Loading stroke data from server..." />;
@@ -1305,9 +1316,41 @@ export function HanziDrawingTool() {
       <span className="text-[0.8rem] font-semibold text-muted-foreground">
         Character: <strong className="text-primary">{current.character}</strong> - Quiz mode
       </span>
+      <div className="mt-5 grid grid-cols-[auto_1fr_auto] items-center gap-2 text-left">
+        <button
+          type="button"
+          className={cn(secondaryButtonClass, "size-10 p-0")}
+          onClick={() => selectCharacter(currentIndex - 1)}
+          title="Previous character"
+          aria-label="Previous character"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <select
+          value={currentIndex}
+          onChange={(event) => selectCharacter(Number(event.target.value))}
+          className="h-10 w-full rounded-lg border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          aria-label="Choose character to practice"
+        >
+          {characters.map((item, index) => (
+            <option key={item.id} value={index}>
+              {index + 1}. {item.character}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className={cn(secondaryButtonClass, "size-10 p-0")}
+          onClick={() => selectCharacter(currentIndex + 1)}
+          title="Next character"
+          aria-label="Next character"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
       <div className="my-6 flex justify-center">
         <HanziStrokePractice
-          key={`${current.id}-${charIdx}`}
+          key={current.id}
           character={current.character}
           mode="quiz"
           size={280}

@@ -1,25 +1,18 @@
+import { useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import {
-  useAchievementsQuery,
-  useDailyContentQuery,
-  useDueSrsCardsQuery,
-  useLessonsQuery,
-  useTodayPlanQuery,
-  useUserProfileQuery,
-  useUserStatsQuery,
-} from "../../api";
+import { toast } from "sonner";
 import {
   Activity,
   ArrowRight,
   BookOpen,
-  Brain,
   Camera,
   CheckCircle2,
+  Circle,
   Clock3,
   Flame,
   Gem,
-  PencilLine,
-  PlayCircle,
+  Medal,
+  Play,
   RefreshCw,
   ShieldCheck,
   ShoppingBag,
@@ -27,33 +20,75 @@ import {
   Star,
   Trophy,
 } from "lucide-react";
+import {
+  type LeaderboardScope,
+  useAchievementsQuery,
+  useDailyContentQuery,
+  useLeaderboardQuery,
+  useLessonsQuery,
+  usePurchaseShopItemMutation,
+  useTodayPlanQuery,
+  useUserProfileQuery,
+  useUserStatsQuery,
+} from "../../api";
+import TtsButton from "../../components/TtsButton";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Progress } from "../../components/ui/progress";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
-import TtsButton from "../../components/TtsButton";
+
+const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
+
+const clampPercent = (current: number, goal: number) => {
+  if (!goal) return 0;
+  return Math.max(0, Math.min(100, Math.round((current / goal) * 100)));
+};
+
+function DashboardAvatar({ avatar, name }: { avatar?: string | null; name: string }) {
+  const isImage = Boolean(avatar && /^(https?:|data:image|blob:)/.test(avatar));
+
+  return (
+    <span className="flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/25 bg-white/20 text-6xl font-extrabold shadow-lg backdrop-blur sm:size-[6.5rem]">
+      {isImage ? (
+        <img src={avatar ?? ""} alt={name} className="size-full object-cover" />
+      ) : (
+        <span aria-hidden="true">{avatar || "学"}</span>
+      )}
+    </span>
+  );
+}
 
 export default function Home() {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const navigate = useNavigate();
   const { setSelectedLessonId } = useOutletContext<{
     setSelectedLessonId: (lessonId: string | null) => void;
   }>();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const [leaderboardScope, setLeaderboardScope] = useState<LeaderboardScope>("global");
+
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const statsQuery = useUserStatsQuery(7, isAuthenticated);
   const lessonsQuery = useLessonsQuery(isAuthenticated);
-  const dueCardsQuery = useDueSrsCardsQuery(20, isAuthenticated);
   const achievementsQuery = useAchievementsQuery(isAuthenticated);
   const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const todayPlanQuery = useTodayPlanQuery(isAuthenticated);
+  const leaderboardQuery = useLeaderboardQuery({
+    scope: leaderboardScope,
+    timeframe: "weekly",
+    enabled: isAuthenticated,
+  });
+  const purchaseMutation = usePurchaseShopItemMutation();
 
   const profile = profileQuery.data?.profile;
   const streak = profileQuery.data?.streak;
   const wallet = profileQuery.data?.wallet;
-  const stats = statsQuery.data?.stats ?? [];
+  const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
   const lessons = lessonsQuery.data?.lessons ?? [];
-  const dueCount = dueCardsQuery.data?.cards.length ?? 0;
   const unlockedAchievements = achievementsQuery.data?.achievements.filter((item) => item.unlockedAt) ?? [];
+  const leaderboardEntries = leaderboardQuery.data?.entries.slice(0, 5) ?? [];
   const todayKey = new Date().toISOString().slice(0, 10);
   const todayStat = stats.find((item) => item.dateKey === todayKey) ?? {
     dateKey: todayKey,
@@ -69,223 +104,419 @@ export default function Home() {
   const nextLesson = lessons.find((lesson) => !lesson.completedAt) ?? lessons[0];
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
-  const xpTarget = Math.max((profile?.dailyMinutes ?? 15) * 3, 45);
-  const xpProgress = Math.min(todayStat.xp, xpTarget);
+  const displayName = profile?.name || t("common.learner");
+  const xpTarget = todayPlan?.xpTarget ?? Math.max((profile?.dailyMinutes ?? 15) * 3, 50);
+  const lessonTarget = 1;
+  const reviewTarget = 10;
+  const lessonProgress = lessons.length ? clampPercent(completedLessons, lessons.length) : 0;
+
+  const dailyChallenges = [
+    {
+      title: t("home.challengeXp", { goal: xpTarget }),
+      current: todayStat.xp,
+      goal: xpTarget,
+      icon: Star,
+      tone: "text-gold",
+    },
+    {
+      title: t("home.challengeLesson", { goal: lessonTarget }),
+      current: todayStat.lessonsCompleted,
+      goal: lessonTarget,
+      icon: BookOpen,
+      tone: "text-tone-2",
+    },
+    {
+      title: t("home.challengeReview", { goal: reviewTarget }),
+      current: todayStat.wordsReviewed,
+      goal: reviewTarget,
+      icon: RefreshCw,
+      tone: "text-tone-1",
+    },
+  ];
+
+  const quickTools = [
+    { label: t("home.aiTutor"), icon: Sparkles, href: "/ai-tutor", tone: "bg-tone-3 text-white" },
+    { label: t("home.scanOcr"), icon: Camera, href: "/translate", tone: "bg-jade text-white" },
+    { label: t("home.toneDrill"), icon: Activity, href: "/practice", tone: "bg-tone-1 text-white" },
+    { label: t("home.srsCards"), icon: RefreshCw, href: "/review", tone: "bg-primary text-primary-foreground" },
+    { label: t("home.shop"), icon: ShoppingBag, href: "/shop", tone: "bg-gold text-white" },
+  ];
+
+  const handleLessonStart = () => {
+    if (!nextLesson) {
+      navigate("/learn");
+      return;
+    }
+
+    setSelectedLessonId(nextLesson.id);
+    navigate("/learn");
+  };
+
+  const handlePlanStep = (stepHref: string, lessonId?: unknown) => {
+    if (typeof lessonId === "string") {
+      setSelectedLessonId(lessonId);
+      navigate("/learn");
+      return;
+    }
+
+    navigate(stepHref);
+  };
+
+  const handleBuyFreeze = async () => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      await purchaseMutation.mutateAsync("streak_freeze_1");
+      toast.success(t("home.freezePurchaseSuccess"));
+    } catch {
+      toast.error(t("home.freezePurchaseError"));
+    }
+  };
 
   return (
-    <div className="anim-slide pb-8">
-      <header className="mb-6 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border bg-card text-4xl sm:size-16 sm:text-[2.8rem]">
-            {profile?.avatar || "学"}
-          </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-extrabold sm:text-[1.4rem]">
-              {t("home.greeting", { name: profile?.name || t("common.learner") })}
-            </h1>
-            <p className="truncate text-xs font-medium text-muted-foreground sm:text-[0.8rem]">
-              {(profile?.startLevel || "beginner").toUpperCase()} · {t("common.goal")}: {(profile?.goalPurpose || "travel").toUpperCase()}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <Flame size={28} className="text-tone-4" fill="var(--tone-4)" />
-          <span className="text-xl font-extrabold">{streak?.current ?? 0}</span>
-        </div>
-      </header>
-
-      <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <h3 className="text-sm font-bold sm:text-[0.95rem]">{t("home.todayGoal")}</h3>
-          <span className="text-xs font-semibold text-muted-foreground sm:text-[0.85rem]">
-            {todayStat.xp} / {Math.round(xpTarget)} XP
-          </span>
-        </div>
-        <div className="mb-5 h-3 w-full overflow-hidden rounded-md border bg-background">
-          <div className="h-full rounded-md bg-[linear-gradient(90deg,var(--primary-red),var(--accent-red))]" style={{ width: `${(xpProgress / xpTarget) * 100}%` }} />
-        </div>
-        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3 lg:grid-cols-6 sm:gap-2.5">
-          {[
-            { label: t("home.xpTotal"), value: totalXp, icon: Star, cls: "text-tone-3" },
-            { label: t("home.streak"), value: streak?.current ?? 0, icon: Flame, cls: "text-tone-4" },
-            { label: t("common.gems"), value: wallet?.gemBalance ?? 0, icon: Gem, cls: "text-tone-1" },
-            { label: t("common.freeze"), value: wallet?.streakFreezes ?? 0, icon: ShieldCheck, cls: "text-tone-2" },
-            { label: t("home.lessons"), value: completedLessons, icon: BookOpen, cls: "text-tone-2" },
-            { label: t("home.reviews"), value: todayStat.wordsReviewed, icon: Brain, cls: "text-tone-1" },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.label} className="flex flex-col items-center rounded-md bg-secondary/50 px-2 py-3 sm:bg-transparent sm:p-0">
-                <Icon size={20} className={item.cls} />
-                <span className="mt-1 text-[1.1rem] font-extrabold">{item.value}</span>
-                <span className="text-[0.65rem] text-muted-foreground">{item.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {isAuthenticated && todayPlan && (
-        <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-bold">Hôm nay học gì</h3>
-              <p className="text-xs font-semibold text-muted-foreground">
-                {todayPlan.todayXp} / {todayPlan.xpTarget} XP - mục tiêu {todayPlan.dailyMinutes} phút
-              </p>
-            </div>
-            <Clock3 size={20} className="text-primary" />
-          </div>
-          <div className="grid gap-2.5">
-            {todayPlan.steps.map((step, index) => (
-              <button
-                key={step.id}
-                type="button"
-                onClick={() => {
-                  if (step.kind === "lesson" && typeof step.meta?.lessonId === "string") {
-                    setSelectedLessonId(step.meta.lessonId);
-                    navigate("/learn");
-                    return;
-                  }
-                  navigate(step.href);
-                }}
-                className="flex items-center gap-3 rounded-lg border bg-background px-3 py-3 text-left transition hover:border-primary/50 hover:bg-secondary/60"
-              >
-                <span className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-md text-xs font-extrabold",
-                  step.status === "current" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
-                )}>
-                  {step.status === "done" ? <CheckCircle2 size={16} /> : index + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-extrabold">{step.title}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{step.description}</span>
-                </span>
-                <span className="shrink-0 text-xs font-bold text-primary">{step.estimateMinutes}m</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="mb-6 overflow-x-auto pb-2">
-        <div className="flex w-max gap-4">
-          {[
-            { label: t("home.aiTutor"), icon: Sparkles, cls: "bg-tone-3", action: () => navigate("/ai-tutor") },
-            { label: t("home.scanOcr"), icon: Camera, cls: "bg-jade", action: () => navigate("/translate") },
-            { label: t("home.toneDrill"), icon: Activity, cls: "bg-tone-1", action: () => navigate("/practice") },
-            { label: t("home.srsCards"), icon: RefreshCw, cls: "bg-primary", action: () => navigate("/review") },
-            { label: t("home.shop"), icon: ShoppingBag, cls: "bg-gold", action: () => navigate("/shop") },
-            { label: t("home.writeHanzi"), icon: PencilLine, cls: "bg-gold", action: () => navigate("/practice") }
-          ].map((act) => {
-            const Icon = act.icon;
-            return (
-              <button key={act.label} onClick={act.action} className="flex w-18 flex-col items-center gap-1.5 text-foreground">
-                <div className={cn("flex size-14 items-center justify-center rounded-full text-white", act.cls)}>
-                  <Icon size={24} />
+    <div className="anim-slide pb-10">
+      <div className="grid gap-5 lg:grid-cols-12">
+        <div className="grid gap-5 lg:col-span-8">
+          <section className="overflow-hidden rounded-lg border border-primary/20 bg-[linear-gradient(135deg,var(--primary-red),var(--accent-red)_54%,var(--gold))] p-5 text-white shadow-lg sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <Badge className="mb-4 bg-white/20 text-white shadow-none backdrop-blur hover:bg-white/25">
+                  {profile?.cefrLevel ?? "A1"} · {lessonProgress}%
+                </Badge>
+                <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+                  {t("home.greeting", { name: displayName })}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm font-semibold text-white/82">
+                  {t("home.dashboardSubtitle")}
+                </p>
+                <div className="mt-5 grid max-w-lg grid-cols-3 gap-2">
+                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                    <span className="block text-xs font-bold text-white/75">XP</span>
+                    <strong className="text-xl text-white">{formatNumber(totalXp)}</strong>
+                  </div>
+                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                    <span className="block text-xs font-bold text-white/75">{t("home.lessons")}</span>
+                    <strong className="text-xl text-white">{completedLessons}</strong>
+                  </div>
+                  <div className="rounded-lg bg-white/16 p-3 backdrop-blur">
+                    <span className="block text-xs font-bold text-white/75">{t("home.reviews")}</span>
+                    <strong className="text-xl text-white">{todayStat.wordsReviewed}</strong>
+                  </div>
                 </div>
-                <span className="text-xs font-semibold">{act.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mb-5 rounded-lg border border-primary/20 bg-[linear-gradient(135deg,rgba(217,63,71,0.15),rgba(242,89,82,0.05))] p-4 shadow-sm sm:p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="text-base font-bold">{t("home.continueLearning")}</h3>
-          <button onClick={() => navigate("/learn")} className="flex items-center gap-1 text-[0.85rem] font-bold text-primary">
-            {t("home.allLessons")} <ArrowRight size={14} />
-          </button>
-        </div>
-        {nextLesson ? (
-          <div
-            onClick={() => {
-              setSelectedLessonId(nextLesson.id);
-              navigate("/learn");
-            }}
-            className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div className="min-w-0">
-              <div className="mb-0.5 text-xs font-bold text-primary">
-                HSK {nextLesson.hskLevel} · {t("home.lessons")} {nextLesson.order}
               </div>
-              <h4 className="truncate text-[1.1rem] font-extrabold">{nextLesson.title}</h4>
-              <p className="mt-px line-clamp-2 text-[0.8rem] text-muted-foreground">{nextLesson.subtitle}</p>
-              <div className="mt-2 flex gap-2 text-xs text-muted-foreground">
-                <span>{nextLesson.estimatedMinutes} min</span>
-                <span>+{nextLesson.xpReward} XP</span>
+              <DashboardAvatar avatar={profile?.avatar} name={displayName} />
+            </div>
+          </section>
+
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-extrabold">{t("home.continueLearning")}</h2>
+                <p className="text-sm font-medium text-muted-foreground">{t("home.nextLessonHint")}</p>
               </div>
+              <Button type="button" variant="ghost" onClick={() => navigate("/learn")} className="shrink-0 rounded-lg">
+                {t("home.allLessons")}
+                <ArrowRight size={16} />
+              </Button>
             </div>
-            <PlayCircle size={44} className="shrink-0 text-tone-4" fill="rgba(217, 63, 71, 0.1)" />
-          </div>
-        ) : (
-          <div className="p-4 text-center font-bold text-muted-foreground">
-            {t("home.noLessons")}
-          </div>
-        )}
-      </section>
 
-      {currentPhrase && (
-        <section className="mb-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
-          <h3 className="mb-3.5 text-base font-bold">{t("home.phrase")}</h3>
-          <div className="flex flex-col gap-1.5">
-            <h2 className="font-serif text-4xl font-extrabold tracking-[1px] text-primary sm:text-[2.4rem]">
-              {currentPhrase.simplified}
-            </h2>
-            <div className="text-base font-medium text-muted-foreground">{currentPhrase.pinyin}</div>
-            <p className="mt-1 text-base font-medium">"{currentPhrase.english}"</p>
-            <p className="mt-1 border-l-2 pl-2 text-[0.8rem] italic text-muted-foreground">
-              {currentPhrase.note}
-            </p>
-            <TtsButton text={currentPhrase.simplified} className="mt-4 w-fit">
-              {t("common.listen")}
-            </TtsButton>
-          </div>
-        </section>
-      )}
-
-      <section className="mb-6 rounded-lg border border-gold/20 bg-[linear-gradient(135deg,rgba(242,191,76,0.15),rgba(242,191,76,0.05))] p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-bold">{t("home.readyReview")}</h3>
-            <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
-              {t("home.cardsDue", { count: dueCount })}
-            </p>
-          </div>
-          <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4.5 py-2.5 text-[0.85rem] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={() => navigate("/review")}>
-            {t("home.startReview", { count: dueCount })}
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Trophy size={18} className="text-gold" />
-            <h3 className="text-[1.05rem] font-bold">{t("home.badges")}</h3>
-          </div>
-          <button onClick={() => navigate("/achievements")} className="text-xs font-bold text-primary">
-            {t("achievements.title")}
-          </button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2.5">
-          {unlockedAchievements.length === 0 ? (
-            <div className="p-2 text-[0.85rem] text-muted-foreground">
-              {t("home.noBadges")}
-            </div>
-          ) : (
-            unlockedAchievements.map((ach) => (
-              <div key={ach.id} className="flex min-w-24 flex-col items-center rounded-[14px] border border-gold/25 bg-gold/10 p-2.5 text-center">
-                <span className="text-3xl">{ach.emoji}</span>
-                <span className="mt-1.5 w-20 truncate text-[0.7rem] font-bold">
-                  {ach.title}
+            {nextLesson ? (
+              <button
+                type="button"
+                onClick={handleLessonStart}
+                className="group grid w-full gap-4 rounded-lg border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg sm:grid-cols-[minmax(0,1fr)_auto]"
+              >
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="rounded-md">
+                      HSK {nextLesson.hskLevel}
+                    </Badge>
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {nextLesson.estimatedMinutes} min · +{nextLesson.xpReward} XP
+                    </span>
+                  </div>
+                  <h3 className="truncate text-xl font-extrabold">{nextLesson.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{nextLesson.subtitle}</p>
+                </div>
+                <span className="flex size-16 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_0_0_rgba(217,63,71,0)] transition group-hover:scale-105 group-hover:shadow-[0_0_28px_rgba(217,63,71,0.45)]">
+                  <Play size={28} fill="currentColor" />
                 </span>
+              </button>
+            ) : (
+              <div className="rounded-lg border border-dashed bg-background p-6 text-center font-bold text-muted-foreground">
+                {isAuthenticated ? t("home.noLessons") : t("home.loginToPersonalize")}
               </div>
-            ))
-          )}
+            )}
+          </section>
+
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-extrabold">{t("home.todayPlan")}</h2>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {todayPlan
+                    ? t("home.todayPlanMeta", {
+                        xp: todayPlan.todayXp,
+                        target: todayPlan.xpTarget,
+                        minutes: todayPlan.dailyMinutes,
+                      })
+                    : t("home.loginToPersonalize")}
+                </p>
+              </div>
+              <Clock3 size={22} className="text-primary" />
+            </div>
+
+            {isAuthenticated && todayPlan ? (
+              <div className="grid gap-2.5">
+                {todayPlan.steps.map((step, index) => {
+                  const isDone = step.status === "done";
+                  const isCurrent = step.status === "current";
+
+                  return (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => handlePlanStep(step.href, step.meta?.lessonId)}
+                      className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-background px-3 py-3 text-left transition hover:border-primary/50 hover:bg-secondary/60"
+                    >
+                      <span
+                        className={cn(
+                          "flex size-9 items-center justify-center rounded-lg text-xs font-extrabold",
+                          isDone && "bg-tone-2/12 text-tone-2",
+                          isCurrent && "bg-primary text-primary-foreground",
+                          !isDone && !isCurrent && "bg-secondary text-muted-foreground",
+                        )}
+                      >
+                        {isDone ? <CheckCircle2 size={17} /> : index + 1}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-extrabold">{step.title}</span>
+                        <span className="block truncate text-xs font-medium text-muted-foreground">
+                          {step.description}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs font-extrabold text-primary">{step.estimateMinutes}m</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <Button type="button" onClick={() => navigate("/auth")} className="w-full rounded-lg">
+                {t("auth.login")}
+              </Button>
+            )}
+          </section>
+
+          <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+              <h2 className="mb-4 text-lg font-extrabold">{t("home.phrase")}</h2>
+              {currentPhrase ? (
+                <div>
+                  <div className="font-serif text-5xl font-extrabold text-primary sm:text-6xl">
+                    {currentPhrase.simplified}
+                  </div>
+                  <div className="mt-2 text-base font-semibold text-muted-foreground">{currentPhrase.pinyin}</div>
+                  <p className="mt-3 text-base font-bold">
+                    {language === "vi" && currentPhrase.note ? currentPhrase.note : currentPhrase.english}
+                  </p>
+                  <p className="mt-2 border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground">
+                    {currentPhrase.english}
+                  </p>
+                  <TtsButton text={currentPhrase.simplified} className="mt-4">
+                    {t("common.listen")}
+                  </TtsButton>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
+                  {isAuthenticated ? t("common.loading") : t("home.loginToPersonalize")}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+              <h2 className="mb-4 text-lg font-extrabold">{t("home.quickTools")}</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {quickTools.map((tool) => {
+                  const Icon = tool.icon;
+
+                  return (
+                    <button
+                      key={tool.href}
+                      type="button"
+                      onClick={() => navigate(tool.href)}
+                      className="group flex min-h-24 flex-col items-center justify-center rounded-lg border bg-background p-3 text-center transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                    >
+                      <span
+                        className={cn(
+                          "mb-2 flex size-11 items-center justify-center rounded-lg shadow-sm transition group-hover:scale-105",
+                          tool.tone,
+                        )}
+                      >
+                        <Icon size={21} />
+                      </span>
+                      <span className="text-xs font-extrabold">{tool.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
         </div>
-      </section>
+
+        <aside className="grid content-start gap-5 lg:col-span-4">
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-extrabold">{t("home.goalsWallet")}</h2>
+                <p className="text-sm font-medium text-muted-foreground">{t("home.todayGoal")}</p>
+              </div>
+              <span className="flex size-14 items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--tone-4),var(--gold))] text-white shadow-lg">
+                <Flame size={30} fill="currentColor" />
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-secondary/70 p-3">
+                <Flame className="mx-auto mb-1 text-tone-4" size={20} />
+                <strong className="block text-xl">{streak?.current ?? 0}</strong>
+                <span className="text-xs font-bold text-muted-foreground">{t("home.streak")}</span>
+              </div>
+              <div className="rounded-lg bg-secondary/70 p-3">
+                <Gem className="mx-auto mb-1 text-tone-1" size={20} />
+                <strong className="block text-xl">{wallet?.gemBalance ?? 0}</strong>
+                <span className="text-xs font-bold text-muted-foreground">{t("common.gems")}</span>
+              </div>
+              <div className="rounded-lg bg-secondary/70 p-3">
+                <ShieldCheck className="mx-auto mb-1 text-tone-3" size={20} />
+                <strong className="block text-xl">{wallet?.streakFreezes ?? 0}</strong>
+                <span className="text-xs font-bold text-muted-foreground">{t("common.freeze")}</span>
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={handleBuyFreeze}
+              disabled={purchaseMutation.isPending}
+              className="mt-4 w-full rounded-lg"
+            >
+              {purchaseMutation.isPending ? <RefreshCw className="animate-spin" /> : <ShieldCheck size={17} />}
+              {t("home.buyFreeze")}
+            </Button>
+          </section>
+
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-extrabold">{t("home.leaderboard")}</h2>
+              <Trophy size={21} className="text-gold" />
+            </div>
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg border bg-background p-1">
+              {(["global", "friends"] as LeaderboardScope[]).map((scope) => (
+                <button
+                  key={scope}
+                  type="button"
+                  aria-pressed={leaderboardScope === scope}
+                  onClick={() => setLeaderboardScope(scope)}
+                  className={cn(
+                    "h-9 rounded-md px-2 text-sm font-extrabold transition",
+                    leaderboardScope === scope ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary",
+                  )}
+                >
+                  {scope === "global" ? t("home.global") : t("home.friends")}
+                </button>
+              ))}
+            </div>
+
+            {leaderboardQuery.isLoading ? (
+              <div className="rounded-lg border border-dashed bg-background p-4 text-center text-sm font-semibold text-muted-foreground">
+                {t("common.loading")}
+              </div>
+            ) : leaderboardEntries.length ? (
+              <ol className="grid gap-2">
+                {leaderboardEntries.map((entry) => (
+                  <li
+                    key={entry.user.id}
+                    className={cn(
+                      "grid grid-cols-[32px_36px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border bg-background px-2.5 py-2.5",
+                      entry.isCurrentUser && "border-primary/35 bg-primary/5",
+                    )}
+                  >
+                    <span className="flex size-8 items-center justify-center rounded-md bg-secondary text-xs font-extrabold">
+                      {entry.rank <= 3 ? <Medal size={16} className="text-gold" /> : entry.rank}
+                    </span>
+                    <span className="flex size-9 items-center justify-center overflow-hidden rounded-md bg-card text-lg font-extrabold">
+                      {entry.user.avatar || entry.user.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-extrabold">{entry.user.name}</span>
+                      <span className="block truncate text-xs font-semibold text-muted-foreground">
+                        {entry.user.streak.current} {t("home.streak").toLowerCase()}
+                      </span>
+                    </span>
+                    <strong className="text-sm text-primary">{formatNumber(entry.totalXp)} XP</strong>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <div className="rounded-lg border border-dashed bg-background p-4 text-center text-sm font-semibold text-muted-foreground">
+                {isAuthenticated ? t("home.noLeaderboard") : t("home.loginToPersonalize")}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className="mb-4 text-lg font-extrabold">{t("home.dailyChallenges")}</h2>
+            <div className="grid gap-3">
+              {dailyChallenges.map((challenge) => {
+                const Icon = challenge.icon;
+                const percent = clampPercent(challenge.current, challenge.goal);
+
+                return (
+                  <div key={challenge.title} className="rounded-lg border bg-background p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon className={cn("size-4 shrink-0", challenge.tone)} />
+                        <span className="truncate text-sm font-extrabold">{challenge.title}</span>
+                      </span>
+                      <span className="shrink-0 text-xs font-bold text-muted-foreground">
+                        {Math.min(challenge.current, challenge.goal)} / {challenge.goal}
+                      </span>
+                    </div>
+                    <Progress value={percent} />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-extrabold">{t("home.badges")}</h2>
+              <Button type="button" variant="ghost" size="sm" onClick={() => navigate("/achievements")}>
+                {t("home.viewAll")}
+              </Button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {unlockedAchievements.length ? (
+                unlockedAchievements.slice(0, 8).map((ach) => (
+                  <div
+                    key={ach.id}
+                    className="flex min-w-24 flex-col items-center rounded-lg border border-gold/25 bg-gold/10 p-3 text-center"
+                  >
+                    <span className="text-3xl">{ach.emoji}</span>
+                    <span className="mt-2 w-[4.5rem] truncate text-xs font-extrabold">{ach.title}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex w-full items-center gap-2 rounded-lg border border-dashed bg-background p-4 text-sm font-semibold text-muted-foreground">
+                  <Circle size={16} />
+                  {t("home.noBadges")}
+                </div>
+              )}
+            </div>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export const routes: RouteConfig[] = [
       <OptionalAuthRoute>
         <App />
       </OptionalAuthRoute>
-    ), // App serves as the global layout component
+    ), // App renders the global AppLayout.
     children: [
       {
         path: "home",

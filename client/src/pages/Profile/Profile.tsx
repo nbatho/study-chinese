@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useUpdateProfileMutation, useUserProfileQuery, useUserStatsQuery } from "../../api/users/queries";
 import { Crown, Gem, ShieldCheck, ToggleLeft, ToggleRight, User } from "lucide-react";
@@ -11,6 +12,7 @@ import { cn } from "../../utils/cn";
 
 export default function Profile() {
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const { language, setLanguage, t } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
@@ -30,6 +32,7 @@ export default function Profile() {
     audioAutoPlay?: boolean;
   }>({});
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const settingsRef = useRef<HTMLElement | null>(null);
   const name = draftProfile.name ?? profile?.name ?? "";
   const dailyMinutes = draftProfile.dailyMinutes ?? profile?.dailyMinutes ?? 15;
   const showPinyin = draftProfile.showPinyin ?? profile?.showPinyin ?? true;
@@ -95,6 +98,15 @@ export default function Profile() {
     });
   }, [stats]);
 
+  useEffect(() => {
+    if (location.hash !== "#settings") return;
+
+    window.setTimeout(() => {
+      settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      settingsRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, [location.hash]);
+
   const today = stats[stats.length - 1] ?? {
     xp: 0,
     minutesStudied: 0,
@@ -145,7 +157,12 @@ export default function Profile() {
         </div>
       </section>
 
-      <section className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm sm:p-5">
+      <section
+        id="settings"
+        ref={settingsRef}
+        tabIndex={-1}
+        className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/30 sm:p-5"
+      >
         <h3 className="mb-1 text-base font-bold">{t("profile.weeklyXp")}</h3>
         <p className="mb-4 text-[0.8rem] text-muted-foreground">{t("profile.weeklyXpBody")}</p>
         <div className="flex justify-center">

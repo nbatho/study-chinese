@@ -5,28 +5,23 @@ import {
   ChevronRight,
   Compass,
   Dumbbell,
-  Shield,
-  ShoppingBag,
   Home,
   Languages,
   Lock,
-  LogIn,
-  LogOut,
   RefreshCw,
+  Shield,
+  ShoppingBag,
   Sparkles,
   Trophy,
-  User,
   Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useLogoutMutation } from "../api/auth/queries";
 import { useDueSrsCardsQuery } from "../api/srs/queries";
-import { useUserProfileQuery } from "../api/users/queries";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
+import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { cn } from "../utils/cn";
 
 interface NavigationProps {
   collapsed: boolean;
@@ -39,8 +34,6 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const authUser = useAppSelector((state) => state.auth.user);
   const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
-  const profileQuery = useUserProfileQuery(isAuthenticated);
-  const logoutMutation = useLogoutMutation();
   const { t } = useI18n();
 
   const path = location.pathname;
@@ -55,8 +48,6 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/achievements")) activeTab = "achievements";
   else if (path.startsWith("/shop")) activeTab = "shop";
   else if (path.startsWith("/community")) activeTab = "community";
-  else if (path.startsWith("/placement-test")) activeTab = "placement-test";
-  else if (path.startsWith("/profile")) activeTab = "profile";
   else if (path.startsWith("/admin")) activeTab = "admin";
 
   const tabs = [
@@ -65,24 +56,24 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },
-    { id: "review", label: t("nav.review"), icon: RefreshCw, badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0, requiresAuth: true },
+    {
+      id: "review",
+      label: t("nav.review"),
+      icon: RefreshCw,
+      badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0,
+      requiresAuth: true,
+    },
     { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
     { id: "achievements", label: t("nav.achievements"), icon: Trophy, requiresAuth: true },
     { id: "shop", label: t("nav.shop"), icon: ShoppingBag, requiresAuth: true },
     { id: "community", label: t("nav.community"), icon: Users, requiresAuth: true },
-    { id: "profile", label: t("nav.profile"), icon: User, requiresAuth: true },
     ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
   ];
-
-  const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    navigate("/", { replace: true });
-  };
 
   return (
     <aside
       className={cn(
-        "sticky top-0 z-900 flex h-screen shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
+        "sticky top-0 z-40 flex h-screen shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
         collapsed ? "w-19" : "w-66",
       )}
     >
@@ -186,61 +177,6 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
       </nav>
 
       <div className="border-t p-3">
-        {isAuthenticated ? (
-          <>
-            <button
-              type="button"
-              onClick={() => navigate("/placement-test")}
-              className={cn(
-                "mb-2 flex h-11 w-full items-center rounded-lg bg-secondary px-3 text-left text-sm font-bold transition hover:bg-secondary/80",
-                collapsed ? "justify-center px-0" : "justify-between",
-                activeTab === "placement-test" && "bg-primary text-primary-foreground hover:bg-primary",
-              )}
-              aria-label="Kiểm tra đầu vào"
-              title="Kiểm tra đầu vào"
-            >
-              {!collapsed && <span className="truncate">Kiểm tra đầu vào</span>}
-              <Badge className={cn("rounded-md", activeTab === "placement-test" && "bg-primary-foreground text-primary")}>
-                {profileQuery.data?.profile.cefrLevel ?? "A1"}
-              </Badge>
-            </button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleLogout}
-              disabled={logoutMutation.isPending}
-              className={cn(
-                "mb-3 h-11 w-full rounded-lg font-bold text-tone-4",
-                collapsed ? "px-0" : "justify-start px-3",
-              )}
-              aria-label={t("profile.logout")}
-              title={t("profile.logout")}
-            >
-              <LogOut className="size-5 shrink-0" />
-              {!collapsed && (
-                <span className="ml-3 truncate">
-                  {logoutMutation.isPending ? t("profile.signingOut") : t("profile.logout")}
-                </span>
-              )}
-            </Button>
-          </>
-        ) : (
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => navigate("/auth")}
-            className={cn(
-              "mb-3 h-11 w-full rounded-lg font-bold",
-              collapsed ? "px-0" : "justify-start px-3",
-            )}
-            aria-label={t("auth.login")}
-            title={t("auth.login")}
-          >
-            <LogIn className="size-5 shrink-0" />
-            {!collapsed && <span className="ml-3 truncate">{t("auth.login")}</span>}
-          </Button>
-        )}
-
         {collapsed ? (
           <Button
             type="button"

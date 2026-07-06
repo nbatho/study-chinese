@@ -8,9 +8,11 @@ import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
+import { getCurriculumLessonCount, getCurriculumLessons, HSK_CURRICULUM } from "./curriculum";
 
 const CEFR_RANK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
 const CEFR_RECOMMENDED_HSK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
+const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
 
 export default function Learn() {
   const { t } = useI18n();
@@ -32,14 +34,19 @@ export default function Learn() {
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null }) =>
     CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
-  const hskLevels = Array.from(new Set(lessons.map((lesson) => lesson.hskLevel))).sort((a, b) => a - b);
-  const visibleHskLevels = hskLevels.length ? hskLevels : [1, 2, 3];
-  const hskStats = visibleHskLevels.map((level) => {
+  const selectedCurriculum = HSK_CURRICULUM.find((level) => level.hskLevel === selectedHSK) ?? HSK_CURRICULUM[0];
+  const isCurriculumLessonLocked = () => CEFR_RANK[selectedCurriculum.cefrLevel] > CEFR_RANK[userCefrLevel];
+  const visibleHskLevels = VISIBLE_HSK_LEVELS;
+  const hskStats = HSK_CURRICULUM.map((curriculumLevel) => {
+    const level = curriculumLevel.hskLevel;
     const hskLessons = lessons.filter((lesson) => lesson.hskLevel === level);
-    const completedCount = hskLessons.filter((lesson) => lesson.completedAt).length;
-    const percent = Math.round(hskLessons.length ? (completedCount / hskLessons.length) * 100 : 0);
-    const skills = Array.from(new Set(hskLessons.map((lesson) => lesson.skill))).slice(0, 3);
-    const cefrLevel = hskLessons[0]?.cefrLevel ?? (level === 1 ? "A1" : level === 2 ? "A2" : "B1");
+    const curriculumLessons = getCurriculumLessons(curriculumLevel);
+    const curriculumOrders = new Set(curriculumLessons.map((lesson) => lesson.order));
+    const completedCount = hskLessons.filter((lesson) => curriculumOrders.has(lesson.order) && lesson.completedAt).length;
+    const lessonCount = getCurriculumLessonCount(curriculumLevel);
+    const percent = Math.round(lessonCount ? (completedCount / lessonCount) * 100 : 0);
+    const skills = Array.from(new Set(curriculumLessons.map((lesson) => lesson.skill))).slice(0, 4);
+    const cefrLevel = curriculumLevel.cefrLevel;
     const isLocked = CEFR_RANK[cefrLevel] > CEFR_RANK[userCefrLevel];
 
     return {
@@ -47,13 +54,21 @@ export default function Learn() {
       cefrLevel,
       isLocked,
       completedCount,
-      lessonCount: hskLessons.length,
+      lessonCount,
       percent,
       skills,
-      xpReward: hskLessons.reduce((total, lesson) => total + lesson.xpReward, 0),
+      topicCount: curriculumLevel.topics.length,
+      focus: curriculumLevel.focus,
+      xpReward: hskLessons.length
+        ? hskLessons.reduce((total, lesson) => total + lesson.xpReward, 0)
+        : curriculumLessons.reduce((total, lesson) => total + lesson.xpReward, 0),
     };
   });
   const levelLessons = lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
+  const selectedLessonCount = getCurriculumLessonCount(selectedCurriculum);
+  const selectedCurriculumOrders = new Set(getCurriculumLessons(selectedCurriculum).map((lesson) => lesson.order));
+  const selectedCompletedCount = levelLessons.filter((lesson) => selectedCurriculumOrders.has(lesson.order) && lesson.completedAt).length;
+  const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
   const grammarLibrary = dailyContentQuery.data?.grammarLibrary ?? [];
   const filteredGrammar = grammarLibrary.filter((entry) =>
     entry.title.toLowerCase().includes(grammarQuery.toLowerCase()) ||
@@ -123,7 +138,7 @@ export default function Learn() {
                   Làm lại kiểm tra đầu vào
                 </button>
               </div>
-              <div className="mb-5 grid gap-3 sm:grid-cols-3">
+              <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {hskStats.map((levelStats) => (
                   <button
                     key={levelStats.level}
@@ -147,13 +162,15 @@ export default function Learn() {
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
                       <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${levelStats.percent}%` }} />
                     </div>
+                    <p className="mt-3 line-clamp-2 text-xs font-semibold text-muted-foreground">{levelStats.focus}</p>
                     <div className="mt-3 flex items-center justify-between gap-2 text-xs font-bold text-muted-foreground">
                       <span>{levelStats.completedCount}/{levelStats.lessonCount} {t("home.lessons")}</span>
+                      <span>{levelStats.topicCount} topics</span>
                       <span>{levelStats.percent}%</span>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <span className={cn("rounded-md px-2 py-1 text-[0.68rem] font-extrabold", levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
-                        Mức {levelStats.cefrLevel}
+                        Level {levelStats.cefrLevel}
                       </span>
                       {levelStats.skills.map((skill) => (
                         <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold uppercase text-muted-foreground">
@@ -171,9 +188,15 @@ export default function Learn() {
                 ))}
               </div>
               <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
-                {t("learn.progress", { level: selectedHSK, percent: Math.round(levelLessons.length ? (levelLessons.filter((lesson) => lesson.completedAt).length / levelLessons.length) * 100 : 0) })}
+                {t("learn.progress", { level: selectedHSK, percent: selectedProgressPercent })}
               </div>
-              <LessonPath lessons={levelLessons} onSelectLesson={setSelectedLessonId} isLessonLocked={isLessonLockedByCefr} />
+              <LessonPath
+                curriculum={selectedCurriculum}
+                lessons={levelLessons}
+                onSelectLesson={setSelectedLessonId}
+                isLessonLocked={isLessonLockedByCefr}
+                isCurriculumLocked={isCurriculumLessonLocked}
+              />
             </div>
           ) : (
             <div className="anim-slide">
