@@ -2,8 +2,8 @@ services:
   server:
     container_name: study-chinese-server
     build:
-      context: .
-      dockerfile: server/Dockerfile
+      context: ./server
+      dockerfile: Dockerfile
     env_file:
       - ./server/.env
     environment:

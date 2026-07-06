@@ -6,7 +6,9 @@ const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 export const serverRoot = path.resolve(configDir, '..', '..');
 export const repoRoot = path.resolve(serverRoot, '..');
-export const contentRoot = path.join(repoRoot, 'data');
+export const contentRoot = process.env.CONTENT_ROOT
+  ? path.resolve(process.env.CONTENT_ROOT)
+  : path.join(repoRoot, 'data');
 
 export const contentPath = (...segments) => path.join(contentRoot, ...segments);
 
