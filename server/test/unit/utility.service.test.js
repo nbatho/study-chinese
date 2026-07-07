@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { __private__ } from '../../src/services/utility.service.js';
+import { __private__ as aiProviderPrivate } from '../../src/services/ai-provider.service.js';
 
 test('OCR history mapper exposes notebook fields safely', () => {
   const event = __private__.mapOcrHistoryEvent({
@@ -99,4 +100,60 @@ test('text lookup builds one overall meaning for a phrase', () => {
     .map((entry) => ({ entry }));
 
   assert.equal(__private__.buildOverallMeaning(segments), 'so-called true stability');
+});
+
+test('OCR glossary fallback uses dictionary hints when AI is unavailable', () => {
+  assert.equal(
+    __private__.buildGlossaryFallbackMeaning([
+      { text: '\u6211', english: 'I; me' },
+      { text: '\u559d\u8336', english: 'to drink tea; have tea' }
+    ]),
+    'I; to drink tea'
+  );
+});
+
+test('AI translation prompt treats OCR word glosses as context hints', () => {
+  const messages = aiProviderPrivate.toTranslationProviderMessages({
+    text: '\u6211\u60f3\u559d\u8336',
+    glossary: [
+      { text: '\u6211', pinyin: 'wo3', english: 'I; me' },
+      { text: '\u60f3', pinyin: 'xiang3', english: 'to want; to think' },
+      { text: '\u559d\u8336', pinyin: 'he1 cha2', english: 'to drink tea' }
+    ],
+    fallbackTranslation: 'I want to drink tea'
+  });
+
+  assert.match(messages.system, /Prefer contextual sentence\/phrase meaning over word-by-word glosses/);
+  assert.match(messages.history[0].content, /Dictionary hints/);
+  assert.match(messages.history[0].content, /Current word-by-word fallback/);
+});
+
+test('AI translation normalizer prefers model translation and falls back safely', () => {
+  assert.equal(
+    aiProviderPrivate.normalizeTranslationReply(
+      { translation: '  Toi muon uong tra.  ', pinyin: 'wo xiang he cha' },
+      {
+        provider: 'mock-provider',
+        modelName: 'mock-model',
+        tokenUsage: null,
+        latencyMs: 5,
+        fallbackTranslation: 'I want to drink tea'
+      }
+    ).translation,
+    'Toi muon uong tra.'
+  );
+
+  assert.equal(
+    aiProviderPrivate.normalizeTranslationReply(
+      { translation: '   ', pinyin: '' },
+      {
+        provider: 'mock-provider',
+        modelName: 'mock-model',
+        tokenUsage: null,
+        latencyMs: 5,
+        fallbackTranslation: 'I want to drink tea'
+      }
+    ).translation,
+    'I want to drink tea'
+  );
 });

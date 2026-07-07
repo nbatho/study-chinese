@@ -6,6 +6,7 @@ import {
   getAchievements as getAchievementsForUser,
   unlockAchievement as unlockEarnedAchievement
 } from './achievement.service.js';
+import { translateChineseText } from './ai-provider.service.js';
 
 const mapPhrase = (row) => ({
   simplified: row.simplified,
@@ -340,6 +341,12 @@ const buildOverallMeaning = (segments) =>
     .replace(/\s+([,.!?;:])/g, '$1')
     .trim();
 
+const buildGlossaryFallbackMeaning = (glossary) =>
+  glossary
+    .map((item) => getGlossOptions(item)[0])
+    .filter(Boolean)
+    .join('; ');
+
 const buildTextLookupBoxes = (text, entries) => {
   const normalizedText = compactForLookup(text);
   const totalChars = Math.max(1, countChars(normalizedText));
@@ -590,6 +597,14 @@ export const scanOcr = async (userId, payload) => {
   );
   const boxes = [...translatedBoxes, ...unmatchedRegionBoxes];
   const matchedWordIds = boxes.map((box) => box.wordId).filter(Boolean);
+  const dictionaryFallbackMeaning =
+    buildOverallMeaning(textLookupSegments) || buildGlossaryFallbackMeaning(translatedBoxes);
+  const contextualTranslation = await translateChineseText({
+    text: detectedText,
+    glossary: translatedBoxes,
+    fallbackTranslation: dictionaryFallbackMeaning
+  });
+  const combinedMeaning = contextualTranslation.translation || dictionaryFallbackMeaning;
 
   await query(
     `
@@ -607,6 +622,8 @@ export const scanOcr = async (userId, payload) => {
         matchedCount: matchedWordIds.length,
         dictionaryMatchCount: dictionaryBoxes.length,
         textLookupMatchCount: textLookupBoxes.length,
+        translationProvider: contextualTranslation.provider,
+        translationModel: contextualTranslation.modelName,
         baseUrl: mode === 'paddle_ocr' ? env.OCR_BASE_URL : undefined
       })
     ]
@@ -616,9 +633,11 @@ export const scanOcr = async (userId, payload) => {
     boxes,
     regions: rawRegionBoxes,
     segments: boxes.map(toSegment),
-    combinedMeaning: buildOverallMeaning(textLookupSegments),
+    combinedMeaning,
     detectedText,
-    provider: getOcrProvider()
+    provider: getOcrProvider(),
+    translationProvider: contextualTranslation.provider,
+    translationModel: contextualTranslation.modelName
   };
 };
 
@@ -766,6 +785,7 @@ export const clearOcrHistory = async (userId) => {
 
 export const __private__ = {
   buildOverallMeaning,
+  buildGlossaryFallbackMeaning,
   buildTextLookupBoxes,
   mapOcrHistoryEvent,
   normalizeNotebookPayload,

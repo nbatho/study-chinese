@@ -1,0 +1,117 @@
+{
+  "reviewed_at": "2026-07-07T15:41:33.916Z",
+  "count": 11,
+  "ok": false,
+  "results": [
+    {
+      "lesson_id": "hsk1-l01-listening-greetings",
+      "file": "data\\lessons\\generated\\hsk1-l01-listening-greetings.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk1-l02-reading-numbers",
+      "file": "data\\lessons\\generated\\hsk1-l02-reading-numbers.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 0
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk1-l03-speaking-food",
+      "file": "data\\lessons\\generated\\hsk1-l03-speaking-food.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk1-l04-speaking-self-introduction",
+      "file": "data\\lessons\\generated\\hsk1-l04-speaking-self-introduction.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk2-l04-reading-shopping",
+      "file": "data\\lessons\\generated\\hsk2-l04-reading-shopping.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk2-l05-listening-transportation",
+      "file": "data\\lessons\\generated\\hsk2-l05-listening-transportation.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk2-l06-writing-family",
+      "file": "data\\lessons\\generated\\hsk2-l06-writing-family.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 1
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk3-l07-reading-education",
+      "file": "data\\lessons\\generated\\hsk3-l07-reading-education.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 0
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk3-l08-listening-health",
+      "file": "data\\lessons\\generated\\hsk3-l08-listening-health.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 0
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk3-l09-speaking-travel",
+      "file": "data\\lessons\\generated\\hsk3-l09-speaking-travel.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 0
+      },
+      "review_summary": null
+    },
+    {
+      "lesson_id": "hsk3-l10-mixed-weather",
+      "file": "data\\lessons\\generated\\hsk3-l10-mixed-weather.json",
+      "ok": false,
+      "validation_summary": {
+        "errorCount": 3,
+        "warningCount": 0
+      },
+      "review_summary": null
+    }
+  ]
+}

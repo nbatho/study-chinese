@@ -3,8 +3,12 @@
   "metadata": {
     "title_zh": "多少钱？",
     "title_en": "How Much Is It?",
+    "title_vi": "Bao nhiêu tiền?",
     "hsk_level": 2,
-    "cefr_level": "A1",
+    "cefr_level": "A2",
+    "cefr_activities": [
+      "reception"
+    ],
     "primary_skill": "reading",
     "secondary_skills": [
       "writing"
@@ -15,12 +19,17 @@
     "tags": [
       "shopping",
       "reading",
-      "hsk2"
+      "hsk2",
+      "a2"
     ]
   },
   "learning_objectives": [
-    "Read a short shopping exchange.",
-    "Ask and answer prices."
+    "读懂简单购物对话。",
+    "用“多少钱”询问价格。"
+  ],
+  "learning_objectives_vi": [
+    "Đọc hiểu hội thoại mua sắm đơn giản.",
+    "Dùng “多少钱” để hỏi giá."
   ],
   "vocabulary_focus": [
     {
@@ -51,17 +60,18 @@
   "grammar_focus": [
     {
       "pattern": "...多少钱？",
-      "explanation": "Ask for a price.",
+      "explanation": "用“多少钱”询问东西的价格。",
+      "explanation_vi": "Dùng “多少钱” để hỏi giá của đồ vật.",
       "examples": [
         {
           "zh": "这个多少钱？",
           "pinyin": "Zhè ge duō shao qián?",
-          "en": "How much is this?"
+          "en": "How much is this?",
+          "vi": "Cái này bao nhiêu tiền?"
         }
       ],
       "hsk_level": 2,
-      "cefr_level": "A1",
-      "explanation_vi": "Dùng mẫu này để hỏi giá."
+      "cefr_level": "A2"
     }
   ],
   "warm_up": {
@@ -80,7 +90,8 @@
           "type": "short_passage",
           "content_zh": "这个杯子多少钱？二十块。太贵了！",
           "content_pinyin": "Zhè ge bēi zi duō shao qián? Èr shí kuài. Tài guì le!",
-          "content_en": "How much is this cup? Twenty yuan. That is too expensive!"
+          "content_en": "How much is this cup? Twenty yuan. That is too expensive!",
+          "content_vi": "Cái cốc này bao nhiêu tiền? Hai mươi tệ. Đắt quá!"
         }
       ]
     }
@@ -92,169 +103,34 @@
         "kind": "multiple_choice",
         "skill": "reading",
         "bloom_level": "understand",
-        "prompt": "What question asks for a price?",
-        "prompt_vi": "Câu nào dùng để hỏi giá?",
+        "prompt": "哪句话可以问价格？",
+        "prompt_vi": "Câu nào có thể hỏi giá?",
         "options": [
           "多少钱？",
           "你好吗？",
-          "在哪里？",
-          "你叫什么？"
+          "在哪里？"
         ],
         "options_vi": [
-          "Bao nhiêu tiền?",
-          "Bạn khỏe không?",
-          "Ở đâu?",
-          "Bạn tên gì?"
+          "bao nhiêu tiền?",
+          "bạn khỏe không?",
+          "ở đâu?"
         ],
         "correct_answer": "多少钱？",
-        "correct_answer_vi": "多少钱？",
+        "correct_answer_vi": "bao nhiêu tiền?",
         "acceptable_variants": [
-          "多少钱？",
-          "多少钱"
-        ],
-        "explanation": "多少钱 means \"how much money\".",
-        "explanation_vi": "多少钱 nghĩa là \"bao nhiêu tiền\"."
-      },
-      {
-        "id": "hsk2-l04-ex2",
-        "kind": "matching",
-        "skill": "reading",
-        "bloom_level": "remember",
-        "prompt": "Match the shopping words.",
-        "prompt_vi": "Nối các từ mua sắm.",
-        "pairs": [
-          {
-            "left": "这个",
-            "right": "this one"
-          },
-          {
-            "left": "多少",
-            "right": "how much"
-          },
-          {
-            "left": "钱",
-            "right": "money"
-          },
-          {
-            "left": "贵",
-            "right": "expensive"
-          }
-        ],
-        "correct_answer": {
-          "这个": "this one",
-          "多少": "how much",
-          "钱": "money",
-          "贵": "expensive"
-        },
-        "correct_answer_vi": {
-          "这个": "cái này",
-          "多少": "bao nhiêu",
-          "钱": "tiền",
-          "贵": "đắt"
-        },
-        "acceptable_variants": [],
-        "explanation": "These words appear in short price exchanges.",
-        "explanation_vi": "Các từ này thường xuất hiện trong đoạn hỏi giá ngắn."
-      },
-      {
-        "id": "hsk2-l04-ex3",
-        "kind": "fill_blank",
-        "skill": "reading",
-        "bloom_level": "apply",
-        "prompt": "Complete the price question: 这个___？",
-        "prompt_vi": "Hoàn thành câu hỏi giá: 这个___？",
-        "options": [
-          "多少钱",
-          "很贵",
-          "什么",
-          "我家"
-        ],
-        "options_vi": [
-          "bao nhiêu tiền",
-          "rất đắt",
-          "cái gì",
-          "nhà tôi"
-        ],
-        "correct_answer": "多少钱",
-        "correct_answer_vi": "多少钱",
-        "acceptable_variants": [
-          "多少钱",
           "多少钱？"
         ],
-        "explanation": "这个多少钱？ asks \"How much is this one?\"",
-        "explanation_vi": "这个多少钱？ nghĩa là \"Cái này bao nhiêu tiền?\""
-      },
-      {
-        "id": "hsk2-l04-ex4",
-        "kind": "word_order",
-        "skill": "writing",
-        "bloom_level": "apply",
-        "prompt": "Put the words in order: 多少钱 / 这个",
-        "prompt_vi": "Sắp xếp các từ: 多少钱 / 这个",
-        "tokens": [
-          "这个",
-          "多少钱"
-        ],
-        "correct_answer": "这个多少钱？",
-        "correct_answer_vi": "Cái này bao nhiêu tiền?",
-        "acceptable_variants": [
-          "这个多少钱",
-          "这个多少钱？"
-        ],
-        "explanation": "The item 这个 comes before the price question 多少钱.",
-        "explanation_vi": "Vật được hỏi 这个 đứng trước cụm hỏi giá 多少钱."
-      },
-      {
-        "id": "hsk2-l04-ex5",
-        "kind": "cloze",
-        "skill": "reading",
-        "bloom_level": "analyze",
-        "prompt": "Read: 这个杯子二十块。太贵了！ How does the speaker feel about the price?",
-        "prompt_vi": "Đọc: 这个杯子二十块。太贵了！ Người nói thấy giá thế nào?",
-        "options": [
-          "It is expensive.",
-          "It is free.",
-          "It is at school.",
-          "It is their name."
-        ],
-        "options_vi": [
-          "Nó đắt.",
-          "Nó miễn phí.",
-          "Nó ở trường.",
-          "Đó là tên của họ."
-        ],
-        "correct_answer": "It is expensive.",
-        "correct_answer_vi": "Nó đắt.",
-        "acceptable_variants": [
-          "expensive",
-          "It is expensive.",
-          "too expensive"
-        ],
-        "explanation": "太贵了 means \"too expensive\".",
-        "explanation_vi": "太贵了 nghĩa là \"đắt quá\"."
-      },
-      {
-        "id": "hsk2-l04-ex6",
-        "kind": "short_answer",
-        "skill": "writing",
-        "bloom_level": "create",
-        "prompt": "Write one price question in Chinese using 这个.",
-        "prompt_vi": "Viết một câu hỏi giá bằng tiếng Trung, dùng 这个.",
-        "model_answer": "这个多少钱？",
-        "correct_answer": "这个多少钱？",
-        "correct_answer_vi": "这个多少钱？",
-        "acceptable_variants": [
-          "这个多少钱",
-          "这个多少钱？"
-        ],
-        "explanation": "A complete HSK 2 shopping question can be very short.",
-        "explanation_vi": "Một câu hỏi mua sắm HSK 2 hoàn chỉnh có thể rất ngắn."
+        "explanation": "“多少钱”用来问价格。",
+        "explanation_vi": "“多少钱” dùng để hỏi giá."
       }
     ]
   },
   "review": {
     "key_takeaways": [
-      "Use 多少钱 to ask prices."
+      "买东西时可以说“多少钱”。"
+    ],
+    "key_takeaways_vi": [
+      "Khi mua đồ có thể nói “多少钱”."
     ],
     "srs_inject_word_ids": []
   }

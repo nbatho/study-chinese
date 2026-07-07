@@ -54,6 +54,17 @@ const CP1252_REVERSE = new Map([
 const CJK_PATTERN = /[\u3400-\u9fff]/;
 const VIETNAMESE_MARK_PATTERN = /[ăâđêôơưĂÂĐÊÔƠƯáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i;
 const ENGLISH_WORD_PATTERN = /\b(the|and|use|what|how|hello|name|lesson|practice|answer|correct|question)\b/i;
+const LEARNER_ENGLISH_PATTERN = /\b(answer|arrange|choose|complete|does|explain|listen|match|mean|means|option|order|put|question|read|select|sentence|what|which|words?)\b/i;
+const LEARNER_FACING_PATHS = [
+  /^\$\.learning_objectives\[\d+\]$/,
+  /^\$\.grammar_focus\[\d+\]\.explanation$/,
+  /^\$\.grammar_focus\[\d+\]\.tips\[\d+\]$/,
+  /^\$\.practice\.exercises\[\d+\]\.prompt$/,
+  /^\$\.practice\.exercises\[\d+\]\.options\[\d+\]$/,
+  /^\$\.practice\.exercises\[\d+\]\.correct_answer(?:\.|$)/,
+  /^\$\.practice\.exercises\[\d+\]\.explanation$/,
+  /^\$\.review\.key_takeaways\[\d+\]$/
+];
 
 const VI_PHRASES = new Map([
   ['Hello!', 'Xin chào!'],
@@ -93,6 +104,9 @@ const scoreLanguageText = (value) => {
     hasEnglish: ENGLISH_WORD_PATTERN.test(text)
   };
 };
+
+const isLearnerFacingPath = (path) =>
+  LEARNER_FACING_PATHS.some((pattern) => pattern.test(path));
 
 export const hasMojibake = (value) => {
   const text = String(value || '');
@@ -285,6 +299,30 @@ export const auditLessonLanguage = (lesson) => {
         path: item.path,
         sample: item.value.slice(0, 120)
       });
+    }
+
+    if (isLearnerFacingPath(item.path)) {
+      const score = scoreLanguageText(item.value);
+
+      if (!score.hasChinese) {
+        issues.push({
+          severity: 'error',
+          code: 'learner_facing_not_chinese',
+          message: 'Learner-facing lesson text must be Chinese-first.',
+          path: item.path,
+          sample: item.value.slice(0, 120)
+        });
+      }
+
+      if (LEARNER_ENGLISH_PATTERN.test(item.value)) {
+        issues.push({
+          severity: 'error',
+          code: 'learner_facing_english',
+          message: 'Learner-facing lesson text contains English instruction words.',
+          path: item.path,
+          sample: item.value.slice(0, 120)
+        });
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 {
-  "reviewed_at": "2026-07-07T04:49:07.985Z",
+  "reviewed_at": "2026-07-07T15:15:53.839Z",
   "ai_review_enabled": false,
   "ok": true,
   "results": [
@@ -9,7 +9,7 @@
       "ok": true,
       "validation_summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
       "review_summary": {
         "provider": "local",
@@ -39,6 +39,21 @@
       "ok": true,
       "validation_summary": {
         "errorCount": 0,
+        "warningCount": 1
+      },
+      "review_summary": {
+        "provider": "local",
+        "model_name": "static-content-agent",
+        "overall_score": 4,
+        "blocking_issues": []
+      }
+    },
+    {
+      "lesson_id": "hsk1-l04-speaking-self-introduction",
+      "file": "data\\lessons\\generated\\hsk1-l04-speaking-self-introduction.json",
+      "ok": true,
+      "validation_summary": {
+        "errorCount": 0,
         "warningCount": 0
       },
       "review_summary": {
@@ -54,7 +69,7 @@
       "ok": true,
       "validation_summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
       "review_summary": {
         "provider": "local",
@@ -69,7 +84,7 @@
       "ok": true,
       "validation_summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
       "review_summary": {
         "provider": "local",
@@ -84,7 +99,7 @@
       "ok": true,
       "validation_summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
       "review_summary": {
         "provider": "local",

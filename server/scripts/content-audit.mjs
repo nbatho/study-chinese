@@ -3,7 +3,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { auditLessonLanguage } from '../src/services/content-language.service.js';
-import { hasDatabaseConfig } from '../src/config/env.config.js';
 import { repoRoot, resolveContentPath, resolveExistingPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -50,6 +49,8 @@ const loadLessons = async (sourceDir) => {
 };
 
 const databaseAudit = async () => {
+  const { hasDatabaseConfig } = await import('../src/config/env.config.js');
+
   if (!hasDatabaseConfig()) {
     return {
       skipped: true,
@@ -110,9 +111,43 @@ const databaseAudit = async () => {
       });
     }
 
+    const activeLessonResult = await db.query(
+      `
+        SELECT hsk_level, cefr_level, COUNT(*)::int AS count
+        FROM lessons
+        WHERE is_active = true
+        GROUP BY hsk_level, cefr_level
+        ORDER BY hsk_level, cefr_level
+      `
+    );
+    const learnerEnglishPattern = '%(answer|arrange|choose|complete|does|listen|match|mean|question|read|select|what|which)%';
+    const learnerEnglishResult = await db.query(
+      `
+        SELECT e.id, e.prompt
+        FROM exercises e
+        JOIN lessons l ON l.id = e.lesson_id
+        WHERE l.is_active = true
+          AND lower(e.prompt) SIMILAR TO $1
+        ORDER BY e.id
+        LIMIT 20
+      `,
+      [learnerEnglishPattern]
+    );
+
+    if (learnerEnglishResult.rowCount > 0) {
+      issues.push({
+        severity: 'error',
+        code: 'db_learner_facing_english',
+        message: 'Active lesson exercises still contain learner-facing English prompts.',
+        details: { matches: learnerEnglishResult.rows }
+      });
+    }
+
     return {
       skipped: false,
-      issues
+      issues,
+      activeLessonsByLevel: activeLessonResult.rows,
+      learnerFacingEnglishPromptMatches: learnerEnglishResult.rows
     };
   } finally {
     await db.closeDB();

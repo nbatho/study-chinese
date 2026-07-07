@@ -1,12 +1,16 @@
 {
-  "generated_at": "2026-07-03T16:28:54.778Z",
+  "generated_at": "2026-07-07T15:15:49.722Z",
   "schema": "../schemas/lesson-template.schema.json",
-  "count": 10,
+  "count": 11,
   "lessons": [
     {
       "lesson_id": "hsk1-l01-listening-greetings",
       "file": "hsk1-l01-listening-greetings.json",
       "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "listening",
       "topic": "greetings",
       "title_zh": "你好！",
@@ -16,6 +20,10 @@
       "lesson_id": "hsk1-l02-reading-numbers",
       "file": "hsk1-l02-reading-numbers.json",
       "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "reading",
       "topic": "numbers",
       "title_zh": "一二三",
@@ -25,15 +33,38 @@
       "lesson_id": "hsk1-l03-speaking-food",
       "file": "hsk1-l03-speaking-food.json",
       "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
       "primary_skill": "speaking",
       "topic": "food",
       "title_zh": "今天吃什么？",
       "title_en": "What Are We Eating Today?"
     },
     {
+      "lesson_id": "hsk1-l04-speaking-self-introduction",
+      "file": "hsk1-l04-speaking-self-introduction.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "introductions",
+      "title_zh": "我叫安娜",
+      "title_en": "First Self-introduction"
+    },
+    {
       "lesson_id": "hsk2-l04-reading-shopping",
       "file": "hsk2-l04-reading-shopping.json",
       "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "reading",
       "topic": "shopping",
       "title_zh": "多少钱？",
@@ -43,6 +74,10 @@
       "lesson_id": "hsk2-l05-listening-transportation",
       "file": "hsk2-l05-listening-transportation.json",
       "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "listening",
       "topic": "transportation",
       "title_zh": "去学校",
@@ -52,6 +87,10 @@
       "lesson_id": "hsk2-l06-writing-family",
       "file": "hsk2-l06-writing-family.json",
       "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production"
+      ],
       "primary_skill": "writing",
       "topic": "family",
       "title_zh": "我的家",
@@ -61,6 +100,10 @@
       "lesson_id": "hsk3-l07-reading-education",
       "file": "hsk3-l07-reading-education.json",
       "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "reading",
       "topic": "education",
       "title_zh": "今天的中文课",
@@ -70,6 +113,10 @@
       "lesson_id": "hsk3-l08-listening-health",
       "file": "hsk3-l08-listening-health.json",
       "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
       "primary_skill": "listening",
       "topic": "health",
       "title_zh": "你怎么了？",
@@ -79,6 +126,11 @@
       "lesson_id": "hsk3-l09-speaking-travel",
       "file": "hsk3-l09-speaking-travel.json",
       "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
       "primary_skill": "speaking",
       "topic": "travel",
       "title_zh": "车站在哪里？",
@@ -88,6 +140,12 @@
       "lesson_id": "hsk3-l10-mixed-weather",
       "file": "hsk3-l10-mixed-weather.json",
       "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
       "primary_skill": "mixed",
       "topic": "weather",
       "title_zh": "明天会下雨吗？",

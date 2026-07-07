@@ -3,8 +3,13 @@
   "metadata": {
     "title_zh": "今天吃什么？",
     "title_en": "What Are We Eating Today?",
+    "title_vi": "Hôm nay ăn gì?",
     "hsk_level": 1,
     "cefr_level": "A1",
+    "cefr_activities": [
+      "production",
+      "interaction"
+    ],
     "primary_skill": "speaking",
     "secondary_skills": [],
     "topic": "food",
@@ -13,13 +18,17 @@
     "tags": [
       "food",
       "speaking",
-      "hsk1"
-    ],
-    "title_vi": "What Are We Eating Today?"
+      "hsk1",
+      "a1"
+    ]
   },
   "learning_objectives": [
-    "Ask what someone eats.",
-    "Answer with a simple food word."
+    "用“吃”说食物。",
+    "问别人今天吃什么。"
+  ],
+  "learning_objectives_vi": [
+    "Dùng “吃” để nói món ăn.",
+    "Hỏi người khác hôm nay ăn gì."
   ],
   "vocabulary_focus": [
     {
@@ -50,20 +59,20 @@
   "grammar_focus": [
     {
       "pattern": "...吃什么？",
-      "explanation": "Ask what someone eats.",
+      "explanation": "用“吃什么”询问食物。",
+      "explanation_vi": "Dùng “吃什么” để hỏi về món ăn.",
       "examples": [
         {
           "zh": "你吃什么？",
           "pinyin": "Nǐ chī shén me?",
           "en": "What do you eat?",
+          "vi": "Bạn ăn gì?",
           "simplified": "你吃什么？",
-          "english": "What do you eat?",
-          "vi": "What do you eat?"
+          "english": "What do you eat?"
         }
       ],
       "hsk_level": 1,
       "cefr_level": "A1",
-      "explanation_vi": "Dùng mẫu này để hỏi ai đó ăn gì.",
       "tips_vi": []
     }
   ],
@@ -84,7 +93,7 @@
           "content_zh": "今天你吃什么？我吃米饭。",
           "content_pinyin": "Jīn tiān nǐ chī shén me? Wǒ chī mǐ fàn.",
           "content_en": "What are you eating today? I am eating rice.",
-          "content_vi": "What are you eating today? I am eating rice.",
+          "content_vi": "Hôm nay bạn ăn gì? Tôi ăn cơm.",
           "model_dialogue_vi": ""
         }
       ]
@@ -94,179 +103,34 @@
     "exercises": [
       {
         "id": "hsk1-l03-ex1",
-        "kind": "multiple_choice",
-        "skill": "speaking",
-        "bloom_level": "understand",
-        "prompt": "Which word means \"to eat\"?",
-        "prompt_vi": "Từ nào có nghĩa là \"ăn\"?",
-        "options": [
-          "吃",
-          "喝",
-          "今天",
-          "米饭"
-        ],
-        "options_vi": [
-          "ăn",
-          "uống",
-          "hôm nay",
-          "cơm"
-        ],
-        "correct_answer": "吃",
-        "correct_answer_vi": "吃",
-        "acceptable_variants": [
-          "吃"
-        ],
-        "explanation": "吃 is used for eating food.",
-        "explanation_vi": "吃 dùng cho hành động ăn."
-      },
-      {
-        "id": "hsk1-l03-ex2",
-        "kind": "matching",
-        "skill": "speaking",
-        "bloom_level": "remember",
-        "prompt": "Match the food lesson words.",
-        "prompt_vi": "Nối các từ trong bài chủ đề ăn uống.",
-        "pairs": [
-          {
-            "left": "今天",
-            "right": "today"
-          },
-          {
-            "left": "吃",
-            "right": "eat"
-          },
-          {
-            "left": "米饭",
-            "right": "rice"
-          },
-          {
-            "left": "喝",
-            "right": "drink"
-          }
-        ],
-        "correct_answer": {
-          "今天": "today",
-          "吃": "eat",
-          "米饭": "rice",
-          "喝": "drink"
-        },
-        "correct_answer_vi": {
-          "今天": "hôm nay",
-          "吃": "ăn",
-          "米饭": "cơm",
-          "喝": "uống"
-        },
-        "acceptable_variants": [],
-        "explanation": "These words support simple meal questions and answers.",
-        "explanation_vi": "Các từ này giúp hỏi và trả lời rất đơn giản về bữa ăn."
-      },
-      {
-        "id": "hsk1-l03-ex3",
-        "kind": "fill_blank",
-        "skill": "speaking",
-        "bloom_level": "apply",
-        "prompt": "Complete: 你___什么？",
-        "prompt_vi": "Hoàn thành: 你___什么？",
-        "options": [
-          "吃",
-          "米饭",
-          "今天",
-          "喝"
-        ],
-        "options_vi": [
-          "ăn",
-          "cơm",
-          "hôm nay",
-          "uống"
-        ],
-        "correct_answer": "吃",
-        "correct_answer_vi": "吃",
-        "acceptable_variants": [
-          "吃"
-        ],
-        "explanation": "你吃什么？ asks what someone eats.",
-        "explanation_vi": "你吃什么？ dùng để hỏi ai đó ăn gì."
-      },
-      {
-        "id": "hsk1-l03-ex4",
         "kind": "word_order",
         "skill": "speaking",
         "bloom_level": "apply",
-        "prompt": "Put the words in order: 吃 / 我 / 米饭",
-        "prompt_vi": "Sắp xếp các từ: 吃 / 我 / 米饭",
+        "prompt": "排词成句：我 / 吃 / 米饭",
+        "prompt_vi": "Sắp xếp thành câu: 我 / 吃 / 米饭",
         "tokens": [
           "我",
           "吃",
           "米饭"
         ],
-        "correct_answer": "我吃米饭。",
+        "correct_answer": "我 吃 米饭",
         "correct_answer_vi": "Tôi ăn cơm.",
         "acceptable_variants": [
-          "我吃米饭",
-          "我吃米饭。"
+          "我吃米饭"
         ],
-        "explanation": "A simple Mandarin sentence often follows subject + verb + object.",
-        "explanation_vi": "Câu tiếng Trung đơn giản thường theo thứ tự chủ ngữ + động từ + tân ngữ."
-      },
-      {
-        "id": "hsk1-l03-ex5",
-        "kind": "dialogue_choice",
-        "skill": "speaking",
-        "bloom_level": "understand",
-        "prompt": "A asks: 今天你吃什么？ Choose the best answer.",
-        "prompt_vi": "A hỏi: 今天你吃什么？ Chọn câu trả lời đúng nhất.",
-        "options": [
-          "我吃米饭。",
-          "你好。",
-          "我叫什么？",
-          "你喝什么？"
-        ],
-        "options_vi": [
-          "Tôi ăn cơm.",
-          "Xin chào.",
-          "Tôi tên là gì?",
-          "Bạn uống gì?"
-        ],
-        "correct_answer": "我吃米饭。",
-        "correct_answer_vi": "我吃米饭。",
-        "acceptable_variants": [
-          "我吃米饭",
-          "我吃米饭。"
-        ],
-        "explanation": "The question asks what you eat, so answer with 吃 plus food.",
-        "explanation_vi": "Câu hỏi hỏi bạn ăn gì, nên trả lời bằng 吃 cộng món ăn."
-      },
-      {
-        "id": "hsk1-l03-ex6",
-        "kind": "short_answer",
-        "skill": "speaking",
-        "bloom_level": "create",
-        "prompt": "Answer in Chinese: 今天你喝什么？",
-        "prompt_vi": "Trả lời bằng tiếng Trung: 今天你喝什么？",
-        "model_answer": "我喝水。",
-        "correct_answer": "我喝 + drink。",
-        "correct_answer_vi": "我喝 + đồ uống。",
-        "acceptable_variants": [
-          "我喝水。",
-          "我喝茶。",
-          "我喝咖啡。"
-        ],
-        "explanation": "Use 我喝 plus a drink word to answer.",
-        "explanation_vi": "Dùng 我喝 cộng với tên đồ uống để trả lời."
+        "explanation": "汉语常用“主语 + 动词 + 宾语”的顺序。",
+        "explanation_vi": "Tiếng Trung thường dùng thứ tự chủ ngữ + động từ + tân ngữ.",
+        "options_vi": []
       }
     ]
   },
   "review": {
     "key_takeaways": [
-      "Use 吃 for eating and 喝 for drinking."
+      "“吃”说食物，“喝”说饮料。"
     ],
-    "srs_inject_word_ids": [],
     "key_takeaways_vi": [
-      "Use 吃 for eating and 喝 for drinking."
-    ]
-  },
-  "learning_objectives_vi": [
-    "Ask what someone eats.",
-    "Answer with a simple food word."
-  ]
+      "“吃” dùng với đồ ăn, “喝” dùng với đồ uống."
+    ],
+    "srs_inject_word_ids": []
+  }
 }

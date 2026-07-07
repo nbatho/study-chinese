@@ -6,5 +6,8 @@ Rules:
 - Use only vocabulary from HSK {level} or below unless a requested target word is explicitly listed.
 - Do not copy textbook exercises, exam items, or existing online content.
 - Include a mix of multiple choice, fill blank, word order, matching, cloze, and short answer when appropriate.
+- Learner-facing primary fields must be Chinese: prompt, options, correct_answer, acceptable_variants, and explanation.
+- Put Vietnamese support in *_vi fields. Keep English only in explicit translation fields such as prompt_english when needed.
+- Do not use English instruction words like "choose", "what", "answer", "arrange", "match", or "mean" in learner-facing primary fields.
 - Every exercise must include kind, skill, bloom_level, prompt, correct answer, acceptable variants, and explanation.
 - Output valid JSON only. Follow the lesson template schema.

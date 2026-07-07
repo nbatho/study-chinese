@@ -14,6 +14,15 @@ const ALLOWED_BLOOM_LEVELS = new Set([
   'evaluate',
   'create'
 ]);
+const ALLOWED_CEFR_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+const ALLOWED_CEFR_ACTIVITIES = new Set(['reception', 'production', 'interaction', 'mediation']);
+const EXPECTED_CEFR_ACTIVITIES_BY_SKILL = new Map([
+  ['listening', ['reception']],
+  ['reading', ['reception']],
+  ['speaking', ['production', 'interaction']],
+  ['writing', ['production']],
+  ['mixed', ['reception', 'production', 'interaction']]
+]);
 
 const LEVEL_LENGTHS = [
   { maxLevel: 2, min: 20, max: 100 },
@@ -63,6 +72,37 @@ const countHanzi = (lesson) =>
   collectStrings(lesson)
     .join('')
     .match(/[\u3400-\u9fff]/g)?.length || 0;
+
+const countHanziInText = (value) =>
+  String(value || '').match(/[\u3400-\u9fff]/g)?.length || 0;
+
+const longestModuleTextLength = (lesson) => {
+  let longest = 0;
+
+  for (const module of lesson?.core_modules || []) {
+    for (const phase of module?.phases || []) {
+      const candidates = [
+        phase.content_zh,
+        phase.model_dialogue_zh,
+        ...(Array.isArray(phase.dialogue)
+          ? phase.dialogue.map((line) => line.zh || line.simplified)
+          : [])
+      ];
+
+      for (const candidate of candidates) {
+        longest = Math.max(longest, countHanziInText(candidate));
+      }
+    }
+  }
+
+  return longest;
+};
+
+const hasConnectedB1Task = (lesson) =>
+  longestModuleTextLength(lesson) >= 40 ||
+  (lesson?.practice?.exercises || []).some((exercise) =>
+    ['analyze', 'evaluate', 'create'].includes(exercise?.bloom_level)
+  );
 
 const validateRequired = (value, fields, pathLabel, issues) => {
   for (const field of fields) {
@@ -116,6 +156,10 @@ export class ContentValidator {
 
     if (lesson?.metadata?.primary_skill && !ALLOWED_SKILLS.has(lesson.metadata.primary_skill)) {
       pushIssue(issues, 'error', 'schema_enum', 'metadata.primary_skill is not supported.');
+    }
+
+    if (lesson?.metadata?.cefr_level && !ALLOWED_CEFR_LEVELS.has(lesson.metadata.cefr_level)) {
+      pushIssue(issues, 'error', 'schema_enum', 'metadata.cefr_level is not supported.');
     }
 
     if (!Array.isArray(lesson?.learning_objectives) || lesson.learning_objectives.length === 0) {
@@ -387,6 +431,69 @@ export class ContentValidator {
     return issues;
   }
 
+  cefrCheck(lesson) {
+    const issues = [];
+    const metadata = lesson?.metadata || {};
+    const hskLevel = Number(metadata.hsk_level || 1);
+    const cefrLevel = metadata.cefr_level;
+    const primarySkill = metadata.primary_skill;
+    const activities = Array.isArray(metadata.cefr_activities)
+      ? metadata.cefr_activities
+      : [];
+
+    if (!cefrLevel || !ALLOWED_CEFR_LEVELS.has(cefrLevel)) {
+      pushIssue(issues, 'error', 'cefr_level_invalid', 'metadata.cefr_level must be A1, A2, B1, B2, C1, or C2.');
+      return issues;
+    }
+
+    if (activities.length === 0) {
+      pushIssue(issues, 'error', 'cefr_activity_missing', 'metadata.cefr_activities must describe CEFR language activities.');
+    }
+
+    const unsupportedActivities = activities.filter((activity) => !ALLOWED_CEFR_ACTIVITIES.has(activity));
+    if (unsupportedActivities.length > 0) {
+      pushIssue(issues, 'error', 'cefr_activity_invalid', 'metadata.cefr_activities contains unsupported values.', {
+        activities: unsupportedActivities
+      });
+    }
+
+    const expectedActivities = EXPECTED_CEFR_ACTIVITIES_BY_SKILL.get(primarySkill) || [];
+    const missingActivities = expectedActivities.filter((activity) => !activities.includes(activity));
+    if (missingActivities.length > 0) {
+      pushIssue(issues, 'error', 'cefr_activity_mismatch', 'metadata.cefr_activities does not match primary_skill.', {
+        primarySkill,
+        expectedActivities,
+        actualActivities: activities
+      });
+    }
+
+    if (activities.includes('mediation')) {
+      pushIssue(issues, 'error', 'cefr_mediation_not_supported', 'Mediation is not supported for v1 lessons unless a mediation task is explicitly implemented.');
+    }
+
+    if (hskLevel <= 1 && cefrLevel !== 'A1') {
+      pushIssue(issues, 'error', 'cefr_can_do_mismatch', 'HSK 1 sample lessons must stay at CEFR A1 can-do scope.');
+    }
+
+    if (hskLevel === 2 && cefrLevel !== 'A2') {
+      pushIssue(issues, 'error', 'cefr_can_do_mismatch', 'HSK 2 sample lessons must target CEFR A2 routine-task scope.');
+    }
+
+    if (hskLevel === 3 && !['A2', 'B1'].includes(cefrLevel)) {
+      pushIssue(issues, 'error', 'cefr_can_do_mismatch', 'HSK 3 sample lessons may only target CEFR A2 or B1.');
+    }
+
+    if (hskLevel <= 3 && ['B2', 'C1', 'C2'].includes(cefrLevel)) {
+      pushIssue(issues, 'error', 'cefr_too_high_for_sample', 'B2+ requires complex text or response tasks and is not valid for HSK 1-3 sample lessons.');
+    }
+
+    if (cefrLevel === 'B1' && !hasConnectedB1Task(lesson)) {
+      pushIssue(issues, 'error', 'cefr_b1_evidence_missing', 'B1 lessons must include connected input or higher-autonomy tasks.');
+    }
+
+    return issues;
+  }
+
   languageCheck(lesson) {
     const audit = auditLessonLanguage(lesson);
     return audit.issues;
@@ -403,6 +510,7 @@ export class ContentValidator {
       ...issueGroups.flat(),
       ...this.lengthCheck(lesson, targetLevel),
       ...this.grammarCheck(lesson),
+      ...this.cefrCheck(lesson),
       ...this.languageCheck(lesson)
     ];
     const errors = issues.filter((issue) => issue.severity === 'error');

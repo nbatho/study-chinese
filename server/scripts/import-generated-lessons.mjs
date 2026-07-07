@@ -95,7 +95,7 @@ const extractOrder = (lessonId, fallback) => {
   return match ? Number(match[1]) : fallback;
 };
 
-const titleForLesson = (lesson) => lesson?.metadata?.title_en || lesson?.metadata?.title_zh || lesson.lesson_id;
+const titleForLesson = (lesson) => lesson?.metadata?.title_zh || lesson?.metadata?.title_en || lesson.lesson_id;
 const titleViForLesson = (lesson) => lesson?.metadata?.title_vi || titleForLesson(lesson);
 
 const subtitleForLesson = (lesson) => {
@@ -252,7 +252,7 @@ const normalizeMatchingExercise = (exercise) => {
   return {
     ...exercise,
     kind: 'matching',
-    prompt: `Which meaning matches ${target.left}?`,
+    prompt: `请选择和“${target.left}”相配的一项。`,
     prompt_vi: `Nghĩa nào khớp với ${target.left}?`,
     options: optionValues,
     options_vi: optionValuesVi,

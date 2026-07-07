@@ -1,0 +1,60 @@
+{
+  "ok": false,
+  "errors": [
+    {
+      "severity": "error",
+      "code": "vocab_check_skipped",
+      "message": "Vocabulary check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "pinyin_check_skipped",
+      "message": "Pinyin check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "duplicate_check_skipped",
+      "message": "Duplicate check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    }
+  ],
+  "warnings": [],
+  "issues": [
+    {
+      "severity": "error",
+      "code": "vocab_check_skipped",
+      "message": "Vocabulary check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "pinyin_check_skipped",
+      "message": "Pinyin check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "duplicate_check_skipped",
+      "message": "Duplicate check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    }
+  ],
+  "summary": {
+    "errorCount": 3,
+    "warningCount": 0
+  }
+}

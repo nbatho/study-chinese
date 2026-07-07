@@ -39,6 +39,8 @@ export interface OcrScanResponse {
     combinedMeaning?: string;
     detectedText?: string;
     provider?: string;
+    translationProvider?: string;
+    translationModel?: string;
 }
 
 export interface OcrHistoryEvent {

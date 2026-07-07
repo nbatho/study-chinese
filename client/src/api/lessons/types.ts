@@ -68,7 +68,8 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
         id: string;
         kind: string;
         prompt: string;
-        promptEn?: string;
+        promptZh?: string;
+        promptEn?: string | null;
         promptVi?: string | null;
         promptHanzi?: string;
         promptPinyin?: string;
@@ -89,13 +90,16 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
             }>;
         };
         options?: string[];
+        optionsZh?: string[];
         optionsEn?: string[];
         optionsVi?: string[];
         correctIndex?: number;
         correctText: string;
-        correctTextEn?: string;
+        correctTextZh?: string;
+        correctTextEn?: string | null;
         correctTextVi?: string | null;
         answerExplanation?: string | null;
+        answerExplanationZh?: string | null;
         answerExplanationEn?: string | null;
         answerExplanationVi?: string | null;
         acceptableVariants?: string[];

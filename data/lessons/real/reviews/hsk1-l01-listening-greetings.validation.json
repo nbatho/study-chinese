@@ -1,0 +1,83 @@
+{
+  "ok": false,
+  "errors": [
+    {
+      "severity": "error",
+      "code": "vocab_check_skipped",
+      "message": "Vocabulary check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "pinyin_check_skipped",
+      "message": "Pinyin check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "duplicate_check_skipped",
+      "message": "Duplicate check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "warning",
+      "code": "length_out_of_range",
+      "message": "Chinese text length is outside the suggested range.",
+      "details": {
+        "targetLevel": 1,
+        "hanziCount": 148,
+        "suggestedMin": 20,
+        "suggestedMax": 100
+      }
+    }
+  ],
+  "issues": [
+    {
+      "severity": "error",
+      "code": "vocab_check_skipped",
+      "message": "Vocabulary check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "pinyin_check_skipped",
+      "message": "Pinyin check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "error",
+      "code": "duplicate_check_skipped",
+      "message": "Duplicate check was skipped because the database was unavailable.",
+      "details": {
+        "reason": "Missing PostgreSQL configuration. Set DATABASE_URL or DB_HOST, DB_NAME and DB_USER in server/.env."
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "length_out_of_range",
+      "message": "Chinese text length is outside the suggested range.",
+      "details": {
+        "targetLevel": 1,
+        "hanziCount": 148,
+        "suggestedMin": 20,
+        "suggestedMax": 100
+      }
+    }
+  ],
+  "summary": {
+    "errorCount": 3,
+    "warningCount": 1
+  }
+}

@@ -3,8 +3,12 @@
   "metadata": {
     "title_zh": "去学校",
     "title_en": "Going to School",
+    "title_vi": "Đi học",
     "hsk_level": 2,
-    "cefr_level": "A1",
+    "cefr_level": "A2",
+    "cefr_activities": [
+      "reception"
+    ],
     "primary_skill": "listening",
     "secondary_skills": [
       "speaking"
@@ -15,13 +19,17 @@
     "tags": [
       "transportation",
       "listening",
-      "hsk2"
-    ],
-    "title_vi": "Going to School"
+      "hsk2",
+      "a2"
+    ]
   },
   "learning_objectives": [
-    "Understand simple transport choices.",
-    "Identify destination words."
+    "听懂简单交通方式。",
+    "说出目的地和交通工具。"
+  ],
+  "learning_objectives_vi": [
+    "Nghe hiểu phương tiện đi lại đơn giản.",
+    "Nói điểm đến và phương tiện."
   ],
   "vocabulary_focus": [
     {
@@ -51,21 +59,21 @@
   ],
   "grammar_focus": [
     {
-      "pattern": "坐 + transport + 去...",
-      "explanation": "Say how someone goes somewhere.",
+      "pattern": "坐 + 交通工具 + 去...",
+      "explanation": "用“坐”说明去某地的交通方式。",
+      "explanation_vi": "Dùng “坐” để nói cách đi đến một nơi.",
       "examples": [
         {
           "zh": "我坐公共汽车去学校。",
           "pinyin": "Wǒ zuò gōng gòng qì chē qù xué xiào.",
           "en": "I take the bus to school.",
+          "vi": "Tôi đi xe buýt đến trường.",
           "simplified": "我坐公共汽车去学校。",
-          "english": "I take the bus to school.",
-          "vi": "I take the bus to school."
+          "english": "I take the bus to school."
         }
       ],
       "hsk_level": 2,
-      "cefr_level": "A1",
-      "explanation_vi": "Nói ai đó đi đâu bằng phương tiện gì.",
+      "cefr_level": "A2",
       "tips_vi": []
     }
   ],
@@ -89,14 +97,14 @@
               "zh": "你怎么去学校？",
               "pinyin": "Nǐ zěn me qù xué xiào?",
               "en": "How do you go to school?",
-              "vi": "How do you go to school?"
+              "vi": "Bạn đi học bằng gì?"
             },
             {
               "speaker": "B",
               "zh": "我坐公共汽车去学校。",
               "pinyin": "Wǒ zuò gōng gòng qì chē qù xué xiào.",
               "en": "I take the bus to school.",
-              "vi": "I take the bus to school."
+              "vi": "Tôi đi xe buýt đến trường."
             }
           ],
           "content_vi": "",
@@ -112,177 +120,35 @@
         "kind": "multiple_choice",
         "skill": "listening",
         "bloom_level": "understand",
-        "prompt": "Listen/read: 我坐公共汽车去学校。 How does the speaker go to school?",
-        "prompt_vi": "Nghe/đọc: 我坐公共汽车去学校。 Người nói đi học bằng gì?",
+        "prompt": "听对话，B坐什么去学校？",
+        "prompt_vi": "Nghe hội thoại, B đi học bằng gì?",
         "options": [
-          "by bus",
-          "by train",
-          "on foot",
-          "by bike"
+          "公共汽车",
+          "火车",
+          "出租车"
         ],
         "options_vi": [
-          "bằng xe buýt",
-          "bằng tàu hỏa",
-          "đi bộ",
-          "bằng xe đạp"
+          "xe buýt",
+          "tàu hỏa",
+          "taxi"
         ],
-        "correct_answer": "by bus",
-        "correct_answer_vi": "bằng xe buýt",
+        "correct_answer": "公共汽车",
+        "correct_answer_vi": "xe buýt",
         "acceptable_variants": [
-          "bus",
-          "by bus",
           "公共汽车"
         ],
-        "explanation": "公共汽车 means bus.",
-        "explanation_vi": "公共汽车 nghĩa là xe buýt."
-      },
-      {
-        "id": "hsk2-l05-ex2",
-        "kind": "matching",
-        "skill": "listening",
-        "bloom_level": "remember",
-        "prompt": "Match the transportation words.",
-        "prompt_vi": "Nối các từ về đi lại.",
-        "pairs": [
-          {
-            "left": "去",
-            "right": "go"
-          },
-          {
-            "left": "学校",
-            "right": "school"
-          },
-          {
-            "left": "坐",
-            "right": "ride; sit"
-          },
-          {
-            "left": "公共汽车",
-            "right": "bus"
-          }
-        ],
-        "correct_answer": {
-          "去": "go",
-          "学校": "school",
-          "坐": "ride; sit",
-          "公共汽车": "bus"
-        },
-        "correct_answer_vi": {
-          "去": "đi",
-          "学校": "trường học",
-          "坐": "ngồi/đi bằng",
-          "公共汽车": "xe buýt"
-        },
-        "acceptable_variants": [],
-        "explanation": "These words combine to describe going somewhere by transport.",
-        "explanation_vi": "Các từ này kết hợp để nói đi đâu đó bằng phương tiện."
-      },
-      {
-        "id": "hsk2-l05-ex3",
-        "kind": "fill_blank",
-        "skill": "listening",
-        "bloom_level": "apply",
-        "prompt": "Complete: 我___公共汽车去学校。",
-        "prompt_vi": "Hoàn thành: 我___公共汽车去学校。",
-        "options": [
-          "坐",
-          "去",
-          "学校",
-          "多少"
-        ],
-        "options_vi": [
-          "đi bằng/ngồi",
-          "đi",
-          "trường học",
-          "bao nhiêu"
-        ],
-        "correct_answer": "坐",
-        "correct_answer_vi": "坐",
-        "acceptable_variants": [
-          "坐"
-        ],
-        "explanation": "Use 坐 before many transport words.",
-        "explanation_vi": "Dùng 坐 trước nhiều từ chỉ phương tiện."
-      },
-      {
-        "id": "hsk2-l05-ex4",
-        "kind": "word_order",
-        "skill": "speaking",
-        "bloom_level": "apply",
-        "prompt": "Put the words in order: 去学校 / 坐公共汽车 / 我",
-        "prompt_vi": "Sắp xếp các cụm: 去学校 / 坐公共汽车 / 我",
-        "tokens": [
-          "我",
-          "坐公共汽车",
-          "去学校"
-        ],
-        "correct_answer": "我坐公共汽车去学校。",
-        "correct_answer_vi": "Tôi đi xe buýt đến trường.",
-        "acceptable_variants": [
-          "我坐公共汽车去学校",
-          "我坐公共汽车去学校。"
-        ],
-        "explanation": "The pattern is person + 坐 + transport + 去 + place.",
-        "explanation_vi": "Mẫu câu là người + 坐 + phương tiện + 去 + địa điểm."
-      },
-      {
-        "id": "hsk2-l05-ex5",
-        "kind": "dialogue_choice",
-        "skill": "listening",
-        "bloom_level": "understand",
-        "prompt": "A asks: 你怎么去学校？ Choose a direct answer.",
-        "prompt_vi": "A hỏi: 你怎么去学校？ Chọn câu trả lời trực tiếp.",
-        "options": [
-          "我坐公共汽车去学校。",
-          "这个多少钱？",
-          "我家有三个人。",
-          "我叫小明。"
-        ],
-        "options_vi": [
-          "Tôi đi xe buýt đến trường.",
-          "Cái này bao nhiêu tiền?",
-          "Nhà tôi có ba người.",
-          "Tôi tên Tiểu Minh."
-        ],
-        "correct_answer": "我坐公共汽车去学校。",
-        "correct_answer_vi": "我坐公共汽车去学校。",
-        "acceptable_variants": [
-          "我坐公共汽车去学校",
-          "我坐公共汽车去学校。"
-        ],
-        "explanation": "The answer gives the transport method and destination.",
-        "explanation_vi": "Câu trả lời nêu phương tiện và điểm đến."
-      },
-      {
-        "id": "hsk2-l05-ex6",
-        "kind": "short_answer",
-        "skill": "speaking",
-        "bloom_level": "create",
-        "prompt": "Say one sentence about going to school by bus.",
-        "prompt_vi": "Nói một câu về việc đi học bằng xe buýt.",
-        "model_answer": "我坐公共汽车去学校。",
-        "correct_answer": "我坐公共汽车去学校。",
-        "correct_answer_vi": "我坐公共汽车去学校。",
-        "acceptable_variants": [
-          "我坐公共汽车去学校。",
-          "我坐公共汽车去学校"
-        ],
-        "explanation": "This sentence satisfies the HSK 2 transport pattern.",
-        "explanation_vi": "Câu này đáp ứng mẫu giao tiếp HSK 2 về phương tiện."
+        "explanation": "B说“我坐公共汽车去学校”。",
+        "explanation_vi": "B nói “我坐公共汽车去学校”."
       }
     ]
   },
   "review": {
     "key_takeaways": [
-      "Use 坐 before many transport words."
+      "“坐”常放在交通工具前面。"
     ],
-    "srs_inject_word_ids": [],
     "key_takeaways_vi": [
-      "Use 坐 before many transport words."
-    ]
-  },
-  "learning_objectives_vi": [
-    "Understand simple transport choices.",
-    "Identify destination words."
-  ]
+      "“坐” thường đứng trước phương tiện giao thông."
+    ],
+    "srs_inject_word_ids": []
+  }
 }

@@ -1,7 +1,7 @@
 {
-  "audited_at": "2026-07-07T04:49:12.559Z",
+  "audited_at": "2026-07-07T15:47:09.665Z",
   "source": "data\\lessons\\normalized",
-  "count": 10,
+  "count": 11,
   "ok": true,
   "results": [
     {
@@ -21,6 +21,13 @@
     {
       "lesson_id": "hsk1-l03-speaking-food",
       "file": "data\\lessons\\normalized\\hsk1-l03-speaking-food.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk1-l04-speaking-self-introduction",
+      "file": "data\\lessons\\normalized\\hsk1-l04-speaking-self-introduction.json",
       "ok": true,
       "errors": [],
       "warnings": []
@@ -76,7 +83,25 @@
     }
   ],
   "database": {
-    "skipped": true,
-    "reason": "Pass --db to audit database metadata."
+    "skipped": false,
+    "issues": [],
+    "activeLessonsByLevel": [
+      {
+        "hsk_level": 1,
+        "cefr_level": "A1",
+        "count": 4
+      },
+      {
+        "hsk_level": 2,
+        "cefr_level": "A2",
+        "count": 3
+      },
+      {
+        "hsk_level": 3,
+        "cefr_level": "B1",
+        "count": 4
+      }
+    ],
+    "learnerFacingEnglishPromptMatches": []
   }
 }

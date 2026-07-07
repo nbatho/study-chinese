@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T04:49:07.985Z",
+  "generated_at": "2026-07-07T15:15:53.839Z",
   "count": 10,
   "entries": [
     {
@@ -33,16 +33,16 @@
       "id": "grammar_2e2e2ee5a49ae5b091e992b1efbc9f",
       "pattern": "...多少钱？",
       "hsk_level": 2,
-      "cefr_level": "A1",
+      "cefr_level": "A2",
       "source_lesson_ids": [
         "hsk2-l04-reading-shopping"
       ]
     },
     {
-      "id": "grammar_e59d90202b207472616e73706f7274202b20e58e",
-      "pattern": "坐 + transport + 去...",
+      "id": "grammar_e59d90202b20e4baa4e9809ae5b7a5e585b7202b",
+      "pattern": "坐 + 交通工具 + 去...",
       "hsk_level": 2,
-      "cefr_level": "A1",
+      "cefr_level": "A2",
       "source_lesson_ids": [
         "hsk2-l05-listening-transportation"
       ]
@@ -51,25 +51,25 @@
       "id": "grammar_e68891e5aeb6e69c892e2e2e",
       "pattern": "我家有...",
       "hsk_level": 2,
-      "cefr_level": "A1",
+      "cefr_level": "A2",
       "source_lesson_ids": [
         "hsk2-l06-writing-family"
       ]
     },
     {
-      "id": "grammar_e8a681202b2076657262",
-      "pattern": "要 + verb",
+      "id": "grammar_e8a681202b20e58aa8e8af8d",
+      "pattern": "要 + 动词",
       "hsk_level": 3,
-      "cefr_level": "A2",
+      "cefr_level": "B1",
       "source_lesson_ids": [
         "hsk3-l07-reading-education"
       ]
     },
     {
-      "id": "grammar_e69c89e782b9e584bf202b2061646a6563746976",
-      "pattern": "有点儿 + adjective",
+      "id": "grammar_e69c89e782b9e584bf202b20e5bda2e5aeb9e8af",
+      "pattern": "有点儿 + 形容词",
       "hsk_level": 3,
-      "cefr_level": "A2",
+      "cefr_level": "B1",
       "source_lesson_ids": [
         "hsk3-l08-listening-health"
       ]
@@ -78,16 +78,16 @@
       "id": "grammar_e8afb7e997ae2e2e2e",
       "pattern": "请问...",
       "hsk_level": 3,
-      "cefr_level": "A2",
+      "cefr_level": "B1",
       "source_lesson_ids": [
         "hsk3-l09-speaking-travel"
       ]
     },
     {
-      "id": "grammar_e4bc9a202b2076657262",
-      "pattern": "会 + verb",
+      "id": "grammar_e4bc9a202b20e58aa8e8af8d",
+      "pattern": "会 + 动词",
       "hsk_level": 3,
-      "cefr_level": "A2",
+      "cefr_level": "B1",
       "source_lesson_ids": [
         "hsk3-l10-mixed-weather"
       ]

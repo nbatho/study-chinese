@@ -3,8 +3,12 @@
   "metadata": {
     "title_zh": "今天的中文课",
     "title_en": "Today's Chinese Class",
+    "title_vi": "Tiết tiếng Trung hôm nay",
     "hsk_level": 3,
-    "cefr_level": "A2",
+    "cefr_level": "B1",
+    "cefr_activities": [
+      "reception"
+    ],
     "primary_skill": "reading",
     "secondary_skills": [
       "writing"
@@ -15,13 +19,17 @@
     "tags": [
       "education",
       "reading",
-      "hsk3"
-    ],
-    "title_vi": "Today's Chinese Class"
+      "hsk3",
+      "b1"
+    ]
   },
   "learning_objectives": [
-    "Read a short paragraph about class.",
-    "Find the teacher advice in a passage."
+    "读懂一段关于课堂的短文。",
+    "找出老师给学生的建议。"
+  ],
+  "learning_objectives_vi": [
+    "Đọc hiểu đoạn văn ngắn về lớp học.",
+    "Tìm lời khuyên giáo viên đưa cho học sinh."
   ],
   "vocabulary_focus": [
     {
@@ -51,21 +59,21 @@
   ],
   "grammar_focus": [
     {
-      "pattern": "要 + verb",
-      "explanation": "Use 要 before a verb to express need or intention.",
+      "pattern": "要 + 动词",
+      "explanation": "“要”放在动词前，表示需要或打算做一件事。",
+      "explanation_vi": "“要” đứng trước động từ, diễn tả cần hoặc định làm việc gì.",
       "examples": [
         {
           "zh": "我要多练习。",
           "pinyin": "Wǒ yào duō liàn xí.",
           "en": "I need to practice more.",
+          "vi": "Tôi cần luyện tập nhiều hơn.",
           "simplified": "我要多练习。",
-          "english": "I need to practice more.",
-          "vi": "I need to practice more."
+          "english": "I need to practice more."
         }
       ],
       "hsk_level": 3,
-      "cefr_level": "A2",
-      "explanation_vi": "Dùng 要 trước động từ để diễn đạt nhu cầu hoặc dự định.",
+      "cefr_level": "B1",
       "tips_vi": []
     }
   ],
@@ -83,10 +91,10 @@
       "phases": [
         {
           "type": "reading_passage",
-          "content_zh": "我们今天有中文课。老师说要多听、多说，还要每天练习新句子。",
-          "content_pinyin": "Wǒ men jīn tiān yǒu Zhōng wén kè. Lǎo shī shuō yào duō tīng, duō shuō, hái yào měi tiān liàn xí xīn jù zi.",
-          "content_en": "We have Chinese class today. The teacher says we should listen more, speak more, and practice new sentences every day.",
-          "content_vi": "We have Chinese class today. The teacher says we should listen more, speak more, and practice new sentences every day.",
+          "content_zh": "我们今天有中文课。老师说，学习中文要多听、多说，还要每天练习新句子。下课以后，我和同学一起读课文，也一起回答问题。",
+          "content_pinyin": "Wǒ men jīn tiān yǒu Zhōng wén kè. Lǎo shī shuō, xué xí Zhōng wén yào duō tīng, duō shuō, hái yào měi tiān liàn xí xīn jù zi. Xià kè yǐ hòu, wǒ hé tóng xué yì qǐ dú kè wén, yě yì qǐ huí dá wèn tí.",
+          "content_en": "We have Chinese class today. The teacher says learning Chinese requires more listening and speaking, and daily sentence practice. After class, my classmate and I read the text and answer questions together.",
+          "content_vi": "Hôm nay chúng tôi có tiết tiếng Trung. Giáo viên nói học tiếng Trung cần nghe nhiều, nói nhiều và luyện câu mới mỗi ngày. Sau giờ học, tôi cùng bạn đọc bài khóa và trả lời câu hỏi.",
           "model_dialogue_vi": ""
         }
       ]
@@ -98,178 +106,36 @@
         "id": "hsk3-l07-ex1",
         "kind": "multiple_choice",
         "skill": "reading",
-        "bloom_level": "understand",
-        "prompt": "What does the teacher suggest in the passage?",
-        "prompt_vi": "Trong đoạn đọc, giáo viên khuyên điều gì?",
-        "options": [
-          "listen and speak more",
-          "sleep earlier",
-          "buy a book",
-          "take a train"
-        ],
-        "options_vi": [
-          "nghe và nói nhiều hơn",
-          "ngủ sớm hơn",
-          "mua sách",
-          "đi tàu hỏa"
-        ],
-        "correct_answer": "listen and speak more",
-        "correct_answer_vi": "nghe và nói nhiều hơn",
-        "acceptable_variants": [
-          "listen and speak more",
-          "多听、多说"
-        ],
-        "explanation": "多听、多说 means listen more and speak more.",
-        "explanation_vi": "多听、多说 nghĩa là nghe nhiều hơn và nói nhiều hơn."
-      },
-      {
-        "id": "hsk3-l07-ex2",
-        "kind": "matching",
-        "skill": "reading",
-        "bloom_level": "remember",
-        "prompt": "Match the education words.",
-        "prompt_vi": "Nối các từ về học tập.",
-        "pairs": [
-          {
-            "left": "中文课",
-            "right": "Chinese class"
-          },
-          {
-            "left": "老师",
-            "right": "teacher"
-          },
-          {
-            "left": "多",
-            "right": "more"
-          },
-          {
-            "left": "练习",
-            "right": "practice"
-          }
-        ],
-        "correct_answer": {
-          "中文课": "Chinese class",
-          "老师": "teacher",
-          "多": "more",
-          "练习": "practice"
-        },
-        "correct_answer_vi": {
-          "中文课": "lớp tiếng Trung",
-          "老师": "giáo viên",
-          "多": "nhiều hơn",
-          "练习": "luyện tập"
-        },
-        "acceptable_variants": [],
-        "explanation": "These words support A2 classroom comprehension.",
-        "explanation_vi": "Các từ này hỗ trợ đọc hiểu ngữ cảnh lớp học ở mức A2."
-      },
-      {
-        "id": "hsk3-l07-ex3",
-        "kind": "fill_blank",
-        "skill": "reading",
-        "bloom_level": "apply",
-        "prompt": "Complete: 我要多___中文。",
-        "prompt_vi": "Hoàn thành: 我要多___中文。",
-        "options": [
-          "练习",
-          "下雨",
-          "车站",
-          "贵"
-        ],
-        "options_vi": [
-          "luyện tập",
-          "mưa",
-          "nhà ga",
-          "đắt"
-        ],
-        "correct_answer": "练习",
-        "correct_answer_vi": "练习",
-        "acceptable_variants": [
-          "练习"
-        ],
-        "explanation": "要 + verb expresses a need or intention.",
-        "explanation_vi": "要 + động từ diễn đạt nhu cầu hoặc dự định."
-      },
-      {
-        "id": "hsk3-l07-ex4",
-        "kind": "word_order",
-        "skill": "writing",
-        "bloom_level": "apply",
-        "prompt": "Put the words in order: 多 / 我要 / 练习",
-        "prompt_vi": "Sắp xếp các từ: 多 / 我要 / 练习",
-        "tokens": [
-          "我要",
-          "多",
-          "练习"
-        ],
-        "correct_answer": "我要多练习。",
-        "correct_answer_vi": "Tôi cần luyện tập nhiều hơn.",
-        "acceptable_variants": [
-          "我要多练习",
-          "我要多练习。"
-        ],
-        "explanation": "多 usually appears before the verb it modifies.",
-        "explanation_vi": "多 thường đứng trước động từ mà nó bổ nghĩa."
-      },
-      {
-        "id": "hsk3-l07-ex5",
-        "kind": "cloze",
-        "skill": "reading",
         "bloom_level": "analyze",
-        "prompt": "Read: 老师说要每天练习新句子。 What should students practice?",
-        "prompt_vi": "Đọc: 老师说要每天练习新句子。 Học sinh nên luyện gì?",
+        "prompt": "老师建议学生怎么学习中文？",
+        "prompt_vi": "Giáo viên khuyên học sinh học tiếng Trung như thế nào?",
         "options": [
-          "new sentences",
-          "weather",
-          "prices",
-          "family names"
+          "多听、多说、每天练习",
+          "只买一本书",
+          "每天早睡"
         ],
         "options_vi": [
-          "câu mới",
-          "thời tiết",
-          "giá cả",
-          "tên người nhà"
+          "nghe nhiều, nói nhiều, luyện tập mỗi ngày",
+          "chỉ mua một quyển sách",
+          "ngủ sớm mỗi ngày"
         ],
-        "correct_answer": "new sentences",
-        "correct_answer_vi": "câu mới",
+        "correct_answer": "多听、多说、每天练习",
+        "correct_answer_vi": "nghe nhiều, nói nhiều, luyện tập mỗi ngày",
         "acceptable_variants": [
-          "new sentences",
-          "新句子"
+          "多听、多说、每天练习"
         ],
-        "explanation": "新句子 means new sentences.",
-        "explanation_vi": "新句子 nghĩa là các câu mới."
-      },
-      {
-        "id": "hsk3-l07-ex6",
-        "kind": "short_answer",
-        "skill": "writing",
-        "bloom_level": "create",
-        "prompt": "Write one study goal using 要 and 练习.",
-        "prompt_vi": "Viết một mục tiêu học tập, dùng 要 và 练习.",
-        "model_answer": "我要每天练习中文。",
-        "correct_answer": "我要...练习...",
-        "correct_answer_vi": "我要...练习...",
-        "acceptable_variants": [
-          "我要每天练习中文。",
-          "我要多练习。",
-          "我要多练习中文。"
-        ],
-        "explanation": "A2 learners can produce simple connected text about familiar study goals.",
-        "explanation_vi": "Người học A2 có thể viết câu đơn giản về mục tiêu học tập quen thuộc."
+        "explanation": "短文中说“要多听、多说，还要每天练习新句子”。",
+        "explanation_vi": "Đoạn văn nói “要多听、多说，还要每天练习新句子”."
       }
     ]
   },
   "review": {
     "key_takeaways": [
-      "Use 要 before a verb for need or intention."
+      "B1阅读要抓住清楚短文的主要信息。"
     ],
-    "srs_inject_word_ids": [],
     "key_takeaways_vi": [
-      "Use 要 before a verb for need or intention."
-    ]
-  },
-  "learning_objectives_vi": [
-    "Read a short paragraph about class.",
-    "Find the teacher advice in a passage."
-  ]
+      "Đọc B1 cần nắm thông tin chính trong đoạn văn rõ ràng."
+    ],
+    "srs_inject_word_ids": []
+  }
 }

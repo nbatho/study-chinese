@@ -38,6 +38,12 @@
         "title_vi": { "type": "string" },
         "hsk_level": { "type": "integer", "minimum": 1, "maximum": 9 },
         "cefr_level": { "type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"] },
+        "cefr_activities": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["reception", "production", "interaction", "mediation"] },
+          "uniqueItems": true,
+          "default": []
+        },
         "primary_skill": {
           "type": "string",
           "enum": ["listening", "speaking", "reading", "writing", "mixed"]

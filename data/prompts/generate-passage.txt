@@ -5,6 +5,7 @@ Generate a reading passage for HSK {level}, topic "{topic}", primary skill "{ski
 Rules:
 - Use only vocabulary from HSK {level} or below unless a requested target word is explicitly listed.
 - Do not copy textbook passages, exam items, copyrighted courses, or existing online passages.
-- Include simplified Chinese, pinyin, English translation, word count, target words, grammar points, and questions.
+- Include simplified Chinese, pinyin, Vietnamese support fields, English translation fields, word count, target words, grammar points, and questions.
+- Passage questions must be Chinese-first in learner-facing primary fields. Keep English only as translation metadata.
 - Target length: HSK 1-2 is 30-80 Chinese characters, HSK 3-4 is 80-180, HSK 5-6 is 180-350, HSK 7-9 is 350-700.
 - Output valid JSON only. Follow the lesson template schema.

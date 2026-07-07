@@ -55,6 +55,7 @@ const lessonTemplateSkeleton = {
     title_vi: '<Vietnamese title>',
     hsk_level: 2,
     cefr_level: 'A1',
+    cefr_activities: ['reception'],
     primary_skill: '<primary_skill>',
     secondary_skills: [],
     topic: '<topic>',
@@ -62,7 +63,7 @@ const lessonTemplateSkeleton = {
     xp_reward: 30,
     tags: ['hsk2', 'food', 'reading']
   },
-  learning_objectives: ['<objective 1>', '<objective 2>'],
+  learning_objectives: ['<Chinese objective 1>', '<Chinese objective 2>'],
   learning_objectives_vi: ['<Vietnamese objective 1>', '<Vietnamese objective 2>'],
   vocabulary_focus: [
     {
@@ -103,17 +104,17 @@ const lessonTemplateSkeleton = {
     exercises: [
       {
         kind: 'multiple_choice',
-        skill: '<exact primary_skill>',
-        bloom_level: 'understand',
-        prompt: '<question>',
-        prompt_vi: '<Vietnamese question>',
-        options: ['<option A>', '<option B>', '<option C>'],
-        options_vi: ['<Vietnamese option A>', '<Vietnamese option B>', '<Vietnamese option C>'],
-        correct_answer: '<correct option>',
-        correct_answer_vi: '<Vietnamese correct option>',
-        acceptable_variants: ['<correct option>'],
-        explanation: '<why this is correct>',
-        explanation_vi: '<Vietnamese explanation>'
+      skill: '<exact primary_skill>',
+      bloom_level: 'understand',
+      prompt: '<Chinese question/instruction>',
+      prompt_vi: '<Vietnamese question>',
+      options: ['<Chinese option A>', '<Chinese option B>', '<Chinese option C>'],
+      options_vi: ['<Vietnamese option A>', '<Vietnamese option B>', '<Vietnamese option C>'],
+      correct_answer: '<Chinese correct option>',
+      correct_answer_vi: '<Vietnamese correct option>',
+      acceptable_variants: ['<Chinese correct option>'],
+      explanation: '<Chinese explanation>',
+      explanation_vi: '<Vietnamese explanation>'
       }
     ]
   },
@@ -153,7 +154,14 @@ const loadGenerationPrompt = async () => {
     metadata: {
       ...lessonTemplateSkeleton.metadata,
       hsk_level: level,
-      cefr_level: level <= 2 ? 'A1' : level <= 3 ? 'A2' : level <= 4 ? 'B1' : level <= 6 ? 'B2' : 'C1',
+      cefr_level: level <= 1 ? 'A1' : level <= 2 ? 'A2' : level <= 3 ? 'B1' : level <= 4 ? 'B1' : level <= 6 ? 'B2' : 'C1',
+      cefr_activities: {
+        listening: ['reception'],
+        reading: ['reception'],
+        speaking: ['production', 'interaction'],
+        writing: ['production'],
+        mixed: ['reception', 'production', 'interaction']
+      }[skill],
       primary_skill: skill,
       secondary_skills: skill === 'reading' ? ['writing'] : skill === 'listening' ? ['speaking'] : [],
       topic,
@@ -195,10 +203,14 @@ Hard requirements:
 - Return only one JSON object. Do not return markdown, prose, an array, or an empty object.
 - The top-level keys must be exactly compatible with: lesson_id, metadata, learning_objectives, vocabulary_focus, grammar_focus, warm_up, core_modules, practice, review.
 - Use the exact lesson_id, metadata.hsk_level, metadata.primary_skill, and metadata.topic from the lesson spec.
+- Set metadata.cefr_level by CEFR can-do scope, not by HSK number alone: A1 for familiar concrete phrases; A2 for routine immediate needs; B1 for clear connected familiar input or travel/school/work situations; never use B2+ for simple HSK 1-3 content.
+- Set metadata.cefr_activities from the primary skill: listening/reading = ["reception"], speaking = ["production","interaction"], writing = ["production"], mixed = ["reception","production","interaction"].
 - Fill every placeholder with real lesson content. Do not leave placeholder text.
 - Use only HSK ${level} or lower vocabulary unless target_words lists a word.
 - Keep Chinese content original. Do not copy textbook passages, exam items, paid courses, or existing online content.
 - For HSK 1-2, keep total Chinese lesson text around 30-80 Chinese characters.
+- Every learner-facing primary field must be Chinese: learning_objectives, grammar_focus.explanation, practice.exercises[].prompt, practice.exercises[].options, practice.exercises[].correct_answer, practice.exercises[].explanation, and review.key_takeaways.
+- Do not put English instruction words like "choose", "what", "answer", "arrange", "match", or "mean" in learner-facing primary fields.
 - Every exercise must include kind, skill, bloom_level, prompt, correct_answer, acceptable_variants, and explanation.
 - Include Vietnamese fields next to English content: title_vi, learning_objectives_vi, explanation_vi, prompt_vi, options_vi, correct_answer_vi, key_takeaways_vi, and example vi.
 - Every grammar_focus item must include hsk_level and cefr_level that do not exceed the lesson level.

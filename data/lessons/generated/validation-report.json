@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-03T16:28:54.778Z",
-  "count": 10,
+  "generated_at": "2026-07-07T15:15:49.722Z",
+  "count": 11,
   "ok": true,
   "results": [
     {
@@ -8,9 +8,21 @@
       "ok": true,
       "summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "length_out_of_range",
+          "message": "Chinese text length is outside the suggested range.",
+          "details": {
+            "targetLevel": 1,
+            "hanziCount": 144,
+            "suggestedMin": 20,
+            "suggestedMax": 100
+          }
+        }
+      ]
     },
     {
       "lesson_id": "hsk1-l02-reading-numbers",
@@ -26,6 +38,27 @@
       "ok": true,
       "summary": {
         "errorCount": 0,
+        "warningCount": 1
+      },
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "length_out_of_range",
+          "message": "Chinese text length is outside the suggested range.",
+          "details": {
+            "targetLevel": 1,
+            "hanziCount": 104,
+            "suggestedMin": 20,
+            "suggestedMax": 100
+          }
+        }
+      ]
+    },
+    {
+      "lesson_id": "hsk1-l04-speaking-self-introduction",
+      "ok": true,
+      "summary": {
+        "errorCount": 0,
         "warningCount": 0
       },
       "warnings": []
@@ -35,27 +68,63 @@
       "ok": true,
       "summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "length_out_of_range",
+          "message": "Chinese text length is outside the suggested range.",
+          "details": {
+            "targetLevel": 2,
+            "hanziCount": 114,
+            "suggestedMin": 20,
+            "suggestedMax": 100
+          }
+        }
+      ]
     },
     {
       "lesson_id": "hsk2-l05-listening-transportation",
       "ok": true,
       "summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "length_out_of_range",
+          "message": "Chinese text length is outside the suggested range.",
+          "details": {
+            "targetLevel": 2,
+            "hanziCount": 132,
+            "suggestedMin": 20,
+            "suggestedMax": 100
+          }
+        }
+      ]
     },
     {
       "lesson_id": "hsk2-l06-writing-family",
       "ok": true,
       "summary": {
         "errorCount": 0,
-        "warningCount": 0
+        "warningCount": 1
       },
-      "warnings": []
+      "warnings": [
+        {
+          "severity": "warning",
+          "code": "length_out_of_range",
+          "message": "Chinese text length is outside the suggested range.",
+          "details": {
+            "targetLevel": 2,
+            "hanziCount": 133,
+            "suggestedMin": 20,
+            "suggestedMax": 100
+          }
+        }
+      ]
     },
     {
       "lesson_id": "hsk3-l07-reading-education",
