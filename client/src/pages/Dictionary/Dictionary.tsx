@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BookOpen,
@@ -23,6 +24,7 @@ import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
+import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoadingCard from "../../components/LoadingCard";
 import WordCard from "./components/WordCard";
 
@@ -35,14 +37,15 @@ const sortOptions: Array<{ value: VocabularySort; label: string }> = [
 ];
 const pageSize = 24;
 const listEmojis = ["📘", "⭐", "🧠", "✍️"];
-
 export default function Dictionary() {
   const { t } = useI18n();
+  const [urlSearchParams, setUrlSearchParams] = useSearchParams();
+  const radicalParam = urlSearchParams.get("radical");
   const [query, setQuery] = useState("");
   const [selectedHsk, setSelectedHsk] = useState<number | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCefr, setSelectedCefr] = useState<CefrLevel | "all">("all");
-  const [selectedRadical, setSelectedRadical] = useState<string>("all");
+  const [selectedRadical, setSelectedRadical] = useState<string>(() => radicalParam || "all");
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
   const [sort, setSort] = useState<VocabularySort>("hsk");
   const [page, setPage] = useState(1);
@@ -51,7 +54,7 @@ export default function Dictionary() {
   const [newListEmoji, setNewListEmoji] = useState(listEmojis[0]);
   const [favoriteWordIds, setFavoriteWordIds] = useState<string[]>([]);
 
-  const searchParams = {
+  const vocabularySearchParams = {
     q: query.trim() || undefined,
     hsk: selectedHsk === "all" ? undefined : selectedHsk,
     category: selectedCategory === "all" ? undefined : selectedCategory,
@@ -63,7 +66,7 @@ export default function Dictionary() {
     limit: pageSize,
   };
 
-  const vocabularyQuery = useVocabularyQuery(searchParams);
+  const vocabularyQuery = useVocabularyQuery(vocabularySearchParams);
   const topicsQuery = useVocabularyTopicsQuery();
   const radicalsQuery = useVocabularyRadicalsQuery();
   const listsQuery = useListsQuery();
@@ -87,7 +90,29 @@ export default function Dictionary() {
 
   const resetPage = () => setPage(1);
 
-  const handleCreateList = async (event: React.FormEvent) => {
+  useEffect(() => {
+    const nextRadical = radicalParam || "all";
+
+    if (nextRadical !== selectedRadical) {
+      setSelectedRadical(nextRadical);
+      setPage(1);
+    }
+  }, [radicalParam, selectedRadical]);
+
+  const updateRadicalFilter = (value: string) => {
+    setSelectedRadical(value);
+    resetPage();
+
+    const nextParams = new URLSearchParams(urlSearchParams);
+    if (value === "all") {
+      nextParams.delete("radical");
+    } else {
+      nextParams.set("radical", value);
+    }
+    setUrlSearchParams(nextParams, { replace: true });
+  };
+
+  const handleCreateList = async (event: FormEvent) => {
     event.preventDefault();
     const name = newListName.trim();
     if (!name) return;
@@ -148,110 +173,110 @@ export default function Dictionary() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={selectedHsk}
-              onChange={(event) => {
-                setSelectedHsk(event.target.value === "all" ? "all" : Number(event.target.value));
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              <option value="all">{t("dictionary.allHsk")}</option>
-              {hskLevels.map((level) => (
-                <option key={level} value={level}>HSK {level}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="HSK filter"
+            icon={<Filter size={16} />}
+            value={String(selectedHsk)}
+            onChange={(value) => {
+              setSelectedHsk(value === "all" ? "all" : Number(value));
+              resetPage();
+            }}
+            options={[
+              { value: "all", label: t("dictionary.allHsk") },
+              ...hskLevels.map((level) => ({ value: String(level), label: `HSK ${level}` })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
 
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={selectedCategory}
-              onChange={(event) => {
-                setSelectedCategory(event.target.value);
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              <option value="all">{t("dictionary.allCategories")}</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="Category filter"
+            icon={<Filter size={16} />}
+            value={selectedCategory}
+            onChange={(value) => {
+              setSelectedCategory(value);
+              resetPage();
+            }}
+            options={[
+              { value: "all", label: t("dictionary.allCategories") },
+              ...categories.map((category) => ({ value: category, label: category })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
 
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={selectedCefr}
-              onChange={(event) => {
-                setSelectedCefr(event.target.value === "all" ? "all" : event.target.value as CefrLevel);
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              <option value="all">All CEFR</option>
-              {cefrLevels.map((level) => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="CEFR filter"
+            icon={<Filter size={16} />}
+            value={selectedCefr}
+            onChange={(value) => {
+              setSelectedCefr(value === "all" ? "all" : value as CefrLevel);
+              resetPage();
+            }}
+            options={[
+              { value: "all", label: "All CEFR" },
+              ...cefrLevels.map((level) => ({ value: level, label: level })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
 
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={selectedRadical}
-              onChange={(event) => {
-                setSelectedRadical(event.target.value);
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              <option value="all">All radicals</option>
-              {radicals.map((item) => (
-                <option key={item.radical} value={item.radical}>
-                  {item.radical} ({item.count})
-                </option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="Radical filter"
+            icon={<Filter size={16} />}
+            value={selectedRadical}
+            onChange={updateRadicalFilter}
+            options={[
+              { value: "all", label: "All radicals" },
+              ...radicals.map((item) => ({ value: item.radical, label: `${item.radical} (${item.count})` })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
 
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={selectedTopic}
-              onChange={(event) => {
-                setSelectedTopic(event.target.value);
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              <option value="all">All topics</option>
-              {topics.map((topic) => (
-                <option key={topic.id} value={topic.id}>
-                  {topic.emoji ? `${topic.emoji} ` : ""}{topic.nameEn}
-                </option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="Topic filter"
+            icon={<Filter size={16} />}
+            value={selectedTopic}
+            onChange={(value) => {
+              setSelectedTopic(value);
+              resetPage();
+            }}
+            options={[
+              { value: "all", label: "All topics" },
+              ...topics.map((topic) => ({
+                value: topic.id,
+                label: `${topic.emoji ? `${topic.emoji} ` : ""}${topic.nameEn}`,
+              })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
 
-          <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <select
-              value={sort}
-              onChange={(event) => {
-                setSort(event.target.value as VocabularySort);
-                resetPage();
-              }}
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-            >
-              {sortOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            label="Sort dictionary"
+            icon={<Filter size={16} />}
+            value={sort}
+            onChange={(value) => {
+              setSort(value);
+              resetPage();
+            }}
+            options={sortOptions}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
         </div>
       </section>
 
@@ -293,15 +318,16 @@ export default function Dictionary() {
         </div>
 
         <form onSubmit={handleCreateList} className="grid gap-2 sm:grid-cols-[92px_1fr_auto]">
-          <select
+          <DropdownSelect
+            label="List emoji"
             value={newListEmoji}
-            onChange={(event) => setNewListEmoji(event.target.value)}
-            className="app-control text-sm font-semibold"
-          >
-            {listEmojis.map((emoji) => (
-              <option key={emoji} value={emoji}>{emoji}</option>
-            ))}
-          </select>
+            onChange={setNewListEmoji}
+            options={listEmojis.map((emoji) => ({ value: emoji, label: emoji }))}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between text-base"
+            menuClassName="w-full min-w-24"
+          />
           <input
             value={newListName}
             onChange={(event) => setNewListName(event.target.value)}

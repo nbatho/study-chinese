@@ -22,6 +22,7 @@ const mapLessonSummary = (row) => ({
   tags: row.tags || [],
   estimatedMinutes: Number(row.estimated_minutes),
   xpReward: Number(row.xp_reward),
+  grammarCount: Number(row.grammar_count || 0),
   completedAt: row.completed_at,
   bestAccuracy: Number(row.best_accuracy || 0),
   attempts: Number(row.attempts || 0)
@@ -33,6 +34,26 @@ const mapGrammarPoint = (row) => ({
   explanation: row.explanation,
   tips: row.tips || [],
   examples: row.examples || []
+});
+
+const mapLessonGrammarEntry = (row) => ({
+  id: row.id,
+  pattern: row.pattern,
+  explanation: row.explanation,
+  tips: row.tips || [],
+  examples: row.examples || [],
+  lesson: {
+    id: row.lesson_id,
+    title: row.lesson_title,
+    subtitle: row.lesson_subtitle,
+    hskLevel: Number(row.hsk_level),
+    cefrLevel: row.cefr_level || 'A1',
+    order: Number(row.order_num),
+    skill: row.primary_skill || row.skill,
+    completedAt: row.completed_at,
+    bestAccuracy: Number(row.best_accuracy || 0),
+    attempts: Number(row.attempts || 0)
+  }
 });
 
 const mapExercise = (row) => ({
@@ -123,10 +144,16 @@ export const getLessons = async (userId, filters = {}) => {
     `
       SELECT
         l.*,
+        COALESCE(grammar_counts.grammar_count, 0) AS grammar_count,
         ulp.completed_at,
         ulp.best_accuracy,
         ulp.attempts
       FROM lessons l
+      LEFT JOIN (
+        SELECT lesson_id, COUNT(*)::int AS grammar_count
+        FROM grammar_points
+        GROUP BY lesson_id
+      ) grammar_counts ON grammar_counts.lesson_id = l.id
       LEFT JOIN user_lesson_progress ulp
         ON ulp.lesson_id = l.id AND ulp.user_id = $${values.length + 1}
       WHERE ${whereSql}
@@ -137,6 +164,37 @@ export const getLessons = async (userId, filters = {}) => {
 
   return {
     lessons: result.rows.map(mapLessonSummary)
+  };
+};
+
+export const getLessonGrammarIndex = async (userId) => {
+  const result = await query(
+    `
+      SELECT
+        gp.*,
+        l.id AS lesson_id,
+        l.title AS lesson_title,
+        l.subtitle AS lesson_subtitle,
+        l.hsk_level,
+        l.cefr_level,
+        l.order_num,
+        l.skill,
+        l.primary_skill,
+        ulp.completed_at,
+        ulp.best_accuracy,
+        ulp.attempts
+      FROM grammar_points gp
+      JOIN lessons l ON l.id = gp.lesson_id
+      LEFT JOIN user_lesson_progress ulp
+        ON ulp.lesson_id = l.id AND ulp.user_id = $1
+      WHERE l.is_active = true
+      ORDER BY l.hsk_level, l.order_num, gp.order_num, gp.id
+    `,
+    [userId]
+  );
+
+  return {
+    grammar: result.rows.map(mapLessonGrammarEntry)
   };
 };
 

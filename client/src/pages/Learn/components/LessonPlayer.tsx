@@ -140,12 +140,34 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           {lesson.grammar.length > 0 && (
             <div className="mb-8 text-left">
               <h4 className="mb-2.5 text-[0.9rem] font-bold uppercase text-muted-foreground">{t("learn.targetGrammar")}</h4>
-              {lesson.grammar.map((gp) => (
-                <div key={gp.id} className="mb-3">
-                  <div className="font-bold text-primary">{gp.pattern}</div>
-                  <p className="mt-0.5 text-[0.85rem] text-muted-foreground">{gp.explanation}</p>
-                </div>
-              ))}
+              <div className="grid gap-3">
+                {lesson.grammar.map((gp) => (
+                  <section key={gp.id} className="rounded-lg border bg-background p-4">
+                    <div className="rounded-md bg-card px-3 py-2 font-serif text-xl font-extrabold text-primary">{gp.pattern}</div>
+                    <p className="mt-2 text-[0.88rem] leading-relaxed text-muted-foreground">{gp.explanation}</p>
+                    {gp.tips.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {gp.tips.map((tip) => (
+                          <span key={tip} className="rounded-md bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                            {tip}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {gp.examples.length > 0 && (
+                      <div className="mt-3 grid gap-2 border-t border-dashed pt-3">
+                        {gp.examples.map((example, index) => (
+                          <div key={`${gp.id}-${index}`} className="rounded-md bg-card p-3">
+                            <div className="font-serif text-xl font-bold">{example.simplified}</div>
+                            <div className="text-xs font-semibold text-muted-foreground">{example.pinyin}</div>
+                            <div className="mt-1 text-sm">{example.english}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                ))}
+              </div>
             </div>
           )}
           <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={handleStart}>{t("learn.start")}</button>

@@ -12,12 +12,13 @@ export interface LessonSummary {
     skill: string;
     estimatedMinutes: number;
     xpReward: number;
+    grammarCount: number;
     completedAt: string | null;
     bestAccuracy: number;
     attempts: number;
 }
 
-export interface LessonDetail extends Omit<LessonSummary, 'completedAt' | 'bestAccuracy' | 'attempts'> {
+export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'completedAt' | 'bestAccuracy' | 'attempts'> {
     intro: string;
     newWords: Word[];
     grammar: Array<{
@@ -83,6 +84,24 @@ export interface LessonsResponse {
 
 export interface LessonDetailResponse {
     lesson: LessonDetail;
+}
+
+export interface LessonGrammarEntry {
+    id: string;
+    pattern: string;
+    explanation: string;
+    tips: string[];
+    examples: Array<{
+        simplified: string;
+        traditional?: string;
+        pinyin: string;
+        english: string;
+    }>;
+    lesson: Pick<LessonSummary, 'id' | 'title' | 'subtitle' | 'hskLevel' | 'cefrLevel' | 'order' | 'skill' | 'completedAt' | 'bestAccuracy' | 'attempts'>;
+}
+
+export interface LessonGrammarIndexResponse {
+    grammar: LessonGrammarEntry[];
 }
 
 export interface CompleteLessonPayload {

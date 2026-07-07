@@ -18,6 +18,7 @@ import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { CircularProgress } from "./ui/circular-progress";
+import { DropdownSelect } from "./ui/dropdown-select";
 
 function Avatar({
   avatar,
@@ -43,106 +44,6 @@ function Avatar({
         <span aria-hidden="true">{avatar || name.slice(0, 1).toUpperCase() || "学"}</span>
       )}
     </span>
-  );
-}
-
-function LanguageDropdown({
-  language,
-  label,
-  englishLabel,
-  vietnameseLabel,
-  onSelect,
-}: {
-  language: "en" | "vi";
-  label: string;
-  englishLabel: string;
-  vietnameseLabel: string;
-  onSelect: (language: "en" | "vi") => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const languageOptions: Array<{ code: string; label: string; value: "en" | "vi" }> = [
-    { code: "EN", label: englishLabel, value: "en" },
-    { code: "VI", label: vietnameseLabel, value: "vi" },
-  ];
-  const currentLanguage = languageOptions.find((option) => option.value === language) ?? languageOptions[0];
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!dropdownRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen]);
-
-  return (
-    <div ref={dropdownRef} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setIsOpen((value) => !value)}
-        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border bg-background/70 px-2.5 text-xs font-extrabold text-muted-foreground transition hover:border-primary/30 hover:bg-secondary hover:text-foreground active:translate-y-px"
-        aria-expanded={isOpen}
-        aria-haspopup="menu"
-        aria-label={`${label}: ${currentLanguage.label}`}
-        title={`${label}: ${currentLanguage.label}`}
-      >
-        <Globe2 size={16} className="text-primary" />
-        <span className="min-w-18 text-left leading-none">
-          <span className="mt-1 block text-xs font-extrabold text-foreground">{currentLanguage.label}</span>
-        </span>
-        <ChevronDown size={15} className={cn("text-muted-foreground transition", isOpen && "rotate-180")} />
-      </button>
-
-      {isOpen && (
-        <div
-          role="menu"
-          className="absolute right-0 mt-2 w-48 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-xl"
-        >
-          {languageOptions.map((option) => {
-            const isSelected = option.value === language;
-
-            return (
-              <div key={option.value} className={cn("rounded-xl p-1", isSelected && "bg-primary")}>
-                <button
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={isSelected}
-                  onClick={() => {
-                    onSelect(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm font-extrabold transition",
-                    isSelected
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                  )}
-                >
-                  <span className={cn("w-7 text-xs", isSelected ? "text-primary-foreground/80" : "text-primary")}>
-                    {option.code}
-                  </span>
-                  <span>{option.label}</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -220,12 +121,16 @@ export default function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <LanguageDropdown
-            language={language}
+          <DropdownSelect
+            value={language}
             label={t("navbar.languageToggle")}
-            englishLabel={t("profile.languageEnglish")}
-            vietnameseLabel={t("profile.languageVietnamese")}
-            onSelect={setLanguage}
+            icon={<Globe2 size={16} />}
+            onChange={setLanguage}
+            options={[
+              { code: "EN", label: t("profile.languageEnglish"), value: "en" },
+              { code: "VI", label: t("profile.languageVietnamese"), value: "vi" },
+            ]}
+            buttonClassName="min-w-36"
           />
 
           {isAuthenticated ? (

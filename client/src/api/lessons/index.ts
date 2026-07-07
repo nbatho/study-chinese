@@ -4,6 +4,7 @@ import type {
     CompleteLessonPayload,
     CompleteLessonResponse,
     LessonDetailResponse,
+    LessonGrammarIndexResponse,
     LessonsResponse,
     ReportLessonIssuePayload,
     ReportLessonIssueResponse,
@@ -11,6 +12,8 @@ import type {
 
 export const lessonsApi = {
     list: () => apiRequest<LessonsResponse>(beApi.get('lessons')),
+
+    grammarIndex: () => apiRequest<LessonGrammarIndexResponse>(beApi.get('lessons/grammar')),
 
     detail: (lessonId: string) => apiRequest<LessonDetailResponse>(beApi.get(`lessons/${lessonId}`)),
 

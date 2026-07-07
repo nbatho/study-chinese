@@ -3,6 +3,7 @@ import { success } from '../utils/response.js';
 import {
   completeLesson,
   getDialogue,
+  getLessonGrammarIndex,
   getLessonDetails,
   getLessonModules,
   getLessons,
@@ -12,6 +13,11 @@ import { createCourseIssueReport } from '../services/report.service.js';
 
 export const listLessons = asyncHandler(async (req, res) => {
   const data = await getLessons(req.user.id, req.query);
+  success(res, data);
+});
+
+export const listLessonGrammar = asyncHandler(async (req, res) => {
+  const data = await getLessonGrammarIndex(req.user.id);
   success(res, data);
 });
 

@@ -12,6 +12,13 @@ export const useLessonsQuery = (enabled = true) =>
         enabled,
     });
 
+export const useLessonGrammarIndexQuery = (enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.lessons.grammar,
+        queryFn: () => unwrapApiData(lessonsApi.grammarIndex()),
+        enabled,
+    });
+
 export const useLessonDetailQuery = (lessonId: string, enabled = true) =>
     useQuery({
         queryKey: queryKeys.lessons.detail(lessonId),

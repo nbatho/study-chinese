@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
-import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, Search, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
+import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
+import { speakChinese } from "../../utils/tts";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 import { getCurriculumLessonCount, getCurriculumLessons, HSK_CURRICULUM } from "./curriculum";
@@ -13,10 +14,36 @@ import { getCurriculumLessonCount, getCurriculumLessons, HSK_CURRICULUM } from "
 const CEFR_RANK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
 const CEFR_RECOMMENDED_HSK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
 const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
+const BASIC_STROKES = [
+  { name: "Ngang", mark: "一", description: "Kéo thẳng từ trái sang phải.", example: "一" },
+  { name: "Sổ", mark: "丨", description: "Kéo thẳng từ trên xuống dưới.", example: "十" },
+  { name: "Chấm", mark: "丶", description: "Chấm nhỏ, hơi xiên nhẹ xuống dưới.", example: "六" },
+  { name: "Phẩy", mark: "丿", description: "Kéo từ trên xuống, lượn từ phải qua trái.", example: "八" },
+  { name: "Mác", mark: "㇏", description: "Xiên xuống từ trái sang phải, cuối nét dày hơn.", example: "八" },
+  { name: "Hất", mark: "㇀", description: "Kéo vút lên từ trái sang phải.", example: "冰" },
+  { name: "Gập", mark: "𠃍", description: "Đổi hướng liền mạch mà không nhấc bút.", example: "口" },
+  { name: "Móc", mark: "亅", description: "Kết thúc bằng móc nhọn hất lên.", example: "小" },
+];
+const STROKE_RULES = [
+  "Ngang trước, sổ sau",
+  "Phẩy trước, mác sau",
+  "Trên trước, dưới sau",
+  "Trái trước, phải sau",
+  "Ngoài trước, trong sau",
+  "Vào trước, đóng sau",
+];
+const TONES = [
+  { name: "Thanh 1", pinyin: "mā", mark: "ˉ", example: "妈", description: "Cao và đều, không đổi âm vực." },
+  { name: "Thanh 2", pinyin: "má", mark: "ˊ", example: "麻", description: "Từ thấp lên cao, giống câu hỏi ngắn." },
+  { name: "Thanh 3", pinyin: "mǎ", mark: "ˇ", example: "马", description: "Hạ xuống thấp rồi kéo lên." },
+  { name: "Thanh 4", pinyin: "mà", mark: "ˋ", example: "骂", description: "Rơi nhanh từ cao xuống thấp, dứt khoát." },
+  { name: "Khinh thanh", pinyin: "ma", mark: "·", example: "吗", description: "Đọc nhẹ, ngắn, phụ thuộc âm trước." },
+];
 
 export default function Learn() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const { selectedLessonId, setSelectedLessonId } = useOutletContext<{
     selectedLessonId: string | null;
@@ -76,6 +103,24 @@ export default function Learn() {
   const selectedCompletedCount = levelLessons.filter((lesson) => selectedCurriculumOrders.has(lesson.order) && lesson.completedAt).length;
   const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
 
+  useEffect(() => {
+    const lessonIdFromUrl = searchParams.get("lessonId");
+
+    if (lessonIdFromUrl && lessonIdFromUrl !== selectedLessonId) {
+      setSelectedLessonId(lessonIdFromUrl);
+    }
+  }, [searchParams, selectedLessonId, setSelectedLessonId]);
+
+  const closeSelectedLesson = () => {
+    setSelectedLessonId(null);
+
+    if (searchParams.has("lessonId")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("lessonId");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -89,7 +134,7 @@ export default function Learn() {
   return (
     <div className="app-page">
       {selectedLessonId ? (
-        <LessonPlayer lessonId={selectedLessonId} onClose={() => setSelectedLessonId(null)} />
+        <LessonPlayer lessonId={selectedLessonId} onClose={closeSelectedLesson} />
       ) : (
         <div>
           {needsPlacementTest && (
@@ -113,6 +158,90 @@ export default function Learn() {
               </button>
             </div>
           )}
+
+          <section className="app-surface-padded mb-5 text-left">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
+                  <PenLine size={17} />
+                  Nhập môn Hán tự
+                </div>
+                <h2 className="text-2xl font-extrabold">8 nét cơ bản và 4 thanh điệu</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  Nắm nét viết, bút thuận và cao độ phát âm trước khi vào lộ trình HSK để đọc, nghe và viết ổn định hơn.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/practice?tool=hanzi")}
+                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
+              >
+                <PenLine size={17} />
+                Luyện viết
+              </button>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+              <div>
+                <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">8 nét cơ bản</h3>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {BASIC_STROKES.map((stroke) => (
+                    <article key={stroke.name} className="rounded-lg border bg-background p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="font-serif text-4xl font-extrabold text-primary">{stroke.mark}</span>
+                        <span className="rounded-md bg-secondary px-2 py-1 font-serif text-lg font-bold">{stroke.example}</span>
+                      </div>
+                      <h4 className="font-extrabold">{stroke.name}</h4>
+                      <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{stroke.description}</p>
+                    </article>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-lg border bg-background p-4">
+                  <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">Quy tắc bút thuận</h3>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {STROKE_RULES.map((rule, index) => (
+                      <div key={rule} className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold">
+                        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-xs text-primary">{index + 1}</span>
+                        <span>{rule}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">Thanh điệu phổ thông</h3>
+                <div className="grid gap-2">
+                  {TONES.map((tone) => (
+                    <article key={tone.name} className="rounded-lg border bg-background p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold">{tone.name}</span>
+                            <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-extrabold text-muted-foreground">{tone.mark}</span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="font-serif text-2xl font-extrabold text-primary">{tone.example}</span>
+                            <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => speakChinese(tone.example)}
+                          className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary hover:text-primary"
+                          aria-label={`Nghe ${tone.pinyin}`}
+                          title={`Nghe ${tone.pinyin}`}
+                        >
+                          <Volume2 size={18} />
+                        </button>
+                      </div>
+                      <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground">{tone.description}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
           <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {hskStats.map((levelStats) => (

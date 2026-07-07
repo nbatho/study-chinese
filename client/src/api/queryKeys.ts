@@ -11,6 +11,7 @@ export const queryKeys = {
     },
     lessons: {
         list: ['lessons'] as const,
+        grammar: ['lessons', 'grammar'] as const,
         detail: (lessonId: string) => ['lessons', lessonId] as const,
     },
     placement: {

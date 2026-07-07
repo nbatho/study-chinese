@@ -10,6 +10,7 @@ import {
   Languages,
   Lock,
   RefreshCw,
+  Shapes,
   Shield,
   ShoppingBag,
   Sparkles,
@@ -41,6 +42,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   if (path.startsWith("/guide")) activeTab = "guide";
   else if (path.startsWith("/learn")) activeTab = "learn";
   else if (path.startsWith("/grammar")) activeTab = "grammar";
+  else if (path.startsWith("/radicals")) activeTab = "radicals";
   else if (path.startsWith("/practice")) activeTab = "practice";
   else if (path.startsWith("/review")) activeTab = "review";
   else if (path.startsWith("/dictionary")) activeTab = "dictionary";
@@ -54,6 +56,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
     { id: "home", label: t("nav.home"), icon: Home },
     { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
     { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
+    { id: "radicals", label: "Bộ thủ", icon: Shapes },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },

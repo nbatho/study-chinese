@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  listLessonGrammar,
   listLessonModules,
   listLessons,
   reportLessonIssue,
@@ -14,6 +15,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', listLessons);
+router.get('/grammar', listLessonGrammar);
 router.get('/:id/modules', listLessonModules);
 router.get('/:id', showLesson);
 router.post('/:id/complete', requireFields(['accuracy']), submitLessonCompletion);
