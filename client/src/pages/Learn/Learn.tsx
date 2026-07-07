@@ -32,13 +32,46 @@ const STROKE_RULES = [
   "Ngoài trước, trong sau",
   "Vào trước, đóng sau",
 ];
-const TONES = [
-  { name: "Thanh 1", pinyin: "mā", mark: "ˉ", example: "妈", description: "Cao và đều, không đổi âm vực." },
-  { name: "Thanh 2", pinyin: "má", mark: "ˊ", example: "麻", description: "Từ thấp lên cao, giống câu hỏi ngắn." },
-  { name: "Thanh 3", pinyin: "mǎ", mark: "ˇ", example: "马", description: "Hạ xuống thấp rồi kéo lên." },
-  { name: "Thanh 4", pinyin: "mà", mark: "ˋ", example: "骂", description: "Rơi nhanh từ cao xuống thấp, dứt khoát." },
-  { name: "Khinh thanh", pinyin: "ma", mark: "·", example: "吗", description: "Đọc nhẹ, ngắn, phụ thuộc âm trước." },
+type ToneContour = "level" | "rising" | "dipping" | "falling" | "neutral";
+type ToneInfo = {
+  name: string;
+  pinyin: string;
+  contour: ToneContour;
+  example: string;
+  description: string;
+};
+const TONES: ToneInfo[] = [
+  { name: "Âm bình (阴平)", pinyin: "mā", contour: "level", example: "妈", description: "Cao và đều, không đổi âm vực." },
+  { name: "Dương bình (阳平)", pinyin: "má", contour: "rising", example: "麻", description: "Từ thấp lên cao, giống câu hỏi ngắn." },
+  { name: "Thượng thanh (上声)", pinyin: "mǎ", contour: "dipping", example: "马", description: "Hạ xuống thấp rồi kéo lên." },
+  { name: "Khứ thanh (去声)", pinyin: "mà", contour: "falling", example: "骂", description: "Rơi nhanh từ cao xuống thấp, dứt khoát." },
+  { name: "Khinh thanh (轻声)", pinyin: "ma", contour: "neutral", example: "吗", description: "Đọc nhẹ, ngắn, phụ thuộc âm trước." },
 ];
+
+function ToneContourIcon({ contour }: { contour: ToneContour }) {
+  if (contour === "neutral") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 72 56" className="size-14 overflow-visible">
+        <path d="M10 48H62" className="stroke-primary/15" strokeWidth="5" strokeLinecap="round" fill="none" />
+        <circle cx="36" cy="28" r="9" className="fill-primary" />
+      </svg>
+    );
+  }
+
+  const path = {
+    level: "M14 18H58",
+    rising: "M16 42L58 14",
+    dipping: "M14 22C24 45 43 45 58 18",
+    falling: "M16 14L58 42",
+  }[contour];
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 72 56" className="size-14 overflow-visible">
+      <path d="M10 48H62" className="stroke-primary/15" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <path d={path} className="stroke-primary" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
 
 export default function Learn() {
   const { t } = useI18n();
@@ -348,14 +381,16 @@ export default function Learn() {
                   {TONES.map((tone) => (
                     <article key={tone.name} className="rounded-xl border bg-background p-3">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold">{tone.name}</span>
-                            <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-extrabold text-muted-foreground">{tone.mark}</span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="font-serif text-2xl font-extrabold text-primary">{tone.example}</span>
-                            <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span className="grid size-16 shrink-0 place-items-center rounded-lg bg-primary/10">
+                            <ToneContourIcon contour={tone.contour} />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="font-extrabold leading-tight">{tone.name}</div>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="font-serif text-2xl font-extrabold text-primary">{tone.example}</span>
+                              <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
+                            </div>
                           </div>
                         </div>
                         <button

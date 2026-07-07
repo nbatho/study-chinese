@@ -34,10 +34,10 @@ const minVoicedFrameRatio = 0.04;
 const minVoicePeak = 0.1;
 const minVoiceRms = 0.018;
 const TONE_LABELS: Record<number, { mark: string; name: string }> = {
-  1: { mark: "ˉ", name: "阴平 (flat)" },
-  2: { mark: "ˊ", name: "阳平 (rising)" },
-  3: { mark: "ˇ", name: "上声 (dip)" },
-  4: { mark: "ˋ", name: "去声 (falling)" },
+  1: { mark: "ˉ", name: "Âm bình (阴平)" },
+  2: { mark: "ˊ", name: "Dương bình (阳平)" },
+  3: { mark: "ˇ", name: "Thượng thanh (上声)" },
+  4: { mark: "ˋ", name: "Khứ thanh (去声)" },
 };
 
 const containsChinese = (value: string) => /[\u4e00-\u9fff]/.test(value);
