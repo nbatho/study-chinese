@@ -17,12 +17,12 @@ export const listLessons = asyncHandler(async (req, res) => {
 });
 
 export const listLessonGrammar = asyncHandler(async (req, res) => {
-  const data = await getLessonGrammarIndex(req.user.id);
+  const data = await getLessonGrammarIndex(req.user.id, req.query.locale);
   success(res, data);
 });
 
 export const showLesson = asyncHandler(async (req, res) => {
-  const data = await getLessonDetails(req.params.id);
+  const data = await getLessonDetails(req.params.id, req.query.locale);
   success(res, data);
 });
 

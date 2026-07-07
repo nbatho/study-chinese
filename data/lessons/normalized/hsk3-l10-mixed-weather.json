@@ -1,0 +1,135 @@
+{
+  "lesson_id": "hsk3-l10-mixed-weather",
+  "metadata": {
+    "title_zh": "明天会下雨吗？",
+    "title_en": "Will It Rain Tomorrow?",
+    "hsk_level": 3,
+    "cefr_level": "A2",
+    "primary_skill": "mixed",
+    "secondary_skills": [],
+    "topic": "weather",
+    "estimated_minutes": 12,
+    "xp_reward": 35,
+    "tags": [
+      "weather",
+      "mixed",
+      "hsk3"
+    ],
+    "title_vi": "Will It Rain Tomorrow?"
+  },
+  "learning_objectives": [
+    "Understand a simple weather forecast.",
+    "Use 会 for a likely future event."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "明天",
+      "pinyin": "míng tiān",
+      "english": "tomorrow",
+      "is_new": true
+    },
+    {
+      "simplified": "会",
+      "pinyin": "huì",
+      "english": "will; can",
+      "is_new": true
+    },
+    {
+      "simplified": "下雨",
+      "pinyin": "xià yǔ",
+      "english": "to rain",
+      "is_new": true
+    },
+    {
+      "simplified": "天气",
+      "pinyin": "tiān qì",
+      "english": "weather",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "会 + verb",
+      "explanation": "Use 会 for something that will probably happen.",
+      "examples": [
+        {
+          "zh": "明天会下雨。",
+          "pinyin": "Míng tiān huì xià yǔ.",
+          "en": "It will rain tomorrow.",
+          "simplified": "明天会下雨。",
+          "english": "It will rain tomorrow.",
+          "vi": "It will rain tomorrow."
+        }
+      ],
+      "hsk_level": 3,
+      "cefr_level": "A2",
+      "explanation_vi": "Use 会 for something that will probably happen.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "明天",
+      "天气",
+      "下雨"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "reading",
+      "phases": [
+        {
+          "type": "reading_and_speaking",
+          "content_zh": "明天天气不好，可能会下雨。我们在家学习吧。",
+          "content_pinyin": "Míng tiān tiān qì bù hǎo, kě néng huì xià yǔ. Wǒ men zài jiā xué xí ba.",
+          "content_en": "The weather will not be good tomorrow. It may rain. Let us study at home.",
+          "content_vi": "The weather will not be good tomorrow. It may rain. Let us study at home.",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk3-l10-ex1",
+        "kind": "multiple_choice",
+        "skill": "mixed",
+        "bloom_level": "understand",
+        "prompt": "What may happen tomorrow?",
+        "options": [
+          "It may rain.",
+          "It may snow.",
+          "It may be very hot."
+        ],
+        "correct_answer": "It may rain.",
+        "acceptable_variants": [
+          "It may rain."
+        ],
+        "explanation": "可能会下雨 means it may rain.",
+        "prompt_vi": "What may happen tomorrow?",
+        "options_vi": [
+          "It may rain.",
+          "It may snow.",
+          "It may be very hot."
+        ],
+        "correct_answer_vi": "It may rain.",
+        "explanation_vi": "可能会下雨 means it may rain."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "Use 会 before a verb to discuss likely future events."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "Use 会 before a verb to discuss likely future events."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Understand a simple weather forecast.",
+    "Use 会 for a likely future event."
+  ]
+}

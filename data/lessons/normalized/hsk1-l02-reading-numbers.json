@@ -1,0 +1,137 @@
+{
+  "lesson_id": "hsk1-l02-reading-numbers",
+  "metadata": {
+    "title_zh": "一二三",
+    "title_en": "One, Two, Three",
+    "hsk_level": 1,
+    "cefr_level": "A1",
+    "primary_skill": "reading",
+    "secondary_skills": [
+      "writing"
+    ],
+    "topic": "numbers",
+    "estimated_minutes": 8,
+    "xp_reward": 25,
+    "tags": [
+      "numbers",
+      "reading",
+      "hsk1"
+    ],
+    "title_vi": "One, Two, Three"
+  },
+  "learning_objectives": [
+    "Read numbers from one to ten.",
+    "Match numbers with simple quantities."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "一",
+      "pinyin": "yī",
+      "english": "one",
+      "is_new": true
+    },
+    {
+      "simplified": "二",
+      "pinyin": "èr",
+      "english": "two",
+      "is_new": true
+    },
+    {
+      "simplified": "三",
+      "pinyin": "sān",
+      "english": "three",
+      "is_new": true
+    },
+    {
+      "simplified": "十",
+      "pinyin": "shí",
+      "english": "ten",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "数字 + 个",
+      "explanation": "A number can appear before a measure word.",
+      "examples": [
+        {
+          "zh": "三个人",
+          "pinyin": "sān ge rén",
+          "en": "three people",
+          "simplified": "三个人",
+          "english": "three people",
+          "vi": "three people"
+        }
+      ],
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "explanation_vi": "A number can appear before a measure word.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "一",
+      "二",
+      "三"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "reading",
+      "phases": [
+        {
+          "type": "character_match",
+          "content_zh": "一二三四五六七八九十",
+          "content_pinyin": "yī èr sān sì wǔ liù qī bā jiǔ shí",
+          "content_en": "one two three four five six seven eight nine ten",
+          "content_vi": "one two three four five six seven eight nine ten",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk1-l02-ex1",
+        "kind": "multiple_choice",
+        "skill": "reading",
+        "bloom_level": "understand",
+        "prompt": "Which character means three?",
+        "options": [
+          "一",
+          "二",
+          "三"
+        ],
+        "correct_answer": "三",
+        "acceptable_variants": [
+          "三"
+        ],
+        "explanation": "三 means three.",
+        "prompt_vi": "Which character means three?",
+        "options_vi": [
+          "一",
+          "二",
+          "三"
+        ],
+        "correct_answer_vi": "三",
+        "explanation_vi": "三 means three."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "一, 二, 三 are the first three numbers."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "一, 二, 三 are the first three numbers."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Read numbers from one to ten.",
+    "Match numbers with simple quantities."
+  ]
+}

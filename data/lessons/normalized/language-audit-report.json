@@ -1,0 +1,82 @@
+{
+  "audited_at": "2026-07-07T04:49:12.559Z",
+  "source": "data\\lessons\\normalized",
+  "count": 10,
+  "ok": true,
+  "results": [
+    {
+      "lesson_id": "hsk1-l01-listening-greetings",
+      "file": "data\\lessons\\normalized\\hsk1-l01-listening-greetings.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk1-l02-reading-numbers",
+      "file": "data\\lessons\\normalized\\hsk1-l02-reading-numbers.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk1-l03-speaking-food",
+      "file": "data\\lessons\\normalized\\hsk1-l03-speaking-food.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk2-l04-reading-shopping",
+      "file": "data\\lessons\\normalized\\hsk2-l04-reading-shopping.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk2-l05-listening-transportation",
+      "file": "data\\lessons\\normalized\\hsk2-l05-listening-transportation.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk2-l06-writing-family",
+      "file": "data\\lessons\\normalized\\hsk2-l06-writing-family.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk3-l07-reading-education",
+      "file": "data\\lessons\\normalized\\hsk3-l07-reading-education.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk3-l08-listening-health",
+      "file": "data\\lessons\\normalized\\hsk3-l08-listening-health.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk3-l09-speaking-travel",
+      "file": "data\\lessons\\normalized\\hsk3-l09-speaking-travel.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "lesson_id": "hsk3-l10-mixed-weather",
+      "file": "data\\lessons\\normalized\\hsk3-l10-mixed-weather.json",
+      "ok": true,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "database": {
+    "skipped": true,
+    "reason": "Pass --db to audit database metadata."
+  }
+}

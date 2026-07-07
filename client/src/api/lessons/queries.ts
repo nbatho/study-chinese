@@ -4,27 +4,37 @@ import { unwrapApiData } from '../shared';
 import { lessonsApi } from './index';
 import type { CompleteLessonPayload, ReportLessonIssuePayload } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
+import { useAppSelector } from '../../store/hooks';
 
-export const useLessonsQuery = (enabled = true) =>
-    useQuery({
-        queryKey: queryKeys.lessons.list,
-        queryFn: () => unwrapApiData(lessonsApi.list()),
+export const useLessonsQuery = (enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.lessons.list(locale),
+        queryFn: () => unwrapApiData(lessonsApi.list(locale)),
         enabled,
     });
+};
 
-export const useLessonGrammarIndexQuery = (enabled = true) =>
-    useQuery({
-        queryKey: queryKeys.lessons.grammar,
-        queryFn: () => unwrapApiData(lessonsApi.grammarIndex()),
+export const useLessonGrammarIndexQuery = (enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.lessons.grammar(locale),
+        queryFn: () => unwrapApiData(lessonsApi.grammarIndex(locale)),
         enabled,
     });
+};
 
-export const useLessonDetailQuery = (lessonId: string, enabled = true) =>
-    useQuery({
-        queryKey: queryKeys.lessons.detail(lessonId),
-        queryFn: () => unwrapApiData(lessonsApi.detail(lessonId)),
+export const useLessonDetailQuery = (lessonId: string, enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.lessons.detail(lessonId, locale),
+        queryFn: () => unwrapApiData(lessonsApi.detail(lessonId, locale)),
         enabled: enabled && Boolean(lessonId),
     });
+};
 
 export const useCompleteLessonMutation = (lessonId: string) => {
     const queryClient = useQueryClient();
@@ -33,8 +43,7 @@ export const useCompleteLessonMutation = (lessonId: string) => {
         mutationFn: (payload: CompleteLessonPayload) =>
             unwrapApiData(lessonsApi.complete(lessonId, payload)),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list });
-            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.detail(lessonId) });
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.due() });
             queryClient.invalidateQueries({ queryKey: ['users'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });

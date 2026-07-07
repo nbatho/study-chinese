@@ -4,11 +4,24 @@ import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
 import { awardGems } from './gamification.service.js';
 import { mapWord } from './vocab.service.js';
+import { chooseLocalizedText, normalizeLocale } from './content-language.service.js';
 
-const mapLessonSummary = (row) => ({
+const mapExample = (example, locale) => ({
+  ...example,
+  simplified: example.simplified || example.zh || '',
+  english: chooseLocalizedText(example.english || example.en || '', example.vi, locale),
+  en: example.en || example.english || '',
+  vi: example.vi || null
+});
+
+const mapLessonSummary = (row, locale = 'en') => ({
   id: row.id,
-  title: row.title,
-  subtitle: row.subtitle,
+  title: chooseLocalizedText(row.title, row.title_vi, locale),
+  subtitle: chooseLocalizedText(row.subtitle, row.subtitle_vi, locale),
+  titleEn: row.title,
+  titleVi: row.title_vi || null,
+  subtitleEn: row.subtitle,
+  subtitleVi: row.subtitle_vi || null,
   hskLevel: Number(row.hsk_level),
   cefrLevel: row.cefr_level || 'A1',
   order: Number(row.order_num),
@@ -28,24 +41,36 @@ const mapLessonSummary = (row) => ({
   attempts: Number(row.attempts || 0)
 });
 
-const mapGrammarPoint = (row) => ({
+const mapGrammarPoint = (row, locale = 'en') => ({
   id: row.id,
   pattern: row.pattern,
-  explanation: row.explanation,
-  tips: row.tips || [],
-  examples: row.examples || []
+  explanation: chooseLocalizedText(row.explanation, row.explanation_vi, locale),
+  explanationEn: row.explanation,
+  explanationVi: row.explanation_vi || null,
+  tips: locale === 'vi' && row.tips_vi?.length ? row.tips_vi : row.tips || [],
+  tipsEn: row.tips || [],
+  tipsVi: row.tips_vi || [],
+  hskLevel: row.hsk_level === null || row.hsk_level === undefined ? null : Number(row.hsk_level),
+  cefrLevel: row.cefr_level || null,
+  examples: (row.examples || []).map((example) => mapExample(example, locale))
 });
 
-const mapLessonGrammarEntry = (row) => ({
+const mapLessonGrammarEntry = (row, locale = 'en') => ({
   id: row.id,
   pattern: row.pattern,
-  explanation: row.explanation,
-  tips: row.tips || [],
-  examples: row.examples || [],
+  explanation: chooseLocalizedText(row.explanation, row.explanation_vi, locale),
+  explanationEn: row.explanation,
+  explanationVi: row.explanation_vi || null,
+  tips: locale === 'vi' && row.tips_vi?.length ? row.tips_vi : row.tips || [],
+  tipsEn: row.tips || [],
+  tipsVi: row.tips_vi || [],
+  hskLevel: row.grammar_hsk_level === null || row.grammar_hsk_level === undefined ? null : Number(row.grammar_hsk_level),
+  cefrLevel: row.grammar_cefr_level || null,
+  examples: (row.examples || []).map((example) => mapExample(example, locale)),
   lesson: {
     id: row.lesson_id,
-    title: row.lesson_title,
-    subtitle: row.lesson_subtitle,
+    title: chooseLocalizedText(row.lesson_title, row.lesson_title_vi, locale),
+    subtitle: chooseLocalizedText(row.lesson_subtitle, row.lesson_subtitle_vi, locale),
     hskLevel: Number(row.hsk_level),
     cefrLevel: row.cefr_level || 'A1',
     order: Number(row.order_num),
@@ -56,20 +81,28 @@ const mapLessonGrammarEntry = (row) => ({
   }
 });
 
-const mapExercise = (row) => ({
+const mapExercise = (row, locale = 'en') => ({
   id: row.id,
   kind: row.kind,
   skill: row.skill || null,
   bloomLevel: row.bloom_level || null,
-  prompt: row.prompt,
+  prompt: chooseLocalizedText(row.prompt, row.prompt_vi, locale),
+  promptEn: row.prompt,
+  promptVi: row.prompt_vi || null,
   promptHanzi: row.prompt_hanzi,
   promptPinyin: row.prompt_pinyin,
   promptEnglish: row.prompt_english,
   stimulus: row.stimulus || {},
-  options: row.options || [],
+  options: locale === 'vi' && row.options_vi?.length ? row.options_vi : row.options || [],
+  optionsEn: row.options || [],
+  optionsVi: row.options_vi || [],
   correctIndex: row.correct_index,
-  correctText: row.correct_text,
-  answerExplanation: row.answer_explanation,
+  correctText: chooseLocalizedText(row.correct_text, row.correct_text_vi, locale),
+  correctTextEn: row.correct_text,
+  correctTextVi: row.correct_text_vi || null,
+  answerExplanation: chooseLocalizedText(row.answer_explanation, row.answer_explanation_vi, locale),
+  answerExplanationEn: row.answer_explanation,
+  answerExplanationVi: row.answer_explanation_vi || null,
   aiGradingEnabled: Boolean(row.ai_grading_enabled),
   acceptableVariants: row.acceptable_variants || [],
   audioWordId: row.audio_word_id,
@@ -84,28 +117,38 @@ const mapLessonModule = (row) => ({
   phases: row.phases || []
 });
 
-const mapDialogue = (row) => ({
+const mapDialogue = (row, locale = 'en') => ({
   id: row.id,
   lessonId: row.lesson_id,
   titleZh: row.title_zh,
   titleEn: row.title_en,
+  titleVi: row.title_vi || null,
+  title: chooseLocalizedText(row.title_en, row.title_vi, locale),
   hskLevel: Number(row.hsk_level),
   topic: row.topic,
-  lines: row.lines || [],
+  lines: (row.lines || []).map((line) => ({
+    ...line,
+    english: chooseLocalizedText(line.english || line.en || '', line.vi, locale),
+    en: line.en || line.english || '',
+    vi: line.vi || null
+  })),
   audioFullRef: row.audio_full_ref,
   wordCount: row.word_count === null || row.word_count === undefined ? null : Number(row.word_count)
 });
 
-const mapReadingPassage = (row) => ({
+const mapReadingPassage = (row, locale = 'en') => ({
   id: row.id,
   lessonId: row.lesson_id,
   titleZh: row.title_zh,
   titleEn: row.title_en,
+  titleVi: row.title_vi || null,
+  title: chooseLocalizedText(row.title_en, row.title_vi, locale),
   hskLevel: Number(row.hsk_level),
   topic: row.topic,
   contentZh: row.content_zh,
   contentPinyin: row.content_pinyin,
-  contentEn: row.content_en,
+  contentEn: chooseLocalizedText(row.content_en, row.content_vi, locale),
+  contentVi: row.content_vi || null,
   wordCount: Number(row.word_count),
   newWordIds: row.new_word_ids || [],
   grammarPointIds: row.grammar_point_ids || [],
@@ -139,6 +182,7 @@ const buildLessonFilters = ({ skill, topic, hsk_level: hskLevel, hsk } = {}) => 
 };
 
 export const getLessons = async (userId, filters = {}) => {
+  const locale = normalizeLocale(filters.locale);
   const { values, whereSql } = buildLessonFilters(filters);
   const result = await query(
     `
@@ -163,18 +207,23 @@ export const getLessons = async (userId, filters = {}) => {
   );
 
   return {
-    lessons: result.rows.map(mapLessonSummary)
+    lessons: result.rows.map((row) => mapLessonSummary(row, locale))
   };
 };
 
-export const getLessonGrammarIndex = async (userId) => {
+export const getLessonGrammarIndex = async (userId, localeInput = 'en') => {
+  const locale = normalizeLocale(localeInput);
   const result = await query(
     `
       SELECT
         gp.*,
+        gp.hsk_level AS grammar_hsk_level,
+        gp.cefr_level AS grammar_cefr_level,
         l.id AS lesson_id,
         l.title AS lesson_title,
+        l.title_vi AS lesson_title_vi,
         l.subtitle AS lesson_subtitle,
+        l.subtitle_vi AS lesson_subtitle_vi,
         l.hsk_level,
         l.cefr_level,
         l.order_num,
@@ -194,11 +243,12 @@ export const getLessonGrammarIndex = async (userId) => {
   );
 
   return {
-    grammar: result.rows.map(mapLessonGrammarEntry)
+    grammar: result.rows.map((row) => mapLessonGrammarEntry(row, locale))
   };
 };
 
-export const getLessonDetails = async (lessonId) => {
+export const getLessonDetails = async (lessonId, localeInput = 'en') => {
+  const locale = normalizeLocale(localeInput);
   const lessonResult = await query(
     `
       SELECT *
@@ -275,8 +325,12 @@ export const getLessonDetails = async (lessonId) => {
   return {
     lesson: {
       id: lesson.id,
-      title: lesson.title,
-      subtitle: lesson.subtitle,
+      title: chooseLocalizedText(lesson.title, lesson.title_vi, locale),
+      subtitle: chooseLocalizedText(lesson.subtitle, lesson.subtitle_vi, locale),
+      titleEn: lesson.title,
+      titleVi: lesson.title_vi || null,
+      subtitleEn: lesson.subtitle,
+      subtitleVi: lesson.subtitle_vi || null,
       hskLevel: Number(lesson.hsk_level),
       cefrLevel: lesson.cefr_level || 'A1',
       order: Number(lesson.order_num),
@@ -284,7 +338,11 @@ export const getLessonDetails = async (lessonId) => {
       primarySkill: lesson.primary_skill || lesson.skill,
       secondarySkills: lesson.secondary_skills || [],
       topic: lesson.topic || null,
-      learningObjectives: lesson.learning_objectives || [],
+      learningObjectives: locale === 'vi' && lesson.learning_objectives_vi?.length
+        ? lesson.learning_objectives_vi
+        : lesson.learning_objectives || [],
+      learningObjectivesEn: lesson.learning_objectives || [],
+      learningObjectivesVi: lesson.learning_objectives_vi || [],
       warmUp: lesson.warm_up || null,
       reviewSummary: lesson.review_summary || null,
       difficultyScore: lesson.difficulty_score === null || lesson.difficulty_score === undefined
@@ -293,14 +351,16 @@ export const getLessonDetails = async (lessonId) => {
       tags: lesson.tags || [],
       estimatedMinutes: Number(lesson.estimated_minutes),
       xpReward: Number(lesson.xp_reward),
-      intro: lesson.intro,
+      intro: chooseLocalizedText(lesson.intro, lesson.intro_vi, locale),
+      introEn: lesson.intro,
+      introVi: lesson.intro_vi || null,
       newWords: wordsResult.rows.map(mapWord),
-      grammar: grammarResult.rows.map(mapGrammarPoint),
+      grammar: grammarResult.rows.map((row) => mapGrammarPoint(row, locale)),
       dialogue: lesson.dialogue,
       modules: modulesResult.rows.map(mapLessonModule),
-      dialogues: dialoguesResult.rows.map(mapDialogue),
-      readingPassages: passagesResult.rows.map(mapReadingPassage),
-      exercises: exercisesResult.rows.map(mapExercise)
+      dialogues: dialoguesResult.rows.map((row) => mapDialogue(row, locale)),
+      readingPassages: passagesResult.rows.map((row) => mapReadingPassage(row, locale)),
+      exercises: exercisesResult.rows.map((row) => mapExercise(row, locale))
     }
   };
 };

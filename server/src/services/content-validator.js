@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { query as defaultQuery } from '../config/db.config.js';
 import { contentPath } from '../config/content-paths.js';
+import { auditLessonLanguage } from './content-language.service.js';
 
 const schemaPath = contentPath('schemas', 'lesson-template.schema.json');
 const HANZI_PATTERN = /[\u3400-\u9fff]+/g;
@@ -344,6 +345,8 @@ export class ContentValidator {
   grammarCheck(lesson) {
     const issues = [];
     const grammarFocus = lesson?.grammar_focus || [];
+    const targetLevel = Number(lesson?.metadata?.hsk_level || 1);
+    const targetCefr = lesson?.metadata?.cefr_level;
 
     if (!Array.isArray(grammarFocus) || grammarFocus.length === 0) {
       pushIssue(issues, 'warning', 'grammar_missing', 'Lesson has no grammar focus.');
@@ -354,9 +357,39 @@ export class ContentValidator {
       if (!Array.isArray(item?.examples) || item.examples.length === 0) {
         pushIssue(issues, 'warning', 'grammar_examples_missing', `grammar_focus[${index}] has no examples.`);
       }
+
+      if (!item?.hsk_level || !item?.cefr_level) {
+        pushIssue(
+          issues,
+          'error',
+          'grammar_level_missing',
+          `grammar_focus[${index}] must include hsk_level and cefr_level.`
+        );
+      } else if (Number(item.hsk_level) > targetLevel) {
+        pushIssue(
+          issues,
+          'error',
+          'grammar_above_lesson_level',
+          `grammar_focus[${index}] exceeds lesson HSK level.`,
+          { grammarLevel: Number(item.hsk_level), targetLevel }
+        );
+      } else if (targetCefr && item.cefr_level && item.cefr_level !== targetCefr && Number(item.hsk_level) === targetLevel) {
+        pushIssue(
+          issues,
+          'warning',
+          'grammar_cefr_mismatch',
+          `grammar_focus[${index}] CEFR level differs from the lesson CEFR level.`,
+          { grammarCefr: item.cefr_level, targetCefr }
+        );
+      }
     }
 
     return issues;
+  }
+
+  languageCheck(lesson) {
+    const audit = auditLessonLanguage(lesson);
+    return audit.issues;
   }
 
   async validateLesson(lesson, targetLevel = lesson?.metadata?.hsk_level || 1) {
@@ -369,7 +402,8 @@ export class ContentValidator {
     const issues = [
       ...issueGroups.flat(),
       ...this.lengthCheck(lesson, targetLevel),
-      ...this.grammarCheck(lesson)
+      ...this.grammarCheck(lesson),
+      ...this.languageCheck(lesson)
     ];
     const errors = issues.filter((issue) => issue.severity === 'error');
     const warnings = issues.filter((issue) => issue.severity === 'warning');

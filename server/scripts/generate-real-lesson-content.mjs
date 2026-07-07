@@ -7,6 +7,7 @@ import { hasDatabaseConfig } from '../src/config/env.config.js';
 import { ContentReviewer } from '../src/services/content-reviewer.js';
 import { ContentValidator } from '../src/services/content-validator.js';
 import { resolveContentPath } from '../src/config/content-paths.js';
+import { localizeLesson } from '../src/services/content-language.service.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -51,6 +52,7 @@ const lessonTemplateSkeleton = {
   metadata: {
     title_zh: '<Chinese title>',
     title_en: '<English title>',
+    title_vi: '<Vietnamese title>',
     hsk_level: 2,
     cefr_level: 'A1',
     primary_skill: '<primary_skill>',
@@ -61,6 +63,7 @@ const lessonTemplateSkeleton = {
     tags: ['hsk2', 'food', 'reading']
   },
   learning_objectives: ['<objective 1>', '<objective 2>'],
+  learning_objectives_vi: ['<Vietnamese objective 1>', '<Vietnamese objective 2>'],
   vocabulary_focus: [
     {
       simplified: '<Chinese word>',
@@ -73,7 +76,10 @@ const lessonTemplateSkeleton = {
     {
       pattern: '<grammar pattern>',
       explanation: '<short explanation>',
-      examples: [{ zh: '<Chinese example>', pinyin: '<pinyin>', en: '<English translation>' }]
+      explanation_vi: '<Vietnamese explanation>',
+      hsk_level: 2,
+      cefr_level: 'A1',
+      examples: [{ zh: '<Chinese example>', pinyin: '<pinyin>', en: '<English translation>', vi: '<Vietnamese translation>' }]
     }
   ],
   warm_up: {
@@ -100,15 +106,20 @@ const lessonTemplateSkeleton = {
         skill: '<exact primary_skill>',
         bloom_level: 'understand',
         prompt: '<question>',
+        prompt_vi: '<Vietnamese question>',
         options: ['<option A>', '<option B>', '<option C>'],
+        options_vi: ['<Vietnamese option A>', '<Vietnamese option B>', '<Vietnamese option C>'],
         correct_answer: '<correct option>',
+        correct_answer_vi: '<Vietnamese correct option>',
         acceptable_variants: ['<correct option>'],
-        explanation: '<why this is correct>'
+        explanation: '<why this is correct>',
+        explanation_vi: '<Vietnamese explanation>'
       }
     ]
   },
   review: {
     key_takeaways: ['<takeaway>'],
+    key_takeaways_vi: ['<Vietnamese takeaway>'],
     srs_inject_word_ids: []
   }
 };
@@ -189,6 +200,8 @@ Hard requirements:
 - Keep Chinese content original. Do not copy textbook passages, exam items, paid courses, or existing online content.
 - For HSK 1-2, keep total Chinese lesson text around 30-80 Chinese characters.
 - Every exercise must include kind, skill, bloom_level, prompt, correct_answer, acceptable_variants, and explanation.
+- Include Vietnamese fields next to English content: title_vi, learning_objectives_vi, explanation_vi, prompt_vi, options_vi, correct_answer_vi, key_takeaways_vi, and example vi.
+- Every grammar_focus item must include hsk_level and cefr_level that do not exceed the lesson level.
 
 Return this shape with real values:
 ${JSON.stringify(exactSkeleton, null, 2)}
@@ -425,7 +438,7 @@ ${feedback ? `Previous issues to fix before returning the next JSON:\n${feedback
         prompt,
         temperature: 0.35
       });
-      const lesson = parseLesson(generation.json);
+      const lesson = localizeLesson(parseLesson(generation.json));
       const validation = withProductionSpecValidation(await validator.validateLesson(lesson, level), lesson);
       let aiReview = null;
 

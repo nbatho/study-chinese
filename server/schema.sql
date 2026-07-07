@@ -196,6 +196,10 @@ ALTER TABLE lessons ADD COLUMN IF NOT EXISTS warm_up JSONB;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS review_summary JSONB;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS difficulty_score DECIMAL(3,1) DEFAULT 1.0;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS title_vi VARCHAR(150);
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS subtitle_vi VARCHAR(150);
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS intro_vi TEXT;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS learning_objectives_vi JSONB DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS word_topics (
   id VARCHAR(50) PRIMARY KEY,
@@ -232,6 +236,12 @@ CREATE TABLE IF NOT EXISTS grammar_points (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE grammar_points ADD COLUMN IF NOT EXISTS hsk_level INT;
+ALTER TABLE grammar_points ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5)
+  CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2'));
+ALTER TABLE grammar_points ADD COLUMN IF NOT EXISTS explanation_vi TEXT;
+ALTER TABLE grammar_points ADD COLUMN IF NOT EXISTS tips_vi TEXT[] NOT NULL DEFAULT '{}';
+
 CREATE TABLE IF NOT EXISTS exercises (
   id VARCHAR(50) PRIMARY KEY,
   lesson_id VARCHAR(50) NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -258,6 +268,10 @@ ALTER TABLE exercises ADD COLUMN IF NOT EXISTS bloom_level VARCHAR(20)
   CHECK (bloom_level IN ('remember', 'understand', 'apply', 'analyze', 'evaluate', 'create'));
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS ai_grading_enabled BOOLEAN DEFAULT false;
 ALTER TABLE exercises ADD COLUMN IF NOT EXISTS acceptable_variants JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS prompt_vi TEXT;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS options_vi JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS correct_text_vi TEXT;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS answer_explanation_vi TEXT;
 
 CREATE TABLE IF NOT EXISTS lesson_modules (
   id VARCHAR(80) PRIMARY KEY,
@@ -286,6 +300,8 @@ CREATE TABLE IF NOT EXISTS dialogues (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE dialogues ADD COLUMN IF NOT EXISTS title_vi VARCHAR(200);
+
 CREATE TABLE IF NOT EXISTS reading_passages (
   id VARCHAR(80) PRIMARY KEY,
   lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
@@ -304,6 +320,9 @@ CREATE TABLE IF NOT EXISTS reading_passages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE reading_passages ADD COLUMN IF NOT EXISTS title_vi VARCHAR(200);
+ALTER TABLE reading_passages ADD COLUMN IF NOT EXISTS content_vi TEXT;
 
 CREATE TABLE IF NOT EXISTS content_generation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -514,6 +533,13 @@ CREATE TABLE IF NOT EXISTS grammar_library (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE grammar_library ADD COLUMN IF NOT EXISTS hsk_level INT;
+ALTER TABLE grammar_library ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5)
+  CHECK (cefr_level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2'));
+ALTER TABLE grammar_library ADD COLUMN IF NOT EXISTS title_vi VARCHAR(150);
+ALTER TABLE grammar_library ADD COLUMN IF NOT EXISTS summary_vi TEXT;
+ALTER TABLE grammar_library ADD COLUMN IF NOT EXISTS source_lesson_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS practice_minimal_pairs (
   id VARCHAR(50) PRIMARY KEY,
@@ -764,6 +790,7 @@ CREATE INDEX IF NOT EXISTS idx_lessons_skill_topic ON lessons (primary_skill, to
 CREATE INDEX IF NOT EXISTS idx_placement_questions_order ON placement_questions (section, difficulty, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lesson_words_word ON lesson_words (word_id);
 CREATE INDEX IF NOT EXISTS idx_grammar_points_lesson_order ON grammar_points (lesson_id, order_num);
+CREATE INDEX IF NOT EXISTS idx_grammar_points_level ON grammar_points (hsk_level, cefr_level, lesson_id);
 CREATE INDEX IF NOT EXISTS idx_exercises_lesson_order ON exercises (lesson_id, order_num);
 CREATE INDEX IF NOT EXISTS idx_lesson_modules_lesson ON lesson_modules (lesson_id, order_num);
 CREATE INDEX IF NOT EXISTS idx_dialogues_lesson ON dialogues (lesson_id) WHERE is_active = true;
@@ -798,5 +825,6 @@ CREATE INDEX IF NOT EXISTS idx_course_issue_reports_status_created ON course_iss
 CREATE INDEX IF NOT EXISTS idx_course_issue_reports_lesson ON course_issue_reports (lesson_id);
 CREATE INDEX IF NOT EXISTS idx_practice_minimal_pairs_order ON practice_minimal_pairs (order_num, id) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_practice_hanzi_strokes_order ON practice_hanzi_strokes (order_num, id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_grammar_library_level ON grammar_library (hsk_level, cefr_level) WHERE is_active = true;
 
 COMMIT;

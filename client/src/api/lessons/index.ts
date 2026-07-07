@@ -11,11 +11,13 @@ import type {
 } from './types';
 
 export const lessonsApi = {
-    list: () => apiRequest<LessonsResponse>(beApi.get('lessons')),
+    list: (locale = 'en') => apiRequest<LessonsResponse>(beApi.get('lessons', { params: { locale } })),
 
-    grammarIndex: () => apiRequest<LessonGrammarIndexResponse>(beApi.get('lessons/grammar')),
+    grammarIndex: (locale = 'en') =>
+        apiRequest<LessonGrammarIndexResponse>(beApi.get('lessons/grammar', { params: { locale } })),
 
-    detail: (lessonId: string) => apiRequest<LessonDetailResponse>(beApi.get(`lessons/${lessonId}`)),
+    detail: (lessonId: string, locale = 'en') =>
+        apiRequest<LessonDetailResponse>(beApi.get(`lessons/${lessonId}`, { params: { locale } })),
 
     complete: (lessonId: string, payload: CompleteLessonPayload) =>
         apiRequest<CompleteLessonResponse>(beApi.post(`lessons/${lessonId}/complete`, payload)),

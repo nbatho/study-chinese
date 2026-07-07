@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { ContentReviewer } from '../src/services/content-reviewer.js';
 import { ContentValidator } from '../src/services/content-validator.js';
 import { repoRoot, resolveContentPath } from '../src/config/content-paths.js';
+import { localizeLesson } from '../src/services/content-language.service.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -62,7 +63,7 @@ const run = async () => {
   await mkdir(outputDir, { recursive: true });
 
   for (const lessonPath of lessonFiles) {
-    const lesson = JSON.parse(await readFile(lessonPath, 'utf8'));
+    const lesson = localizeLesson(JSON.parse(await readFile(lessonPath, 'utf8')));
     const targetLevel = Number(lesson?.metadata?.hsk_level || 1);
     const validation = await validator.validateLesson(lesson, targetLevel);
     const aiReview = validation.ok

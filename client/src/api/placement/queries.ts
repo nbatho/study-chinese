@@ -18,7 +18,7 @@ export const useSubmitPlacementMutation = () => {
         mutationFn: (payload: PlacementSubmitPayload) => unwrapApiData(placementApi.submitResult(payload)),
         onSuccess: (data) => {
             queryClient.setQueryData(queryKeys.users.profile, data);
-            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list });
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
         },
     });

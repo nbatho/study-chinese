@@ -17,6 +17,9 @@
     "lessons:generate": "node scripts/generate-real-lesson-content.mjs --save",
     "lessons:generate:one": "node scripts/generate-real-lesson-content.mjs --save",
     "lessons:review": "node scripts/review-lesson-content.mjs",
+    "content:audit": "node scripts/content-audit.mjs",
+    "content:agent": "node scripts/content-agent.mjs",
+    "content:import": "node scripts/content-import.mjs",
     "test": "node --test",
     "test:integration": "node --test test/integration/*.test.js"
   },

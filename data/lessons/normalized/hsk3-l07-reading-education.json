@@ -1,0 +1,137 @@
+{
+  "lesson_id": "hsk3-l07-reading-education",
+  "metadata": {
+    "title_zh": "今天的中文课",
+    "title_en": "Today's Chinese Class",
+    "hsk_level": 3,
+    "cefr_level": "A2",
+    "primary_skill": "reading",
+    "secondary_skills": [
+      "writing"
+    ],
+    "topic": "education",
+    "estimated_minutes": 12,
+    "xp_reward": 35,
+    "tags": [
+      "education",
+      "reading",
+      "hsk3"
+    ],
+    "title_vi": "Today's Chinese Class"
+  },
+  "learning_objectives": [
+    "Read a short paragraph about class.",
+    "Find the teacher advice in a passage."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "中文课",
+      "pinyin": "zhōng wén kè",
+      "english": "Chinese class",
+      "is_new": true
+    },
+    {
+      "simplified": "老师",
+      "pinyin": "lǎo shī",
+      "english": "teacher",
+      "is_new": true
+    },
+    {
+      "simplified": "多",
+      "pinyin": "duō",
+      "english": "more",
+      "is_new": true
+    },
+    {
+      "simplified": "练习",
+      "pinyin": "liàn xí",
+      "english": "to practice",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "要 + verb",
+      "explanation": "Use 要 before a verb to express need or intention.",
+      "examples": [
+        {
+          "zh": "我要多练习。",
+          "pinyin": "Wǒ yào duō liàn xí.",
+          "en": "I need to practice more.",
+          "simplified": "我要多练习。",
+          "english": "I need to practice more.",
+          "vi": "I need to practice more."
+        }
+      ],
+      "hsk_level": 3,
+      "cefr_level": "A2",
+      "explanation_vi": "Use 要 before a verb to express need or intention.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "中文课",
+      "老师",
+      "练习"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "reading",
+      "phases": [
+        {
+          "type": "reading_passage",
+          "content_zh": "我们今天有中文课。老师说要多听、多说，还要每天练习新句子。",
+          "content_pinyin": "Wǒ men jīn tiān yǒu Zhōng wén kè. Lǎo shī shuō yào duō tīng, duō shuō, hái yào měi tiān liàn xí xīn jù zi.",
+          "content_en": "We have Chinese class today. The teacher says we should listen more, speak more, and practice new sentences every day.",
+          "content_vi": "We have Chinese class today. The teacher says we should listen more, speak more, and practice new sentences every day.",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk3-l07-ex1",
+        "kind": "multiple_choice",
+        "skill": "reading",
+        "bloom_level": "understand",
+        "prompt": "What does the teacher suggest?",
+        "options": [
+          "listen and speak more",
+          "sleep earlier",
+          "buy a book"
+        ],
+        "correct_answer": "listen and speak more",
+        "acceptable_variants": [
+          "listen and speak more"
+        ],
+        "explanation": "多听、多说 means listen more and speak more.",
+        "prompt_vi": "What does the teacher suggest?",
+        "options_vi": [
+          "listen and speak more",
+          "sleep earlier",
+          "buy a book"
+        ],
+        "correct_answer_vi": "listen and speak more",
+        "explanation_vi": "多听、多说 means listen more and speak more."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "Use 要 before a verb for need or intention."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "Use 要 before a verb for need or intention."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Read a short paragraph about class.",
+    "Find the teacher advice in a passage."
+  ]
+}

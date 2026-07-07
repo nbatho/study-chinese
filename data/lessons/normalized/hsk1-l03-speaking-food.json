@@ -1,0 +1,131 @@
+{
+  "lesson_id": "hsk1-l03-speaking-food",
+  "metadata": {
+    "title_zh": "今天吃什么？",
+    "title_en": "What Are We Eating Today?",
+    "hsk_level": 1,
+    "cefr_level": "A1",
+    "primary_skill": "speaking",
+    "secondary_skills": [],
+    "topic": "food",
+    "estimated_minutes": 8,
+    "xp_reward": 25,
+    "tags": [
+      "food",
+      "speaking",
+      "hsk1"
+    ],
+    "title_vi": "What Are We Eating Today?"
+  },
+  "learning_objectives": [
+    "Ask what someone eats.",
+    "Answer with a simple food word."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "今天",
+      "pinyin": "jīn tiān",
+      "english": "today",
+      "is_new": true
+    },
+    {
+      "simplified": "吃",
+      "pinyin": "chī",
+      "english": "to eat",
+      "is_new": true
+    },
+    {
+      "simplified": "米饭",
+      "pinyin": "mǐ fàn",
+      "english": "rice",
+      "is_new": true
+    },
+    {
+      "simplified": "喝",
+      "pinyin": "hē",
+      "english": "to drink",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "...吃什么？",
+      "explanation": "Ask what someone eats.",
+      "examples": [
+        {
+          "zh": "你吃什么？",
+          "pinyin": "Nǐ chī shén me?",
+          "en": "What do you eat?",
+          "simplified": "你吃什么？",
+          "english": "What do you eat?",
+          "vi": "What do you eat?"
+        }
+      ],
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "explanation_vi": "Ask what someone eats.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "吃",
+      "喝",
+      "米饭"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "speaking",
+      "phases": [
+        {
+          "type": "shadowing",
+          "content_zh": "今天你吃什么？我吃米饭。",
+          "content_pinyin": "Jīn tiān nǐ chī shén me? Wǒ chī mǐ fàn.",
+          "content_en": "What are you eating today? I am eating rice.",
+          "content_vi": "What are you eating today? I am eating rice.",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk1-l03-ex1",
+        "kind": "word_order",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Arrange the words: I eat rice.",
+        "tokens": [
+          "我",
+          "吃",
+          "米饭"
+        ],
+        "correct_answer": "我 吃 米饭",
+        "acceptable_variants": [
+          "我吃米饭"
+        ],
+        "explanation": "Chinese word order is subject + verb + object.",
+        "prompt_vi": "Arrange the words: I eat rice.",
+        "options_vi": [],
+        "correct_answer_vi": "我 吃 米饭",
+        "explanation_vi": "Chinese word order is subject + verb + object."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "Use 吃 for eating and 喝 for drinking."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "Use 吃 for eating and 喝 for drinking."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Ask what someone eats.",
+    "Answer with a simple food word."
+  ]
+}

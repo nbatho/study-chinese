@@ -1,0 +1,157 @@
+{
+  "lesson_id": "hsk3-l08-listening-health",
+  "metadata": {
+    "title_zh": "你怎么了？",
+    "title_en": "What Happened?",
+    "hsk_level": 3,
+    "cefr_level": "A2",
+    "primary_skill": "listening",
+    "secondary_skills": [
+      "speaking"
+    ],
+    "topic": "health",
+    "estimated_minutes": 12,
+    "xp_reward": 35,
+    "tags": [
+      "health",
+      "listening",
+      "hsk3"
+    ],
+    "title_vi": "What Happened?"
+  },
+  "learning_objectives": [
+    "Understand a simple health complaint.",
+    "Choose an appropriate response."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "怎么了",
+      "pinyin": "zěn me le",
+      "english": "what happened",
+      "is_new": true
+    },
+    {
+      "simplified": "不舒服",
+      "pinyin": "bù shū fu",
+      "english": "unwell",
+      "is_new": true
+    },
+    {
+      "simplified": "医生",
+      "pinyin": "yī shēng",
+      "english": "doctor",
+      "is_new": true
+    },
+    {
+      "simplified": "休息",
+      "pinyin": "xiū xi",
+      "english": "to rest",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "有点儿 + adjective",
+      "explanation": "Use this to soften a description.",
+      "examples": [
+        {
+          "zh": "我有点儿不舒服。",
+          "pinyin": "Wǒ yǒu diǎnr bù shū fu.",
+          "en": "I feel a little unwell.",
+          "simplified": "我有点儿不舒服。",
+          "english": "I feel a little unwell.",
+          "vi": "I feel a little unwell."
+        }
+      ],
+      "hsk_level": 3,
+      "cefr_level": "A2",
+      "explanation_vi": "Use this to soften a description.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "不舒服",
+      "医生",
+      "休息"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "listening",
+      "phases": [
+        {
+          "type": "dialogue_comprehension",
+          "dialogue": [
+            {
+              "speaker": "A",
+              "zh": "你怎么了？",
+              "pinyin": "Nǐ zěn me le?",
+              "en": "What happened?",
+              "vi": "What happened?"
+            },
+            {
+              "speaker": "B",
+              "zh": "我有点儿不舒服。",
+              "pinyin": "Wǒ yǒu diǎnr bù shū fu.",
+              "en": "I feel a little unwell.",
+              "vi": "I feel a little unwell."
+            },
+            {
+              "speaker": "A",
+              "zh": "你要多休息。",
+              "pinyin": "Nǐ yào duō xiū xi.",
+              "en": "You should rest more.",
+              "vi": "You should rest more."
+            }
+          ],
+          "content_vi": "",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk3-l08-ex1",
+        "kind": "multiple_choice",
+        "skill": "listening",
+        "bloom_level": "understand",
+        "prompt": "How does B feel?",
+        "options": [
+          "a little unwell",
+          "very happy",
+          "very busy"
+        ],
+        "correct_answer": "a little unwell",
+        "acceptable_variants": [
+          "a little unwell"
+        ],
+        "explanation": "有点儿不舒服 means a little unwell.",
+        "prompt_vi": "How does B feel?",
+        "options_vi": [
+          "a little unwell",
+          "very happy",
+          "very busy"
+        ],
+        "correct_answer_vi": "a little unwell",
+        "explanation_vi": "有点儿不舒服 means a little unwell."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "你怎么了？ asks what happened."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "你怎么了？ asks what happened."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Understand a simple health complaint.",
+    "Choose an appropriate response."
+  ]
+}

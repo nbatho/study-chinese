@@ -10,9 +10,9 @@ export const queryKeys = {
         shop: ['users', 'shop'] as const,
     },
     lessons: {
-        list: ['lessons'] as const,
-        grammar: ['lessons', 'grammar'] as const,
-        detail: (lessonId: string) => ['lessons', lessonId] as const,
+        list: (locale = 'en') => ['lessons', locale] as const,
+        grammar: (locale = 'en') => ['lessons', 'grammar', locale] as const,
+        detail: (lessonId: string, locale = 'en') => ['lessons', lessonId, locale] as const,
     },
     placement: {
         questions: ['placement', 'questions'] as const,

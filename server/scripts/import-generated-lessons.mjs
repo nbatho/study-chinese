@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { resolveExistingPath } from '../src/config/content-paths.js';
+import { localizeLesson, normalizeGrammarExample } from '../src/services/content-language.service.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -36,6 +37,21 @@ const KIND_MAP = {
 
 const toJson = (value) => JSON.stringify(value ?? null);
 const toJsonArray = (value) => JSON.stringify(Array.isArray(value) ? value : []);
+const NON_LESSON_JSON_FILES = new Set([
+  'manifest.json',
+  'validation-report.json',
+  'language-audit-report.json',
+  'grammar-sync-report.json',
+  'agent-review-report.json',
+  'ai-review-report.json'
+]);
+
+const isLessonJson = (file) =>
+  file.endsWith('.json') &&
+  !file.endsWith('.validation.json') &&
+  !file.endsWith('.review.json') &&
+  !file.endsWith('.release.json') &&
+  !NON_LESSON_JSON_FILES.has(file);
 
 const slugify = (value, fallback = 'item') => {
   const slug = String(value || '')
@@ -77,12 +93,19 @@ const extractOrder = (lessonId, fallback) => {
 };
 
 const titleForLesson = (lesson) => lesson?.metadata?.title_en || lesson?.metadata?.title_zh || lesson.lesson_id;
+const titleViForLesson = (lesson) => lesson?.metadata?.title_vi || titleForLesson(lesson);
 
 const subtitleForLesson = (lesson) => {
   const titleZh = lesson?.metadata?.title_zh;
   const topic = lesson?.metadata?.topic;
   const skill = lesson?.metadata?.primary_skill;
   return [titleZh, topic, skill].filter(Boolean).join(' · ') || lesson.lesson_id;
+};
+
+const subtitleViForLesson = (lesson) => {
+  const topic = lesson?.metadata?.topic;
+  const skill = lesson?.metadata?.primary_skill;
+  return [lesson?.metadata?.title_vi, topic, skill].filter(Boolean).join(' - ') || subtitleForLesson(lesson);
 };
 
 const introForLesson = (lesson) => {
@@ -92,6 +115,15 @@ const introForLesson = (lesson) => {
   }
 
   return `Practice ${lesson?.metadata?.primary_skill || 'Chinese'} with ${titleForLesson(lesson)}.`;
+};
+
+const introViForLesson = (lesson) => {
+  const objectives = Array.isArray(lesson.learning_objectives_vi) ? lesson.learning_objectives_vi : [];
+  if (objectives.length > 0) {
+    return objectives.join(' ');
+  }
+
+  return introForLesson(lesson);
 };
 
 const firstDialoguePhase = (lesson) => {
@@ -123,7 +155,8 @@ const normalizeLegacyDialogue = (lesson) => {
       simplified: line.zh || line.simplified || '',
       traditional: line.traditional || line.zh || line.simplified || '',
       pinyin: line.pinyin || '',
-      english: line.en || line.english || ''
+      english: line.en || line.english || '',
+      vi: line.vi || line.en || line.english || ''
     }))
   };
 };
@@ -142,7 +175,8 @@ const normalizeDialogueRows = (lesson) => {
         speaker: line.speaker || (index % 2 === 0 ? 'A' : 'B'),
         simplified: line.zh || line.simplified || '',
         pinyin: line.pinyin || '',
-        english: line.en || line.english || ''
+        english: line.en || line.english || '',
+        vi: line.vi || line.en || line.english || ''
       }));
 
       rows.push({
@@ -150,6 +184,7 @@ const normalizeDialogueRows = (lesson) => {
         lessonId: lesson.lesson_id,
         titleZh: lesson.metadata?.title_zh || null,
         titleEn: lesson.metadata?.title_en || null,
+        titleVi: lesson.metadata?.title_vi || null,
         hskLevel: Number(lesson.metadata?.hsk_level || 1),
         topic: lesson.metadata?.topic || null,
         lines,
@@ -176,11 +211,13 @@ const normalizePassageRows = (lesson) => {
         lessonId: lesson.lesson_id,
         titleZh: lesson.metadata?.title_zh || null,
         titleEn: lesson.metadata?.title_en || null,
+        titleVi: lesson.metadata?.title_vi || null,
         hskLevel: Number(lesson.metadata?.hsk_level || 1),
         topic: lesson.metadata?.topic || null,
         contentZh,
         contentPinyin: phase.content_pinyin || phase.model_dialogue_pinyin || null,
         contentEn: phase.content_en || phase.model_dialogue_en || null,
+        contentVi: phase.content_vi || phase.model_dialogue_vi || phase.content_en || phase.model_dialogue_en || null,
         wordCount: [...String(contentZh)].filter((char) => /\S/.test(char)).length,
         newWordIds: lesson.review?.srs_inject_word_ids || [],
         grammarPointIds: [],
@@ -212,6 +249,10 @@ const normalizeExercise = (lesson, exercise, index) => {
     correctIndex: correctIndex >= 0 ? correctIndex : null,
     correctText: String(correctAnswer),
     answerExplanation: exercise.explanation || exercise.answer_explanation || null,
+    promptVi: exercise.prompt_vi || null,
+    optionsVi: exercise.options_vi || [],
+    correctTextVi: exercise.correct_answer_vi || exercise.correctTextVi || null,
+    answerExplanationVi: exercise.explanation_vi || exercise.answer_explanation_vi || null,
     acceptableVariants: exercise.acceptable_variants || [],
     order: index + 1
   };
@@ -233,7 +274,7 @@ const validateLesson = (lesson, filename) => {
 const loadLessons = async () => {
   const inputDir = await resolveExistingPath(inputDirArg, ['lessons', 'generated']);
   const files = (await readdir(inputDir))
-    .filter((file) => file.endsWith('.json') && !['manifest.json', 'validation-report.json'].includes(file))
+    .filter(isLessonJson)
     .sort();
   const lessons = [];
 
@@ -335,6 +376,7 @@ const ensureWord = async (client, item, lesson) => {
 };
 
 const importLesson = async (client, lesson, orderFallback, releaseId) => {
+  lesson = localizeLesson(lesson);
   const metadata = lesson.metadata || {};
   const hskLevel = Number(metadata.hsk_level || 1);
   const legacyDialogue = normalizeLegacyDialogue(lesson);
@@ -348,12 +390,14 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         id, release_id, title, subtitle, hsk_level, cefr_level, order_num, skill,
         primary_skill, secondary_skills, topic, learning_objectives, warm_up,
         review_summary, tags, estimated_minutes, xp_reward, intro, dialogue,
+        title_vi, subtitle_vi, intro_vi, learning_objectives_vi,
         content_version, is_active
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8,
         $8, $9::varchar(20)[], $10, $11::jsonb, $12::jsonb,
         $13::jsonb, $14::text[], $15, $16, $17, $18::jsonb,
+        $19, $20, $21, $22::jsonb,
         1, true
       )
       ON CONFLICT (id)
@@ -376,6 +420,10 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         xp_reward = EXCLUDED.xp_reward,
         intro = EXCLUDED.intro,
         dialogue = EXCLUDED.dialogue,
+        title_vi = EXCLUDED.title_vi,
+        subtitle_vi = EXCLUDED.subtitle_vi,
+        intro_vi = EXCLUDED.intro_vi,
+        learning_objectives_vi = EXCLUDED.learning_objectives_vi,
         content_version = lessons.content_version + 1,
         is_active = true,
         updated_at = now()
@@ -398,7 +446,11 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
       Number(metadata.estimated_minutes || 8),
       Number(metadata.xp_reward || 20),
       introForLesson(lesson),
-      toJson(legacyDialogue)
+      toJson(legacyDialogue),
+      titleViForLesson(lesson),
+      subtitleViForLesson(lesson),
+      introViForLesson(lesson),
+      toJsonArray(lesson.learning_objectives_vi)
     ]
   );
 
@@ -424,14 +476,21 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
   for (const [index, grammar] of (lesson.grammar_focus || []).entries()) {
     await client.query(
       `
-        INSERT INTO grammar_points (id, lesson_id, pattern, explanation, tips, examples, order_num)
-        VALUES ($1, $2, $3, $4, $5::text[], $6::jsonb, $7)
+        INSERT INTO grammar_points (
+          id, lesson_id, pattern, explanation, explanation_vi, tips, tips_vi,
+          examples, hsk_level, cefr_level, order_num
+        )
+        VALUES ($1, $2, $3, $4, $5, $6::text[], $7::text[], $8::jsonb, $9, $10, $11)
         ON CONFLICT (id)
         DO UPDATE SET
           pattern = EXCLUDED.pattern,
           explanation = EXCLUDED.explanation,
+          explanation_vi = EXCLUDED.explanation_vi,
           tips = EXCLUDED.tips,
+          tips_vi = EXCLUDED.tips_vi,
           examples = EXCLUDED.examples,
+          hsk_level = EXCLUDED.hsk_level,
+          cefr_level = EXCLUDED.cefr_level,
           order_num = EXCLUDED.order_num,
           updated_at = now()
       `,
@@ -440,8 +499,12 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         lesson.lesson_id,
         grammar.pattern || `Grammar ${index + 1}`,
         grammar.explanation || '',
+        grammar.explanation_vi || null,
         grammar.tips || [],
-        toJsonArray(grammar.examples),
+        grammar.tips_vi || [],
+        toJsonArray((grammar.examples || []).map(normalizeGrammarExample)),
+        Number(grammar.hsk_level || hskLevel),
+        grammar.cefr_level || metadata.cefr_level || CEFR_BY_HSK.get(hskLevel) || 'A1',
         index + 1
       ]
     );
@@ -479,13 +542,15 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
           id, lesson_id, kind, skill, bloom_level, prompt, prompt_hanzi,
           prompt_pinyin, prompt_english, stimulus, options, correct_index,
           correct_text, answer_explanation, ai_grading_enabled,
-          acceptable_variants, order_num
+          acceptable_variants, prompt_vi, options_vi, correct_text_vi,
+          answer_explanation_vi, order_num
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7,
           $8, $9, $10::jsonb, $11::jsonb, $12,
           $13, $14, false,
-          $15::jsonb, $16
+          $15::jsonb, $16, $17::jsonb, $18,
+          $19, $20
         )
         ON CONFLICT (id)
         DO UPDATE SET
@@ -502,6 +567,10 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
           correct_text = EXCLUDED.correct_text,
           answer_explanation = EXCLUDED.answer_explanation,
           acceptable_variants = EXCLUDED.acceptable_variants,
+          prompt_vi = EXCLUDED.prompt_vi,
+          options_vi = EXCLUDED.options_vi,
+          correct_text_vi = EXCLUDED.correct_text_vi,
+          answer_explanation_vi = EXCLUDED.answer_explanation_vi,
           order_num = EXCLUDED.order_num,
           updated_at = now()
       `,
@@ -521,6 +590,10 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         exercise.correctText,
         exercise.answerExplanation,
         toJsonArray(exercise.acceptableVariants),
+        exercise.promptVi,
+        toJsonArray(exercise.optionsVi),
+        exercise.correctTextVi,
+        exercise.answerExplanationVi,
         exercise.order
       ]
     );
@@ -532,9 +605,9 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
       `
         INSERT INTO dialogues (
           id, lesson_id, title_zh, title_en, hsk_level, topic, lines,
-          word_count, is_active
+          word_count, title_vi, is_active
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, true)
         ON CONFLICT (id)
         DO UPDATE SET
           title_zh = EXCLUDED.title_zh,
@@ -543,6 +616,7 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
           topic = EXCLUDED.topic,
           lines = EXCLUDED.lines,
           word_count = EXCLUDED.word_count,
+          title_vi = EXCLUDED.title_vi,
           is_active = true,
           updated_at = now()
       `,
@@ -554,7 +628,8 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         dialogue.hskLevel,
         dialogue.topic,
         toJsonArray(dialogue.lines),
-        dialogue.wordCount
+        dialogue.wordCount,
+        dialogue.titleVi
       ]
     );
   }
@@ -566,12 +641,12 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         INSERT INTO reading_passages (
           id, lesson_id, title_zh, title_en, hsk_level, topic,
           content_zh, content_pinyin, content_en, word_count,
-          new_word_ids, grammar_point_ids, questions, is_active
+          new_word_ids, grammar_point_ids, questions, title_vi, content_vi, is_active
         )
         VALUES (
           $1, $2, $3, $4, $5, $6,
           $7, $8, $9, $10,
-          $11::jsonb, $12::jsonb, $13::jsonb, true
+          $11::jsonb, $12::jsonb, $13::jsonb, $14, $15, true
         )
         ON CONFLICT (id)
         DO UPDATE SET
@@ -586,6 +661,8 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
           new_word_ids = EXCLUDED.new_word_ids,
           grammar_point_ids = EXCLUDED.grammar_point_ids,
           questions = EXCLUDED.questions,
+          title_vi = EXCLUDED.title_vi,
+          content_vi = EXCLUDED.content_vi,
           is_active = true,
           updated_at = now()
       `,
@@ -602,7 +679,9 @@ const importLesson = async (client, lesson, orderFallback, releaseId) => {
         passage.wordCount,
         toJsonArray(passage.newWordIds),
         toJsonArray(passage.grammarPointIds),
-        toJsonArray(passage.questions)
+        toJsonArray(passage.questions),
+        passage.titleVi,
+        passage.contentVi
       ]
     );
   }

@@ -6,6 +6,10 @@ export interface LessonSummary {
     id: string;
     title: string;
     subtitle: string;
+    titleEn?: string;
+    titleVi?: string | null;
+    subtitleEn?: string;
+    subtitleVi?: string | null;
     hskLevel: number;
     cefrLevel: CefrLevel;
     order: number;
@@ -20,17 +24,30 @@ export interface LessonSummary {
 
 export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'completedAt' | 'bestAccuracy' | 'attempts'> {
     intro: string;
+    introEn?: string;
+    introVi?: string | null;
+    learningObjectives?: string[];
+    learningObjectivesEn?: string[];
+    learningObjectivesVi?: string[];
     newWords: Word[];
     grammar: Array<{
         id: string;
         pattern: string;
         explanation: string;
+        explanationEn?: string;
+        explanationVi?: string | null;
         tips: string[];
+        tipsEn?: string[];
+        tipsVi?: string[];
+        hskLevel?: number | null;
+        cefrLevel?: CefrLevel | null;
         examples: Array<{
             simplified: string;
             traditional?: string;
             pinyin: string;
             english: string;
+            en?: string;
+            vi?: string | null;
         }>;
     }>;
     dialogue?: {
@@ -51,6 +68,8 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
         id: string;
         kind: string;
         prompt: string;
+        promptEn?: string;
+        promptVi?: string | null;
         promptHanzi?: string;
         promptPinyin?: string;
         promptEnglish?: string;
@@ -70,9 +89,15 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
             }>;
         };
         options?: string[];
+        optionsEn?: string[];
+        optionsVi?: string[];
         correctIndex?: number;
         correctText: string;
+        correctTextEn?: string;
+        correctTextVi?: string | null;
         answerExplanation?: string | null;
+        answerExplanationEn?: string | null;
+        answerExplanationVi?: string | null;
         audioWordId?: string;
         tone?: number;
     }>;
@@ -90,12 +115,20 @@ export interface LessonGrammarEntry {
     id: string;
     pattern: string;
     explanation: string;
+    explanationEn?: string;
+    explanationVi?: string | null;
     tips: string[];
+    tipsEn?: string[];
+    tipsVi?: string[];
+    hskLevel?: number | null;
+    cefrLevel?: CefrLevel | null;
     examples: Array<{
         simplified: string;
         traditional?: string;
         pinyin: string;
         english: string;
+        en?: string;
+        vi?: string | null;
     }>;
     lesson: Pick<LessonSummary, 'id' | 'title' | 'subtitle' | 'hskLevel' | 'cefrLevel' | 'order' | 'skill' | 'completedAt' | 'bestAccuracy' | 'attempts'>;
 }

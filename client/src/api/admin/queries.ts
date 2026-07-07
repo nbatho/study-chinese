@@ -54,7 +54,7 @@ export const useAdminLessonMutation = () => {
             id ? unwrapApiData(adminApi.updateLesson(id, payload)) : unwrapApiData(adminApi.createLesson(payload)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list });
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.admin.summary });
         },
     });
@@ -67,7 +67,7 @@ export const useDeleteAdminLessonMutation = () => {
         mutationFn: (lessonId: string) => unwrapApiData(adminApi.deleteLesson(lessonId)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'lessons'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.list });
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.admin.summary });
         },
     });

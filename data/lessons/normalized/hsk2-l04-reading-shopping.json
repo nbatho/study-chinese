@@ -1,0 +1,137 @@
+{
+  "lesson_id": "hsk2-l04-reading-shopping",
+  "metadata": {
+    "title_zh": "多少钱？",
+    "title_en": "How Much Is It?",
+    "hsk_level": 2,
+    "cefr_level": "A1",
+    "primary_skill": "reading",
+    "secondary_skills": [
+      "writing"
+    ],
+    "topic": "shopping",
+    "estimated_minutes": 10,
+    "xp_reward": 30,
+    "tags": [
+      "shopping",
+      "reading",
+      "hsk2"
+    ],
+    "title_vi": "How Much Is It?"
+  },
+  "learning_objectives": [
+    "Read a short shopping exchange.",
+    "Ask and answer prices."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "这个",
+      "pinyin": "zhè ge",
+      "english": "this one",
+      "is_new": true
+    },
+    {
+      "simplified": "多少",
+      "pinyin": "duō shao",
+      "english": "how much",
+      "is_new": true
+    },
+    {
+      "simplified": "钱",
+      "pinyin": "qián",
+      "english": "money",
+      "is_new": true
+    },
+    {
+      "simplified": "贵",
+      "pinyin": "guì",
+      "english": "expensive",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "...多少钱？",
+      "explanation": "Ask for a price.",
+      "examples": [
+        {
+          "zh": "这个多少钱？",
+          "pinyin": "Zhè ge duō shao qián?",
+          "en": "How much is this?",
+          "simplified": "这个多少钱？",
+          "english": "How much is this?",
+          "vi": "How much is this?"
+        }
+      ],
+      "hsk_level": 2,
+      "cefr_level": "A1",
+      "explanation_vi": "Ask for a price.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "多少",
+      "钱",
+      "贵"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "reading",
+      "phases": [
+        {
+          "type": "short_passage",
+          "content_zh": "这个杯子多少钱？二十块。太贵了！",
+          "content_pinyin": "Zhè ge bēi zi duō shao qián? Èr shí kuài. Tài guì le!",
+          "content_en": "How much is this cup? Twenty yuan. That is too expensive!",
+          "content_vi": "How much is this cup? Twenty yuan. That is too expensive!",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk2-l04-ex1",
+        "kind": "multiple_choice",
+        "skill": "reading",
+        "bloom_level": "understand",
+        "prompt": "What question asks for a price?",
+        "options": [
+          "多少钱？",
+          "你好吗？",
+          "在哪里？"
+        ],
+        "correct_answer": "多少钱？",
+        "acceptable_variants": [
+          "多少钱？"
+        ],
+        "explanation": "多少钱 means how much money.",
+        "prompt_vi": "What question asks for a price?",
+        "options_vi": [
+          "多少钱？",
+          "你好吗？",
+          "在哪里？"
+        ],
+        "correct_answer_vi": "多少钱？",
+        "explanation_vi": "多少钱 means how much money."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "Use 多少钱 to ask prices."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "Use 多少钱 to ask prices."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Read a short shopping exchange.",
+    "Ask and answer prices."
+  ]
+}

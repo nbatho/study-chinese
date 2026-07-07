@@ -1,0 +1,159 @@
+{
+  "lesson_id": "hsk1-l01-listening-greetings",
+  "metadata": {
+    "title_zh": "你好！",
+    "title_en": "Hello!",
+    "hsk_level": 1,
+    "cefr_level": "A1",
+    "primary_skill": "listening",
+    "secondary_skills": [
+      "speaking"
+    ],
+    "topic": "greetings",
+    "estimated_minutes": 8,
+    "xp_reward": 25,
+    "tags": [
+      "greetings",
+      "listening",
+      "hsk1"
+    ],
+    "title_vi": "Xin chào!"
+  },
+  "learning_objectives": [
+    "Recognize simple greetings.",
+    "Answer with your name."
+  ],
+  "vocabulary_focus": [
+    {
+      "simplified": "你好",
+      "pinyin": "nǐ hǎo",
+      "english": "hello",
+      "is_new": true
+    },
+    {
+      "simplified": "我",
+      "pinyin": "wǒ",
+      "english": "I; me",
+      "is_new": true
+    },
+    {
+      "simplified": "叫",
+      "pinyin": "jiào",
+      "english": "to be called",
+      "is_new": true
+    },
+    {
+      "simplified": "什么",
+      "pinyin": "shén me",
+      "english": "what",
+      "is_new": true
+    }
+  ],
+  "grammar_focus": [
+    {
+      "pattern": "我叫...",
+      "explanation": "Use this pattern to say your name.",
+      "examples": [
+        {
+          "zh": "我叫小明。",
+          "pinyin": "Wǒ jiào Xiǎo Míng.",
+          "en": "My name is Xiao Ming.",
+          "simplified": "我叫小明。",
+          "english": "My name is Xiao Ming.",
+          "vi": "Tên tôi là Tiểu Minh."
+        }
+      ],
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "explanation_vi": "Dùng mẫu câu này để nói tên của bạn.",
+      "tips_vi": []
+    }
+  ],
+  "warm_up": {
+    "type": "vocabulary_review",
+    "items": [
+      "你好",
+      "我",
+      "叫"
+    ]
+  },
+  "core_modules": [
+    {
+      "module_type": "listening",
+      "phases": [
+        {
+          "type": "dialogue_listen",
+          "dialogue": [
+            {
+              "speaker": "A",
+              "zh": "你好！",
+              "pinyin": "Nǐ hǎo!",
+              "en": "Hello!",
+              "vi": "Xin chào!"
+            },
+            {
+              "speaker": "B",
+              "zh": "你好！我叫小明。",
+              "pinyin": "Nǐ hǎo! Wǒ jiào Xiǎo Míng.",
+              "en": "Hello! My name is Xiao Ming.",
+              "vi": "Hello! My name is Xiao Ming."
+            },
+            {
+              "speaker": "A",
+              "zh": "你叫什么？",
+              "pinyin": "Nǐ jiào shén me?",
+              "en": "What is your name?",
+              "vi": "Bạn tên là gì?"
+            }
+          ],
+          "content_vi": "",
+          "model_dialogue_vi": ""
+        }
+      ]
+    }
+  ],
+  "practice": {
+    "exercises": [
+      {
+        "id": "hsk1-l01-ex1",
+        "kind": "multiple_choice",
+        "skill": "listening",
+        "bloom_level": "understand",
+        "prompt": "What does 你好 mean?",
+        "options": [
+          "hello",
+          "thank you",
+          "goodbye"
+        ],
+        "correct_answer": "hello",
+        "acceptable_variants": [
+          "hello"
+        ],
+        "explanation": "你好 is the basic greeting hello.",
+        "prompt_vi": "你好 có nghĩa là gì?",
+        "options_vi": [
+          "xin chào",
+          "cảm ơn",
+          "tạm biệt"
+        ],
+        "correct_answer_vi": "xin chào",
+        "explanation_vi": "你好 is the basic greeting hello."
+      }
+    ]
+  },
+  "review": {
+    "key_takeaways": [
+      "你好 means hello.",
+      "Use 我叫... to say your name."
+    ],
+    "srs_inject_word_ids": [],
+    "key_takeaways_vi": [
+      "你好 means hello.",
+      "Use 我叫... to say your name."
+    ]
+  },
+  "learning_objectives_vi": [
+    "Nhận biết các câu chào hỏi đơn giản.",
+    "Trả lời bằng tên của bạn."
+  ]
+}

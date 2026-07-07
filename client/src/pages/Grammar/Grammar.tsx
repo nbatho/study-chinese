@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { BookOpen, CheckCircle2, FileText, Search } from "lucide-react";
+import { BookOpen, CheckCircle2, FileText, Filter, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLessonGrammarIndexQuery } from "../../api";
 import type { LessonGrammarEntry } from "../../api/lessons";
+import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LoadingCard from "../../components/LoadingCard";
 import { useI18n } from "../../i18n";
@@ -24,13 +25,14 @@ export default function Grammar() {
 
   const grammar = grammarQuery.data?.grammar ?? [];
   const hskLevels = useMemo(
-    () => Array.from(new Set(grammar.map((entry) => entry.lesson.hskLevel))).sort((a, b) => a - b),
+    () => Array.from(new Set(grammar.map((entry) => entry.hskLevel ?? entry.lesson.hskLevel))).sort((a, b) => a - b),
     [grammar],
   );
   const groups = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     const filtered = grammar.filter((entry) => {
-      const matchesHsk = selectedHsk === "all" || entry.lesson.hskLevel === selectedHsk;
+      const entryHsk = entry.hskLevel ?? entry.lesson.hskLevel;
+      const matchesHsk = selectedHsk === "all" || entryHsk === selectedHsk;
       const haystack = [
         entry.pattern,
         entry.explanation,
@@ -101,16 +103,20 @@ export default function Grammar() {
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
             />
           </label>
-          <select
-            value={selectedHsk}
-            onChange={(event) => setSelectedHsk(event.target.value === "all" ? "all" : Number(event.target.value))}
-            className="app-control h-11 text-sm font-semibold"
-          >
-            <option value="all">Tất cả HSK</option>
-            {hskLevels.map((level) => (
-              <option key={level} value={level}>HSK {level}</option>
-            ))}
-          </select>
+          <DropdownSelect
+            label="HSK filter"
+            icon={<Filter size={16} />}
+            value={String(selectedHsk)}
+            onChange={(value) => setSelectedHsk(value === "all" ? "all" : Number(value))}
+            options={[
+              { value: "all", label: "Tất cả HSK" },
+              ...hskLevels.map((level) => ({ value: String(level), label: `HSK ${level}` })),
+            ]}
+            align="left"
+            className="min-w-0"
+            buttonClassName="w-full justify-between"
+            menuClassName="w-full min-w-48"
+          />
         </div>
       </section>
 
@@ -131,6 +137,7 @@ export default function Grammar() {
                   <div className="min-w-0">
                     <div className="mb-1 flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase text-muted-foreground">
                       <span>HSK {group.lesson.hskLevel}</span>
+                      <span>{group.lesson.cefrLevel}</span>
                       <span>Bài {group.lesson.order}</span>
                       <span>{group.lesson.skill}</span>
                       {group.lesson.completedAt && (
