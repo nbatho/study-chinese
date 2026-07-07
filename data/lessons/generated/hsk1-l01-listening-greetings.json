@@ -58,7 +58,10 @@
           "pinyin": "Wǒ jiào Xiǎo Míng.",
           "en": "My name is Xiao Ming."
         }
-      ]
+      ],
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "explanation_vi": "Dùng mẫu câu này để nói tên của bạn."
     }
   ],
   "warm_up": {
@@ -106,17 +109,162 @@
         "kind": "multiple_choice",
         "skill": "listening",
         "bloom_level": "understand",
-        "prompt": "What does 你好 mean?",
+        "prompt": "Listen/read: 你好. What does it mean?",
+        "prompt_vi": "Nghe/đọc: 你好. Câu này có nghĩa là gì?",
         "options": [
           "hello",
           "thank you",
-          "goodbye"
+          "goodbye",
+          "teacher"
+        ],
+        "options_vi": [
+          "xin chào",
+          "cảm ơn",
+          "tạm biệt",
+          "giáo viên"
         ],
         "correct_answer": "hello",
+        "correct_answer_vi": "xin chào",
         "acceptable_variants": [
-          "hello"
+          "hello",
+          "hi"
         ],
-        "explanation": "你好 is the basic greeting hello."
+        "explanation": "你好 is the basic everyday greeting.",
+        "explanation_vi": "你好 là lời chào cơ bản trong giao tiếp hằng ngày."
+      },
+      {
+        "id": "hsk1-l01-ex2",
+        "kind": "matching",
+        "skill": "listening",
+        "bloom_level": "remember",
+        "prompt": "Match each phrase with its meaning: 你好, 我, 叫, 什么.",
+        "prompt_vi": "Nối mỗi cụm với nghĩa đúng: 你好, 我, 叫, 什么.",
+        "pairs": [
+          {
+            "left": "你好",
+            "right": "hello"
+          },
+          {
+            "left": "我",
+            "right": "I; me"
+          },
+          {
+            "left": "叫",
+            "right": "to be called"
+          },
+          {
+            "left": "什么",
+            "right": "what"
+          }
+        ],
+        "correct_answer": {
+          "你好": "hello",
+          "我": "I; me",
+          "叫": "to be called",
+          "什么": "what"
+        },
+        "correct_answer_vi": {
+          "你好": "xin chào",
+          "我": "tôi",
+          "叫": "tên là/được gọi là",
+          "什么": "cái gì"
+        },
+        "acceptable_variants": [],
+        "explanation": "These four words build a very short self-introduction.",
+        "explanation_vi": "Bốn từ này tạo thành phần tự giới thiệu rất ngắn."
+      },
+      {
+        "id": "hsk1-l01-ex3",
+        "kind": "fill_blank",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Complete the self-introduction: 我___小明。",
+        "prompt_vi": "Hoàn thành câu tự giới thiệu: 我___小明。",
+        "options": [
+          "叫",
+          "什么",
+          "你好",
+          "我"
+        ],
+        "options_vi": [
+          "tên là",
+          "cái gì",
+          "xin chào",
+          "tôi"
+        ],
+        "correct_answer": "叫",
+        "correct_answer_vi": "叫",
+        "acceptable_variants": [
+          "叫"
+        ],
+        "explanation": "我叫小明 means \"My name is Xiao Ming.\"",
+        "explanation_vi": "我叫小明 nghĩa là \"Tôi tên là Tiểu Minh.\""
+      },
+      {
+        "id": "hsk1-l01-ex4",
+        "kind": "word_order",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Put the words in order to ask \"What is your name?\": 叫什么 / 你",
+        "prompt_vi": "Sắp xếp để hỏi \"Bạn tên là gì?\": 叫什么 / 你",
+        "tokens": [
+          "你",
+          "叫什么"
+        ],
+        "correct_answer": "你叫什么？",
+        "correct_answer_vi": "Bạn tên là gì?",
+        "acceptable_variants": [
+          "你叫什么",
+          "你叫什么？"
+        ],
+        "explanation": "The person comes before 叫什么 in this question.",
+        "explanation_vi": "Trong câu hỏi này, người được hỏi đứng trước 叫什么."
+      },
+      {
+        "id": "hsk1-l01-ex5",
+        "kind": "dialogue_choice",
+        "skill": "listening",
+        "bloom_level": "understand",
+        "prompt": "A says: 你好！ Choose a natural reply.",
+        "prompt_vi": "A nói: 你好！ Chọn câu đáp tự nhiên.",
+        "options": [
+          "你好！",
+          "我什么。",
+          "叫你好。",
+          "什么我？"
+        ],
+        "options_vi": [
+          "Xin chào!",
+          "Tôi cái gì.",
+          "Tên là xin chào.",
+          "Cái gì tôi?"
+        ],
+        "correct_answer": "你好！",
+        "correct_answer_vi": "你好！",
+        "acceptable_variants": [
+          "你好",
+          "你好！"
+        ],
+        "explanation": "Repeating 你好 is a simple and natural greeting response.",
+        "explanation_vi": "Đáp lại bằng 你好 là cách chào đơn giản và tự nhiên."
+      },
+      {
+        "id": "hsk1-l01-ex6",
+        "kind": "short_answer",
+        "skill": "speaking",
+        "bloom_level": "create",
+        "prompt": "Answer in Chinese with your name: 你叫什么？",
+        "prompt_vi": "Trả lời bằng tiếng Trung với tên của bạn: 你叫什么？",
+        "model_answer": "我叫安。",
+        "correct_answer": "我叫 + name。",
+        "correct_answer_vi": "我叫 + tên。",
+        "acceptable_variants": [
+          "我叫安。",
+          "我叫小明。",
+          "我叫..."
+        ],
+        "explanation": "Use 我叫 plus a name to introduce yourself.",
+        "explanation_vi": "Dùng 我叫 cộng với tên để tự giới thiệu."
       }
     ]
   },

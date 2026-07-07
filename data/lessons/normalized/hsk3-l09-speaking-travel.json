@@ -63,7 +63,7 @@
       ],
       "hsk_level": 3,
       "cefr_level": "A2",
-      "explanation_vi": "Use this polite opener before asking a question.",
+      "explanation_vi": "Dùng cách mở đầu lịch sự này trước khi đặt câu hỏi.",
       "tips_vi": []
     }
   ],
@@ -95,25 +95,165 @@
     "exercises": [
       {
         "id": "hsk3-l09-ex1",
+        "kind": "multiple_choice",
+        "skill": "speaking",
+        "bloom_level": "understand",
+        "prompt": "Which phrase politely starts a travel question?",
+        "prompt_vi": "Cụm nào mở đầu câu hỏi du lịch một cách lịch sự?",
+        "options": [
+          "请问",
+          "太贵了",
+          "不舒服",
+          "米饭"
+        ],
+        "options_vi": [
+          "xin hỏi/cho hỏi",
+          "đắt quá",
+          "không khỏe",
+          "cơm"
+        ],
+        "correct_answer": "请问",
+        "correct_answer_vi": "请问",
+        "acceptable_variants": [
+          "请问"
+        ],
+        "explanation": "请问 is a polite opener before asking a question.",
+        "explanation_vi": "请问 là cách mở đầu lịch sự trước khi hỏi."
+      },
+      {
+        "id": "hsk3-l09-ex2",
+        "kind": "matching",
+        "skill": "speaking",
+        "bloom_level": "remember",
+        "prompt": "Match the travel words.",
+        "prompt_vi": "Nối các từ về du lịch/đi lại.",
+        "pairs": [
+          {
+            "left": "火车",
+            "right": "train"
+          },
+          {
+            "left": "北京",
+            "right": "Beijing"
+          },
+          {
+            "left": "车站",
+            "right": "station"
+          },
+          {
+            "left": "请问",
+            "right": "excuse me; may I ask"
+          }
+        ],
+        "correct_answer": {
+          "火车": "train",
+          "北京": "Beijing",
+          "车站": "station",
+          "请问": "excuse me; may I ask"
+        },
+        "correct_answer_vi": {
+          "火车": "tàu hỏa",
+          "北京": "Bắc Kinh",
+          "车站": "nhà ga",
+          "请问": "xin hỏi/cho hỏi"
+        },
+        "acceptable_variants": [],
+        "explanation": "These words form a useful travel question.",
+        "explanation_vi": "Các từ này tạo thành một câu hỏi đi đường hữu ích."
+      },
+      {
+        "id": "hsk3-l09-ex3",
+        "kind": "fill_blank",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Complete politely: ___，车站在哪里？",
+        "prompt_vi": "Hoàn thành cho lịch sự: ___，车站在哪里？",
+        "options": [
+          "请问",
+          "火车",
+          "北京",
+          "休息"
+        ],
+        "options_vi": [
+          "xin hỏi",
+          "tàu hỏa",
+          "Bắc Kinh",
+          "nghỉ ngơi"
+        ],
+        "correct_answer": "请问",
+        "correct_answer_vi": "请问",
+        "acceptable_variants": [
+          "请问"
+        ],
+        "explanation": "请问 makes the location question more polite.",
+        "explanation_vi": "请问 làm câu hỏi địa điểm lịch sự hơn."
+      },
+      {
+        "id": "hsk3-l09-ex4",
         "kind": "word_order",
         "skill": "speaking",
         "bloom_level": "apply",
-        "prompt": "Arrange the question: Excuse me, where is the station?",
+        "prompt": "Put the words in order: 在哪里 / 请问 / 车站",
+        "prompt_vi": "Sắp xếp các từ: 在哪里 / 请问 / 车站",
         "tokens": [
           "请问",
           "车站",
-          "在",
-          "哪里"
+          "在哪里"
         ],
-        "correct_answer": "请问 车站 在 哪里",
+        "correct_answer": "请问，车站在哪里？",
+        "correct_answer_vi": "Xin hỏi, nhà ga ở đâu?",
         "acceptable_variants": [
-          "请问车站在哪里"
+          "请问，车站在哪里？",
+          "请问车站在哪里？",
+          "车站在哪里？"
         ],
-        "explanation": "Use 请问 first, then ask the location.",
-        "prompt_vi": "Arrange the question: Excuse me, where is the station?",
-        "options_vi": [],
-        "correct_answer_vi": "请问 车站 在 哪里",
-        "explanation_vi": "Use 请问 first, then ask the location."
+        "explanation": "请问 can come before the full question.",
+        "explanation_vi": "请问 có thể đứng trước toàn bộ câu hỏi."
+      },
+      {
+        "id": "hsk3-l09-ex5",
+        "kind": "dialogue_choice",
+        "skill": "speaking",
+        "bloom_level": "analyze",
+        "prompt": "You want to take a train to Beijing. Which sentence fits?",
+        "prompt_vi": "Bạn muốn đi tàu hỏa đến Bắc Kinh. Câu nào phù hợp?",
+        "options": [
+          "我想坐火车去北京。",
+          "我有点儿不舒服。",
+          "这个多少钱？",
+          "我家有妈妈。"
+        ],
+        "options_vi": [
+          "Tôi muốn đi tàu hỏa đến Bắc Kinh.",
+          "Tôi hơi không khỏe.",
+          "Cái này bao nhiêu tiền?",
+          "Nhà tôi có mẹ."
+        ],
+        "correct_answer": "我想坐火车去北京。",
+        "correct_answer_vi": "我想坐火车去北京。",
+        "acceptable_variants": [
+          "我想坐火车去北京",
+          "我想坐火车去北京。"
+        ],
+        "explanation": "坐火车去北京 expresses taking a train to Beijing.",
+        "explanation_vi": "坐火车去北京 diễn đạt đi tàu hỏa đến Bắc Kinh."
+      },
+      {
+        "id": "hsk3-l09-ex6",
+        "kind": "short_answer",
+        "skill": "speaking",
+        "bloom_level": "create",
+        "prompt": "Ask where the station is in Chinese. Use 请问.",
+        "prompt_vi": "Hỏi nhà ga ở đâu bằng tiếng Trung. Dùng 请问.",
+        "model_answer": "请问，车站在哪里？",
+        "correct_answer": "请问，车站在哪里？",
+        "correct_answer_vi": "请问，车站在哪里？",
+        "acceptable_variants": [
+          "请问，车站在哪里？",
+          "请问车站在哪里？"
+        ],
+        "explanation": "This is a practical A2 travel question.",
+        "explanation_vi": "Đây là câu hỏi đi đường thực tế ở mức A2."
       }
     ]
   },

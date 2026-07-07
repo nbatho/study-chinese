@@ -8,7 +8,6 @@ import {
   buildGrammarLibraryEntries,
   localizeLesson
 } from '../src/services/content-language.service.js';
-import { hasDatabaseConfig } from '../src/config/env.config.js';
 import { repoRoot, resolveExistingPath } from '../src/config/content-paths.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -73,6 +72,8 @@ const runImportScript = (sourceDir) =>
   });
 
 const upsertGrammarLibrary = async (lessons) => {
+  const { hasDatabaseConfig } = await import('../src/config/env.config.js');
+
   if (!hasDatabaseConfig()) {
     return {
       skipped: true,

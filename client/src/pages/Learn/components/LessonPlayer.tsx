@@ -39,6 +39,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [arrangedWords, setArrangedWords] = useState<string[]>([]);
+  const [shortAnswer, setShortAnswer] = useState("");
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportCategory, setReportCategory] = useState<"content" | "translation" | "audio" | "exercise" | "technical" | "other">("content");
   const [reportMessage, setReportMessage] = useState("");
@@ -47,11 +48,19 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
   const currentExercise = lesson?.exercises[exerciseIdx];
   const exerciseCount = lesson?.exercises.length ?? 0;
   const finalAccuracy = exerciseCount ? Math.round((correctAnswersCount / exerciseCount) * 100) : 0;
+  const lessonSteps = [
+    { id: "intro", label: "Tổng quan" },
+    ...(lesson?.dialogue ? [{ id: "dialogue", label: "Hội thoại" }] : []),
+    { id: "exercises", label: "Bài tập" },
+    { id: "completed", label: "Kết quả" },
+  ] as const;
+  const activeStepIndex = Math.max(0, lessonSteps.findIndex((step) => step.id === stage));
 
   const initExerciseState = () => {
     setSelectedOptionIdx(null);
     setIsAnswerChecked(false);
     setArrangedWords([]);
+    setShortAnswer("");
   };
 
   const handleStart = () => {
@@ -68,14 +77,17 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
     if (!currentExercise) return;
     if (isAnswerChecked) return;
     const isArrangeExercise = currentExercise.kind === "arrangeSentence";
-    if (isArrangeExercise ? arrangedWords.length === 0 : selectedOptionIdx === null) return;
-    const correct = currentExercise.kind === "arrangeSentence"
+    const isShortAnswerExercise = currentExercise.kind === "short_answer" || currentExercise.kind === "shortAnswer";
+    if (isArrangeExercise ? arrangedWords.length === 0 : isShortAnswerExercise ? !shortAnswer.trim() : selectedOptionIdx === null) return;
+    const correct = isShortAnswerExercise
+      ? getAcceptedAnswers(currentExercise).includes(normalizeAnswer(shortAnswer))
+      : currentExercise.kind === "arrangeSentence"
       ? arrangedWords.join("") === currentExercise.correctText.replace(/\s+/g, "")
       : selectedOptionIdx === currentExercise.correctIndex;
     if (correct) setCorrectAnswersCount((prev) => prev + 1);
     if (!correct) {
       void recordMistakeMutation
-        .mutateAsync(buildLessonMistakePayload(lesson, currentExercise, selectedOptionIdx, arrangedWords))
+        .mutateAsync(buildLessonMistakePayload(lesson, currentExercise, selectedOptionIdx, arrangedWords, shortAnswer))
         .catch(() => undefined);
     }
     setIsAnswerChecked(true);
@@ -118,16 +130,59 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
   }
 
   return (
-    <div className="anim-pop mx-auto max-w-160 rounded-[20px] border bg-card p-4 shadow-sm sm:p-6">
+    <div className="anim-pop mx-auto max-w-5xl overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <div className="sticky top-0 z-20 border-b bg-card/95 p-4 backdrop-blur sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground transition hover:border-primary hover:text-primary active:translate-y-px"
+              aria-label="Về lộ trình"
+              title="Về lộ trình"
+            >
+              <ArrowLeft size={19} />
+            </button>
+            <div className="min-w-0 text-left">
+              <div className="text-xs font-extrabold text-primary">HSK {lesson.hskLevel} - {lesson.estimatedMinutes} phút</div>
+              <h2 className="truncate text-lg font-extrabold sm:text-xl">{lesson.title}</h2>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              {lessonSteps.map((step, index) => {
+                const isActive = index === activeStepIndex;
+                const isDone = index < activeStepIndex;
+                return (
+                  <div key={step.id} className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex min-h-8 items-center justify-center rounded-xl px-3 text-xs font-extrabold",
+                        isActive && "bg-primary text-primary-foreground",
+                        isDone && "bg-jade/10 text-jade",
+                        !isActive && !isDone && "bg-secondary text-muted-foreground",
+                      )}
+                    >
+                      {step.label}
+                    </span>
+                    {index < lessonSteps.length - 1 && <span className="hidden h-px w-5 bg-border sm:block" />}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${lessonSteps.length > 1 ? (activeStepIndex / (lessonSteps.length - 1)) * 100 : 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="p-4 sm:p-6">
       {stage === "intro" && (
         <div className="anim-slide">
-          <div className="mb-4 flex items-center gap-2.5">
-            <button onClick={onClose} className="text-muted-foreground">
-              <ArrowLeft size={20} />
-            </button>
-            <span className="text-[0.8rem] font-bold text-primary">HSK {lesson.hskLevel} · Curriculum Path</span>
-          </div>
-          <button type="button" onClick={() => setIsReportOpen(true)} className="mb-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-primary">
+          <button type="button" onClick={() => setIsReportOpen(true)} className="mb-3 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-primary">
             <Flag size={14} />
             Báo lỗi
           </button>
@@ -210,7 +265,8 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           {(() => {
             const kindLabelKey = exerciseKindTranslationKeys[currentExercise.kind];
             const isArrangeExercise = currentExercise.kind === "arrangeSentence";
-            const isCheckDisabled = isArrangeExercise ? arrangedWords.length === 0 : selectedOptionIdx === null;
+            const isShortAnswerExercise = currentExercise.kind === "short_answer" || currentExercise.kind === "shortAnswer";
+            const isCheckDisabled = isArrangeExercise ? arrangedWords.length === 0 : isShortAnswerExercise ? !shortAnswer.trim() : selectedOptionIdx === null;
             const isReadingComprehension = currentExercise.kind === "readingComprehension";
             const isListeningComprehension = currentExercise.kind === "listeningComprehension";
             const listeningAudioText = currentExercise.stimulus?.audioText ||
@@ -229,7 +285,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             </div>
           </div>
           <div className="mb-6 rounded-lg border bg-card px-5 py-7.5 text-center shadow-sm">
-            <h4 className="mb-3 text-base uppercase text-muted-foreground">{kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
+            <h4 className="mb-3 text-base uppercase text-muted-foreground">{isShortAnswerExercise ? "Trả lời ngắn" : kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
             {currentExercise.kind === "listening" && (
               <button className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" onClick={() => speakChinese(currentExercise.correctText)}>
                 <Volume2 size={36} />
@@ -291,6 +347,14 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           <div className="mb-7 grid gap-2.5">
             {currentExercise.kind === "arrangeSentence" ? (
               <ArrangeExercise options={currentExercise.options || []} arrangedWords={arrangedWords} isAnswerChecked={isAnswerChecked} onToggle={handleWordArrangeToggle} />
+            ) : isShortAnswerExercise ? (
+              <textarea
+                value={shortAnswer}
+                disabled={isAnswerChecked}
+                onChange={(event) => setShortAnswer(event.target.value)}
+                className="min-h-28 rounded-xl border bg-card px-4 py-3 text-base font-semibold outline-none transition focus:border-primary disabled:cursor-default disabled:opacity-80"
+                placeholder="Nhập câu trả lời bằng tiếng Trung"
+              />
             ) : (
               (currentExercise.options || []).map((option, idx) => {
                 const isSelected = selectedOptionIdx === idx;
@@ -406,11 +470,29 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
 
 type LessonExercise = LessonDetail["exercises"][number];
+
+const normalizeAnswer = (value: string) =>
+  value
+    .trim()
+    .replace(/[。！？!?，,\s]+/g, "")
+    .toLowerCase();
+
+const getAcceptedAnswers = (exercise: LessonExercise) => {
+  const answers = [
+    exercise.correctText,
+    exercise.correctTextEn,
+    exercise.correctTextVi ?? undefined,
+    ...(exercise.acceptableVariants ?? []),
+  ].filter((answer): answer is string => Boolean(answer));
+
+  return Array.from(new Set(answers.map(normalizeAnswer).filter(Boolean)));
+};
 
 function hasChineseText(value?: string | null) {
   return /[\u3400-\u9fff]/.test(value || "");
@@ -421,6 +503,7 @@ function buildLessonMistakePayload(
   exercise: LessonExercise,
   selectedOptionIdx: number | null,
   arrangedWords: string[],
+  shortAnswer = "",
 ): MistakePayload {
   const matchedWord =
     lesson.newWords.find((word) => word.id === exercise.audioWordId) ??
@@ -434,7 +517,11 @@ function buildLessonMistakePayload(
   const correctOption =
     exercise.correctIndex === undefined ? undefined : exercise.options?.[exercise.correctIndex];
   const userAnswer =
-    exercise.kind === "arrangeSentence" ? arrangedWords.join("") : selectedOption;
+    exercise.kind === "arrangeSentence"
+      ? arrangedWords.join("")
+      : exercise.kind === "short_answer" || exercise.kind === "shortAnswer"
+        ? shortAnswer
+        : selectedOption;
   const simplified =
     exercise.promptHanzi ||
     matchedWord?.simplified ||

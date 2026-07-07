@@ -98,6 +98,7 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
         answerExplanation?: string | null;
         answerExplanationEn?: string | null;
         answerExplanationVi?: string | null;
+        acceptableVariants?: string[];
         audioWordId?: string;
         tone?: number;
     }>;

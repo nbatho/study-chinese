@@ -58,7 +58,10 @@
           "pinyin": "sān ge rén",
           "en": "three people"
         }
-      ]
+      ],
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "explanation_vi": "Một số có thể đứng trước lượng từ."
     }
   ],
   "warm_up": {
@@ -88,18 +91,165 @@
         "id": "hsk1-l02-ex1",
         "kind": "multiple_choice",
         "skill": "reading",
-        "bloom_level": "understand",
-        "prompt": "Which character means three?",
+        "bloom_level": "remember",
+        "prompt": "Which character means \"three\"?",
+        "prompt_vi": "Chữ nào có nghĩa là \"ba\"?",
         "options": [
           "一",
           "二",
-          "三"
+          "三",
+          "十"
+        ],
+        "options_vi": [
+          "một",
+          "hai",
+          "ba",
+          "mười"
         ],
         "correct_answer": "三",
+        "correct_answer_vi": "三",
         "acceptable_variants": [
           "三"
         ],
-        "explanation": "三 means three."
+        "explanation": "三 is the Chinese character for three.",
+        "explanation_vi": "三 là chữ Hán chỉ số ba."
+      },
+      {
+        "id": "hsk1-l02-ex2",
+        "kind": "matching",
+        "skill": "reading",
+        "bloom_level": "remember",
+        "prompt": "Match the numbers: 一, 二, 三, 十.",
+        "prompt_vi": "Nối các số: 一, 二, 三, 十.",
+        "pairs": [
+          {
+            "left": "一",
+            "right": "one"
+          },
+          {
+            "left": "二",
+            "right": "two"
+          },
+          {
+            "left": "三",
+            "right": "three"
+          },
+          {
+            "left": "十",
+            "right": "ten"
+          }
+        ],
+        "correct_answer": {
+          "一": "one",
+          "二": "two",
+          "三": "three",
+          "十": "ten"
+        },
+        "correct_answer_vi": {
+          "一": "một",
+          "二": "hai",
+          "三": "ba",
+          "十": "mười"
+        },
+        "acceptable_variants": [],
+        "explanation": "These are high-frequency HSK 1 number characters.",
+        "explanation_vi": "Đây là các chữ số HSK 1 rất thường gặp."
+      },
+      {
+        "id": "hsk1-l02-ex3",
+        "kind": "fill_blank",
+        "skill": "reading",
+        "bloom_level": "apply",
+        "prompt": "Complete the phrase \"three people\": ___个人.",
+        "prompt_vi": "Hoàn thành cụm \"ba người\": ___个人.",
+        "options": [
+          "一",
+          "二",
+          "三",
+          "十"
+        ],
+        "options_vi": [
+          "một",
+          "hai",
+          "ba",
+          "mười"
+        ],
+        "correct_answer": "三",
+        "correct_answer_vi": "三",
+        "acceptable_variants": [
+          "三"
+        ],
+        "explanation": "数字 + 个 can show a quantity, as in 三个人.",
+        "explanation_vi": "Mẫu 数字 + 个 dùng để nói số lượng, như 三个人."
+      },
+      {
+        "id": "hsk1-l02-ex4",
+        "kind": "word_order",
+        "skill": "writing",
+        "bloom_level": "apply",
+        "prompt": "Put the words in order: 个 / 三 / 人",
+        "prompt_vi": "Sắp xếp các từ: 个 / 三 / 人",
+        "tokens": [
+          "三",
+          "个",
+          "人"
+        ],
+        "correct_answer": "三个人",
+        "correct_answer_vi": "ba người",
+        "acceptable_variants": [
+          "三个人"
+        ],
+        "explanation": "The number comes before the measure word 个.",
+        "explanation_vi": "Số đứng trước lượng từ 个."
+      },
+      {
+        "id": "hsk1-l02-ex5",
+        "kind": "cloze",
+        "skill": "reading",
+        "bloom_level": "understand",
+        "prompt": "Read: 我家有三个人。 How many people are there?",
+        "prompt_vi": "Đọc: 我家有三个人。 Có mấy người?",
+        "options": [
+          "one",
+          "two",
+          "three",
+          "ten"
+        ],
+        "options_vi": [
+          "một",
+          "hai",
+          "ba",
+          "mười"
+        ],
+        "correct_answer": "three",
+        "correct_answer_vi": "ba",
+        "acceptable_variants": [
+          "three",
+          "3",
+          "三"
+        ],
+        "explanation": "三个人 means three people.",
+        "explanation_vi": "三个人 nghĩa là ba người."
+      },
+      {
+        "id": "hsk1-l02-ex6",
+        "kind": "short_answer",
+        "skill": "writing",
+        "bloom_level": "create",
+        "prompt": "Write a quantity with 个 using 一, 二, 三, or 十.",
+        "prompt_vi": "Viết một cụm số lượng với 个, dùng 一, 二, 三 hoặc 十.",
+        "model_answer": "三个人",
+        "correct_answer": "number + 个 + noun",
+        "correct_answer_vi": "số + 个 + danh từ",
+        "acceptable_variants": [
+          "一个人",
+          "两个人",
+          "二个人",
+          "三个人",
+          "十个人"
+        ],
+        "explanation": "At this level, a short phrase with 数字 + 个 is enough.",
+        "explanation_vi": "Ở trình độ này, một cụm ngắn theo mẫu 数字 + 个 là phù hợp."
       }
     ]
   },

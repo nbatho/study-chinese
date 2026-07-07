@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { useI18n } from "../../i18n";
@@ -102,6 +102,10 @@ export default function Learn() {
   const selectedCurriculumOrders = new Set(getCurriculumLessons(selectedCurriculum).map((lesson) => lesson.order));
   const selectedCompletedCount = levelLessons.filter((lesson) => selectedCurriculumOrders.has(lesson.order) && lesson.completedAt).length;
   const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
+  const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
+  const nextLesson = levelLessons.find(
+    (lesson) => selectedCurriculumOrders.has(lesson.order) && !lesson.completedAt && !isLessonLockedByCefr(lesson),
+  );
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");
@@ -136,9 +140,9 @@ export default function Learn() {
       {selectedLessonId ? (
         <LessonPlayer lessonId={selectedLessonId} onClose={closeSelectedLesson} />
       ) : (
-        <div>
+        <div className="grid gap-5">
           {needsPlacementTest && (
-            <div className="app-surface-padded mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="app-surface-padded flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <ClipboardCheck size={20} />
@@ -159,16 +163,145 @@ export default function Learn() {
             </div>
           )}
 
-          <section className="app-surface-padded mb-5 text-left">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
-                  <PenLine size={17} />
-                  Nhập môn Hán tự
+          <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+              <div className="p-5 text-left sm:p-6">
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
+                    <BookOpenCheck size={17} />
+                    Lộ trình HSK {selectedHSK}
+                  </span>
+                  <span className="rounded-xl bg-secondary px-3 py-1.5 text-sm font-bold text-muted-foreground">
+                    CEFR {selectedCurriculum.cefrLevel}
+                  </span>
                 </div>
-                <h2 className="text-2xl font-extrabold">8 nét cơ bản và 4 thanh điệu</h2>
+                <h1 className="max-w-3xl text-3xl font-extrabold leading-tight sm:text-4xl">
+                  Học theo bài tiếp theo, không cần tự đoán nên bắt đầu ở đâu.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-muted-foreground sm:text-base">
+                  Chọn cấp HSK, xem tiến độ và mở bài đang phù hợp với trình độ hiện tại của bạn.
+                </p>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    disabled={!nextLesson}
+                    onClick={() => nextLesson && setSelectedLessonId(nextLesson.id)}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+                  >
+                    {nextLesson ? `Học tiếp: Bài ${nextLesson.order}` : "Chưa có bài mở"}
+                    <ArrowRight size={17} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/practice?tool=hanzi")}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border bg-background px-5 py-3 text-sm font-extrabold transition hover:border-primary hover:text-primary active:translate-y-px"
+                  >
+                    <PenLine size={17} />
+                    Luyện viết
+                  </button>
+                </div>
+              </div>
+              <div className="border-t bg-secondary/45 p-5 lg:border-l lg:border-t-0">
+                <div className="grid h-full content-between gap-5">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
+                      <span>Tiến độ cấp đang học</span>
+                      <span>{selectedProgressPercent}%</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-background">
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${selectedProgressPercent}%` }} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-xl border bg-card p-3">
+                      <span className="text-xs font-bold text-muted-foreground">Đã học</span>
+                      <strong className="mt-1 block text-xl">{selectedCompletedCount}/{selectedLessonCount}</strong>
+                    </div>
+                    <div className="rounded-xl border bg-card p-3">
+                      <span className="text-xs font-bold text-muted-foreground">Chủ đề</span>
+                      <strong className="mt-1 block text-xl">{selectedCurriculum.topics.length}</strong>
+                    </div>
+                    <div className="rounded-xl border bg-card p-3">
+                      <span className="text-xs font-bold text-muted-foreground">XP</span>
+                      <strong className="mt-1 block text-xl text-gold">{selectedLevelStats?.xpReward ?? 0}</strong>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold leading-relaxed text-muted-foreground">
+                    {selectedCurriculum.focus}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold">Chọn cấp HSK</h2>
+                <p className="mt-1 text-sm font-semibold text-muted-foreground">
+                  Bài vượt quá kết quả kiểm tra đầu vào vẫn hiển thị nhưng sẽ khóa để bạn nhìn được toàn lộ trình.
+                </p>
+              </div>
+              <div className="text-sm font-bold text-muted-foreground">
+                {t("learn.progress", { level: selectedHSK, percent: selectedProgressPercent })}
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {hskStats.map((levelStats) => (
+                <button
+                  key={levelStats.level}
+                  type="button"
+                  onClick={() => setManualHskSelection({ placementAt, level: levelStats.level })}
+                  className={cn(
+                    "group min-h-31 rounded-2xl border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-md active:translate-y-px",
+                    selectedHSK === levelStats.level && "border-primary bg-primary/5 ring-2 ring-primary/10",
+                    levelStats.isLocked && "border-dashed opacity-75",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-extrabold text-primary">HSK {levelStats.level}</div>
+                      <h3 className="mt-1 line-clamp-1 text-lg font-extrabold">{levelStats.focus}</h3>
+                    </div>
+                    <span className={cn("flex size-10 items-center justify-center rounded-xl", levelStats.percent === 100 ? "bg-jade/10 text-jade" : levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground")}>
+                      {levelStats.percent === 100 ? <CheckCircle2 size={19} /> : levelStats.isLocked ? <Lock size={18} /> : <BookOpenCheck size={19} />}
+                    </span>
+                  </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${levelStats.percent}%` }} />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-muted-foreground">
+                    <span>{levelStats.completedCount}/{levelStats.lessonCount} bài</span>
+                    <span>{levelStats.topicCount} chủ đề</span>
+                    <span>{levelStats.percent}%</span>
+                    {levelStats.xpReward > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-gold/10 px-2 py-1 text-gold">
+                        <Trophy size={12} />
+                        {levelStats.xpReward} XP
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className={cn("rounded-lg px-2 py-1 text-[0.68rem] font-extrabold", levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
+                      CEFR {levelStats.cefrLevel}
+                    </span>
+                    {levelStats.skills.slice(0, 3).map((skill) => (
+                      <span key={skill} className="rounded-lg bg-secondary px-2 py-1 text-[0.68rem] font-extrabold text-muted-foreground">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="app-surface-padded text-left">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold">Nền tảng phát âm và nét viết</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  Nắm nét viết, bút thuận và cao độ phát âm trước khi vào lộ trình HSK để đọc, nghe và viết ổn định hơn.
+                  Ôn nhanh nét cơ bản, bút thuận và thanh điệu trước khi vào bài để đọc, nghe và viết ổn định hơn.
                 </p>
               </div>
               <button
@@ -183,25 +316,25 @@ export default function Learn() {
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
               <div>
-                <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">8 nét cơ bản</h3>
+                <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">8 nét cơ bản</h3>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                   {BASIC_STROKES.map((stroke) => (
-                    <article key={stroke.name} className="rounded-lg border bg-background p-3">
+                    <article key={stroke.name} className="rounded-xl border bg-background p-3">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <span className="font-serif text-4xl font-extrabold text-primary">{stroke.mark}</span>
-                        <span className="rounded-md bg-secondary px-2 py-1 font-serif text-lg font-bold">{stroke.example}</span>
+                        <span className="rounded-lg bg-secondary px-2 py-1 font-serif text-lg font-bold">{stroke.example}</span>
                       </div>
                       <h4 className="font-extrabold">{stroke.name}</h4>
                       <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{stroke.description}</p>
                     </article>
                   ))}
                 </div>
-                <div className="mt-4 rounded-lg border bg-background p-4">
-                  <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">Quy tắc bút thuận</h3>
+                <div className="mt-4 rounded-xl border bg-background p-4">
+                  <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">Quy tắc bút thuận</h3>
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {STROKE_RULES.map((rule, index) => (
-                      <div key={rule} className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold">
-                        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-xs text-primary">{index + 1}</span>
+                      <div key={rule} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm font-bold">
+                        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs text-primary">{index + 1}</span>
                         <span>{rule}</span>
                       </div>
                     ))}
@@ -210,15 +343,15 @@ export default function Learn() {
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-extrabold uppercase text-muted-foreground">Thanh điệu phổ thông</h3>
+                <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">Thanh điệu phổ thông</h3>
                 <div className="grid gap-2">
                   {TONES.map((tone) => (
-                    <article key={tone.name} className="rounded-lg border bg-background p-3">
+                    <article key={tone.name} className="rounded-xl border bg-background p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-extrabold">{tone.name}</span>
-                            <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-extrabold text-muted-foreground">{tone.mark}</span>
+                            <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-extrabold text-muted-foreground">{tone.mark}</span>
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="font-serif text-2xl font-extrabold text-primary">{tone.example}</span>
@@ -228,7 +361,7 @@ export default function Learn() {
                         <button
                           type="button"
                           onClick={() => speakChinese(tone.example)}
-                          className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border bg-card text-muted-foreground transition hover:border-primary hover:text-primary"
+                          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card text-muted-foreground transition hover:border-primary hover:text-primary"
                           aria-label={`Nghe ${tone.pinyin}`}
                           title={`Nghe ${tone.pinyin}`}
                         >
@@ -243,58 +376,6 @@ export default function Learn() {
             </div>
           </section>
 
-          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {hskStats.map((levelStats) => (
-              <button
-                key={levelStats.level}
-                type="button"
-                onClick={() => setManualHskSelection({ placementAt, level: levelStats.level })}
-                className={cn(
-                  "min-h-36 rounded-2xl border-2 bg-card/95 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
-                  selectedHSK === levelStats.level ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground",
-                  levelStats.isLocked && "border-dashed opacity-75",
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-bold uppercase text-muted-foreground">Curriculum</span>
-                    <h3 className="mt-1 text-2xl font-extrabold">HSK {levelStats.level}</h3>
-                  </div>
-                  <span className={cn("flex size-9 items-center justify-center rounded-xl", levelStats.percent === 100 ? "bg-jade/10 text-jade" : levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground")}>
-                    {levelStats.percent === 100 ? <CheckCircle2 size={19} /> : levelStats.isLocked ? <Lock size={18} /> : <BookOpenCheck size={19} />}
-                  </span>
-                </div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${levelStats.percent}%` }} />
-                </div>
-                <p className="mt-3 line-clamp-2 text-xs font-semibold text-muted-foreground">{levelStats.focus}</p>
-                <div className="mt-3 flex items-center justify-between gap-2 text-xs font-bold text-muted-foreground">
-                  <span>{levelStats.completedCount}/{levelStats.lessonCount} {t("home.lessons")}</span>
-                  <span>{levelStats.topicCount} topics</span>
-                  <span>{levelStats.percent}%</span>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <span className={cn("rounded-md px-2 py-1 text-[0.68rem] font-extrabold", levelStats.isLocked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
-                    Level {levelStats.cefrLevel}
-                  </span>
-                  {levelStats.skills.map((skill) => (
-                    <span key={skill} className="rounded-md bg-secondary px-2 py-1 text-[0.68rem] font-extrabold text-muted-foreground">
-                      {skill}
-                    </span>
-                  ))}
-                  {levelStats.xpReward > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-gold/10 px-2 py-1 text-[0.68rem] font-extrabold text-gold">
-                      <Trophy size={12} />
-                      {levelStats.xpReward} XP
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-          <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
-            {t("learn.progress", { level: selectedHSK, percent: selectedProgressPercent })}
-          </div>
           <LessonPath
             curriculum={selectedCurriculum}
             lessons={levelLessons}

@@ -58,7 +58,10 @@
           "pinyin": "Wǒ yǒu diǎnr bù shū fu.",
           "en": "I feel a little unwell."
         }
-      ]
+      ],
+      "hsk_level": 3,
+      "cefr_level": "A2",
+      "explanation_vi": "Dùng mẫu này để nói nhẹ đi một trạng thái."
     }
   ],
   "warm_up": {
@@ -106,17 +109,164 @@
         "kind": "multiple_choice",
         "skill": "listening",
         "bloom_level": "understand",
-        "prompt": "How does B feel?",
+        "prompt": "Listen/read: 我有点儿不舒服。 How does the speaker feel?",
+        "prompt_vi": "Nghe/đọc: 我有点儿不舒服。 Người nói cảm thấy thế nào?",
         "options": [
           "a little unwell",
           "very happy",
-          "very busy"
+          "too expensive",
+          "at the station"
+        ],
+        "options_vi": [
+          "hơi khó chịu/không khỏe",
+          "rất vui",
+          "quá đắt",
+          "ở nhà ga"
         ],
         "correct_answer": "a little unwell",
+        "correct_answer_vi": "hơi không khỏe",
         "acceptable_variants": [
-          "a little unwell"
+          "a little unwell",
+          "unwell",
+          "不舒服"
         ],
-        "explanation": "有点儿不舒服 means a little unwell."
+        "explanation": "有点儿 softens the description 不舒服.",
+        "explanation_vi": "有点儿 làm nhẹ sắc thái của 不舒服."
+      },
+      {
+        "id": "hsk3-l08-ex2",
+        "kind": "matching",
+        "skill": "listening",
+        "bloom_level": "remember",
+        "prompt": "Match the health words.",
+        "prompt_vi": "Nối các từ về sức khỏe.",
+        "pairs": [
+          {
+            "left": "怎么了",
+            "right": "what happened"
+          },
+          {
+            "left": "不舒服",
+            "right": "unwell"
+          },
+          {
+            "left": "医生",
+            "right": "doctor"
+          },
+          {
+            "left": "休息",
+            "right": "rest"
+          }
+        ],
+        "correct_answer": {
+          "怎么了": "what happened",
+          "不舒服": "unwell",
+          "医生": "doctor",
+          "休息": "rest"
+        },
+        "correct_answer_vi": {
+          "怎么了": "bị sao vậy",
+          "不舒服": "không khỏe",
+          "医生": "bác sĩ",
+          "休息": "nghỉ ngơi"
+        },
+        "acceptable_variants": [],
+        "explanation": "These words are useful in simple health conversations.",
+        "explanation_vi": "Các từ này hữu ích trong hội thoại sức khỏe đơn giản."
+      },
+      {
+        "id": "hsk3-l08-ex3",
+        "kind": "fill_blank",
+        "skill": "listening",
+        "bloom_level": "apply",
+        "prompt": "Complete: 我有点儿___。",
+        "prompt_vi": "Hoàn thành: 我有点儿___。",
+        "options": [
+          "不舒服",
+          "医生",
+          "怎么了",
+          "车站"
+        ],
+        "options_vi": [
+          "không khỏe",
+          "bác sĩ",
+          "bị sao vậy",
+          "nhà ga"
+        ],
+        "correct_answer": "不舒服",
+        "correct_answer_vi": "不舒服",
+        "acceptable_variants": [
+          "不舒服"
+        ],
+        "explanation": "有点儿 + adjective can describe a mild condition.",
+        "explanation_vi": "有点儿 + tính từ có thể miêu tả trạng thái nhẹ."
+      },
+      {
+        "id": "hsk3-l08-ex4",
+        "kind": "word_order",
+        "skill": "speaking",
+        "bloom_level": "apply",
+        "prompt": "Put the words in order: 有点儿 / 我 / 不舒服",
+        "prompt_vi": "Sắp xếp các từ: 有点儿 / 我 / 不舒服",
+        "tokens": [
+          "我",
+          "有点儿",
+          "不舒服"
+        ],
+        "correct_answer": "我有点儿不舒服。",
+        "correct_answer_vi": "Tôi hơi không khỏe.",
+        "acceptable_variants": [
+          "我有点儿不舒服",
+          "我有点儿不舒服。"
+        ],
+        "explanation": "The sentence follows subject + 有点儿 + adjective.",
+        "explanation_vi": "Câu theo mẫu chủ ngữ + 有点儿 + tính từ."
+      },
+      {
+        "id": "hsk3-l08-ex5",
+        "kind": "dialogue_choice",
+        "skill": "listening",
+        "bloom_level": "analyze",
+        "prompt": "A says: 我有点儿不舒服。 Choose a helpful response.",
+        "prompt_vi": "A nói: 我有点儿不舒服。 Chọn câu đáp phù hợp.",
+        "options": [
+          "你要多休息。",
+          "这个多少钱？",
+          "车站在哪里？",
+          "我吃米饭。"
+        ],
+        "options_vi": [
+          "Bạn nên nghỉ ngơi nhiều hơn.",
+          "Cái này bao nhiêu tiền?",
+          "Nhà ga ở đâu?",
+          "Tôi ăn cơm."
+        ],
+        "correct_answer": "你要多休息。",
+        "correct_answer_vi": "你要多休息。",
+        "acceptable_variants": [
+          "你要多休息",
+          "你要多休息。"
+        ],
+        "explanation": "Rest is an appropriate response to feeling unwell.",
+        "explanation_vi": "Khuyên nghỉ ngơi là phản hồi phù hợp khi ai đó không khỏe."
+      },
+      {
+        "id": "hsk3-l08-ex6",
+        "kind": "short_answer",
+        "skill": "speaking",
+        "bloom_level": "create",
+        "prompt": "Answer the question in Chinese: 你怎么了？",
+        "prompt_vi": "Trả lời câu hỏi bằng tiếng Trung: 你怎么了？",
+        "model_answer": "我有点儿不舒服。",
+        "correct_answer": "我有点儿...",
+        "correct_answer_vi": "我有点儿...",
+        "acceptable_variants": [
+          "我有点儿不舒服。",
+          "我不舒服。",
+          "我有点儿累。"
+        ],
+        "explanation": "Use a short condition sentence to answer 怎么了.",
+        "explanation_vi": "Dùng một câu ngắn miêu tả tình trạng để trả lời 怎么了."
       }
     ]
   },

@@ -63,7 +63,7 @@
       ],
       "hsk_level": 2,
       "cefr_level": "A1",
-      "explanation_vi": "Use 有 to say there is or someone has.",
+      "explanation_vi": "Dùng 有 để nói có gì hoặc ai đó có gì.",
       "tips_vi": []
     }
   ],
@@ -95,24 +95,169 @@
     "exercises": [
       {
         "id": "hsk2-l06-ex1",
+        "kind": "multiple_choice",
+        "skill": "writing",
+        "bloom_level": "understand",
+        "prompt": "Which sentence means \"My family has mom and dad\"?",
+        "prompt_vi": "Câu nào nghĩa là \"Nhà tôi có mẹ và bố\"?",
+        "options": [
+          "我家有妈妈和爸爸。",
+          "我坐公共汽车。",
+          "这个多少钱？",
+          "你吃什么？"
+        ],
+        "options_vi": [
+          "Nhà tôi có mẹ và bố.",
+          "Tôi đi xe buýt.",
+          "Cái này bao nhiêu tiền?",
+          "Bạn ăn gì?"
+        ],
+        "correct_answer": "我家有妈妈和爸爸。",
+        "correct_answer_vi": "我家有妈妈和爸爸。",
+        "acceptable_variants": [
+          "我家有妈妈和爸爸。",
+          "我家有爸爸和妈妈。"
+        ],
+        "explanation": "我家有... says what people are in your family.",
+        "explanation_vi": "我家有... dùng để nói trong gia đình có những ai."
+      },
+      {
+        "id": "hsk2-l06-ex2",
+        "kind": "matching",
+        "skill": "writing",
+        "bloom_level": "remember",
+        "prompt": "Match the family words.",
+        "prompt_vi": "Nối các từ về gia đình.",
+        "pairs": [
+          {
+            "left": "家",
+            "right": "family; home"
+          },
+          {
+            "left": "爸爸",
+            "right": "father"
+          },
+          {
+            "left": "妈妈",
+            "right": "mother"
+          },
+          {
+            "left": "有",
+            "right": "have"
+          }
+        ],
+        "correct_answer": {
+          "家": "family; home",
+          "爸爸": "father",
+          "妈妈": "mother",
+          "有": "have"
+        },
+        "correct_answer_vi": {
+          "家": "nhà/gia đình",
+          "爸爸": "bố",
+          "妈妈": "mẹ",
+          "有": "có"
+        },
+        "acceptable_variants": [],
+        "explanation": "These are core HSK family-description words.",
+        "explanation_vi": "Đây là các từ cốt lõi để miêu tả gia đình ở HSK."
+      },
+      {
+        "id": "hsk2-l06-ex3",
+        "kind": "fill_blank",
+        "skill": "writing",
+        "bloom_level": "apply",
+        "prompt": "Complete: 我家___三个人。",
+        "prompt_vi": "Hoàn thành: 我家___三个人。",
+        "options": [
+          "有",
+          "叫",
+          "坐",
+          "贵"
+        ],
+        "options_vi": [
+          "có",
+          "tên là",
+          "ngồi/đi bằng",
+          "đắt"
+        ],
+        "correct_answer": "有",
+        "correct_answer_vi": "有",
+        "acceptable_variants": [
+          "有"
+        ],
+        "explanation": "有 means \"have/there is\" in this sentence.",
+        "explanation_vi": "Trong câu này, 有 nghĩa là \"có\"."
+      },
+      {
+        "id": "hsk2-l06-ex4",
         "kind": "word_order",
         "skill": "writing",
         "bloom_level": "apply",
-        "prompt": "Arrange the sentence: My family has three people.",
+        "prompt": "Put the words in order: 有 / 我家 / 爸爸 / 妈妈 / 和",
+        "prompt_vi": "Sắp xếp các từ: 有 / 我家 / 爸爸 / 妈妈 / 和",
         "tokens": [
           "我家",
           "有",
-          "三个人"
+          "爸爸",
+          "和",
+          "妈妈"
         ],
-        "correct_answer": "我家 有 三个人",
+        "correct_answer": "我家有爸爸和妈妈。",
+        "correct_answer_vi": "Nhà tôi có bố và mẹ.",
         "acceptable_variants": [
-          "我家有三个人"
+          "我家有爸爸和妈妈",
+          "我家有爸爸和妈妈。",
+          "我家有妈妈和爸爸。"
         ],
-        "explanation": "Use place/person + 有 + noun phrase.",
-        "prompt_vi": "Arrange the sentence: My family has three people.",
-        "options_vi": [],
-        "correct_answer_vi": "我家 有 三个人",
-        "explanation_vi": "Use place/person + 有 + noun phrase."
+        "explanation": "我家 comes first, followed by 有 and the family members.",
+        "explanation_vi": "我家 đứng đầu, sau đó là 有 và các thành viên gia đình."
+      },
+      {
+        "id": "hsk2-l06-ex5",
+        "kind": "cloze",
+        "skill": "reading",
+        "bloom_level": "understand",
+        "prompt": "Read: 我家有三个人：爸爸、妈妈和我。 Who is mentioned?",
+        "prompt_vi": "Đọc: 我家有三个人：爸爸、妈妈和我。 Những ai được nhắc đến?",
+        "options": [
+          "father, mother, and me",
+          "teacher and doctor",
+          "bus and school",
+          "rice and water"
+        ],
+        "options_vi": [
+          "bố, mẹ và tôi",
+          "giáo viên và bác sĩ",
+          "xe buýt và trường học",
+          "cơm và nước"
+        ],
+        "correct_answer": "father, mother, and me",
+        "correct_answer_vi": "bố, mẹ và tôi",
+        "acceptable_variants": [
+          "father, mother, and me",
+          "爸爸、妈妈和我"
+        ],
+        "explanation": "爸爸、妈妈和我 names the three people.",
+        "explanation_vi": "爸爸、妈妈和我 nêu ba người trong gia đình."
+      },
+      {
+        "id": "hsk2-l06-ex6",
+        "kind": "short_answer",
+        "skill": "writing",
+        "bloom_level": "create",
+        "prompt": "Write one sentence about your family using 我家有.",
+        "prompt_vi": "Viết một câu về gia đình bạn, dùng 我家有.",
+        "model_answer": "我家有三个人。",
+        "correct_answer": "我家有...",
+        "correct_answer_vi": "我家有...",
+        "acceptable_variants": [
+          "我家有三个人。",
+          "我家有爸爸和妈妈。",
+          "我家有妈妈。"
+        ],
+        "explanation": "A short sentence with 我家有 is enough for HSK 2 writing practice.",
+        "explanation_vi": "Một câu ngắn với 我家有 là phù hợp cho luyện viết HSK 2."
       }
     ]
   },

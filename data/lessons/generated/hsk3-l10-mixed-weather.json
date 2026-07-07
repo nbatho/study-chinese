@@ -56,7 +56,10 @@
           "pinyin": "Míng tiān huì xià yǔ.",
           "en": "It will rain tomorrow."
         }
-      ]
+      ],
+      "hsk_level": 3,
+      "cefr_level": "A2",
+      "explanation_vi": "Dùng 会 để nói một việc có khả năng xảy ra."
     }
   ],
   "warm_up": {
@@ -85,19 +88,167 @@
       {
         "id": "hsk3-l10-ex1",
         "kind": "multiple_choice",
-        "skill": "mixed",
+        "skill": "listening",
         "bloom_level": "understand",
-        "prompt": "What may happen tomorrow?",
+        "prompt": "Read/listen: 明天会下雨。 What will happen tomorrow?",
+        "prompt_vi": "Đọc/nghe: 明天会下雨。 Ngày mai sẽ xảy ra điều gì?",
         "options": [
-          "It may rain.",
-          "It may snow.",
-          "It may be very hot."
+          "It will rain.",
+          "It will be expensive.",
+          "There is class.",
+          "Take the bus."
         ],
-        "correct_answer": "It may rain.",
+        "options_vi": [
+          "Trời sẽ mưa.",
+          "Nó sẽ đắt.",
+          "Có lớp học.",
+          "Đi xe buýt."
+        ],
+        "correct_answer": "It will rain.",
+        "correct_answer_vi": "Trời sẽ mưa.",
         "acceptable_variants": [
-          "It may rain."
+          "It will rain.",
+          "rain",
+          "下雨"
         ],
-        "explanation": "可能会下雨 means it may rain."
+        "explanation": "会下雨 means will probably rain.",
+        "explanation_vi": "会下雨 nghĩa là có khả năng/sẽ mưa."
+      },
+      {
+        "id": "hsk3-l10-ex2",
+        "kind": "matching",
+        "skill": "reading",
+        "bloom_level": "remember",
+        "prompt": "Match the weather words.",
+        "prompt_vi": "Nối các từ về thời tiết.",
+        "pairs": [
+          {
+            "left": "明天",
+            "right": "tomorrow"
+          },
+          {
+            "left": "会",
+            "right": "will; can"
+          },
+          {
+            "left": "下雨",
+            "right": "rain"
+          },
+          {
+            "left": "天气",
+            "right": "weather"
+          }
+        ],
+        "correct_answer": {
+          "明天": "tomorrow",
+          "会": "will; can",
+          "下雨": "rain",
+          "天气": "weather"
+        },
+        "correct_answer_vi": {
+          "明天": "ngày mai",
+          "会": "sẽ/có thể",
+          "下雨": "mưa",
+          "天气": "thời tiết"
+        },
+        "acceptable_variants": [],
+        "explanation": "These words are enough for a simple weather forecast.",
+        "explanation_vi": "Các từ này đủ để tạo một dự báo thời tiết đơn giản."
+      },
+      {
+        "id": "hsk3-l10-ex3",
+        "kind": "fill_blank",
+        "skill": "reading",
+        "bloom_level": "apply",
+        "prompt": "Complete: 明天___下雨。",
+        "prompt_vi": "Hoàn thành: 明天___下雨。",
+        "options": [
+          "会",
+          "贵",
+          "医生",
+          "钱"
+        ],
+        "options_vi": [
+          "sẽ/có thể",
+          "đắt",
+          "bác sĩ",
+          "tiền"
+        ],
+        "correct_answer": "会",
+        "correct_answer_vi": "会",
+        "acceptable_variants": [
+          "会"
+        ],
+        "explanation": "会 before a verb can discuss a likely future event.",
+        "explanation_vi": "会 đứng trước động từ để nói về một sự việc có khả năng xảy ra trong tương lai."
+      },
+      {
+        "id": "hsk3-l10-ex4",
+        "kind": "word_order",
+        "skill": "writing",
+        "bloom_level": "apply",
+        "prompt": "Put the words in order: 会 / 明天 / 下雨",
+        "prompt_vi": "Sắp xếp các từ: 会 / 明天 / 下雨",
+        "tokens": [
+          "明天",
+          "会",
+          "下雨"
+        ],
+        "correct_answer": "明天会下雨。",
+        "correct_answer_vi": "Ngày mai trời sẽ mưa.",
+        "acceptable_variants": [
+          "明天会下雨",
+          "明天会下雨。"
+        ],
+        "explanation": "Time words such as 明天 often appear near the start.",
+        "explanation_vi": "Từ chỉ thời gian như 明天 thường đứng gần đầu câu."
+      },
+      {
+        "id": "hsk3-l10-ex5",
+        "kind": "cloze",
+        "skill": "reading",
+        "bloom_level": "analyze",
+        "prompt": "Read: 明天天气不好，可能会下雨。 What should you understand?",
+        "prompt_vi": "Đọc: 明天天气不好，可能会下雨。 Bạn nên hiểu điều gì?",
+        "options": [
+          "The weather may be bad and rainy.",
+          "The teacher is at school.",
+          "The cup is cheap.",
+          "The station is in Beijing."
+        ],
+        "options_vi": [
+          "Thời tiết có thể xấu và có mưa.",
+          "Giáo viên ở trường.",
+          "Cốc rẻ.",
+          "Nhà ga ở Bắc Kinh."
+        ],
+        "correct_answer": "The weather may be bad and rainy.",
+        "correct_answer_vi": "Thời tiết có thể xấu và có mưa.",
+        "acceptable_variants": [
+          "bad and rainy",
+          "may rain",
+          "天气不好，可能会下雨"
+        ],
+        "explanation": "可能会下雨 shows uncertainty about rain.",
+        "explanation_vi": "可能会下雨 cho thấy khả năng có mưa, chưa hoàn toàn chắc chắn."
+      },
+      {
+        "id": "hsk3-l10-ex6",
+        "kind": "short_answer",
+        "skill": "speaking",
+        "bloom_level": "create",
+        "prompt": "Make one weather sentence with 明天 and 会.",
+        "prompt_vi": "Tạo một câu về thời tiết, dùng 明天 và 会.",
+        "model_answer": "明天会下雨。",
+        "correct_answer": "明天会...",
+        "correct_answer_vi": "明天会...",
+        "acceptable_variants": [
+          "明天会下雨。",
+          "明天天气会很好。",
+          "明天会很热。"
+        ],
+        "explanation": "A2 learners can make a short prediction about familiar daily topics.",
+        "explanation_vi": "Người học A2 có thể tạo câu dự đoán ngắn về chủ đề quen thuộc hằng ngày."
       }
     ]
   },

@@ -30,6 +30,9 @@ const KIND_MAP = {
   multiple_choice: 'multipleChoice',
   word_order: 'arrangeSentence',
   fill_blank: 'fillBlank',
+  cloze: 'multipleChoice',
+  dialogue_choice: 'multipleChoice',
+  matching: 'multipleChoice',
   true_false: 'trueFalse',
   listening_comprehension: 'listeningComprehension',
   reading_comprehension: 'readingComprehension'
@@ -229,9 +232,44 @@ const normalizePassageRows = (lesson) => {
   return rows;
 };
 
+const normalizeMatchingExercise = (exercise) => {
+  const pairs = Array.isArray(exercise.pairs) ? exercise.pairs.filter((pair) => pair?.left && pair?.right) : [];
+
+  if (pairs.length === 0) {
+    return exercise;
+  }
+
+  const target = pairs[0];
+  const viAnswers = exercise.correct_answer_vi && typeof exercise.correct_answer_vi === 'object'
+    ? exercise.correct_answer_vi
+    : {};
+  const optionValues = [...new Set(pairs.map((pair) => pair.right).filter(Boolean))];
+  const optionValuesVi = optionValues.map((value) => {
+    const pair = pairs.find((item) => item.right === value);
+    return pair ? viAnswers[pair.left] || value : value;
+  });
+
+  return {
+    ...exercise,
+    kind: 'matching',
+    prompt: `Which meaning matches ${target.left}?`,
+    prompt_vi: `Nghĩa nào khớp với ${target.left}?`,
+    options: optionValues,
+    options_vi: optionValuesVi,
+    correct_answer: target.right,
+    correct_answer_vi: viAnswers[target.left] || target.right,
+    acceptable_variants: [target.right]
+  };
+};
+
 const normalizeExercise = (lesson, exercise, index) => {
-  const options = Array.isArray(exercise.options) ? exercise.options : [];
-  const correctAnswer = exercise.correct_answer ?? exercise.correctText ?? '';
+  exercise = exercise.kind === 'matching' ? normalizeMatchingExercise(exercise) : exercise;
+  const options = Array.isArray(exercise.options) && exercise.options.length > 0
+    ? exercise.options
+    : Array.isArray(exercise.tokens)
+      ? exercise.tokens
+      : [];
+  const correctAnswer = exercise.correct_answer ?? exercise.correctText ?? exercise.model_answer ?? '';
   const correctIndex = options.findIndex((option) => String(option) === String(correctAnswer));
 
   return {
