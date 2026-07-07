@@ -1,95 +1,155 @@
 {
-  "generated_at": "2026-07-07T15:15:53.839Z",
-  "count": 10,
+  "generated_at": "2026-07-07T16:45:00.649Z",
+  "count": 6,
   "entries": [
     {
-      "id": "grammar_e68891e58fab2e2e2e",
-      "pattern": "我叫...",
+      "id": "grammar_e68891e698af2e2e2e",
+      "pattern": "我是...",
       "hsk_level": 1,
       "cefr_level": "A1",
       "source_lesson_ids": [
-        "hsk1-l01-listening-greetings"
+        "hsk1-l01-reading-introductions",
+        "hsk1-l02-reading-introductions",
+        "hsk1-l03-writing-introductions",
+        "hsk1-l04-speaking-introductions",
+        "hsk1-l05-reading-family",
+        "hsk1-l06-reading-family",
+        "hsk1-l07-reading-family",
+        "hsk1-l08-listening-family",
+        "hsk1-l09-reading-daily-life",
+        "hsk1-l10-reading-daily-life",
+        "hsk1-l11-writing-daily-life",
+        "hsk1-l12-listening-daily-life",
+        "hsk1-l13-reading-shopping",
+        "hsk1-l14-reading-shopping",
+        "hsk1-l15-reading-shopping",
+        "hsk1-l16-speaking-shopping",
+        "hsk1-l17-mixed-end-test"
       ]
     },
     {
-      "id": "grammar_e695b0e5ad97202b20e4b8aa",
-      "pattern": "数字 + 个",
-      "hsk_level": 1,
-      "cefr_level": "A1",
-      "source_lesson_ids": [
-        "hsk1-l02-reading-numbers"
-      ]
-    },
-    {
-      "id": "grammar_2e2e2ee59083e4bb80e4b988efbc9f",
-      "pattern": "...吃什么？",
-      "hsk_level": 1,
-      "cefr_level": "A1",
-      "source_lesson_ids": [
-        "hsk1-l03-speaking-food"
-      ]
-    },
-    {
-      "id": "grammar_2e2e2ee5a49ae5b091e992b1efbc9f",
-      "pattern": "...多少钱？",
+      "id": "grammar_e59ca82be59cb0e782b9",
+      "pattern": "在+地点",
       "hsk_level": 2,
       "cefr_level": "A2",
       "source_lesson_ids": [
-        "hsk2-l04-reading-shopping"
+        "hsk2-l01-reading-home-city",
+        "hsk2-l02-reading-home-city",
+        "hsk2-l03-writing-home-city",
+        "hsk2-l04-listening-home-city",
+        "hsk2-l05-reading-plans",
+        "hsk2-l06-speaking-plans",
+        "hsk2-l07-reading-plans",
+        "hsk2-l08-writing-plans",
+        "hsk2-l09-reading-food-travel",
+        "hsk2-l10-listening-food-travel",
+        "hsk2-l11-speaking-food-travel",
+        "hsk2-l12-reading-food-travel",
+        "hsk2-l13-reading-health-weather",
+        "hsk2-l14-reading-health-weather",
+        "hsk2-l15-writing-health-weather",
+        "hsk2-l16-speaking-health-weather",
+        "hsk2-l17-mixed-end-test"
       ]
     },
     {
-      "id": "grammar_e59d90202b20e4baa4e9809ae5b7a5e585b7202b",
-      "pattern": "坐 + 交通工具 + 去...",
-      "hsk_level": 2,
-      "cefr_level": "A2",
-      "source_lesson_ids": [
-        "hsk2-l05-listening-transportation"
-      ]
-    },
-    {
-      "id": "grammar_e68891e5aeb6e69c892e2e2e",
-      "pattern": "我家有...",
-      "hsk_level": 2,
-      "cefr_level": "A2",
-      "source_lesson_ids": [
-        "hsk2-l06-writing-family"
-      ]
-    },
-    {
-      "id": "grammar_e8a681202b20e58aa8e8af8d",
-      "pattern": "要 + 动词",
+      "id": "grammar_e59ba0e4b8ba2e2e2ee68980e4bba52e2e2e",
+      "pattern": "因为...所以...",
       "hsk_level": 3,
       "cefr_level": "B1",
       "source_lesson_ids": [
-        "hsk3-l07-reading-education"
+        "hsk3-l01-reading-experiences",
+        "hsk3-l02-listening-experiences",
+        "hsk3-l03-speaking-experiences",
+        "hsk3-l04-writing-experiences",
+        "hsk3-l05-listening-travel",
+        "hsk3-l06-speaking-travel",
+        "hsk3-l07-reading-travel",
+        "hsk3-l08-writing-travel",
+        "hsk3-l09-reading-study-work",
+        "hsk3-l10-listening-study-work",
+        "hsk3-l11-speaking-study-work",
+        "hsk3-l12-speaking-study-work",
+        "hsk3-l13-reading-media-opinions",
+        "hsk3-l14-listening-media-opinions",
+        "hsk3-l15-speaking-media-opinions",
+        "hsk3-l16-writing-media-opinions",
+        "hsk3-l17-mixed-end-test"
       ]
     },
     {
-      "id": "grammar_e69c89e782b9e584bf202b20e5bda2e5aeb9e8af",
-      "pattern": "有点儿 + 形容词",
-      "hsk_level": 3,
-      "cefr_level": "B1",
+      "id": "grammar_e899bde784b62e2e2ee4bd86e698af2e2e2e",
+      "pattern": "虽然...但是...",
+      "hsk_level": 4,
+      "cefr_level": "B2",
       "source_lesson_ids": [
-        "hsk3-l08-listening-health"
+        "hsk4-l01-reading-arguments",
+        "hsk4-l02-listening-arguments",
+        "hsk4-l03-speaking-arguments",
+        "hsk4-l04-writing-arguments",
+        "hsk4-l05-listening-workplace",
+        "hsk4-l06-speaking-workplace",
+        "hsk4-l07-reading-workplace",
+        "hsk4-l08-writing-workplace",
+        "hsk4-l09-reading-culture",
+        "hsk4-l10-listening-culture",
+        "hsk4-l11-speaking-culture",
+        "hsk4-l12-reading-culture",
+        "hsk4-l13-reading-news",
+        "hsk4-l14-listening-news",
+        "hsk4-l15-speaking-news",
+        "hsk4-l16-writing-news",
+        "hsk4-l17-mixed-end-test"
       ]
     },
     {
-      "id": "grammar_e8afb7e997ae2e2e2e",
-      "pattern": "请问...",
-      "hsk_level": 3,
-      "cefr_level": "B1",
+      "id": "grammar_e4b88de4bb852e2e2ee8808ce4b8942e2e2e",
+      "pattern": "不仅...而且...",
+      "hsk_level": 5,
+      "cefr_level": "C1",
       "source_lesson_ids": [
-        "hsk3-l09-speaking-travel"
+        "hsk5-l01-reading-implicit-meaning",
+        "hsk5-l02-listening-implicit-meaning",
+        "hsk5-l03-speaking-implicit-meaning",
+        "hsk5-l04-writing-implicit-meaning",
+        "hsk5-l05-reading-academic",
+        "hsk5-l06-listening-academic",
+        "hsk5-l07-speaking-academic",
+        "hsk5-l08-writing-academic",
+        "hsk5-l09-listening-social-professional",
+        "hsk5-l10-speaking-social-professional",
+        "hsk5-l11-reading-social-professional",
+        "hsk5-l12-writing-social-professional",
+        "hsk5-l13-reading-debate",
+        "hsk5-l14-listening-debate",
+        "hsk5-l15-speaking-debate",
+        "hsk5-l16-writing-debate",
+        "hsk5-l17-mixed-end-test"
       ]
     },
     {
-      "id": "grammar_e4bc9a202b20e58aa8e8af8d",
-      "pattern": "会 + 动词",
-      "hsk_level": 3,
-      "cefr_level": "B1",
+      "id": "grammar_e697a22e2e2ee58f882e2e2e",
+      "pattern": "既...又...",
+      "hsk_level": 6,
+      "cefr_level": "C2",
       "source_lesson_ids": [
-        "hsk3-l10-mixed-weather"
+        "hsk6-l01-reading-synthesis",
+        "hsk6-l02-listening-synthesis",
+        "hsk6-l03-speaking-synthesis",
+        "hsk6-l04-writing-synthesis",
+        "hsk6-l05-reading-precision",
+        "hsk6-l06-listening-precision",
+        "hsk6-l07-speaking-precision",
+        "hsk6-l08-reading-precision",
+        "hsk6-l09-reading-public-discourse",
+        "hsk6-l10-listening-public-discourse",
+        "hsk6-l11-speaking-public-discourse",
+        "hsk6-l12-writing-public-discourse",
+        "hsk6-l13-reading-masterclass",
+        "hsk6-l14-listening-masterclass",
+        "hsk6-l15-speaking-masterclass",
+        "hsk6-l16-writing-masterclass",
+        "hsk6-l17-mixed-end-test"
       ]
     }
   ]

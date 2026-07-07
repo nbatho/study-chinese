@@ -346,7 +346,19 @@ const getActiveReleaseId = async (client) => {
 
 const ensureWord = async (client, item, lesson) => {
   if (item.word_id) {
-    return item.word_id;
+    const existingById = await client.query(
+      `
+        SELECT id
+        FROM words
+        WHERE id = $1 AND is_active = true
+        LIMIT 1
+      `,
+      [item.word_id]
+    );
+
+    if (existingById.rowCount > 0) {
+      return item.word_id;
+    }
   }
 
   const simplified = String(item.simplified || '').trim();

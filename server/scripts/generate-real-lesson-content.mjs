@@ -2,15 +2,16 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { callOpenAiCompatibleJson } from '../src/services/content-ai-client.js';
-import { hasDatabaseConfig } from '../src/config/env.config.js';
-import { ContentReviewer } from '../src/services/content-reviewer.js';
-import { ContentValidator } from '../src/services/content-validator.js';
-import { resolveContentPath } from '../src/config/content-paths.js';
-import { localizeLesson } from '../src/services/content-language.service.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
+
+const { callOpenAiCompatibleJson } = await import('../src/services/content-ai-client.js');
+const { hasDatabaseConfig } = await import('../src/config/env.config.js');
+const { ContentReviewer } = await import('../src/services/content-reviewer.js');
+const { ContentValidator } = await import('../src/services/content-validator.js');
+const { resolveContentPath } = await import('../src/config/content-paths.js');
+const { localizeLesson } = await import('../src/services/content-language.service.js');
 
 const args = process.argv.slice(2);
 const hasFlag = (name) => args.includes(`--${name}`);
@@ -37,6 +38,7 @@ const maxRetries = Number(readArg('retries', 3));
 const saveOutput = hasFlag('save');
 const reviewEnabled = !hasFlag('skip-ai-review');
 const logToDatabase = !hasFlag('no-db-log');
+const dbChecks = hasFlag('db-checks');
 const outputDir = resolveContentPath(readArg('output-dir'), ['lessons', 'real']);
 const targetWords = readArg('target-words', '')
   .split(',')
@@ -46,6 +48,19 @@ const grammarPatterns = readArg('grammar', '')
   .split(',')
   .map((item) => item.trim())
   .filter(Boolean);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const rateLimitDelayMs = (error) => {
+  const message = String(error?.message || '');
+  if (!message.includes('429') && !message.toLowerCase().includes('rate limit')) {
+    return 0;
+  }
+
+  const match = message.match(/try again in\s+([\d.]+)s/i);
+  const seconds = match ? Number(match[1]) : 65;
+  return Math.max(10_000, Math.ceil(seconds * 1000) + 2_000);
+};
 
 const lessonTemplateSkeleton = {
   lesson_id: '<lesson_id>',
@@ -203,13 +218,13 @@ Hard requirements:
 - Return only one JSON object. Do not return markdown, prose, an array, or an empty object.
 - The top-level keys must be exactly compatible with: lesson_id, metadata, learning_objectives, vocabulary_focus, grammar_focus, warm_up, core_modules, practice, review.
 - Use the exact lesson_id, metadata.hsk_level, metadata.primary_skill, and metadata.topic from the lesson spec.
-- Set metadata.cefr_level by CEFR can-do scope, not by HSK number alone: A1 for familiar concrete phrases; A2 for routine immediate needs; B1 for clear connected familiar input or travel/school/work situations; never use B2+ for simple HSK 1-3 content.
+- Set metadata.cefr_level by CEFR can-do scope according strictly to https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages, not by HSK number alone: A1 for familiar concrete phrases; A2 for routine immediate needs; B1 for clear connected familiar input or travel/school/work situations; never use B2+ for simple HSK 1-3 content.
 - Set metadata.cefr_activities from the primary skill: listening/reading = ["reception"], speaking = ["production","interaction"], writing = ["production"], mixed = ["reception","production","interaction"].
 - Fill every placeholder with real lesson content. Do not leave placeholder text.
 - Use only HSK ${level} or lower vocabulary unless target_words lists a word.
 - Keep Chinese content original. Do not copy textbook passages, exam items, paid courses, or existing online content.
 - For HSK 1-2, keep total Chinese lesson text around 30-80 Chinese characters.
-- Every learner-facing primary field must be Chinese: learning_objectives, grammar_focus.explanation, practice.exercises[].prompt, practice.exercises[].options, practice.exercises[].correct_answer, practice.exercises[].explanation, and review.key_takeaways.
+- Every learner-facing primary field MUST strictly be in Chinese: learning_objectives, grammar_focus.explanation, practice.exercises[].prompt, practice.exercises[].options, practice.exercises[].correct_answer, practice.exercises[].explanation, and review.key_takeaways. For all types of lessons, all levels, topics, and sub-lessons, all questions (prompts) and all answers (options, correct_answer) MUST strictly be in Chinese. No English or Vietnamese is allowed in the primary question and answer fields.
 - Do not put English instruction words like "choose", "what", "answer", "arrange", "match", or "mean" in learner-facing primary fields.
 - Every exercise must include kind, skill, bloom_level, prompt, correct_answer, acceptable_variants, and explanation.
 - Include Vietnamese fields next to English content: title_vi, learning_objectives_vi, explanation_vi, prompt_vi, options_vi, correct_answer_vi, key_takeaways_vi, and example vi.
@@ -431,7 +446,10 @@ const run = async () => {
   requireValidArgs();
 
   const basePrompt = await loadGenerationPrompt();
-  const validator = new ContentValidator({ requireDatabaseChecks: true });
+  const validator = new ContentValidator({
+    skipDatabaseChecks: !dbChecks,
+    requireDatabaseChecks: dbChecks
+  });
   const reviewer = reviewEnabled ? new ContentReviewer() : null;
   let lastResult;
   let feedback = '';
@@ -481,6 +499,11 @@ ${feedback ? `Previous issues to fix before returning the next JSON:\n${feedback
     } catch (error) {
       lastError = error;
       feedback = `Generation failed before validation: ${error.message}`;
+      const waitMs = rateLimitDelayMs(error);
+      if (waitMs > 0 && attempt < maxRetries) {
+        console.log(`Rate limit hit. Waiting ${Math.ceil(waitMs / 1000)} seconds before retrying...`);
+        await sleep(waitMs);
+      }
     }
   }
 

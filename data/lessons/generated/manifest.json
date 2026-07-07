@@ -1,51 +1,53 @@
 {
-  "generated_at": "2026-07-07T15:15:49.722Z",
+  "generated_at": "2026-07-07T16:44:54.473Z",
   "schema": "../schemas/lesson-template.schema.json",
-  "count": 11,
+  "count": 102,
   "lessons": [
     {
-      "lesson_id": "hsk1-l01-listening-greetings",
-      "file": "hsk1-l01-listening-greetings.json",
-      "hsk_level": 1,
-      "cefr_level": "A1",
-      "cefr_activities": [
-        "reception"
-      ],
-      "primary_skill": "listening",
-      "topic": "greetings",
-      "title_zh": "你好！",
-      "title_en": "Hello!"
-    },
-    {
-      "lesson_id": "hsk1-l02-reading-numbers",
-      "file": "hsk1-l02-reading-numbers.json",
+      "lesson_id": "hsk1-l01-reading-introductions",
+      "file": "hsk1-l01-reading-introductions.json",
       "hsk_level": 1,
       "cefr_level": "A1",
       "cefr_activities": [
         "reception"
       ],
       "primary_skill": "reading",
-      "topic": "numbers",
-      "title_zh": "一二三",
-      "title_en": "One, Two, Three"
+      "topic": "introductions",
+      "title_zh": "自我介绍",
+      "title_en": "Pronouns and basic identity sentences",
+      "title_vi": "giới thiệu bản thân - đọc"
     },
     {
-      "lesson_id": "hsk1-l03-speaking-food",
-      "file": "hsk1-l03-speaking-food.json",
+      "lesson_id": "hsk1-l02-reading-introductions",
+      "file": "hsk1-l02-reading-introductions.json",
       "hsk_level": 1,
       "cefr_level": "A1",
       "cefr_activities": [
-        "production",
-        "interaction"
+        "reception"
       ],
-      "primary_skill": "speaking",
-      "topic": "food",
-      "title_zh": "今天吃什么？",
-      "title_en": "What Are We Eating Today?"
+      "primary_skill": "reading",
+      "topic": "introductions",
+      "title_zh": "自我介绍",
+      "title_en": "Greetings, countries, and jobs",
+      "title_vi": "giới thiệu bản thân - đọc"
     },
     {
-      "lesson_id": "hsk1-l04-speaking-self-introduction",
-      "file": "hsk1-l04-speaking-self-introduction.json",
+      "lesson_id": "hsk1-l03-writing-introductions",
+      "file": "hsk1-l03-writing-introductions.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "introductions",
+      "title_zh": "自我介绍",
+      "title_en": "Yes/no and question-word forms",
+      "title_vi": "giới thiệu bản thân - viết"
+    },
+    {
+      "lesson_id": "hsk1-l04-speaking-introductions",
+      "file": "hsk1-l04-speaking-introductions.json",
       "hsk_level": 1,
       "cefr_level": "A1",
       "cefr_activities": [
@@ -54,77 +56,512 @@
       ],
       "primary_skill": "speaking",
       "topic": "introductions",
-      "title_zh": "我叫安娜",
-      "title_en": "First Self-introduction"
+      "title_zh": "自我介绍",
+      "title_en": "First self-introduction",
+      "title_vi": "giới thiệu bản thân - nói"
     },
     {
-      "lesson_id": "hsk2-l04-reading-shopping",
-      "file": "hsk2-l04-reading-shopping.json",
+      "lesson_id": "hsk1-l05-reading-family",
+      "file": "hsk1-l05-reading-family.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "family",
+      "title_zh": "家庭",
+      "title_en": "Family members and basic adjectives",
+      "title_vi": "gia đình - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l06-reading-family",
+      "file": "hsk1-l06-reading-family.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "family",
+      "title_zh": "家庭",
+      "title_en": "Possession and have/has patterns",
+      "title_vi": "gia đình - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l07-reading-family",
+      "file": "hsk1-l07-reading-family.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "family",
+      "title_zh": "家庭",
+      "title_en": "A short family profile",
+      "title_vi": "gia đình - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l08-listening-family",
+      "file": "hsk1-l08-listening-family.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "family",
+      "title_zh": "家庭",
+      "title_en": "Recognizing family descriptions",
+      "title_vi": "gia đình - nghe"
+    },
+    {
+      "lesson_id": "hsk1-l09-reading-daily-life",
+      "file": "hsk1-l09-reading-daily-life.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "daily-life",
+      "title_zh": "日常生活",
+      "title_en": "Present habits and daily actions",
+      "title_vi": "sinh hoạt hằng ngày - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l10-reading-daily-life",
+      "file": "hsk1-l10-reading-daily-life.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "daily-life",
+      "title_zh": "日常生活",
+      "title_en": "Time, weekdays, and daily verbs",
+      "title_vi": "sinh hoạt hằng ngày - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l11-writing-daily-life",
+      "file": "hsk1-l11-writing-daily-life.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "daily-life",
+      "title_zh": "日常生活",
+      "title_en": "Frequency words in short routines",
+      "title_vi": "sinh hoạt hằng ngày - viết"
+    },
+    {
+      "lesson_id": "hsk1-l12-listening-daily-life",
+      "file": "hsk1-l12-listening-daily-life.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "daily-life",
+      "title_zh": "日常生活",
+      "title_en": "A simple daily schedule",
+      "title_vi": "sinh hoạt hằng ngày - nghe"
+    },
+    {
+      "lesson_id": "hsk1-l13-reading-shopping",
+      "file": "hsk1-l13-reading-shopping.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "shopping",
+      "title_zh": "购物",
+      "title_en": "Numbers, prices, food, and objects",
+      "title_vi": "mua sắm - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l14-reading-shopping",
+      "file": "hsk1-l14-reading-shopping.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "shopping",
+      "title_zh": "购物",
+      "title_en": "There is, there are, and simple negatives",
+      "title_vi": "mua sắm - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l15-reading-shopping",
+      "file": "hsk1-l15-reading-shopping.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "shopping",
+      "title_zh": "购物",
+      "title_en": "Menus, price tags, and labels",
+      "title_vi": "mua sắm - đọc"
+    },
+    {
+      "lesson_id": "hsk1-l16-speaking-shopping",
+      "file": "hsk1-l16-speaking-shopping.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "shopping",
+      "title_zh": "购物",
+      "title_en": "Buying something politely",
+      "title_vi": "mua sắm - nói"
+    },
+    {
+      "lesson_id": "hsk1-l17-mixed-end-test",
+      "file": "hsk1-l17-mixed-end-test.json",
+      "hsk_level": 1,
+      "cefr_level": "A1",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "mixed",
+      "topic": "end-test",
+      "title_zh": "阶段复习",
+      "title_en": "HSK 1 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 1"
+    },
+    {
+      "lesson_id": "hsk2-l01-reading-home-city",
+      "file": "hsk2-l01-reading-home-city.json",
       "hsk_level": 2,
       "cefr_level": "A2",
       "cefr_activities": [
         "reception"
       ],
       "primary_skill": "reading",
-      "topic": "shopping",
-      "title_zh": "多少钱？",
-      "title_en": "How Much Is It?"
+      "topic": "home-city",
+      "title_zh": "家和城市",
+      "title_en": "Location words and existence patterns",
+      "title_vi": "nhà và thành phố - đọc"
     },
     {
-      "lesson_id": "hsk2-l05-listening-transportation",
-      "file": "hsk2-l05-listening-transportation.json",
+      "lesson_id": "hsk2-l02-reading-home-city",
+      "file": "hsk2-l02-reading-home-city.json",
       "hsk_level": 2,
       "cefr_level": "A2",
       "cefr_activities": [
         "reception"
       ],
-      "primary_skill": "listening",
-      "topic": "transportation",
-      "title_zh": "去学校",
-      "title_en": "Going to School"
+      "primary_skill": "reading",
+      "topic": "home-city",
+      "title_zh": "家和城市",
+      "title_en": "Neighborhood places and directions",
+      "title_vi": "nhà và thành phố - đọc"
     },
     {
-      "lesson_id": "hsk2-l06-writing-family",
-      "file": "hsk2-l06-writing-family.json",
+      "lesson_id": "hsk2-l03-writing-home-city",
+      "file": "hsk2-l03-writing-home-city.json",
       "hsk_level": 2,
       "cefr_level": "A2",
       "cefr_activities": [
         "production"
       ],
       "primary_skill": "writing",
-      "topic": "family",
-      "title_zh": "我的家",
-      "title_en": "My Family"
+      "topic": "home-city",
+      "title_zh": "家和城市",
+      "title_en": "Describing your area",
+      "title_vi": "nhà và thành phố - viết"
     },
     {
-      "lesson_id": "hsk3-l07-reading-education",
-      "file": "hsk3-l07-reading-education.json",
+      "lesson_id": "hsk2-l04-listening-home-city",
+      "file": "hsk2-l04-listening-home-city.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "home-city",
+      "title_zh": "家和城市",
+      "title_en": "Following simple directions",
+      "title_vi": "nhà và thành phố - nghe"
+    },
+    {
+      "lesson_id": "hsk2-l05-reading-plans",
+      "file": "hsk2-l05-reading-plans.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "plans",
+      "title_zh": "计划",
+      "title_en": "Time phrases and future plans",
+      "title_vi": "kế hoạch - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l06-speaking-plans",
+      "file": "hsk2-l06-speaking-plans.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "plans",
+      "title_zh": "计划",
+      "title_en": "Making and accepting invitations",
+      "title_vi": "kế hoạch - nói"
+    },
+    {
+      "lesson_id": "hsk2-l07-reading-plans",
+      "file": "hsk2-l07-reading-plans.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "plans",
+      "title_zh": "计划",
+      "title_en": "Messages and appointment notes",
+      "title_vi": "kế hoạch - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l08-writing-plans",
+      "file": "hsk2-l08-writing-plans.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "plans",
+      "title_zh": "计划",
+      "title_en": "A short invitation message",
+      "title_vi": "kế hoạch - viết"
+    },
+    {
+      "lesson_id": "hsk2-l09-reading-food-travel",
+      "file": "hsk2-l09-reading-food-travel.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "food-travel",
+      "title_zh": "饮食和出行",
+      "title_en": "Meals, transport, and tickets",
+      "title_vi": "ăn uống và đi lại - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l10-listening-food-travel",
+      "file": "hsk2-l10-listening-food-travel.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "food-travel",
+      "title_zh": "饮食和出行",
+      "title_en": "Restaurant and transport exchanges",
+      "title_vi": "ăn uống và đi lại - nghe"
+    },
+    {
+      "lesson_id": "hsk2-l11-speaking-food-travel",
+      "file": "hsk2-l11-speaking-food-travel.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "food-travel",
+      "title_zh": "饮食和出行",
+      "title_en": "Ordering and asking for help",
+      "title_vi": "ăn uống và đi lại - nói"
+    },
+    {
+      "lesson_id": "hsk2-l12-reading-food-travel",
+      "file": "hsk2-l12-reading-food-travel.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "food-travel",
+      "title_zh": "饮食和出行",
+      "title_en": "Measure words and comparison basics",
+      "title_vi": "ăn uống và đi lại - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l13-reading-health-weather",
+      "file": "hsk2-l13-reading-health-weather.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "health-weather",
+      "title_zh": "健康和天气",
+      "title_en": "Weather reports and simple notices",
+      "title_vi": "sức khỏe và thời tiết - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l14-reading-health-weather",
+      "file": "hsk2-l14-reading-health-weather.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "health-weather",
+      "title_zh": "健康和天气",
+      "title_en": "Body, feelings, and weather",
+      "title_vi": "sức khỏe và thời tiết - đọc"
+    },
+    {
+      "lesson_id": "hsk2-l15-writing-health-weather",
+      "file": "hsk2-l15-writing-health-weather.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "health-weather",
+      "title_zh": "健康和天气",
+      "title_en": "Explaining a simple problem",
+      "title_vi": "sức khỏe và thời tiết - viết"
+    },
+    {
+      "lesson_id": "hsk2-l16-speaking-health-weather",
+      "file": "hsk2-l16-speaking-health-weather.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "health-weather",
+      "title_zh": "健康和天气",
+      "title_en": "Requesting help in routine situations",
+      "title_vi": "sức khỏe và thời tiết - nói"
+    },
+    {
+      "lesson_id": "hsk2-l17-mixed-end-test",
+      "file": "hsk2-l17-mixed-end-test.json",
+      "hsk_level": 2,
+      "cefr_level": "A2",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "mixed",
+      "topic": "end-test",
+      "title_zh": "阶段复习",
+      "title_en": "HSK 2 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 2"
+    },
+    {
+      "lesson_id": "hsk3-l01-reading-experiences",
+      "file": "hsk3-l01-reading-experiences.json",
       "hsk_level": 3,
       "cefr_level": "B1",
       "cefr_activities": [
         "reception"
       ],
       "primary_skill": "reading",
-      "topic": "education",
-      "title_zh": "今天的中文课",
-      "title_en": "Today's Chinese Class"
+      "topic": "experiences",
+      "title_zh": "个人经历阅读",
+      "title_en": "Reading a personal story",
+      "title_vi": "trải nghiệm cá nhân - đọc"
     },
     {
-      "lesson_id": "hsk3-l08-listening-health",
-      "file": "hsk3-l08-listening-health.json",
+      "lesson_id": "hsk3-l02-listening-experiences",
+      "file": "hsk3-l02-listening-experiences.json",
       "hsk_level": 3,
       "cefr_level": "B1",
       "cefr_activities": [
         "reception"
       ],
       "primary_skill": "listening",
-      "topic": "health",
-      "title_zh": "你怎么了？",
-      "title_en": "What Happened?"
+      "topic": "experiences",
+      "title_zh": "个人经历听力",
+      "title_en": "Listening to a travel or life story",
+      "title_vi": "trải nghiệm cá nhân - nghe"
     },
     {
-      "lesson_id": "hsk3-l09-speaking-travel",
-      "file": "hsk3-l09-speaking-travel.json",
+      "lesson_id": "hsk3-l03-speaking-experiences",
+      "file": "hsk3-l03-speaking-experiences.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "experiences",
+      "title_zh": "个人经历口语",
+      "title_en": "Retelling a memorable event",
+      "title_vi": "trải nghiệm cá nhân - nói"
+    },
+    {
+      "lesson_id": "hsk3-l04-writing-experiences",
+      "file": "hsk3-l04-writing-experiences.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "experiences",
+      "title_zh": "个人经历写作",
+      "title_en": "A connected experience paragraph",
+      "title_vi": "trải nghiệm cá nhân - viết"
+    },
+    {
+      "lesson_id": "hsk3-l05-listening-travel",
+      "file": "hsk3-l05-listening-travel.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "travel",
+      "title_zh": "旅行听力",
+      "title_en": "Hotel, station, and airport situations",
+      "title_vi": "du lịch - nghe"
+    },
+    {
+      "lesson_id": "hsk3-l06-speaking-travel",
+      "file": "hsk3-l06-speaking-travel.json",
       "hsk_level": 3,
       "cefr_level": "B1",
       "cefr_activities": [
@@ -133,12 +570,156 @@
       ],
       "primary_skill": "speaking",
       "topic": "travel",
-      "title_zh": "车站在哪里？",
-      "title_en": "Where Is the Station?"
+      "title_zh": "旅行口语",
+      "title_en": "Solving travel problems",
+      "title_vi": "du lịch - nói"
     },
     {
-      "lesson_id": "hsk3-l10-mixed-weather",
-      "file": "hsk3-l10-mixed-weather.json",
+      "lesson_id": "hsk3-l07-reading-travel",
+      "file": "hsk3-l07-reading-travel.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "travel",
+      "title_zh": "旅行阅读",
+      "title_en": "Schedules, notices, and travel guidance",
+      "title_vi": "du lịch - đọc"
+    },
+    {
+      "lesson_id": "hsk3-l08-writing-travel",
+      "file": "hsk3-l08-writing-travel.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "travel",
+      "title_zh": "旅行写作",
+      "title_en": "Changing or canceling a booking",
+      "title_vi": "du lịch - viết"
+    },
+    {
+      "lesson_id": "hsk3-l09-reading-study-work",
+      "file": "hsk3-l09-reading-study-work.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "study-work",
+      "title_zh": "学习和工作阅读",
+      "title_en": "Choosing a field or job",
+      "title_vi": "học tập và công việc - đọc"
+    },
+    {
+      "lesson_id": "hsk3-l10-listening-study-work",
+      "file": "hsk3-l10-listening-study-work.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "study-work",
+      "title_zh": "学习和工作听力",
+      "title_en": "A short interview about study or work",
+      "title_vi": "học tập và công việc - nghe"
+    },
+    {
+      "lesson_id": "hsk3-l11-speaking-study-work",
+      "file": "hsk3-l11-speaking-study-work.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "study-work",
+      "title_zh": "学习和工作口语",
+      "title_en": "Presenting goals and plans",
+      "title_vi": "học tập và công việc - nói"
+    },
+    {
+      "lesson_id": "hsk3-l12-speaking-study-work",
+      "file": "hsk3-l12-speaking-study-work.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "study-work",
+      "title_zh": "学习和工作口语",
+      "title_en": "Discussing choices and advice",
+      "title_vi": "học tập và công việc - nói"
+    },
+    {
+      "lesson_id": "hsk3-l13-reading-media-opinions",
+      "file": "hsk3-l13-reading-media-opinions.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "media-opinions",
+      "title_zh": "媒体和观点阅读",
+      "title_en": "A short article on daily life or media",
+      "title_vi": "truyền thông và quan điểm - đọc"
+    },
+    {
+      "lesson_id": "hsk3-l14-listening-media-opinions",
+      "file": "hsk3-l14-listening-media-opinions.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "media-opinions",
+      "title_zh": "媒体和观点听力",
+      "title_en": "A familiar-topic discussion",
+      "title_vi": "truyền thông và quan điểm - nghe"
+    },
+    {
+      "lesson_id": "hsk3-l15-speaking-media-opinions",
+      "file": "hsk3-l15-speaking-media-opinions.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "media-opinions",
+      "title_zh": "媒体和观点口语",
+      "title_en": "Giving a supported opinion",
+      "title_vi": "truyền thông và quan điểm - nói"
+    },
+    {
+      "lesson_id": "hsk3-l16-writing-media-opinions",
+      "file": "hsk3-l16-writing-media-opinions.json",
+      "hsk_level": 3,
+      "cefr_level": "B1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "media-opinions",
+      "title_zh": "媒体和观点写作",
+      "title_en": "A short opinion paragraph",
+      "title_vi": "truyền thông và quan điểm - viết"
+    },
+    {
+      "lesson_id": "hsk3-l17-mixed-end-test",
+      "file": "hsk3-l17-mixed-end-test.json",
       "hsk_level": 3,
       "cefr_level": "B1",
       "cefr_activities": [
@@ -147,9 +728,742 @@
         "interaction"
       ],
       "primary_skill": "mixed",
-      "topic": "weather",
-      "title_zh": "明天会下雨吗？",
-      "title_en": "Will It Rain Tomorrow?"
+      "topic": "end-test",
+      "title_zh": "HSK3阶段复习",
+      "title_en": "HSK 3 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 3"
+    },
+    {
+      "lesson_id": "hsk4-l01-reading-arguments",
+      "file": "hsk4-l01-reading-arguments.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "arguments",
+      "title_zh": "观点讨论阅读",
+      "title_en": "Reading balanced arguments",
+      "title_vi": "thảo luận quan điểm - đọc"
+    },
+    {
+      "lesson_id": "hsk4-l02-listening-arguments",
+      "file": "hsk4-l02-listening-arguments.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "arguments",
+      "title_zh": "观点讨论听力",
+      "title_en": "Following a structured discussion",
+      "title_vi": "thảo luận quan điểm - nghe"
+    },
+    {
+      "lesson_id": "hsk4-l03-speaking-arguments",
+      "file": "hsk4-l03-speaking-arguments.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "arguments",
+      "title_zh": "观点讨论口语",
+      "title_en": "Explaining advantages and disadvantages",
+      "title_vi": "thảo luận quan điểm - nói"
+    },
+    {
+      "lesson_id": "hsk4-l04-writing-arguments",
+      "file": "hsk4-l04-writing-arguments.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "arguments",
+      "title_zh": "观点讨论写作",
+      "title_en": "A balanced opinion response",
+      "title_vi": "thảo luận quan điểm - viết"
+    },
+    {
+      "lesson_id": "hsk4-l05-listening-workplace",
+      "file": "hsk4-l05-listening-workplace.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "workplace",
+      "title_zh": "职场学习听力",
+      "title_en": "Meeting updates and task negotiation",
+      "title_vi": "nơi làm việc và học thuật - nghe"
+    },
+    {
+      "lesson_id": "hsk4-l06-speaking-workplace",
+      "file": "hsk4-l06-speaking-workplace.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "workplace",
+      "title_zh": "职场学习口语",
+      "title_en": "Clarifying and negotiating tasks",
+      "title_vi": "nơi làm việc và học thuật - nói"
+    },
+    {
+      "lesson_id": "hsk4-l07-reading-workplace",
+      "file": "hsk4-l07-reading-workplace.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "workplace",
+      "title_zh": "职场学习阅读",
+      "title_en": "Reports and formal announcements",
+      "title_vi": "nơi làm việc và học thuật - đọc"
+    },
+    {
+      "lesson_id": "hsk4-l08-writing-workplace",
+      "file": "hsk4-l08-writing-workplace.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "workplace",
+      "title_zh": "职场学习写作",
+      "title_en": "A concise professional email",
+      "title_vi": "nơi làm việc và học thuật - viết"
+    },
+    {
+      "lesson_id": "hsk4-l09-reading-culture",
+      "file": "hsk4-l09-reading-culture.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "culture",
+      "title_zh": "文化比较阅读",
+      "title_en": "Reading cultural explanation texts",
+      "title_vi": "so sánh văn hóa - đọc"
+    },
+    {
+      "lesson_id": "hsk4-l10-listening-culture",
+      "file": "hsk4-l10-listening-culture.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "culture",
+      "title_zh": "文化比较听力",
+      "title_en": "Interviews about customs",
+      "title_vi": "so sánh văn hóa - nghe"
+    },
+    {
+      "lesson_id": "hsk4-l11-speaking-culture",
+      "file": "hsk4-l11-speaking-culture.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "culture",
+      "title_zh": "文化比较口语",
+      "title_en": "Comparing customs and habits",
+      "title_vi": "so sánh văn hóa - nói"
+    },
+    {
+      "lesson_id": "hsk4-l12-reading-culture",
+      "file": "hsk4-l12-reading-culture.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "culture",
+      "title_zh": "文化比较阅读",
+      "title_en": "Abstract nouns and connectors",
+      "title_vi": "so sánh văn hóa - đọc"
+    },
+    {
+      "lesson_id": "hsk4-l13-reading-news",
+      "file": "hsk4-l13-reading-news.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "news",
+      "title_zh": "新闻趋势阅读",
+      "title_en": "Understanding news-style texts",
+      "title_vi": "tin tức và xu hướng - đọc"
+    },
+    {
+      "lesson_id": "hsk4-l14-listening-news",
+      "file": "hsk4-l14-listening-news.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "news",
+      "title_zh": "新闻趋势听力",
+      "title_en": "Listening to reports and interviews",
+      "title_vi": "tin tức và xu hướng - nghe"
+    },
+    {
+      "lesson_id": "hsk4-l15-speaking-news",
+      "file": "hsk4-l15-speaking-news.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "news",
+      "title_zh": "新闻趋势口语",
+      "title_en": "Reacting to current issues",
+      "title_vi": "tin tức và xu hướng - nói"
+    },
+    {
+      "lesson_id": "hsk4-l16-writing-news",
+      "file": "hsk4-l16-writing-news.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "news",
+      "title_zh": "新闻趋势写作",
+      "title_en": "Summarizing a public issue",
+      "title_vi": "tin tức và xu hướng - viết"
+    },
+    {
+      "lesson_id": "hsk4-l17-mixed-end-test",
+      "file": "hsk4-l17-mixed-end-test.json",
+      "hsk_level": 4,
+      "cefr_level": "B2",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "mixed",
+      "topic": "end-test",
+      "title_zh": "HSK4阶段复习",
+      "title_en": "HSK 4 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 4"
+    },
+    {
+      "lesson_id": "hsk5-l01-reading-implicit-meaning",
+      "file": "hsk5-l01-reading-implicit-meaning.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "implicit-meaning",
+      "title_zh": "言外之意阅读",
+      "title_en": "Reading between the lines",
+      "title_vi": "hàm ý - đọc"
+    },
+    {
+      "lesson_id": "hsk5-l02-listening-implicit-meaning",
+      "file": "hsk5-l02-listening-implicit-meaning.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "implicit-meaning",
+      "title_zh": "言外之意听力",
+      "title_en": "Inferring meaning in longer speech",
+      "title_vi": "hàm ý - nghe"
+    },
+    {
+      "lesson_id": "hsk5-l03-speaking-implicit-meaning",
+      "file": "hsk5-l03-speaking-implicit-meaning.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "implicit-meaning",
+      "title_zh": "言外之意口语",
+      "title_en": "Responding with nuance",
+      "title_vi": "hàm ý - nói"
+    },
+    {
+      "lesson_id": "hsk5-l04-writing-implicit-meaning",
+      "file": "hsk5-l04-writing-implicit-meaning.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "implicit-meaning",
+      "title_zh": "言外之意写作",
+      "title_en": "A nuanced analytical paragraph",
+      "title_vi": "hàm ý - viết"
+    },
+    {
+      "lesson_id": "hsk5-l05-reading-academic",
+      "file": "hsk5-l05-reading-academic.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "academic",
+      "title_zh": "学术分析阅读",
+      "title_en": "Long-form analytical texts",
+      "title_vi": "phân tích học thuật - đọc"
+    },
+    {
+      "lesson_id": "hsk5-l06-listening-academic",
+      "file": "hsk5-l06-listening-academic.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "academic",
+      "title_zh": "学术分析听力",
+      "title_en": "Lectures and expert explanations",
+      "title_vi": "phân tích học thuật - nghe"
+    },
+    {
+      "lesson_id": "hsk5-l07-speaking-academic",
+      "file": "hsk5-l07-speaking-academic.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "academic",
+      "title_zh": "学术分析口语",
+      "title_en": "Presenting a complex idea",
+      "title_vi": "phân tích học thuật - nói"
+    },
+    {
+      "lesson_id": "hsk5-l08-writing-academic",
+      "file": "hsk5-l08-writing-academic.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "academic",
+      "title_zh": "学术分析写作",
+      "title_en": "A structured analytical response",
+      "title_vi": "phân tích học thuật - viết"
+    },
+    {
+      "lesson_id": "hsk5-l09-listening-social-professional",
+      "file": "hsk5-l09-listening-social-professional.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "social-professional",
+      "title_zh": "社交和职场听力",
+      "title_en": "Register shifts in conversation",
+      "title_vi": "giao tiếp xã hội và nghề nghiệp - nghe"
+    },
+    {
+      "lesson_id": "hsk5-l10-speaking-social-professional",
+      "file": "hsk5-l10-speaking-social-professional.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "social-professional",
+      "title_zh": "社交和职场口语",
+      "title_en": "Adapting language to context",
+      "title_vi": "giao tiếp xã hội và nghề nghiệp - nói"
+    },
+    {
+      "lesson_id": "hsk5-l11-reading-social-professional",
+      "file": "hsk5-l11-reading-social-professional.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "social-professional",
+      "title_zh": "社交和职场阅读",
+      "title_en": "Formal correspondence and policy texts",
+      "title_vi": "giao tiếp xã hội và nghề nghiệp - đọc"
+    },
+    {
+      "lesson_id": "hsk5-l12-writing-social-professional",
+      "file": "hsk5-l12-writing-social-professional.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "social-professional",
+      "title_zh": "社交和职场写作",
+      "title_en": "A formal proposal or response",
+      "title_vi": "giao tiếp xã hội và nghề nghiệp - viết"
+    },
+    {
+      "lesson_id": "hsk5-l13-reading-debate",
+      "file": "hsk5-l13-reading-debate.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "debate",
+      "title_zh": "辩论综合阅读",
+      "title_en": "Comparing multiple sources",
+      "title_vi": "tranh luận và tổng hợp - đọc"
+    },
+    {
+      "lesson_id": "hsk5-l14-listening-debate",
+      "file": "hsk5-l14-listening-debate.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "debate",
+      "title_zh": "辩论综合听力",
+      "title_en": "Panel discussion comprehension",
+      "title_vi": "tranh luận và tổng hợp - nghe"
+    },
+    {
+      "lesson_id": "hsk5-l15-speaking-debate",
+      "file": "hsk5-l15-speaking-debate.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "debate",
+      "title_zh": "辩论综合口语",
+      "title_en": "Defending a position under challenge",
+      "title_vi": "tranh luận và tổng hợp - nói"
+    },
+    {
+      "lesson_id": "hsk5-l16-writing-debate",
+      "file": "hsk5-l16-writing-debate.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "debate",
+      "title_zh": "辩论综合写作",
+      "title_en": "Source-based synthesis",
+      "title_vi": "tranh luận và tổng hợp - viết"
+    },
+    {
+      "lesson_id": "hsk5-l17-mixed-end-test",
+      "file": "hsk5-l17-mixed-end-test.json",
+      "hsk_level": 5,
+      "cefr_level": "C1",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "mixed",
+      "topic": "end-test",
+      "title_zh": "HSK5阶段复习",
+      "title_en": "HSK 5 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 5"
+    },
+    {
+      "lesson_id": "hsk6-l01-reading-synthesis",
+      "file": "hsk6-l01-reading-synthesis.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "synthesis",
+      "title_zh": "信息综合阅读",
+      "title_en": "Integrating complex written sources",
+      "title_vi": "tổng hợp thông tin - đọc"
+    },
+    {
+      "lesson_id": "hsk6-l02-listening-synthesis",
+      "file": "hsk6-l02-listening-synthesis.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "synthesis",
+      "title_zh": "信息综合听力",
+      "title_en": "Integrating spoken viewpoints",
+      "title_vi": "tổng hợp thông tin - nghe"
+    },
+    {
+      "lesson_id": "hsk6-l03-speaking-synthesis",
+      "file": "hsk6-l03-speaking-synthesis.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "synthesis",
+      "title_zh": "信息综合口语",
+      "title_en": "Coherent synthesis presentation",
+      "title_vi": "tổng hợp thông tin - nói"
+    },
+    {
+      "lesson_id": "hsk6-l04-writing-synthesis",
+      "file": "hsk6-l04-writing-synthesis.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "synthesis",
+      "title_zh": "信息综合写作",
+      "title_en": "A concise synthesis brief",
+      "title_vi": "tổng hợp thông tin - viết"
+    },
+    {
+      "lesson_id": "hsk6-l05-reading-precision",
+      "file": "hsk6-l05-reading-precision.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "precision",
+      "title_zh": "精确表达阅读",
+      "title_en": "Fine distinctions in advanced texts",
+      "title_vi": "diễn đạt chính xác - đọc"
+    },
+    {
+      "lesson_id": "hsk6-l06-listening-precision",
+      "file": "hsk6-l06-listening-precision.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "precision",
+      "title_zh": "精确表达听力",
+      "title_en": "Fast speech and idiomatic meaning",
+      "title_vi": "diễn đạt chính xác - nghe"
+    },
+    {
+      "lesson_id": "hsk6-l07-speaking-precision",
+      "file": "hsk6-l07-speaking-precision.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "precision",
+      "title_zh": "精确表达口语",
+      "title_en": "Precise spontaneous expression",
+      "title_vi": "diễn đạt chính xác - nói"
+    },
+    {
+      "lesson_id": "hsk6-l08-reading-precision",
+      "file": "hsk6-l08-reading-precision.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "precision",
+      "title_zh": "精确表达阅读",
+      "title_en": "Advanced collocations and idioms",
+      "title_vi": "diễn đạt chính xác - đọc"
+    },
+    {
+      "lesson_id": "hsk6-l09-reading-public-discourse",
+      "file": "hsk6-l09-reading-public-discourse.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "public-discourse",
+      "title_zh": "公共话语阅读",
+      "title_en": "Editorials and persuasive rhetoric",
+      "title_vi": "diễn ngôn công cộng - đọc"
+    },
+    {
+      "lesson_id": "hsk6-l10-listening-public-discourse",
+      "file": "hsk6-l10-listening-public-discourse.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "public-discourse",
+      "title_zh": "公共话语听力",
+      "title_en": "Speeches and advanced interviews",
+      "title_vi": "diễn ngôn công cộng - nghe"
+    },
+    {
+      "lesson_id": "hsk6-l11-speaking-public-discourse",
+      "file": "hsk6-l11-speaking-public-discourse.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "public-discourse",
+      "title_zh": "公共话语口语",
+      "title_en": "High-level argumentation",
+      "title_vi": "diễn ngôn công cộng - nói"
+    },
+    {
+      "lesson_id": "hsk6-l12-writing-public-discourse",
+      "file": "hsk6-l12-writing-public-discourse.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "public-discourse",
+      "title_zh": "公共话语写作",
+      "title_en": "An advanced editorial response",
+      "title_vi": "diễn ngôn công cộng - viết"
+    },
+    {
+      "lesson_id": "hsk6-l13-reading-masterclass",
+      "file": "hsk6-l13-reading-masterclass.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "reading",
+      "topic": "masterclass",
+      "title_zh": "高级任务阅读",
+      "title_en": "Expert-level reading under time pressure",
+      "title_vi": "nhiệm vụ nâng cao - đọc"
+    },
+    {
+      "lesson_id": "hsk6-l14-listening-masterclass",
+      "file": "hsk6-l14-listening-masterclass.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception"
+      ],
+      "primary_skill": "listening",
+      "topic": "masterclass",
+      "title_zh": "高级任务听力",
+      "title_en": "Summarizing long spoken input",
+      "title_vi": "nhiệm vụ nâng cao - nghe"
+    },
+    {
+      "lesson_id": "hsk6-l15-speaking-masterclass",
+      "file": "hsk6-l15-speaking-masterclass.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "speaking",
+      "topic": "masterclass",
+      "title_zh": "高级任务口语",
+      "title_en": "Mediating complex information",
+      "title_vi": "nhiệm vụ nâng cao - nói"
+    },
+    {
+      "lesson_id": "hsk6-l16-writing-masterclass",
+      "file": "hsk6-l16-writing-masterclass.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "production"
+      ],
+      "primary_skill": "writing",
+      "topic": "masterclass",
+      "title_zh": "高级任务写作",
+      "title_en": "A polished final response",
+      "title_vi": "nhiệm vụ nâng cao - viết"
+    },
+    {
+      "lesson_id": "hsk6-l17-mixed-end-test",
+      "file": "hsk6-l17-mixed-end-test.json",
+      "hsk_level": 6,
+      "cefr_level": "C2",
+      "cefr_activities": [
+        "reception",
+        "production",
+        "interaction"
+      ],
+      "primary_skill": "mixed",
+      "topic": "end-test",
+      "title_zh": "HSK6阶段复习",
+      "title_en": "HSK 6 end-of-level review",
+      "title_vi": "Ôn tập cuối HSK 6"
     }
   ]
 }
