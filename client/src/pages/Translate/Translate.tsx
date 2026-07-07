@@ -81,6 +81,7 @@ export default function Translate() {
   const [mode, setMode] = useState<InputMode>("text");
   const [sourceText, setSourceText] = useState("");
   const [detectedText, setDetectedText] = useState("");
+  const [combinedMeaning, setCombinedMeaning] = useState("");
   const [segments, setSegments] = useState<OcrSegment[]>([]);
   const [boxes, setBoxes] = useState<OcrBox[]>([]);
   const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([]);
@@ -102,7 +103,8 @@ export default function Translate() {
     [segments, selectedSegmentIds],
   );
   const activeSegments = selectedSegments.length > 0 ? selectedSegments : segments;
-  const translatedText = getCombinedMeaning(activeSegments);
+  const translatedText =
+    selectedSegments.length > 0 ? getCombinedMeaning(activeSegments) : combinedMeaning || getCombinedMeaning(activeSegments);
   const pinyinText = activeSegments
     .map((segment) => segment.pinyin)
     .filter(Boolean)
@@ -127,6 +129,7 @@ export default function Translate() {
 
     setBoxes(response.boxes);
     setSegments(nextSegments);
+    setCombinedMeaning(response.combinedMeaning || "");
     setDetectedText(response.detectedText || payload.text || "");
 
     if (!response.detectedText && response.boxes.length === 0) {
@@ -430,6 +433,7 @@ export default function Translate() {
                   onClick={() => {
                     setSourceText("");
                     setDetectedText("");
+                    setCombinedMeaning("");
                     setSegments([]);
                     setBoxes([]);
                     setSelectedBox(null);

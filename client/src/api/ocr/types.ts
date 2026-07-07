@@ -36,6 +36,7 @@ export interface OcrScanResponse {
     boxes: OcrBox[];
     regions?: OcrRegion[];
     segments?: OcrSegment[];
+    combinedMeaning?: string;
     detectedText?: string;
     provider?: string;
 }

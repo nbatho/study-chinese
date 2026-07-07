@@ -49,3 +49,54 @@ test('OCR notebook payload keeps explicit null-like edits separate from omitted 
     isFavorite: undefined
   });
 });
+
+test('text lookup segments Chinese phrases by longest dictionary match', () => {
+  const entries = [
+    { simplified: '\u6240', traditional: '\u6240', pinyin: 'suo3', english: 'place; particle' },
+    { simplified: '\u8c13', traditional: '\u8b02', pinyin: 'wei4', english: 'to say' },
+    { simplified: '\u6240\u8c13', traditional: '\u6240\u8b02', pinyin: 'suo3 wei4', english: 'so-called; what is referred to as' },
+    { simplified: '\u771f', traditional: '\u771f', pinyin: 'zhen1', english: 'real' },
+    { simplified: '\u6b63', traditional: '\u6b63', pinyin: 'zheng4', english: 'actually; first month' },
+    { simplified: '\u771f\u6b63', traditional: '\u771f\u6b63', pinyin: 'zhen1 zheng4', english: 'genuine; real; true' },
+    { simplified: '\u7684', traditional: '\u7684', pinyin: 'de', english: 'of; particle' },
+    { simplified: '\u7a33', traditional: '\u7a69', pinyin: 'wen3', english: 'settled; steady' },
+    { simplified: '\u5b9a', traditional: '\u5b9a', pinyin: 'ding4', english: 'to fix; to decide' },
+    { simplified: '\u7a33\u5b9a', traditional: '\u7a69\u5b9a', pinyin: 'wen3 ding4', english: 'steady; stable; stability' }
+  ];
+
+  assert.deepEqual(
+    __private__.segmentDictionaryEntries('\u6240\u8c13\u771f\u6b63\u7684\u7a33\u5b9a', entries).map((entry) => entry.simplified),
+    ['\u6240\u8c13', '\u771f\u6b63', '\u7684', '\u7a33\u5b9a']
+  );
+});
+
+test('text lookup boxes omit low-signal particles from combined text translation', () => {
+  const boxes = __private__.buildTextLookupBoxes('\u6240\u8c13\u771f\u6b63\u7684\u7a33\u5b9a', [
+    { simplified: '\u6240', traditional: '\u6240', pinyin: 'suo3', english: 'place; particle' },
+    { simplified: '\u6240\u8c13', traditional: '\u6240\u8b02', pinyin: 'suo3 wei4', english: 'so-called; what is referred to as' },
+    { simplified: '\u771f\u6b63', traditional: '\u771f\u6b63', pinyin: 'zhen1 zheng4', english: 'genuine; real; true' },
+    { simplified: '\u7684', traditional: '\u7684', pinyin: 'de', english: 'of; particle' },
+    { simplified: '\u7a33\u5b9a', traditional: '\u7a69\u5b9a', pinyin: 'wen3 ding4', english: 'steady; stable; stability' },
+    { simplified: '\u5b9a', traditional: '\u5b9a', pinyin: 'ding4', english: 'to fix; to decide' }
+  ]);
+
+  assert.deepEqual(boxes.map((box) => box.text), ['\u6240\u8c13', '\u771f\u6b63', '\u7a33\u5b9a']);
+  assert.equal(
+    boxes.map((box) => box.english).join('; '),
+    'so-called; what is referred to as; genuine; real; true; steady; stable; stability'
+  );
+});
+
+test('text lookup builds one overall meaning for a phrase', () => {
+  const entries = [
+    { simplified: '\u6240\u8c13', traditional: '\u6240\u8b02', pinyin: 'suo3 wei4', english: 'what is referred to as; so-called' },
+    { simplified: '\u771f\u6b63', traditional: '\u771f\u6b63', pinyin: 'zhen1 zheng4', english: 'genuine; real; true' },
+    { simplified: '\u7684', traditional: '\u7684', pinyin: 'de', english: 'of; particle' },
+    { simplified: '\u7a33\u5b9a', traditional: '\u7a69\u5b9a', pinyin: 'wen3 ding4', english: 'steady; stable; stability' }
+  ];
+  const segments = __private__
+    .segmentDictionaryEntries('\u6240\u8c13\u771f\u6b63\u7684\u7a33\u5b9a', entries)
+    .map((entry) => ({ entry }));
+
+  assert.equal(__private__.buildOverallMeaning(segments), 'so-called true stability');
+});

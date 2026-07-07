@@ -30,6 +30,17 @@ const asText = (value) => String(value || '').trim();
 
 const compactForLookup = (value) => asText(value).replace(/\s+/g, '');
 
+const TEXT_LOOKUP_PARTICLES = new Set(['\u7684']);
+
+const TEXT_LOOKUP_GLOSS_OVERRIDES = new Map([
+  ['\u6240\u8c13', 'so-called'],
+  ['\u771f\u6b63', 'true']
+]);
+
+const TEXT_LOOKUP_NOUN_GLOSS_OVERRIDES = new Map([
+  ['\u7a33\u5b9a', 'stability']
+]);
+
 const entryMatchesText = (text, entry) => {
   const compactText = compactForLookup(text);
 
@@ -233,14 +244,36 @@ const boxOverlapRatio = (first, second) => {
   return intersection / Math.min(firstArea, secondArea);
 };
 
-const segmentDictionaryEntries = (text, entries) => {
+const getEntryLength = (entry) =>
+  Math.max(countChars(entry?.simplified), countChars(entry?.traditional), 1);
+
+const normalizeLookupEntries = (entries) => {
+  const seen = new Set();
+
+  return entries
+    .filter((entry) => entry?.simplified && entry?.traditional && entry?.english)
+    .filter((entry) => {
+      const key = `${entry.traditional}\u0000${entry.simplified}\u0000${entry.pinyin || ''}`;
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .sort((first, second) => getEntryLength(second) - getEntryLength(first));
+};
+
+const segmentDictionaryText = (text, entries) => {
   const normalizedText = compactForLookup(text);
+  const lookupEntries = normalizeLookupEntries(entries);
   const segments = [];
   let cursor = 0;
 
   while (cursor < normalizedText.length) {
     const remaining = normalizedText.slice(cursor);
-    const match = entries.find(
+    const match = lookupEntries.find(
       (entry) => remaining.startsWith(entry.simplified) || remaining.startsWith(entry.traditional)
     );
 
@@ -249,11 +282,89 @@ const segmentDictionaryEntries = (text, entries) => {
       continue;
     }
 
-    segments.push(match);
-    cursor += Math.max(match.simplified.length, match.traditional.length, 1);
+    const target = remaining.startsWith(match.simplified) ? match.simplified : match.traditional;
+    segments.push({
+      entry: match,
+      start: cursor,
+      target
+    });
+    cursor += Math.max(target.length, 1);
   }
 
   return segments;
+};
+
+const segmentDictionaryEntries = (text, entries) =>
+  segmentDictionaryText(text, entries).map((segment) => segment.entry);
+
+const shouldSkipTextLookupSegment = (segment, text) =>
+  countChars(compactForLookup(text)) > 1 && TEXT_LOOKUP_PARTICLES.has(segment.entry.simplified);
+
+const cleanGlossOption = (value) =>
+  String(value || '')
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getGlossOptions = (entry) =>
+  String(entry?.english || '')
+    .split(/[;/]/)
+    .map(cleanGlossOption)
+    .filter(Boolean);
+
+const getPrimaryGloss = (segment, index, segments) => {
+  const simplified = segment.entry?.simplified;
+
+  if (!simplified || TEXT_LOOKUP_PARTICLES.has(simplified)) {
+    return '';
+  }
+
+  if (TEXT_LOOKUP_GLOSS_OVERRIDES.has(simplified)) {
+    return TEXT_LOOKUP_GLOSS_OVERRIDES.get(simplified);
+  }
+
+  const previous = segments[index - 1]?.entry?.simplified;
+
+  if (previous === '\u7684' && TEXT_LOOKUP_NOUN_GLOSS_OVERRIDES.has(simplified)) {
+    return TEXT_LOOKUP_NOUN_GLOSS_OVERRIDES.get(simplified);
+  }
+
+  return getGlossOptions(segment.entry)[0] || '';
+};
+
+const buildOverallMeaning = (segments) =>
+  segments
+    .map((segment, index) => getPrimaryGloss(segment, index, segments))
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+([,.!?;:])/g, '$1')
+    .trim();
+
+const buildTextLookupBoxes = (text, entries) => {
+  const normalizedText = compactForLookup(text);
+  const totalChars = Math.max(1, countChars(normalizedText));
+
+  return segmentDictionaryText(text, entries)
+    .filter((segment) => !shouldSkipTextLookupSegment(segment, text))
+    .map((segment, index) => {
+      const entry = segment.entry;
+      const targetChars = Math.max(1, countChars(segment.target));
+
+      return {
+        id: `text_${index + 1}`,
+        wordId: entry.wordId,
+        text: entry.simplified,
+        pinyin: entry.pinyin,
+        english: entry.english,
+        top: 35.5,
+        left: 30 + (60 * segment.start) / totalChars,
+        width: Math.max(4, (60 * targetChars) / totalChars),
+        height: 12,
+        confidence: null,
+        matched: true,
+        source: entry.wordId ? 'words' : 'cc-cedict'
+      };
+    });
 };
 
 const getDictionaryEntriesForText = async (detectedText) => {
@@ -461,12 +572,24 @@ export const scanOcr = async (userId, payload) => {
 
   const rawRegionBoxes = getOcrRegionBoxes(regions, detectedText);
   const dictionaryEntries = await getDictionaryEntriesForText(detectedText);
-  const dictionaryBoxes = filterDictionaryBoxes(buildDictionaryBoxes(rawRegionBoxes, dictionaryEntries), matchedBoxes);
-  const translatedBoxes = [...matchedBoxes, ...dictionaryBoxes];
+  const textLookupEntries = [
+    ...result.rows.map((word) => ({
+      ...word,
+      wordId: word.id
+    })),
+    ...dictionaryEntries
+  ];
+  const textLookupSegments = !payload?.image ? segmentDictionaryText(detectedText, textLookupEntries) : [];
+  const textLookupBoxes = textLookupSegments.length > 0 ? buildTextLookupBoxes(detectedText, textLookupEntries) : [];
+  const dictionaryBoxes = textLookupBoxes.length > 0
+    ? []
+    : filterDictionaryBoxes(buildDictionaryBoxes(rawRegionBoxes, dictionaryEntries), matchedBoxes);
+  const translatedBoxes = textLookupBoxes.length > 0 ? textLookupBoxes : [...matchedBoxes, ...dictionaryBoxes];
   const unmatchedRegionBoxes = rawRegionBoxes.filter(
     (region) => !translatedBoxes.some((box) => boxOverlapsRegion(box, region))
   );
   const boxes = [...translatedBoxes, ...unmatchedRegionBoxes];
+  const matchedWordIds = boxes.map((box) => box.wordId).filter(Boolean);
 
   await query(
     `
@@ -477,12 +600,13 @@ export const scanOcr = async (userId, payload) => {
       userId,
       env.OCR_PROVIDER,
       detectedText,
-      JSON.stringify(matchedBoxes.map((box) => box.wordId)),
+      JSON.stringify(matchedWordIds),
       JSON.stringify({
         mode,
         regionCount: regions.length,
-        matchedCount: matchedBoxes.length,
+        matchedCount: matchedWordIds.length,
         dictionaryMatchCount: dictionaryBoxes.length,
+        textLookupMatchCount: textLookupBoxes.length,
         baseUrl: mode === 'paddle_ocr' ? env.OCR_BASE_URL : undefined
       })
     ]
@@ -492,6 +616,7 @@ export const scanOcr = async (userId, payload) => {
     boxes,
     regions: rawRegionBoxes,
     segments: boxes.map(toSegment),
+    combinedMeaning: buildOverallMeaning(textLookupSegments),
     detectedText,
     provider: getOcrProvider()
   };
@@ -640,7 +765,10 @@ export const clearOcrHistory = async (userId) => {
 };
 
 export const __private__ = {
+  buildOverallMeaning,
+  buildTextLookupBoxes,
   mapOcrHistoryEvent,
   normalizeNotebookPayload,
-  normalizeOcrHistoryFilters
+  normalizeOcrHistoryFilters,
+  segmentDictionaryEntries
 };
