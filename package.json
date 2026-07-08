@@ -11,6 +11,7 @@
     "server:lint": "npm --prefix server run lint",
     "server:test": "npm --prefix server test",
     "server:test:integration": "npm --prefix server run test:integration",
+    "practice:hanzi:generate": "npm --prefix server run practice:hanzi:generate",
     "content:audit": "npm --prefix server run content:audit",
     "content:agent": "npm --prefix server run content:agent",
     "content:import": "npm --prefix server run content:import",

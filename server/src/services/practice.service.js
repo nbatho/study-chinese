@@ -1,4 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import { query } from '../config/db.config.js';
+import { contentPath } from '../config/content-paths.js';
 import { env } from '../config/env.config.js';
 import { badRequest } from '../utils/http-error.js';
 import { transcribeAudio } from './stt-provider.service.js';
@@ -22,6 +24,32 @@ const mapHanziStroke = (row) => ({
   character: row.character,
   strokes: row.strokes || []
 });
+
+const mapContentHanziStroke = (item, index) => ({
+  id: item.id || `content-hanzi-${index + 1}`,
+  character: item.character,
+  strokes: Array.isArray(item.strokes) ? item.strokes : []
+});
+
+const getContentHanziStrokes = async () => {
+  try {
+    const raw = await readFile(contentPath('practice', 'hanzi-characters.json'), 'utf8');
+    const data = JSON.parse(raw);
+    const characters = Array.isArray(data?.characters) ? data.characters : [];
+    const activeCharacters = characters
+      .filter((item) => typeof item?.character === 'string' && item.character.trim())
+      .sort((a, b) => (a.order_num ?? 0) - (b.order_num ?? 0))
+      .map(mapContentHanziStroke);
+
+    return activeCharacters.length > 0 ? { characters: activeCharacters } : null;
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('Unable to load content Hanzi practice data:', error.message);
+    }
+
+    return null;
+  }
+};
 
 const decodeAudioBytes = (audio) => {
   if (!audio || typeof audio !== 'string') {
@@ -202,6 +230,12 @@ export const getMinimalPairs = async () => {
 };
 
 export const getHanziStrokes = async () => {
+  const contentData = await getContentHanziStrokes();
+
+  if (contentData) {
+    return contentData;
+  }
+
   const result = await query(
     `
       SELECT *
