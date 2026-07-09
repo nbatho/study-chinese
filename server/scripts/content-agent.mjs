@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
@@ -10,6 +10,7 @@ import {
   localizeLesson
 } from '../src/services/content-language.service.js';
 import { repoRoot, resolveContentPath, resolveExistingPath } from '../src/config/content-paths.js';
+import { loadLessonEntries, writeLessonEntry } from './lesson-data-files.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -34,27 +35,8 @@ const dryRun = hasFlag('dry-run');
 const aiReviewEnabled = hasFlag('ai-review');
 const dbChecks = hasFlag('db-checks');
 
-const isLessonJson = (filename) =>
-  filename.endsWith('.json') &&
-  !filename.endsWith('.validation.json') &&
-  !filename.endsWith('.review.json') &&
-  !filename.endsWith('.release.json') &&
-  !['manifest.json', 'validation-report.json', 'language-audit-report.json', 'grammar-sync-report.json', 'agent-review-report.json'].includes(filename);
-
 const loadLessons = async (sourceDir) => {
-  const files = (await readdir(sourceDir)).filter(isLessonJson).sort();
-  const lessons = [];
-
-  for (const file of files) {
-    const fullPath = path.join(sourceDir, file);
-    lessons.push({
-      file,
-      fullPath,
-      lesson: JSON.parse(await readFile(fullPath, 'utf8'))
-    });
-  }
-
-  return lessons;
+  return loadLessonEntries(sourceDir);
 };
 
 const staticReview = (lesson, validation) => ({
@@ -77,7 +59,7 @@ const staticReview = (lesson, validation) => ({
 });
 
 const run = async () => {
-  const sourceDir = await resolveExistingPath(readArg('source', 'data/lessons/generated'), ['lessons', 'generated']);
+  const sourceDir = await resolveExistingPath(readArg('source', 'data/lessons/normalized'), ['lessons', 'normalized']);
   const outputDir = resolveContentPath(readArg('output', readArg('output-dir', 'data/lessons/normalized')));
   const loaded = await loadLessons(sourceDir);
   const validator = new ContentValidator({
@@ -162,11 +144,7 @@ const run = async () => {
     await mkdir(outputDir, { recursive: true });
 
     for (const item of normalizedLessons) {
-      await writeFile(
-        path.join(outputDir, item.file),
-        `${JSON.stringify(item.lesson, null, 2)}\n`,
-        'utf8'
-      );
+      await writeLessonEntry({ targetDir: outputDir, lesson: item.lesson });
     }
 
     await writeFile(path.join(outputDir, 'language-audit-report.json'), `${JSON.stringify(languageAuditReport, null, 2)}\n`, 'utf8');

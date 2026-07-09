@@ -56,3 +56,28 @@ export const resolveExistingPath = async (value, fallbackSegments = []) => {
 
   return candidates[0];
 };
+
+export const findLessonFiles = async (dir, condition = () => true) => {
+  const { readdir, stat } = await import('node:fs/promises');
+  let results = [];
+  try {
+    const list = await readdir(dir);
+    for (const file of list) {
+      const fullPath = path.join(dir, file);
+      const statObj = await stat(fullPath);
+      if (statObj.isDirectory()) {
+        const subFiles = await findLessonFiles(fullPath, condition);
+        results = results.concat(subFiles);
+      } else {
+        if (condition(file)) {
+          results.push(fullPath);
+        }
+      }
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+  return results;
+};

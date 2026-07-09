@@ -1,8 +1,8 @@
-import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { repoRoot, resolveExistingPath } from '../src/config/content-paths.js';
+import { loadLessonEntries } from './lesson-data-files.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -25,34 +25,9 @@ const readArg = (name, fallback) => {
 
 const apply = hasFlag('apply');
 const deleteOldLessons = hasFlag('delete-old-lessons');
-const NON_LESSON_JSON_FILES = new Set([
-  'manifest.json',
-  'validation-report.json',
-  'language-audit-report.json',
-  'grammar-sync-report.json',
-  'agent-review-report.json',
-  'ai-review-report.json'
-]);
-
-const isLessonJson = (filename) =>
-  filename.endsWith('.json') &&
-  !filename.endsWith('.validation.json') &&
-  !filename.endsWith('.review.json') &&
-  !filename.endsWith('.release.json') &&
-  !NON_LESSON_JSON_FILES.has(filename);
-
 const loadLessonIds = async (sourceDir) => {
-  const files = (await readdir(sourceDir)).filter(isLessonJson).sort();
-  const ids = [];
-
-  for (const file of files) {
-    const lesson = JSON.parse(await readFile(path.join(sourceDir, file), 'utf8'));
-    if (lesson.lesson_id) {
-      ids.push(lesson.lesson_id);
-    }
-  }
-
-  return [...new Set(ids)];
+  const entries = await loadLessonEntries(sourceDir);
+  return [...new Set(entries.map(({ lesson }) => lesson.lesson_id).filter(Boolean))];
 };
 
 const countRows = async (client, table, lessonIds) => {

@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { resolveExistingPath } from '../src/config/content-paths.js';
 import { localizeLesson, normalizeGrammarExample } from '../src/services/content-language.service.js';
+import { loadLessonEntries } from './lesson-data-files.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -40,22 +40,6 @@ const KIND_MAP = {
 
 const toJson = (value) => JSON.stringify(value ?? null);
 const toJsonArray = (value) => JSON.stringify(Array.isArray(value) ? value : []);
-const NON_LESSON_JSON_FILES = new Set([
-  'manifest.json',
-  'validation-report.json',
-  'language-audit-report.json',
-  'grammar-sync-report.json',
-  'agent-review-report.json',
-  'ai-review-report.json'
-]);
-
-const isLessonJson = (file) =>
-  file.endsWith('.json') &&
-  !file.endsWith('.validation.json') &&
-  !file.endsWith('.review.json') &&
-  !file.endsWith('.release.json') &&
-  !NON_LESSON_JSON_FILES.has(file);
-
 const slugify = (value, fallback = 'item') => {
   const slug = String(value || '')
     .normalize('NFD')
@@ -310,18 +294,9 @@ const validateLesson = (lesson, filename) => {
 };
 
 const loadLessons = async () => {
-  const inputDir = await resolveExistingPath(inputDirArg, ['lessons', 'generated']);
-  const files = (await readdir(inputDir))
-    .filter(isLessonJson)
-    .sort();
-  const lessons = [];
-
-  for (const file of files) {
-    const lessonPath = path.join(inputDir, file);
-    const lesson = JSON.parse(await readFile(lessonPath, 'utf8'));
-    validateLesson(lesson, file);
-    lessons.push({ file, lesson });
-  }
+  const inputDir = await resolveExistingPath(inputDirArg, ['lessons', 'normalized']);
+  const lessons = await loadLessonEntries(inputDir);
+  lessons.forEach(({ file, lesson }) => validateLesson(lesson, file));
 
   return { inputDir, lessons };
 };

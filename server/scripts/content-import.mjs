@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
@@ -9,6 +8,7 @@ import {
   localizeLesson
 } from '../src/services/content-language.service.js';
 import { repoRoot, resolveExistingPath } from '../src/config/content-paths.js';
+import { loadLessonEntries } from './lesson-data-files.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -31,23 +31,9 @@ const readArg = (name, fallback) => {
 
 const apply = hasFlag('apply');
 
-const isLessonJson = (filename) =>
-  filename.endsWith('.json') &&
-  !filename.endsWith('.validation.json') &&
-  !filename.endsWith('.review.json') &&
-  !filename.endsWith('.release.json') &&
-  !['manifest.json', 'validation-report.json', 'language-audit-report.json', 'grammar-sync-report.json', 'agent-review-report.json'].includes(filename);
-
 const loadLessons = async (sourceDir) => {
-  const files = (await readdir(sourceDir)).filter(isLessonJson).sort();
-  const lessons = [];
-
-  for (const file of files) {
-    const fullPath = path.join(sourceDir, file);
-    lessons.push(JSON.parse(await readFile(fullPath, 'utf8')));
-  }
-
-  return lessons;
+  const entries = await loadLessonEntries(sourceDir);
+  return entries.map(({ lesson }) => lesson);
 };
 
 const runImportScript = (sourceDir) =>

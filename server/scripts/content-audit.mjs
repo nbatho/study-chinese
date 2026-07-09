@@ -3,7 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { auditLessonLanguage } from '../src/services/content-language.service.js';
-import { repoRoot, resolveContentPath, resolveExistingPath } from '../src/config/content-paths.js';
+import { repoRoot, resolveContentPath, resolveExistingPath, findLessonFiles } from '../src/config/content-paths.js';
+import { isLessonJson } from './lesson-data-files.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 dotenv.config({ path: path.join(serverRoot, '.env') });
@@ -24,21 +25,11 @@ const readArg = (name, fallback) => {
   return fallback;
 };
 
-const isLessonJson = (filename) =>
-  filename.endsWith('.json') &&
-  !filename.endsWith('.validation.json') &&
-  !filename.endsWith('.review.json') &&
-  !filename.endsWith('.release.json') &&
-  !['manifest.json', 'validation-report.json', 'language-audit-report.json', 'grammar-sync-report.json', 'agent-review-report.json'].includes(filename);
-
 const loadLessons = async (sourceDir) => {
-  const files = (await readdir(sourceDir))
-    .filter(isLessonJson)
-    .sort();
+  const files = (await findLessonFiles(sourceDir, isLessonJson)).sort();
   const lessons = [];
 
-  for (const file of files) {
-    const fullPath = path.join(sourceDir, file);
+  for (const fullPath of files) {
     lessons.push({
       file: path.relative(repoRoot, fullPath),
       lesson: JSON.parse(await readFile(fullPath, 'utf8'))
@@ -155,7 +146,7 @@ const databaseAudit = async () => {
 };
 
 const run = async () => {
-  const sourceDir = await resolveExistingPath(readArg('source', 'data/lessons/generated'), ['lessons', 'generated']);
+  const sourceDir = await resolveExistingPath(readArg('source', 'data/lessons/normalized'), ['lessons', 'normalized']);
   const outputDir = resolveContentPath(readArg('output-dir', sourceDir));
   const lessons = await loadLessons(sourceDir);
   const results = lessons.map(({ file, lesson }) => {

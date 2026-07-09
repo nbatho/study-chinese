@@ -1,15 +1,7 @@
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { repoRoot, resolveContentPath, resolveExistingPath } from '../src/config/content-paths.js';
-
-const NON_LESSON_JSON_FILES = new Set([
-  'manifest.json',
-  'validation-report.json',
-  'language-audit-report.json',
-  'grammar-sync-report.json',
-  'agent-review-report.json',
-  'ai-review-report.json'
-]);
+import { loadLessonEntries } from './lesson-data-files.mjs';
 
 const HAN_REGEX = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/u;
 
@@ -19,13 +11,6 @@ const readArg = (name, fallback) => {
   const prefix = `--${name}=`;
   return args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length) || fallback;
 };
-
-const isLessonJson = (file) =>
-  file.endsWith('.json') &&
-  !file.endsWith('.validation.json') &&
-  !file.endsWith('.review.json') &&
-  !file.endsWith('.release.json') &&
-  !NON_LESSON_JSON_FILES.has(file);
 
 const walkStrings = (value, visit) => {
   if (Array.isArray(value)) {
@@ -51,11 +36,10 @@ const sourceDir = await resolveExistingPath(readArg('source', 'data/lessons/norm
 ]);
 const outputPath = resolveContentPath(readArg('output', 'data/practice/hanzi-characters.json'));
 
-const files = (await readdir(sourceDir)).filter(isLessonJson).sort((a, b) => a.localeCompare(b));
+const entries = await loadLessonEntries(sourceDir);
 const characters = new Map();
 
-for (const file of files) {
-  const lesson = JSON.parse(await readFile(path.join(sourceDir, file), 'utf8'));
+for (const { file, lesson } of entries) {
   const lessonId = lesson.lesson_id || path.basename(file, '.json');
   const hskLevel = lesson.metadata?.hsk_level ?? null;
 

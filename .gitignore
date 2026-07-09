@@ -71,9 +71,3 @@ Desktop.ini
 
 *.codex
 *data
-*data/
-!data/
-data/*
-!data/practice/
-data/practice/*
-!data/practice/hanzi-characters.json
