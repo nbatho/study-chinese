@@ -271,6 +271,9 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             const isListeningComprehension = currentExercise.kind === "listeningComprehension";
             const listeningAudioText = currentExercise.stimulus?.audioText ||
               currentExercise.stimulus?.lines?.map((line) => line.simplified).join("");
+            const promptZh = currentExercise.promptZh || currentExercise.prompt;
+            const promptEn = currentExercise.promptEn || currentExercise.promptEnglish;
+            const promptVi = currentExercise.promptVi;
 
             return (
               <>
@@ -302,7 +305,23 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             )}
             {currentExercise.promptHanzi && <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">{currentExercise.promptHanzi}</h2>}
             {currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
-            <h3 className="text-[1.2rem] font-bold">{currentExercise.prompt}</h3>
+            <h3 className="font-serif text-[1.35rem] font-bold leading-relaxed">{promptZh}</h3>
+            {(promptEn || promptVi) && (
+              <div className="mx-auto mt-4 grid max-w-2xl gap-2 text-left">
+                {promptEn && promptEn !== promptZh && (
+                  <p className="rounded-md bg-background px-3 py-2 text-sm font-semibold text-muted-foreground">
+                    <span className="mr-2 text-xs font-extrabold uppercase text-primary">EN</span>
+                    {promptEn}
+                  </p>
+                )}
+                {promptVi && promptVi !== promptZh && promptVi !== promptEn && (
+                  <p className="rounded-md bg-background px-3 py-2 text-sm font-semibold text-muted-foreground">
+                    <span className="mr-2 text-xs font-extrabold uppercase text-primary">VI</span>
+                    {promptVi}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           {isReadingComprehension && currentExercise.stimulus?.text && (
             <div className="mb-5 rounded-lg border bg-background p-4 text-left">
