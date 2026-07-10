@@ -2,6 +2,7 @@ import { rm, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { repoRoot, resolveContentPath } from '../src/config/content-paths.js';
 import { writeLessonEntry } from './lesson-data-files.mjs';
+import { accentVietnameseDeep } from './vietnamese-diacritics.mjs';
 
 const CEFR_BY_HSK = {
   1: 'A1',
@@ -611,7 +612,7 @@ const makeLesson = (hsk, index, topic) => {
     id: `${lessonId}-ex${exerciseIndex + 1}`
   }));
 
-  return {
+  return accentVietnameseDeep({
     lesson_id: lessonId,
     metadata: {
       title_zh: topic[1],
@@ -684,7 +685,7 @@ const makeLesson = (hsk, index, topic) => {
         : `Tom tat va danh gia ngan ve ${topic[3]}.`,
       srs_inject_word_ids: vocab.map((_, itemIndex) => `std_hsk${hsk}_${topic[0].replace(/[^a-z0-9]+/g, '_')}_${itemIndex + 1}`)
     }
-  };
+  });
 };
 
 const buildRules = () => ({

@@ -274,6 +274,8 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
             const promptZh = currentExercise.promptZh || currentExercise.prompt;
             const promptEn = currentExercise.promptEn || currentExercise.promptEnglish;
             const promptVi = currentExercise.promptVi;
+            const usePinyinPrompt = lesson.hskLevel <= 3 && Boolean(currentExercise.promptPinyin);
+            const primaryPrompt = usePinyinPrompt ? currentExercise.promptPinyin : promptZh;
 
             return (
               <>
@@ -304,10 +306,16 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
               </button>
             )}
             {currentExercise.promptHanzi && <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">{currentExercise.promptHanzi}</h2>}
-            {currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
-            <h3 className="font-serif text-[1.35rem] font-bold leading-relaxed">{promptZh}</h3>
+            {!usePinyinPrompt && currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
+            <h3 className={cn(usePinyinPrompt ? "text-[1.45rem]" : "font-serif text-[1.35rem]", "font-bold leading-relaxed")}>{primaryPrompt}</h3>
             {(promptEn || promptVi) && (
               <div className="mx-auto mt-4 grid max-w-2xl gap-2 text-left">
+                {usePinyinPrompt && promptZh && promptZh !== primaryPrompt && (
+                  <p className="rounded-md bg-background px-3 py-2 text-sm font-semibold text-muted-foreground">
+                    <span className="mr-2 text-xs font-extrabold uppercase text-primary">ZH</span>
+                    {promptZh}
+                  </p>
+                )}
                 {promptEn && promptEn !== promptZh && (
                   <p className="rounded-md bg-background px-3 py-2 text-sm font-semibold text-muted-foreground">
                     <span className="mr-2 text-xs font-extrabold uppercase text-primary">EN</span>

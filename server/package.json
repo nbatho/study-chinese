@@ -14,6 +14,7 @@
     "hsk:import": "node scripts/import-hsk-vocabulary.js",
     "lessons:import": "node scripts/import-generated-lessons.mjs",
     "lessons:generate:standard": "node scripts/generate-standard-hsk-lessons.mjs",
+    "lessons:normalize-vi": "node scripts/normalize-lesson-vietnamese.mjs",
     "lessons:reset-content": "node scripts/reset-lesson-content.mjs",
     "lessons:reset-user-progress": "node scripts/reset-user-lesson-progress.mjs",
     "practice:hanzi:generate": "node scripts/generate-hanzi-practice-data.mjs",
