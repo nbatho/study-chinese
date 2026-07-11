@@ -2,7 +2,10 @@ import { rm, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { repoRoot, resolveContentPath } from '../src/config/content-paths.js';
 import { writeLessonEntry } from './lesson-data-files.mjs';
-import { accentVietnameseDeep } from './vietnamese-diacritics.mjs';
+import { convertPinyinDeep } from './pinyin-utils.mjs';
+import HSK1_LESSONS from './standard-content/hsk1.mjs';
+import HSK2_LESSONS from './standard-content/hsk2.mjs';
+import { HSK3, HIGH, HIGH_WARMUP, TITLES_VI, FOCUS_GLOSS } from './standard-content/high.mjs';
 
 const CEFR_BY_HSK = {
   1: 'A1',
@@ -22,683 +25,790 @@ const CAN_DO = {
   C2: 'Tổng hợp và đánh giá ngôn ngữ giàu sắc thái, thành ngữ và chiều sâu văn hóa.'
 };
 
-const COMMON = {
-  pronoun: { simplified: '我', pinyin: 'wo3', part_of_speech: 'pronoun', english: 'I', vi: 'toi' },
-  you: { simplified: '你', pinyin: 'ni3', part_of_speech: 'pronoun', english: 'you', vi: 'ban' },
-  today: { simplified: '今天', pinyin: 'jin1 tian1', part_of_speech: 'time word', english: 'today', vi: 'hom nay' },
-  study: { simplified: '学', pinyin: 'xue2', part_of_speech: 'verb', english: 'to study', vi: 'hoc' },
-  like: { simplified: '喜欢', pinyin: 'xi3 huan5', part_of_speech: 'verb', english: 'to like', vi: 'thich' },
-  because: { simplified: '因为', pinyin: 'yin1 wei4', part_of_speech: 'conjunction', english: 'because', vi: 'boi vi' },
-  so: { simplified: '所以', pinyin: 'suo3 yi3', part_of_speech: 'conjunction', english: 'so', vi: 'cho nen' },
-  think: { simplified: '觉得', pinyin: 'jue2 de5', part_of_speech: 'verb', english: 'to think/feel', vi: 'cam thay' },
-  material: { simplified: '材料', pinyin: 'cai2 liao4', part_of_speech: 'noun', english: 'material', vi: 'tai lieu' },
-  viewpoint: { simplified: '观点', pinyin: 'guan1 dian3', part_of_speech: 'noun', english: 'viewpoint', vi: 'quan diem' },
-  influence: { simplified: '影响', pinyin: 'ying3 xiang3', part_of_speech: 'verb/noun', english: 'influence', vi: 'anh huong' },
-  reason: { simplified: '原因', pinyin: 'yuan2 yin1', part_of_speech: 'noun', english: 'reason', vi: 'nguyen nhan' },
-  implication: { simplified: '含义', pinyin: 'han2 yi4', part_of_speech: 'noun', english: 'implication', vi: 'ham y' },
-  nuance: { simplified: '分寸', pinyin: 'fen1 cun4', part_of_speech: 'noun', english: 'sense of proportion', vi: 'chung muc' }
-};
-
+// slug, title_zh, title_en, focus hanzi, focus pinyin. Slugs/titles must stay
+// stable: lesson ids and SRS word ids are derived from them.
 const TOPICS = {
   1: [
-    ['greetings', '问候', 'Greetings', 'chao hoi', '你好', 'ni3 hao3', '打招呼'],
-    ['name', '名字', 'Name', 'ten', '名字', 'ming2 zi5', '说名字'],
-    ['family', '家人', 'Family', 'gia dinh', '妈妈', 'ma1 ma5', '说家人'],
-    ['numbers', '数字', 'Numbers', 'so dem', '三', 'san1', '说数字'],
-    ['date', '日期', 'Date', 'ngay thang', '今天', 'jin1 tian1', '说日期'],
-    ['time', '时间', 'Time', 'thoi gian', '上午', 'shang4 wu3', '说时间'],
-    ['food', '吃饭', 'Food', 'an uong', '米饭', 'mi3 fan4', '说食物'],
-    ['drink', '喝水', 'Drinks', 'do uong', '水', 'shui3', '说饮料'],
-    ['school', '学校', 'School', 'truong hoc', '学校', 'xue2 xiao4', '说学校'],
-    ['class', '上课', 'Class', 'lop hoc', '课', 'ke4', '说课堂'],
-    ['book', '看书', 'Books', 'sach', '书', 'shu1', '说书本'],
-    ['shopping', '买东西', 'Shopping', 'mua sam', '买', 'mai3', '说购物'],
-    ['money', '钱', 'Money', 'tien', '钱', 'qian2', '说价钱'],
-    ['weather', '天气', 'Weather', 'thoi tiet', '天气', 'tian1 qi4', '说天气'],
-    ['place', '地点', 'Places', 'dia diem', '家', 'jia1', '说地点'],
-    ['doctor', '医生', 'Doctor', 'bac si', '医生', 'yi1 sheng1', '说身体'],
-    ['review', '复习', 'Review', 'on tap', '中文', 'zhong1 wen2', '复习中文']
+    ['greetings', '问候', 'Greetings', '你好', 'ni3 hao3'],
+    ['name', '名字', 'Names', '名字', 'ming2 zi5'],
+    ['family', '家人', 'Family', '妈妈', 'ma1 ma5'],
+    ['numbers', '数字', 'Numbers', '三', 'san1'],
+    ['date', '日期', 'Dates', '今天', 'jin1 tian1'],
+    ['time', '时间', 'Time', '上午', 'shang4 wu3'],
+    ['food', '吃饭', 'Food', '米饭', 'mi3 fan4'],
+    ['drink', '喝水', 'Drinks', '水', 'shui3'],
+    ['school', '学校', 'School', '学校', 'xue2 xiao4'],
+    ['class', '上课', 'Class', '课', 'ke4'],
+    ['book', '看书', 'Books', '书', 'shu1'],
+    ['shopping', '买东西', 'Shopping', '买', 'mai3'],
+    ['money', '钱', 'Money', '钱', 'qian2'],
+    ['weather', '天气', 'Weather', '天气', 'tian1 qi4'],
+    ['place', '地点', 'Places', '家', 'jia1'],
+    ['doctor', '医生', 'Seeing a Doctor', '医生', 'yi1 sheng1'],
+    ['review', '复习', 'Review', '中文', 'Zhong1 wen2']
   ],
   2: [
-    ['appointment', '约时间', 'Making an appointment', 'hen lich', '时间', 'shi2 jian1', '安排时间'],
-    ['transport', '坐车', 'Transport', 'di xe', '公共汽车', 'gong1 gong4 qi4 che1', '问路线'],
-    ['weather-plan', '天气计划', 'Weather plans', 'ke hoach thoi tiet', '下雨', 'xia4 yu3', '改计划'],
-    ['restaurant', '饭馆点菜', 'Restaurant', 'nha hang', '饭馆', 'fan4 guan3', '点菜'],
-    ['shopping-clothes', '买衣服', 'Buying clothes', 'mua quan ao', '衣服', 'yi1 fu5', '问价格'],
-    ['phone', '打电话', 'Phone call', 'goi dien', '电话', 'dian4 hua4', '约朋友'],
-    ['hotel', '住旅馆', 'Hotel', 'khach san', '房间', 'fang2 jian1', '住一晚'],
-    ['health', '身体不舒服', 'Health', 'suc khoe', '身体', 'shen1 ti3', '看医生'],
-    ['sports', '运动', 'Sports', 'the thao', '运动', 'yun4 dong4', '说习惯'],
-    ['birthday', '生日', 'Birthday', 'sinh nhat', '生日', 'sheng1 ri4', '送礼物'],
-    ['workday', '工作日', 'Workday', 'ngay lam viec', '工作', 'gong1 zuo4', '说日程'],
-    ['weekend', '周末', 'Weekend', 'cuoi tuan', '周末', 'zhou1 mo4', '安排活动'],
-    ['city', '城市', 'City', 'thanh pho', '城市', 'cheng2 shi4', '问地方'],
-    ['home', '在家', 'At home', 'o nha', '家里', 'jia1 li3', '做家务'],
-    ['travel', '旅游', 'Travel', 'du lich', '旅游', 'lv3 you2', '买票'],
-    ['gift', '礼物', 'Gift', 'qua tang', '礼物', 'li3 wu4', '表达喜欢'],
-    ['routine', '日常', 'Routine', 'sinh hoat', '每天', 'mei3 tian1', '说习惯']
+    ['appointment', '约时间', 'Making an appointment', '时间', 'shi2 jian1'],
+    ['transport', '坐车', 'Transport', '公共汽车', 'gong1 gong4 qi4 che1'],
+    ['weather-plan', '天气计划', 'Weather plans', '下雨', 'xia4 yu3'],
+    ['restaurant', '饭馆点菜', 'Restaurant', '饭馆', 'fan4 guan3'],
+    ['shopping-clothes', '买衣服', 'Buying clothes', '衣服', 'yi1 fu5'],
+    ['phone', '打电话', 'Phone call', '电话', 'dian4 hua4'],
+    ['hotel', '住旅馆', 'Hotel', '房间', 'fang2 jian1'],
+    ['health', '身体不舒服', 'Health', '身体', 'shen1 ti3'],
+    ['sports', '运动', 'Sports', '运动', 'yun4 dong4'],
+    ['birthday', '生日', 'Birthday', '生日', 'sheng1 ri4'],
+    ['workday', '工作日', 'Workday', '工作', 'gong1 zuo4'],
+    ['weekend', '周末', 'Weekend', '周末', 'zhou1 mo4'],
+    ['city', '城市', 'City', '城市', 'cheng2 shi4'],
+    ['home', '在家', 'At home', '家里', 'jia1 li3'],
+    ['travel', '旅游', 'Travel', '旅游', 'lv3 you2'],
+    ['gift', '礼物', 'Gift', '礼物', 'li3 wu4'],
+    ['routine', '日常', 'Routine', '每天', 'mei3 tian1']
   ],
   3: [
-    ['study-method', '学习方法', 'Study methods', 'phuong phap hoc', '方法', 'fang1 fa3', '改进学习'],
-    ['travel-experience', '旅行经历', 'Travel experience', 'trai nghiem du lich', '经历', 'jing1 li4', '讲过去'],
-    ['job-interview', '面试', 'Job interview', 'phong van', '面试', 'mian4 shi4', '说明能力'],
-    ['online-shopping', '网购', 'Online shopping', 'mua hang online', '网上', 'wang3 shang4', '比较选择'],
-    ['neighbors', '邻居', 'Neighbors', 'hang xom', '邻居', 'lin2 ju1', '处理问题'],
-    ['movie-opinion', '电影看法', 'Movie opinions', 'y kien ve phim', '电影', 'dian4 ying3', '表达看法'],
-    ['fitness', '健康习惯', 'Healthy habits', 'thoi quen lanh manh', '健康', 'jian4 kang1', '坚持运动'],
-    ['library', '图书馆', 'Library', 'thu vien', '图书馆', 'tu2 shu1 guan3', '借书学习'],
-    ['schedule-change', '改变计划', 'Changing plans', 'doi ke hoach', '改变', 'gai3 bian4', '解释原因'],
-    ['work-pressure', '工作压力', 'Work pressure', 'ap luc cong viec', '压力', 'ya1 li4', '提出建议'],
-    ['friendship', '朋友关系', 'Friendship', 'tinh ban', '关系', 'guan1 xi5', '沟通想法'],
-    ['lost-item', '丢东西', 'Lost item', 'mat do', '丢', 'diu1', '描述经过'],
-    ['bank', '银行办事', 'Banking', 'ngan hang', '银行', 'yin2 hang2', '办事情'],
-    ['festival', '节日', 'Festival', 'le hoi', '节日', 'jie2 ri4', '介绍习俗'],
-    ['news', '新闻', 'News', 'tin tuc', '新闻', 'xin1 wen2', '说明重点'],
-    ['environment', '环境', 'Environment', 'moi truong', '环境', 'huan2 jing4', '表达责任'],
-    ['review', '综合复习', 'Integrated review', 'on tap tong hop', '复习', 'fu4 xi2', '总结经验']
+    ['study-method', '学习方法', 'Study methods', '方法', 'fang1 fa3'],
+    ['travel-experience', '旅行经历', 'Travel experience', '经历', 'jing1 li4'],
+    ['job-interview', '面试', 'Job interview', '面试', 'mian4 shi4'],
+    ['online-shopping', '网购', 'Online shopping', '网上', 'wang3 shang4'],
+    ['neighbors', '邻居', 'Neighbors', '邻居', 'lin2 ju1'],
+    ['movie-opinion', '电影看法', 'Movie opinions', '电影', 'dian4 ying3'],
+    ['fitness', '健康习惯', 'Healthy habits', '健康', 'jian4 kang1'],
+    ['library', '图书馆', 'Library', '图书馆', 'tu2 shu1 guan3'],
+    ['schedule-change', '改变计划', 'Changing plans', '改变', 'gai3 bian4'],
+    ['work-pressure', '工作压力', 'Work pressure', '压力', 'ya1 li4'],
+    ['friendship', '朋友关系', 'Friendship', '关系', 'guan1 xi5'],
+    ['lost-item', '丢东西', 'Lost item', '丢', 'diu1'],
+    ['bank', '银行办事', 'Banking', '银行', 'yin2 hang2'],
+    ['festival', '节日', 'Festival', '节日', 'jie2 ri4'],
+    ['news', '新闻', 'News', '新闻', 'xin1 wen2'],
+    ['environment', '环境', 'Environment', '环境', 'huan2 jing4'],
+    ['review', '综合复习', 'Integrated review', '复习', 'fu4 xi2']
   ],
   4: [
-    ['teamwork', '团队合作', 'Teamwork', 'lam viec nhom', '团队', 'tuan2 dui4', '分析合作'],
-    ['time-management', '时间管理', 'Time management', 'quan ly thoi gian', '效率', 'xiao4 lv4', '评价安排'],
-    ['online-learning', '在线学习', 'Online learning', 'hoc truc tuyen', '平台', 'ping2 tai2', '讨论学习'],
-    ['public-transport', '公共交通', 'Public transport', 'giao thong cong cong', '交通', 'jiao1 tong1', '提出建议'],
-    ['workplace-feedback', '职场反馈', 'Workplace feedback', 'phan hoi noi lam viec', '反馈', 'fan3 kui4', '说明观点'],
-    ['consumer-choice', '消费选择', 'Consumer choice', 'lua chon tieu dung', '消费', 'xiao1 fei4', '比较价值'],
-    ['community', '社区服务', 'Community service', 'dich vu cong dong', '社区', 'she4 qu1', '讨论责任'],
-    ['culture', '文化差异', 'Cultural differences', 'khac biet van hoa', '差异', 'cha1 yi4', '解释原因'],
-    ['technology', '技术生活', 'Technology in life', 'cong nghe doi song', '技术', 'ji4 shu4', '分析影响'],
-    ['education', '教育公平', 'Education equity', 'cong bang giao duc', '公平', 'gong1 ping2', '提出看法'],
-    ['health-choice', '健康选择', 'Health choices', 'lua chon suc khoe', '选择', 'xuan3 ze2', '说明理由'],
-    ['city-space', '城市空间', 'Urban space', 'khong gian do thi', '空间', 'kong1 jian1', '评价设计'],
-    ['media', '媒体信息', 'Media information', 'thong tin truyen thong', '媒体', 'mei2 ti3', '判断信息'],
-    ['career', '职业发展', 'Career development', 'phat trien nghe nghiep', '职业', 'zhi2 ye4', '规划发展'],
-    ['service', '服务质量', 'Service quality', 'chat luong dich vu', '质量', 'zhi4 liang4', '提出改进'],
-    ['risk', '风险意识', 'Risk awareness', 'nhan thuc rui ro', '风险', 'feng1 xian3', '权衡决定'],
-    ['review', '观点复习', 'Viewpoint review', 'on tap quan diem', '观点', 'guan1 dian3', '组织论证']
+    ['teamwork', '团队合作', 'Teamwork', '团队', 'tuan2 dui4'],
+    ['time-management', '时间管理', 'Time management', '效率', 'xiao4 lv4'],
+    ['online-learning', '在线学习', 'Online learning', '平台', 'ping2 tai2'],
+    ['public-transport', '公共交通', 'Public transport', '交通', 'jiao1 tong1'],
+    ['workplace-feedback', '职场反馈', 'Workplace feedback', '反馈', 'fan3 kui4'],
+    ['consumer-choice', '消费选择', 'Consumer choice', '消费', 'xiao1 fei4'],
+    ['community', '社区服务', 'Community service', '社区', 'she4 qu1'],
+    ['culture', '文化差异', 'Cultural differences', '差异', 'cha1 yi4'],
+    ['technology', '技术生活', 'Technology in life', '技术', 'ji4 shu4'],
+    ['education', '教育公平', 'Education equity', '公平', 'gong1 ping2'],
+    ['health-choice', '健康选择', 'Health choices', '选择', 'xuan3 ze2'],
+    ['city-space', '城市空间', 'Urban space', '空间', 'kong1 jian1'],
+    ['media', '媒体信息', 'Media information', '媒体', 'mei2 ti3'],
+    ['career', '职业发展', 'Career development', '职业', 'zhi2 ye4'],
+    ['service', '服务质量', 'Service quality', '质量', 'zhi4 liang4'],
+    ['risk', '风险意识', 'Risk awareness', '风险', 'feng1 xian3'],
+    ['review', '观点复习', 'Viewpoint review', '观点', 'guan1 dian3']
   ],
   5: [
-    ['implicit-meaning', '言外之意', 'Implicit meaning', 'ham y', '暗示', 'an4 shi4', '识别含义'],
-    ['academic-reading', '学术阅读', 'Academic reading', 'doc hoc thuat', '论证', 'lun4 zheng4', '评价证据'],
-    ['professional-email', '职业邮件', 'Professional email', 'email cong viec', '语气', 'yu3 qi4', '调整表达'],
-    ['social-change', '社会变化', 'Social change', 'bien doi xa hoi', '变化', 'bian4 hua4', '分析趋势'],
-    ['innovation', '创新', 'Innovation', 'doi moi', '创新', 'chuang4 xin1', '评价价值'],
-    ['ethics', '伦理选择', 'Ethical choice', 'lua chon dao duc', '伦理', 'lun2 li3', '权衡后果'],
-    ['memory', '记忆与学习', 'Memory and learning', 'tri nho va hoc', '记忆', 'ji4 yi4', '反思方法'],
-    ['leadership', '领导力', 'Leadership', 'lanh dao', '领导', 'ling3 dao3', '判断风格'],
-    ['negotiation', '协商', 'Negotiation', 'thuong luong', '协商', 'xie2 shang1', '理解立场'],
-    ['identity', '身份认同', 'Identity', 'ban sac', '身份', 'shen1 fen4', '讨论认同'],
-    ['research', '研究方法', 'Research methods', 'phuong phap nghien cuu', '研究', 'yan2 jiu1', '分析限制'],
-    ['persuasion', '说服策略', 'Persuasion', 'thuyet phuc', '说服', 'shuo1 fu2', '评价策略'],
-    ['urbanization', '城市化', 'Urbanization', 'do thi hoa', '城市化', 'cheng2 shi4 hua4', '观察代价'],
-    ['digital-life', '数字生活', 'Digital life', 'doi song so', '隐私', 'yin3 si1', '平衡便利'],
-    ['public-policy', '公共政策', 'Public policy', 'chinh sach cong', '政策', 'zheng4 ce4', '辨析影响'],
-    ['art-review', '艺术评论', 'Art critique', 'phe binh nghe thuat', '审美', 'shen3 mei3', '解读风格'],
-    ['review', '高级复习', 'Advanced review', 'on tap nang cao', '立场', 'li4 chang3', '综合判断']
+    ['implicit-meaning', '言外之意', 'Implicit meaning', '暗示', 'an4 shi4'],
+    ['academic-reading', '学术阅读', 'Academic reading', '论证', 'lun4 zheng4'],
+    ['professional-email', '职业邮件', 'Professional email', '语气', 'yu3 qi4'],
+    ['social-change', '社会变化', 'Social change', '变化', 'bian4 hua4'],
+    ['innovation', '创新', 'Innovation', '创新', 'chuang4 xin1'],
+    ['ethics', '伦理选择', 'Ethical choice', '伦理', 'lun2 li3'],
+    ['memory', '记忆与学习', 'Memory and learning', '记忆', 'ji4 yi4'],
+    ['leadership', '领导力', 'Leadership', '领导', 'ling3 dao3'],
+    ['negotiation', '协商', 'Negotiation', '协商', 'xie2 shang1'],
+    ['identity', '身份认同', 'Identity', '身份', 'shen1 fen4'],
+    ['research', '研究方法', 'Research methods', '研究', 'yan2 jiu1'],
+    ['persuasion', '说服策略', 'Persuasion', '说服', 'shuo1 fu2'],
+    ['urbanization', '城市化', 'Urbanization', '城市化', 'cheng2 shi4 hua4'],
+    ['digital-life', '数字生活', 'Digital life', '隐私', 'yin3 si1'],
+    ['public-policy', '公共政策', 'Public policy', '政策', 'zheng4 ce4'],
+    ['art-review', '艺术评论', 'Art critique', '审美', 'shen3 mei3'],
+    ['review', '高级复习', 'Advanced review', '立场', 'li4 chang3']
   ],
   6: [
-    ['classical-allusion', '典故', 'Allusion', 'dien co', '典故', 'dian3 gu4', '体会文化'],
-    ['rhetoric', '修辞', 'Rhetoric', 'tu tu', '修辞', 'xiu1 ci2', '辨析风格'],
-    ['public-discourse', '公共话语', 'Public discourse', 'dien ngon cong', '话语', 'hua4 yu3', '审视立场'],
-    ['philosophy', '哲学思辨', 'Philosophical reflection', 'suy tu triet hoc', '思辨', 'si1 bian4', '追问前提'],
-    ['literary-style', '文学风格', 'Literary style', 'phong cach van hoc', '笔法', 'bi3 fa3', '品评文本'],
-    ['historical-memory', '历史记忆', 'Historical memory', 'ky uc lich su', '记忆', 'ji4 yi4', '重构叙事'],
-    ['cross-cultural', '跨文化表达', 'Cross-cultural expression', 'bieu dat lien van hoa', '语境', 'yu3 jing4', '拿捏分寸'],
-    ['argument-synthesis', '论证综合', 'Argument synthesis', 'tong hop lap luan', '综合', 'zong1 he2', '整合证据'],
-    ['policy-critique', '政策评议', 'Policy critique', 'binh luan chinh sach', '评议', 'ping2 yi4', '衡量利弊'],
-    ['metaphor', '隐喻', 'Metaphor', 'an du', '隐喻', 'yin3 yu4', '解读象征'],
-    ['translation', '翻译取舍', 'Translation choices', 'lua chon dich thuat', '取舍', 'qu3 she3', '保持神韵'],
-    ['innovation-risk', '创新风险', 'Innovation risk', 'rui ro doi moi', '代价', 'dai4 jia4', '斟酌后果'],
-    ['collective-memory', '集体记忆', 'Collective memory', 'ky uc tap the', '集体', 'ji2 ti3', '辨认叙述'],
-    ['media-framing', '媒体框架', 'Media framing', 'khung truyen thong', '框架', 'kuang4 jia4', '识破预设'],
-    ['aesthetic-judgment', '审美判断', 'Aesthetic judgment', 'phan doan tham my', '判断', 'pan4 duan4', '阐明标准'],
-    ['negotiating-tone', '语气拿捏', 'Tone control', 'kiem soat giong dieu', '拿捏', 'na2 nie1', '把握分寸'],
-    ['review', '精通复习', 'Mastery review', 'on tap tinh thong', '融会贯通', 'rong2 hui4 guan4 tong1', '综合表达']
+    ['classical-allusion', '典故', 'Allusion', '典故', 'dian3 gu4'],
+    ['rhetoric', '修辞', 'Rhetoric', '修辞', 'xiu1 ci2'],
+    ['public-discourse', '公共话语', 'Public discourse', '话语', 'hua4 yu3'],
+    ['philosophy', '哲学思辨', 'Philosophical reflection', '思辨', 'si1 bian4'],
+    ['literary-style', '文学风格', 'Literary style', '笔法', 'bi3 fa3'],
+    ['historical-memory', '历史记忆', 'Historical memory', '记忆', 'ji4 yi4'],
+    ['cross-cultural', '跨文化表达', 'Cross-cultural expression', '语境', 'yu3 jing4'],
+    ['argument-synthesis', '论证综合', 'Argument synthesis', '综合', 'zong1 he2'],
+    ['policy-critique', '政策评议', 'Policy critique', '评议', 'ping2 yi4'],
+    ['metaphor', '隐喻', 'Metaphor', '隐喻', 'yin3 yu4'],
+    ['translation', '翻译取舍', 'Translation choices', '取舍', 'qu3 she3'],
+    ['innovation-risk', '创新风险', 'Innovation risk', '代价', 'dai4 jia4'],
+    ['collective-memory', '集体记忆', 'Collective memory', '集体', 'ji2 ti3'],
+    ['media-framing', '媒体框架', 'Media framing', '框架', 'kuang4 jia4'],
+    ['aesthetic-judgment', '审美判断', 'Aesthetic judgment', '判断', 'pan4 duan4'],
+    ['negotiating-tone', '语气拿捏', 'Tone control', '拿捏', 'na2 nie1'],
+    ['review', '精通复习', 'Mastery review', '融会贯通', 'rong2 hui4 guan4 tong1']
   ]
 };
 
-const levelBaseWords = (hsk, topic) => {
-  const [slug, titleZh, titleEn, titleVi, focus, focusPinyin] = topic;
-  const base = [
-    { simplified: focus, pinyin: focusPinyin, part_of_speech: 'noun/phrase', english: titleEn.toLowerCase(), vi: titleVi }
-  ];
-
-  if (hsk === 1) {
-    return [
-      ...base,
-      { simplified: '学生', pinyin: 'xue2 sheng5', part_of_speech: 'noun', english: 'student', vi: 'hoc sinh' },
-      { simplified: '老师', pinyin: 'lao3 shi1', part_of_speech: 'noun', english: 'teacher', vi: 'giao vien' },
-      { simplified: '读', pinyin: 'du2', part_of_speech: 'verb', english: 'to read', vi: 'doc' },
-      { simplified: '写', pinyin: 'xie3', part_of_speech: 'verb', english: 'to write', vi: 'viet' }
-    ];
-  }
-
-  if (hsk === 2) {
-    return [
-      ...base,
-      { simplified: '计划', pinyin: 'ji4 hua4', part_of_speech: 'noun/verb', english: 'plan', vi: 'ke hoach' },
-      { simplified: '一起', pinyin: 'yi4 qi3', part_of_speech: 'adverb', english: 'together', vi: 'cung nhau' },
-      { simplified: '准备', pinyin: 'zhun3 bei4', part_of_speech: 'verb', english: 'prepare', vi: 'chuan bi' },
-      { simplified: '可以', pinyin: 'ke3 yi3', part_of_speech: 'modal verb', english: 'can/may', vi: 'co the' },
-      COMMON.like
-    ];
-  }
-
-  if (hsk === 3) {
-    return [
-      ...base,
-      { simplified: '经验', pinyin: 'jing1 yan4', part_of_speech: 'noun', english: 'experience', vi: 'kinh nghiem' },
-      { simplified: '解决', pinyin: 'jie3 jue2', part_of_speech: 'verb', english: 'solve', vi: 'giai quyet' },
-      { simplified: '建议', pinyin: 'jian4 yi4', part_of_speech: 'noun/verb', english: 'suggestion', vi: 'goi y' },
-      { simplified: '比较', pinyin: 'bi3 jiao4', part_of_speech: 'adverb/verb', english: 'comparatively/compare', vi: 'so sanh' },
-      COMMON.because,
-      COMMON.so,
-      COMMON.think
-    ];
-  }
-
-  if (hsk === 4) {
-    return [
-      ...base,
-      COMMON.material,
-      COMMON.viewpoint,
-      COMMON.influence,
-      COMMON.reason,
-      { simplified: '证据', pinyin: 'zheng4 ju4', part_of_speech: 'noun', english: 'evidence', vi: 'bang chung' },
-      { simplified: '然而', pinyin: 'ran2 er2', part_of_speech: 'conjunction', english: 'however', vi: 'tuy nhien' },
-      { simplified: '因此', pinyin: 'yin1 ci3', part_of_speech: 'conjunction', english: 'therefore', vi: 'vi vay' },
-      { simplified: '平衡', pinyin: 'ping2 heng2', part_of_speech: 'verb/noun', english: 'balance', vi: 'can bang' }
-    ];
-  }
-
-  if (hsk === 5) {
-    return [
-      ...base,
-      COMMON.material,
-      COMMON.viewpoint,
-      COMMON.influence,
-      COMMON.implication,
-      { simplified: '证据', pinyin: 'zheng4 ju4', part_of_speech: 'noun', english: 'evidence', vi: 'bang chung' },
-      { simplified: '表面', pinyin: 'biao3 mian4', part_of_speech: 'noun', english: 'surface', vi: 'be mat' },
-      { simplified: '背后', pinyin: 'bei4 hou4', part_of_speech: 'noun', english: 'behind', vi: 'phia sau' },
-      { simplified: '倾向', pinyin: 'qing1 xiang4', part_of_speech: 'noun/verb', english: 'tendency', vi: 'khuynh huong' },
-      { simplified: '取决于', pinyin: 'qu3 jue2 yu2', part_of_speech: 'verb phrase', english: 'depend on', vi: 'phu thuoc vao' }
-    ];
-  }
-
-  return [
-    ...base,
-    COMMON.material,
-    COMMON.viewpoint,
-    COMMON.implication,
-    COMMON.nuance,
-    { simplified: '语境', pinyin: 'yu3 jing4', part_of_speech: 'noun', english: 'context', vi: 'ngu canh' },
-    { simplified: '预设', pinyin: 'yu4 she4', part_of_speech: 'noun/verb', english: 'presupposition', vi: 'tien gia dinh' },
-    { simplified: '斟酌', pinyin: 'zhen1 zhuo2', part_of_speech: 'verb', english: 'weigh carefully', vi: 'can nhac ky' },
-    { simplified: '不言自明', pinyin: 'bu4 yan2 zi4 ming2', part_of_speech: 'idiom', english: 'self-evident', vi: 'khong noi cung ro' },
-    { simplified: '恰到好处', pinyin: 'qia4 dao4 hao3 chu4', part_of_speech: 'idiom', english: 'perfectly measured', vi: 'vua dung muc' }
-  ];
+const PROMPT_STRINGS = {
+  fill_blank: { vi: 'Điền từ đúng vào chỗ trống.', en: 'Fill in the blank with the correct word.' },
+  word_order: { vi: 'Sắp xếp các từ thành câu đúng.', en: 'Arrange the words into a correct sentence.' },
+  multiple_choice: { vi: 'Chọn đáp án đúng.', en: 'Choose the correct answer.' },
+  true_false: { vi: 'Câu sau đúng hay sai theo bài khóa?', en: 'True or false, according to the text?' },
+  reading_comprehension: { vi: 'Đọc bài khóa và trả lời câu hỏi.', en: 'Read the text and answer the question.' },
+  listening_comprehension: { vi: 'Nghe đoạn audio và trả lời câu hỏi.', en: 'Listen to the audio and answer the question.' }
 };
 
 const hanziCount = (value) => [...String(value || '')].filter((char) => /\p{Script=Han}/u.test(char)).length;
 
-const chars = (value) => [...String(value || '')].filter((char) => /\S/.test(char)).length;
+const stripPunct = (value) => String(value).replace(/[。？！，、]/g, '');
 
-const pinyinForLowLine = (hsk, focusPinyin) => {
-  if (hsk === 1) {
-    return [
-      'Ni3 hao3, wo3 jiao4 Xiao3 Ming2. Wo3 shi4 xue2 sheng5.',
-      'Ni3 hao3, Xiao3 Ming2. Wo3 shi4 lao3 shi1.',
-      `Jin1 tian1 wo3 xue2 ${focusPinyin}, ye3 du2 ${focusPinyin}.`,
-      `Hen3 hao3. Ni3 xie3 ${focusPinyin} ma?`,
-      `Wo3 xie3 ${focusPinyin}, ye3 shuo1 ${focusPinyin}.`,
-      'Hao3, wo3 men5 yi4 qi3 du2.',
-      'Xie4 xie5 lao3 shi1, zai4 jian4.'
-    ];
-  }
-
-  if (hsk === 2) {
-    return [
-      `Ni3 ming2 tian1 you3 shi2 jian1 ma? Wo3 xiang3 lian4 xi2 ${focusPinyin}.`,
-      'Ke3 yi3. Wo3 men5 xia4 wu3 yi4 qi3 qu4 ba.',
-      `Wo3 yi3 jing1 zhun3 bei4 hao3 le5. Yin1 wei4 wo3 xi3 huan5 ${focusPinyin}.`,
-      'Hen3 hao3. Wo3 ye3 xiang3 gen1 ni3 yi4 qi3 xue2.',
-      'Na4 wo3 men5 san1 dian3 jian4, bu2 yao4 chi2 dao4.',
-      'Mei2 wen4 ti2, yi2 hui4 er2 jian4.'
-    ];
-  }
-
-  return [
-    `Zui4 jin4 wo3 zai4 xue2 ${focusPinyin}, dan4 you3 yi4 dian3 nan2.`,
-    'Ni3 ke3 yi3 xian1 zong3 jie2 wen4 ti2, ran2 hou4 zai4 zhao3 fang1 fa3.',
-    'Wo3 jue2 de5 zhe4 ge5 jian4 yi4 hen3 you3 yong4.',
-    `Yin1 wei4 wo3 yi3 qian2 mei2 you3 zhe4 yang4 lian4 xi2, suo3 yi3 jin4 bu4 hen3 man4.`,
-    'Mei2 guan1 xi5, ni3 mei3 tian1 lian4 xi2 yi4 dian3, xiao4 guo3 hui4 geng4 hao3.',
-    'Hao3, wo3 jin1 tian1 jiu4 shi4 yi2 shi4.'
-  ];
+// Rotate options deterministically so the correct answer is not always first.
+const placeOptions = (options, optionsVi, correctIdx, seed) => {
+  const target = seed % options.length;
+  const rotated = options.slice();
+  const rotatedVi = optionsVi.slice();
+  const [correct] = rotated.splice(correctIdx, 1);
+  const [correctVi] = rotatedVi.splice(correctIdx, 1);
+  rotated.splice(target, 0, correct);
+  rotatedVi.splice(target, 0, correctVi);
+  return { options: rotated, optionsVi: rotatedVi, correct, correctVi };
 };
 
-const lowDialogue = (hsk, topic) => {
-  const focus = topic[4];
-  const focusPinyin = topic[5];
-  const zhLines = hsk === 1
-    ? [
-        '你好，我叫小明。我是学生。',
-        '你好，小明。我是老师。',
-        `今天我学${focus}，也读${focus}。`,
-        `很好。你写${focus}吗？`,
-        `我写${focus}，也说${focus}。`,
-        '好，我们一起读。',
-        '谢谢老师，再见。'
-      ]
-    : hsk === 2
-      ? [
-          `你明天有时间吗？我想练习${focus}。`,
-          '可以。我们下午一起去吧。',
-          `我已经准备好了，因为我喜欢${focus}。`,
-          '很好。我也想跟你一起学。',
-          '那我们三点见，不要迟到。',
-          '没问题，一会儿见。'
-        ]
-      : [
-          `最近我在学${focus}，但是有一点难。`,
-          '你可以先总结问题，然后再找方法。',
-          '我觉得这个建议很有用。',
-          '因为我以前没有这样练习，所以进步很慢。',
-          '没关系，你每天练习一点，效果会更好。',
-          '好，我今天就试一试。'
-        ];
+const pickPool = (pool, start, count) => Array.from({ length: count }, (_, k) => pool[(start + k) % pool.length]);
 
-  const pyLines = pinyinForLowLine(hsk, focusPinyin);
-
-  return zhLines.map((line, index) => ({
-    speaker: index % 2 === 0 ? 'A' : 'B',
-    zh: line,
-    simplified: line,
-    pinyin: pyLines[index],
-    en: `Dialogue line ${index + 1} about ${topic[2].toLowerCase()}.`,
-    vi: `Cau hoi thoai ${index + 1} ve ${topic[3]}.`
-  }));
-};
-
-const highPassage = (hsk, topic) => {
-  const focus = topic[4];
-  if (hsk === 4) {
-    return `这段材料讨论${focus}。在现实生活中，${focus}不只是一个简单话题，也会影响个人选择和团队决定。有人认为，只要目标清楚，行动就会自然有效；然而，材料提醒我们，目标、证据和原因必须放在一起看。没有证据的观点容易显得空，只有情绪的判断也容易失去平衡。因此，学习者需要先找出材料的主要观点，再说明它怎样影响具体行动。材料还强调，讨论问题时要注意对象、场合和结果，不能只看个人感受。这样的阅读训练不是背答案，而是用清楚的理由理解问题、比较选择，并提出合理建议，使表达更可靠。`;
-  }
-
-  if (hsk === 5) {
-    return `这段材料表面上讨论${focus}，背后却在提醒读者注意更深的含义。作者并没有直接给出唯一答案，而是通过几个细节显示自己的倾向：一方面，${focus}能够带来新的机会；另一方面，如果只看眼前利益，就可能忽略长期影响。材料中的论证取决于证据是否充分，也取决于语气是否合适。读者需要分辨哪些内容是事实，哪些只是推测，哪些话带有暗示。尤其要注意作者在转折处留下的保留态度。真正的理解不只是找关键词，而是看出观点之间的关系，评价理由的强弱，并用自己的话说明作者为什么这样安排材料。`;
-  }
-
-  return `这段材料借${focus}展开讨论，真正考查的是读者能否在语境中拿捏分寸。作者的观点并非直线推进，而是先设置一个看似不言自明的预设，再用细节慢慢松动它。某些词语表面平和，实际却带有评议意味；某些转折看似轻描淡写，却改变了整段话的重心。理解这类文本，不能只追求字面对应，还要斟酌修辞、含义和文化背景之间的关系。若把所有表达都译成直接结论，文章的神韵便会被削弱；若只欣赏风格而忽视证据，又会失去判断标准。因此，恰到好处的理解，需要在观点、语气、预设与分寸之间融会贯通。`;
-};
-
-const grammar = (hsk, topic, vocab) => {
-  const focus = topic[4];
-  const focusPinyin = topic[5];
-  const cefr = CEFR_BY_HSK[hsk];
-  const rules = hsk === 1
-    ? [
-        {
-          pattern: '主语 + 是 + 身份',
-          explanation: '用“是”说明一个人的身份。',
-          explanation_vi: 'Dung “是” de noi than phan cua mot nguoi.',
-          examples: ['我是学生。', '你是老师。', '他是医生。'],
-          example_pinyin: ['Wo3 shi4 xue2 sheng5.', 'Ni3 shi4 lao3 shi1.', 'Ta1 shi4 yi1 sheng1.']
-        },
-        {
-          pattern: '主语 + 学/读/写 + 内容',
-          explanation: '动词后面直接放学习的内容。',
-          explanation_vi: 'Sau dong tu dat truc tiep noi dung hoc.',
-          examples: [`我学${focus}。`, `我读${focus}。`, `我写${focus}。`],
-          example_pinyin: [`Wo3 xue2 ${focusPinyin}.`, `Wo3 du2 ${focusPinyin}.`, `Wo3 xie3 ${focusPinyin}.`]
-        }
-      ]
-    : hsk === 2
-      ? [
-          {
-            pattern: '想 + 动词',
-            explanation: '“想”表示计划或愿望。',
-            explanation_vi: '“想” dien ta ke hoach hoac mong muon.',
-            examples: [`我想练习${focus}。`, '我想去学校。', '你想喝水吗？'],
-            example_pinyin: [`Wo3 xiang3 lian4 xi2 ${focusPinyin}.`, 'Wo3 xiang3 qu4 xue2 xiao4.', 'Ni3 xiang3 he1 shui3 ma?']
-          },
-          {
-            pattern: '因为...所以...',
-            explanation: '先说原因，再说结果。',
-            explanation_vi: 'Noi nguyen nhan truoc, roi noi ket qua.',
-            examples: [`因为我喜欢${focus}，所以我练习。`, '因为下雨，所以我在家。', '因为他忙，所以他晚来。'],
-            example_pinyin: [`Yin1 wei4 wo3 xi3 huan5 ${focusPinyin}, suo3 yi3 wo3 lian4 xi2.`, 'Yin1 wei4 xia4 yu3, suo3 yi3 wo3 zai4 jia1.', 'Yin1 wei4 ta1 mang2, suo3 yi3 ta1 wan3 lai2.']
-          }
-        ]
-      : hsk === 3
-        ? [
-            {
-              pattern: '先...然后...',
-              explanation: '说明两个动作的先后顺序。',
-              explanation_vi: 'Dien ta thu tu truoc sau cua hai hanh dong.',
-              examples: ['我先看问题，然后回答。', `他先练习${focus}，然后休息。`, '我们先买票，然后上车。'],
-              example_pinyin: ['Wo3 xian1 kan4 wen4 ti2, ran2 hou4 hui2 da2.', `Ta1 xian1 lian4 xi2 ${focusPinyin}, ran2 hou4 xiu1 xi5.`, 'Wo3 men5 xian1 mai3 piao4, ran2 hou4 shang4 che1.']
-            },
-            {
-              pattern: '虽然...但是...',
-              explanation: '前后意思有转折。',
-              explanation_vi: 'Hai ve co y chuyen huong doi lap.',
-              examples: [`虽然${focus}有点难，但是我想学。`, '虽然今天很忙，但是我会来。', '虽然他不舒服，但是他去上课。'],
-              example_pinyin: [`Sui1 ran2 ${focusPinyin} you3 dian3 nan2, dan4 shi4 wo3 xiang3 xue2.`, 'Sui1 ran2 jin1 tian1 hen3 mang2, dan4 shi4 wo3 hui4 lai2.', 'Sui1 ran2 ta1 bu4 shu1 fu5, dan4 shi4 ta1 qu4 shang4 ke4.']
-            }
-          ]
-        : hsk === 4
-          ? [
-              {
-                pattern: '不只是...也...',
-                explanation: '说明一个事物有两个层面的作用。',
-                explanation_vi: 'Dien ta mot su viec co hon mot tac dung/tang nghia.',
-                examples: [`${focus}不只是话题，也影响选择。`, '学习不只是记词，也训练思考。', '服务不只是速度，也包括质量。']
-              },
-              {
-                pattern: '因此 + 结果/建议',
-                explanation: '用“因此”接前文理由推出结果。',
-                explanation_vi: 'Dung “因此” de rut ra ket qua tu ly do truoc do.',
-                examples: [`证据很清楚，因此观点更有力。`, '原因复杂，因此决定要平衡。', `${focus}影响很大，因此需要讨论。`]
-              }
-            ]
-          : hsk === 5
-            ? [
-                {
-                  pattern: '表面上...背后...',
-                  explanation: '区分表层信息和深层含义。',
-                  explanation_vi: 'Phan biet thong tin be mat va ham y sau do.',
-                  examples: [`材料表面上谈${focus}，背后谈选择。`, '他表面上同意，背后仍有担心。', '问题表面上简单，背后很复杂。']
-                },
-                {
-                  pattern: '取决于...',
-                  explanation: '说明结果由某个条件决定。',
-                  explanation_vi: 'Dien ta ket qua phu thuoc vao dieu kien nao do.',
-                  examples: ['效果取决于证据。', `判断取决于${focus}的背景。`, '语气取决于对象和场合。']
-                }
-              ]
-            : [
-                {
-                  pattern: '并非...而是...',
-                  explanation: '否定一个理解，再提出更准确的理解。',
-                  explanation_vi: 'Phu dinh mot cach hieu, sau do dua ra cach hieu chinh xac hon.',
-                  examples: [`重点并非${focus}本身，而是语境。`, '问题并非没有答案，而是答案有分寸。', '作者并非反对创新，而是提醒代价。']
-                },
-                {
-                  pattern: '若...便...',
-                  explanation: '用较书面的方式说明条件和结果。',
-                  explanation_vi: 'Cau dieu kien-ket qua trang trong hon.',
-                  examples: ['若只看字面，便会误解含义。', '若忽视语境，便难以拿捏分寸。', `若理解${focus}，便能看出预设。`]
-                }
-              ];
-
-  return rules.map((rule) => ({
-    ...rule,
-    hsk_level: hsk,
-    cefr_level: cefr,
-    examples: rule.examples.map((zh, index) => ({
-      zh,
-      simplified: zh,
-      pinyin: hsk <= 3 ? (rule.example_pinyin?.[index] || '') : '',
-      en: `Example ${index + 1} for ${rule.pattern}.`,
-      english: `Example ${index + 1} for ${rule.pattern}.`,
-      vi: `Vi du ${index + 1} cho mau ${rule.pattern}.`
-    }))
-  }));
-};
-
-const warmUp = (hsk, topic) => {
-  const focus = topic[4];
-  const titleVi = topic[3];
-  const items = hsk <= 2
-    ? [
-        `看图选词：${focus} / 学生 / 老师`,
-        `你今天想学${focus}吗？`,
-        `把${focus}和正确场景配对。`
-      ]
-    : hsk === 3
-      ? [
-          `说一说你最近一次接触${focus}的经历。`,
-          `判断：这个场景更需要建议还是原因？`,
-          `用一句话说明你对${focus}的看法。`
-        ]
-      : [
-          `快速判断：${focus}是个人问题还是社会问题？`,
-          `找出一个支持观点和一个反对观点。`,
-          `预测材料可能如何评价${focus}。`
-        ];
-
+const choiceExercise = ({ kind, bloom, prompt, promptPinyin, options, optionsVi, correctIdx, explanation, explanationVi, stimulus = null, seed = 0 }) => {
+  const placed = placeOptions(options, optionsVi, correctIdx, seed);
   return {
-    title: '热身',
-    title_pinyin: hsk <= 3 ? 're4 shen1' : '',
-    title_vi: 'Khoi dong',
-    items,
-    items_vi: [
-      `Kich hoat kien thuc nen ve ${titleVi}.`,
-      `Du doan ngon ngu se dung trong chu de ${titleVi}.`,
-      `Noi nhanh mot tinh huong lien quan den ${titleVi}.`
-    ]
-  };
-};
-
-const coreModule = (hsk, topic) => {
-  if (hsk <= 3) {
-    const dialogue = lowDialogue(hsk, topic);
-    return {
-      module_type: 'reading',
-      phases: [
-        {
-          type: 'dialogue',
-          title: '课文',
-          title_pinyin: 'ke4 wen2',
-          scenario: topic[2],
-          dialogue,
-          content_zh: dialogue.map((line) => line.zh).join(''),
-          content_pinyin: dialogue.map((line) => line.pinyin).join('\n'),
-          content_en: `Situational dialogue about ${topic[2].toLowerCase()}.`,
-          content_vi: `Hoi thoai tinh huong ve ${topic[3]}.`
-        }
-      ]
-    };
-  }
-
-  return {
-    module_type: 'reading',
-    phases: [
-      {
-        type: 'reading_passage',
-        title: '课文',
-        scenario: topic[2],
-        content_zh: highPassage(hsk, topic),
-        content_pinyin: '',
-        content_en: `Short passage about ${topic[2].toLowerCase()}.`,
-        content_vi: `Doan van ngan ve ${topic[3]}.`
-      }
-    ]
-  };
-};
-
-const exercisePinyin = (hsk, value) => (hsk <= 3 ? value : undefined);
-
-const exercises = (hsk, topic, module) => {
-  const cefr = CEFR_BY_HSK[hsk];
-  const focus = topic[4];
-  const focusPinyin = topic[5];
-  const text = module.phases[0].content_zh;
-  const textPinyin = hsk <= 3 ? module.phases[0].content_pinyin : '';
-  const base = {
+    kind,
     skill: 'mixed',
-    prompt_vi: '',
-    prompt_english: '',
-    options_vi: [],
-    correct_answer_vi: '',
-    explanation_vi: '',
-    stimulus: null
+    bloom_level: bloom,
+    prompt,
+    prompt_pinyin: promptPinyin,
+    prompt_vi: PROMPT_STRINGS[kind].vi,
+    prompt_english: PROMPT_STRINGS[kind].en,
+    options: placed.options,
+    options_vi: placed.optionsVi,
+    correct_answer: placed.correct,
+    correct_answer_vi: placed.correctVi,
+    acceptable_variants: [placed.correct],
+    explanation,
+    explanation_vi: explanationVi,
+    stimulus
   };
-  const options = hsk <= 3
-    ? [focus, '学生', '老师']
-    : [focus, '证据', '原因', '观点'];
-
-  return [
-    {
-      ...base,
-      id: '',
-      kind: 'fill_blank',
-      bloom_level: hsk <= 2 ? 'remember' : hsk <= 4 ? 'apply' : 'analyze',
-      prompt: hsk <= 3 ? `今天我学___。` : `${focus}影响___。`,
-      prompt_pinyin: exercisePinyin(hsk, hsk <= 3 ? `Jin1 tian1 wo3 xue2 ___.` : ''),
-      prompt_vi: 'Dien tu dung vao cho trong.',
-      prompt_english: 'Fill in the blank with the correct lesson word.',
-      options,
-      options_vi: options.map((item) => `Lua chon: ${item}`),
-      correct_answer: focus,
-      correct_answer_vi: focus,
-      acceptable_variants: [focus],
-      explanation: hsk <= 3 ? `课文说“今天我学${focus}”。` : `材料围绕${focus}说明影响。`,
-      explanation_vi: 'Dap an lay truc tiep tu tu vung va ngu canh cua bai.'
-    },
-    {
-      ...base,
-      id: '',
-      kind: 'word_order',
-      bloom_level: hsk <= 2 ? 'understand' : hsk <= 4 ? 'apply' : 'evaluate',
-      prompt: hsk <= 3 ? `我 / 学 / ${focus}` : `${focus} / 影响 / 观点`,
-      prompt_pinyin: exercisePinyin(hsk, hsk <= 3 ? `Wo3 / xue2 / ${focusPinyin}` : ''),
-      prompt_vi: 'Sap xep tu thanh cau dung.',
-      prompt_english: 'Unscramble the words into a correct sentence.',
-      options: hsk <= 3 ? ['我', '学', focus] : [focus, '影响', '观点'],
-      options_vi: hsk <= 3 ? ['toi', 'hoc', topic[3]] : [topic[3], 'anh huong', 'quan diem'],
-      correct_answer: hsk <= 3 ? `我学${focus}。` : `${focus}影响观点。`,
-      correct_answer_vi: hsk <= 3 ? `Toi hoc ${topic[3]}.` : `${topic[3]} anh huong quan diem.`,
-      acceptable_variants: [hsk <= 3 ? `我学${focus}` : `${focus}影响观点`],
-      explanation: hsk <= 3 ? `顺序是主语“我”加动词“学”加内容“${focus}”。` : `顺序是主题、动词、对象。`,
-      explanation_vi: 'Bai nay kiem tra trat tu cau duoc day trong phan ngu phap.'
-    },
-    {
-      ...base,
-      id: '',
-      kind: 'reading_comprehension',
-      bloom_level: hsk <= 2 ? 'understand' : hsk <= 4 ? 'analyze' : 'evaluate',
-      prompt: hsk <= 3 ? `小明今天学什么？` : `${focus}和什么有关？`,
-      prompt_pinyin: exercisePinyin(hsk, hsk <= 3 ? 'Xiao3 Ming2 jin1 tian1 xue2 shen2 me5?' : ''),
-      prompt_vi: 'Tra loi dua tren bai doc/hoi thoai.',
-      prompt_english: 'Answer based only on the text/dialogue.',
-      options,
-      options_vi: options.map((item) => `Lua chon: ${item}`),
-      correct_answer: focus,
-      correct_answer_vi: focus,
-      acceptable_variants: [focus],
-      explanation: hsk <= 3 ? `对话中说“今天我学${focus}”。` : `材料从${focus}出发讨论观点、原因和影响。`,
-      explanation_vi: 'Cau tra loi nam trong chinh bai khoa, khong can tu ngoai bai.',
-      stimulus: {
-        type: 'reading',
-        title: topic[1],
-        text,
-        pinyin: textPinyin,
-        english: `Reading stimulus for ${topic[2].toLowerCase()}.`
-      }
-    }
-  ];
 };
 
-const makeLesson = (hsk, index, topic) => {
+const wordOrderExercise = ({ bloom, tokens, tokensPinyin, tokensVi, correct, correctVi, explanation, explanationVi }) => ({
+  kind: 'word_order',
+  skill: 'mixed',
+  bloom_level: bloom,
+  prompt: tokens.join(' / '),
+  prompt_pinyin: tokensPinyin,
+  prompt_vi: PROMPT_STRINGS.word_order.vi,
+  prompt_english: PROMPT_STRINGS.word_order.en,
+  options: tokens,
+  options_vi: tokensVi,
+  correct_answer: correct,
+  correct_answer_vi: correctVi,
+  acceptable_variants: [correct, stripPunct(correct)],
+  explanation,
+  explanation_vi: explanationVi,
+  stimulus: null
+});
+
+const trueFalseExercise = ({ bloom, statement, statementPinyin, answer, explanation, explanationVi }) => ({
+  kind: 'true_false',
+  skill: 'mixed',
+  bloom_level: bloom,
+  prompt: statement,
+  prompt_pinyin: statementPinyin,
+  prompt_vi: PROMPT_STRINGS.true_false.vi,
+  prompt_english: PROMPT_STRINGS.true_false.en,
+  options: ['对', '错'],
+  options_vi: ['Đúng', 'Sai'],
+  correct_answer: answer ? '对' : '错',
+  correct_answer_vi: answer ? 'Đúng' : 'Sai',
+  acceptable_variants: [answer ? '对' : '错'],
+  explanation,
+  explanation_vi: explanationVi,
+  stimulus: null
+});
+
+const readingStimulus = ({ hsk, title, text, pinyin, english, vi }) => ({
+  type: 'reading',
+  title,
+  text,
+  ...(hsk <= 3 ? { pinyin } : {}),
+  english,
+  vietnamese: vi
+});
+
+const listeningStimulus = ({ hsk, title, lines, english }) => {
+  const text = lines.map((line) => line.simplified).join('');
+  return {
+    type: 'listening',
+    title,
+    text,
+    audioText: text,
+    ...(hsk <= 3 ? { pinyin: lines.map((line) => line.pinyin).join('\n') } : {}),
+    english: english || lines.map((line) => line.english).filter(Boolean).join(' '),
+    lines
+  };
+};
+
+const finalizeExercises = (lessonId, exercises) =>
+  exercises.map((exercise, index) => ({ id: `${lessonId}-ex${index + 1}`, ...exercise }));
+
+const lessonShell = ({ hsk, index, topic, titleEn, titleVi, objectivesVi, warmup, vocab, coreModule, grammar, exercises, summaryVi }) => {
   const cefr = CEFR_BY_HSK[hsk];
-  const lessonId = `hsk${hsk}-l${String(index + 1).padStart(2, '0')}-standard-${topic[0]}`;
-  const vocab = levelBaseWords(hsk, topic).slice(0, hsk <= 2 ? 7 : hsk <= 3 ? 9 : 10);
-  const module = coreModule(hsk, topic);
-  const ex = exercises(hsk, topic, module).map((exercise, exerciseIndex) => ({
-    ...exercise,
-    id: `${lessonId}-ex${exerciseIndex + 1}`
+  const [slug, titleZh] = topic;
+  const lessonId = `hsk${hsk}-l${String(index + 1).padStart(2, '0')}-standard-${slug}`;
+  const wordIdBase = `std_hsk${hsk}_${slug.replace(/[^a-z0-9]+/g, '_')}`;
+
+  const vocabulary = vocab.map((item, itemIndex) => ({
+    word_id: `${wordIdBase}_${itemIndex + 1}`,
+    simplified: item[0],
+    pinyin: item[1],
+    part_of_speech: item[2],
+    english: item[3],
+    vi: item[4],
+    is_new: item[5] !== false
   }));
 
-  return accentVietnameseDeep({
+  return {
     lesson_id: lessonId,
     metadata: {
-      title_zh: topic[1],
-      title_en: `${topic[2]} - Standard HSK ${hsk}`,
-      title_vi: `${topic[3]} - HSK ${hsk}`,
+      title_zh: titleZh,
+      title_en: `${titleEn} (HSK ${hsk})`,
+      title_vi: `${titleVi} (HSK ${hsk})`,
       hsk_level: hsk,
       cefr_level: cefr,
       cefr_activities: ['reception', 'production', 'interaction'],
       primary_skill: 'mixed',
-      secondary_skills: ['reading', 'speaking', 'writing'],
-      topic: topic[0],
+      secondary_skills: ['reading', 'listening', 'speaking', 'writing'],
+      topic: slug,
       estimated_minutes: hsk <= 2 ? 15 : hsk <= 4 ? 20 : 25,
       xp_reward: 30 + hsk * 10,
-      tags: [`hsk${hsk}`, cefr.toLowerCase(), 'standard-hsk', topic[0]]
+      tags: [`hsk${hsk}`, cefr.toLowerCase(), 'standard-hsk', slug]
     },
     learning_objectives: [
-      `理解${topic[1]}中的核心词语。`,
-      `使用本课句式完成${topic[1]}表达。`,
-      `根据课文回答不超出本课范围的问题。`
+      `理解${titleZh}中的核心词语。`,
+      `使用本课句式完成${titleZh}表达。`,
+      '根据课文回答不超出本课范围的问题。'
     ],
-    learning_objectives_vi: [
-      `Hieu tu vung cot loi ve ${topic[3]}.`,
-      `Dung mau cau cua bai de dien dat ve ${topic[3]}.`,
-      `Tra loi cau hoi dua tren bai khoa, khong dung tu vuot cap.`
+    learning_objectives_vi: objectivesVi || [
+      `Hiểu các từ then chốt về chủ đề "${titleVi}".`,
+      `Dùng mẫu câu trong bài để diễn đạt về "${titleVi}".`,
+      'Trả lời câu hỏi dựa trên bài khóa, không dùng từ vượt cấp.'
     ],
-    warm_up: warmUp(hsk, topic),
-    vocabulary_focus: vocab.map((item, itemIndex) => ({
-      word_id: `std_hsk${hsk}_${topic[0].replace(/[^a-z0-9]+/g, '_')}_${itemIndex + 1}`,
-      simplified: item.simplified,
-      pinyin: item.pinyin,
-      part_of_speech: item.part_of_speech,
-      english: item.english,
-      vi: item.vi,
-      is_new: true
-    })),
-    core_modules: [module],
-    grammar_focus: grammar(hsk, topic, vocab),
+    warm_up: warmup,
+    vocabulary_focus: vocabulary,
+    core_modules: [coreModule],
+    grammar_focus: grammar,
     practice: {
       title: '练习',
       title_pinyin: hsk <= 3 ? 'lian4 xi2' : '',
       closed_loop_data_rule: true,
-      exercise_types: ['fill_blank', 'word_order', 'reading_comprehension'],
-      exercises: ex
+      exercise_types: [...new Set(exercises.map((exercise) => exercise.kind))],
+      exercises: finalizeExercises(lessonId, exercises)
     },
     practical_application: {
       title: '运用',
       title_pinyin: hsk <= 3 ? 'yun4 yong4' : '',
       can_do: CAN_DO[cefr],
       task_zh: hsk <= 3
-        ? `和同学用本课词语完成一段关于${topic[1]}的短对话。`
-        : `用本课词语概括${topic[1]}的主要观点，并补充一个理由。`,
+        ? `和同学用本课词语完成一段关于${titleZh}的短对话。`
+        : `用本课词语概括${titleZh}的主要观点，并补充一个理由。`,
       task_vi: hsk <= 3
-        ? `Dong vai voi ban hoc mot hoi thoai ngan ve ${topic[3]}, chi dung tu cua bai va cap thap hon.`
-        : `Tom tat quan diem chinh ve ${topic[3]} va them mot ly do, chi dung tu trong bai va cap thap hon.`
+        ? `Đóng vai cùng bạn học một hội thoại ngắn về "${titleVi}", chỉ dùng từ của bài và các cấp thấp hơn.`
+        : `Tóm tắt quan điểm chính của bài về "${titleVi}" và bổ sung một lý do, chỉ dùng từ trong bài và cấp thấp hơn.`
     },
     review: {
       key_takeaways: [
-        `本课围绕${topic[1]}学习。`,
+        `本课围绕${titleZh}学习。`,
         '练习只使用本课或更低等级词语。',
         `对应等级：${cefr}。`
       ],
       key_takeaways_vi: [
-        `Bai hoc xoay quanh ${topic[3]}.`,
-        'Bai tap chi dung tu cua bai hoac cap thap hon.',
-        cefr
+        `Bài học xoay quanh chủ đề "${titleVi}".`,
+        'Bài tập chỉ dùng từ vựng của bài hoặc cấp thấp hơn.',
+        `Tương ứng trình độ ${cefr}.`
       ],
       can_do_task: CAN_DO[cefr],
       practical_application_vi: hsk <= 3
-        ? `Hoi thoai ngan ve ${topic[3]}.`
-        : `Tom tat va danh gia ngan ve ${topic[3]}.`,
-      srs_inject_word_ids: vocab.map((_, itemIndex) => `std_hsk${hsk}_${topic[0].replace(/[^a-z0-9]+/g, '_')}_${itemIndex + 1}`)
+        ? `Hội thoại ngắn về "${titleVi}".`
+        : `Tóm tắt và đánh giá ngắn về "${titleVi}".`,
+      srs_inject_word_ids: vocabulary.map((word) => word.word_id)
     }
+  };
+};
+
+// ---------------------------------------------------------------------------
+// HSK1-2: fully hand-authored lessons.
+// ---------------------------------------------------------------------------
+
+const buildAuthoredExercise = (spec, context) => {
+  const { titleZh, dialogueLines, contentZh, contentPinyin, summaryEn, summaryVi, hsk, seed } = context;
+  const [kind] = spec;
+
+  if (kind === 'word_order') {
+    const [, bloom, tokens, tokensPinyin, tokensVi, correct, correctVi, explanation, explanationVi] = spec;
+    return wordOrderExercise({ bloom, tokens, tokensPinyin, tokensVi, correct, correctVi, explanation, explanationVi });
+  }
+
+  if (kind === 'true_false') {
+    const [, bloom, statement, statementPinyin, answer, explanation, explanationVi] = spec;
+    return trueFalseExercise({ bloom, statement, statementPinyin, answer, explanation, explanationVi });
+  }
+
+  if (kind === 'listening_comprehension') {
+    const [, bloom, lineIdxs, prompt, promptPinyin, options, correctIdx, optionsVi, explanation, explanationVi] = spec;
+    const lines = lineIdxs.map((lineIndex) => {
+      const line = dialogueLines[lineIndex];
+      return { speaker: line[0], simplified: line[1], pinyin: line[2], english: line[3], vi: line[4] };
+    });
+    return choiceExercise({
+      kind, bloom, prompt, promptPinyin, options, optionsVi, correctIdx, explanation, explanationVi, seed,
+      stimulus: listeningStimulus({ hsk, title: titleZh, lines })
+    });
+  }
+
+  const [, bloom, prompt, promptPinyin, options, correctIdx, optionsVi, explanation, explanationVi] = spec;
+  const stimulus = kind === 'reading_comprehension'
+    ? readingStimulus({ hsk, title: titleZh, text: contentZh, pinyin: contentPinyin, english: summaryEn, vi: summaryVi })
+    : null;
+
+  return choiceExercise({ kind, bloom, prompt, promptPinyin, options, optionsVi, correctIdx, explanation, explanationVi, stimulus, seed });
+};
+
+const buildLowLesson = (hsk, index, topic, authored) => {
+  if (authored.slug !== topic[0]) {
+    throw new Error(`Authored HSK${hsk} lesson order mismatch: expected ${topic[0]}, got ${authored.slug}.`);
+  }
+
+  const dialogue = authored.dialogue.map((line) => ({
+    speaker: line[0],
+    zh: line[1],
+    simplified: line[1],
+    pinyin: line[2],
+    en: line[3],
+    vi: line[4]
+  }));
+
+  const contentZh = dialogue.map((line) => line.zh).join('');
+  const contentPinyin = dialogue.map((line) => line.pinyin).join('\n');
+
+  const coreModule = {
+    module_type: 'reading',
+    phases: [
+      {
+        type: 'dialogue',
+        title: '课文',
+        title_pinyin: 'ke4 wen2',
+        scenario: authored.titleEn,
+        dialogue,
+        content_zh: contentZh,
+        content_pinyin: contentPinyin,
+        content_en: authored.summaryEn,
+        content_vi: authored.summaryVi
+      }
+    ]
+  };
+
+  const grammar = authored.grammar.map((rule) => ({
+    pattern: rule.pattern,
+    explanation: rule.explanation,
+    explanation_vi: rule.explanation_vi,
+    examples: rule.examples.map(([zh, pinyin, en, vi]) => ({ zh, simplified: zh, pinyin, en, english: en, vi })),
+    example_pinyin: rule.examples.map(([, pinyin]) => pinyin),
+    hsk_level: hsk,
+    cefr_level: CEFR_BY_HSK[hsk]
+  }));
+
+  const context = {
+    titleZh: topic[1],
+    dialogueLines: authored.dialogue,
+    contentZh,
+    contentPinyin,
+    summaryEn: authored.summaryEn,
+    summaryVi: authored.summaryVi,
+    hsk
+  };
+
+  const exercises = authored.exercises.map((spec, exerciseIndex) =>
+    buildAuthoredExercise(spec, { ...context, seed: index + exerciseIndex }));
+
+  return lessonShell({
+    hsk,
+    index,
+    topic,
+    titleEn: authored.titleEn,
+    titleVi: authored.titleVi,
+    warmup: {
+      title: '热身',
+      title_pinyin: 're4 shen1',
+      title_vi: 'Khởi động',
+      items: authored.warmup.items,
+      items_vi: authored.warmup.itemsVi
+    },
+    vocab: authored.vocab,
+    coreModule,
+    grammar,
+    exercises,
+    summaryVi: authored.summaryVi
   });
 };
 
+// ---------------------------------------------------------------------------
+// HSK3: shared advice dialogue with per-topic activity.
+// ---------------------------------------------------------------------------
+
+const buildHsk3Lesson = (index, topic) => {
+  const hsk = 3;
+  const [slug, titleZh, titleEn, focus, focusPinyin] = topic;
+  const activity = HSK3.activities[slug];
+  const titleVi = TITLES_VI[3][slug];
+  const gloss = FOCUS_GLOSS[3][slug];
+
+  const fill = (value) => String(value)
+    .replaceAll('{A}', activity.zh)
+    .replaceAll('{APY}', activity.py)
+    .replaceAll('{AEN}', activity.en)
+    .replaceAll('{AVI}', activity.vi);
+
+  const dialogue = HSK3.frame.map((line) => ({
+    speaker: line[0],
+    zh: fill(line[1]),
+    simplified: fill(line[1]),
+    pinyin: fill(line[2]),
+    en: fill(line[3]),
+    vi: fill(line[4])
+  }));
+
+  const contentZh = dialogue.map((line) => line.zh).join('');
+  const contentPinyin = dialogue.map((line) => line.pinyin).join('\n');
+  const summaryEn = `An advice dialogue: one speaker has been ${activity.en} and runs into problems; the other suggests writing the problems down and improving a little every day.`;
+  const summaryVi = `Hội thoại khuyên nhủ: một người đang ${activity.vi} và gặp khó khăn; người kia khuyên ghi vấn đề ra giấy và mỗi ngày tiến bộ một chút.`;
+
+  const coreModule = {
+    module_type: 'reading',
+    phases: [
+      {
+        type: 'dialogue',
+        title: '课文',
+        title_pinyin: 'ke4 wen2',
+        scenario: titleEn,
+        dialogue,
+        content_zh: contentZh,
+        content_pinyin: contentPinyin,
+        content_en: summaryEn,
+        content_vi: summaryVi
+      }
+    ]
+  };
+
+  const vocab = [
+    [focus, focusPinyin, 'noun/phrase', gloss.en, gloss.vi],
+    ...HSK3.vocabBase.filter((item) => item[0] !== focus)
+  ];
+
+  const grammar = HSK3.grammar.map((rule) => ({
+    pattern: rule.pattern,
+    explanation: rule.explanation,
+    explanation_vi: rule.explanation_vi,
+    examples: rule.examples.map(([zh, pinyin, en, vi]) => ({ zh, simplified: zh, pinyin, en, english: en, vi })),
+    example_pinyin: rule.examples.map(([, pinyin]) => pinyin),
+    hsk_level: hsk,
+    cefr_level: 'B1'
+  }));
+
+  const pools = HSK3.pools;
+  const readingStim = readingStimulus({ hsk, title: titleZh, text: contentZh, pinyin: contentPinyin, english: summaryEn, vi: summaryVi });
+  const listeningLines = dialogue.slice(0, 2).map((line) => ({ speaker: line.speaker, simplified: line.zh, pinyin: line.pinyin, english: line.en, vi: line.vi }));
+
+  const fillDistractors = pickPool(pools.wrongActivities, index, 2);
+  const listenDistractors = pickPool(pools.listenWrongActivities, index, 2);
+  const readingDistractors = pickPool(pools.readingWrong, index, 2);
+  const fill2Distractors = pickPool(pools.fill2Wrong, index, 2);
+  const mc = pools.mcQuestions[index % pools.mcQuestions.length];
+
+  const exercises = [
+    choiceExercise({
+      kind: 'fill_blank', bloom: 'apply', seed: index,
+      prompt: '最近我在___，可是遇到了一点儿问题。',
+      promptPinyin: 'Zui4 jin4 wo3 zai4 ___, ke3 shi4 yu4 dao4 le5 yi4 dian3r5 wen4 ti2.',
+      options: [activity.zh, ...fillDistractors.map((item) => item[0])],
+      optionsVi: [activity.vi, ...fillDistractors.map((item) => item[2])],
+      correctIdx: 0,
+      explanation: `课文第一句说：“最近我在${activity.zh}。”`,
+      explanationVi: `Câu mở đầu bài khóa cho biết người nói đang ${activity.vi}.`
+    }),
+    wordOrderExercise({
+      bloom: 'apply',
+      tokens: ['你的', '中文', '越来越', '好'],
+      tokensPinyin: 'ni3 de5 / Zhong1 wen2 / yue4 lai2 yue4 / hao3',
+      tokensVi: ['của bạn', 'tiếng Trung', 'càng ngày càng', 'tốt'],
+      correct: '你的中文越来越好。',
+      correctVi: 'Tiếng Trung của bạn càng ngày càng khá.',
+      explanation: '本课语法：越来越 + 形容词，放在主语后面。',
+      explanationVi: 'Ngữ pháp của bài: 越来越 + tính từ, đặt sau chủ ngữ: 你的中文越来越好.'
+    }),
+    choiceExercise({
+      kind: 'listening_comprehension', bloom: 'understand', seed: index + 1,
+      prompt: '说话人最近在做什么？',
+      promptPinyin: 'Shuo1 hua4 ren2 zui4 jin4 zai4 zuo4 shen2 me5?',
+      options: [activity.zh, ...listenDistractors.map((item) => item[0])],
+      optionsVi: [activity.vi, ...listenDistractors.map((item) => item[2])],
+      correctIdx: 0,
+      explanation: `他说：“最近我在${activity.zh}，可是遇到了一点儿问题。”`,
+      explanationVi: `Trong audio, người nói cho biết mình đang ${activity.vi} và gặp một chút vấn đề.`,
+      stimulus: listeningStimulus({ hsk, title: titleZh, lines: listeningLines })
+    }),
+    choiceExercise({
+      kind: 'reading_comprehension', bloom: 'analyze', seed: index + 2,
+      prompt: '遇到问题以后，朋友建议先做什么？',
+      promptPinyin: 'Yu4 dao4 wen4 ti2 yi3 hou4, peng2 you5 jian4 yi4 xian1 zuo4 shen2 me5?',
+      options: ['先把问题写下来', ...readingDistractors.map((item) => item[0])],
+      optionsVi: ['ghi vấn đề ra giấy trước', ...readingDistractors.map((item) => item[1])],
+      correctIdx: 0,
+      explanation: '朋友说：“你可以先把问题写下来，然后再想办法。”',
+      explanationVi: 'Người bạn khuyên: hãy ghi vấn đề ra trước, sau đó mới nghĩ cách giải quyết.',
+      stimulus: readingStim
+    }),
+    trueFalseExercise({
+      bloom: 'understand',
+      statement: '说话人以前经常这样做。',
+      statementPinyin: 'Shuo1 hua4 ren2 yi3 qian2 jing1 chang2 zhe4 yang4 zuo4.',
+      answer: false,
+      explanation: '他说：“我以前没有这样做过。”',
+      explanationVi: 'Sai. Người nói thừa nhận trước giờ chưa từng làm theo cách này.'
+    }),
+    choiceExercise({
+      kind: 'multiple_choice', bloom: 'understand', seed: index + 3,
+      prompt: mc.prompt,
+      promptPinyin: mc.py,
+      options: mc.opts,
+      optionsVi: mc.optsVi,
+      correctIdx: 0,
+      explanation: mc.expl,
+      explanationVi: mc.explVi
+    }),
+    choiceExercise({
+      kind: 'fill_blank', bloom: 'apply', seed: index + 4,
+      prompt: '你每天都做，就一定会___。',
+      promptPinyin: 'Ni3 mei3 tian1 dou1 zuo4, jiu4 yi2 ding4 hui4 ___.',
+      options: ['越来越好', ...fill2Distractors.map((item) => item[0])],
+      optionsVi: ['càng ngày càng tốt', ...fill2Distractors.map((item) => item[1])],
+      correctIdx: 0,
+      explanation: '课文最后说：“你每天都做，就一定会越来越好。”',
+      explanationVi: 'Câu cuối bài: ngày nào cũng làm thì nhất định sẽ càng ngày càng tốt lên.'
+    })
+  ];
+
+  return lessonShell({
+    hsk,
+    index,
+    topic,
+    titleEn,
+    titleVi,
+    warmup: {
+      title: '热身',
+      title_pinyin: 're4 shen1',
+      title_vi: 'Khởi động',
+      items: HSK3.warmup.items.map((item) => item.replaceAll('{T}', titleZh)),
+      items_vi: HSK3.warmup.itemsVi.map((item) => item.replaceAll('{TV}', titleVi))
+    },
+    vocab,
+    coreModule,
+    grammar,
+    exercises,
+    summaryVi
+  });
+};
+
+// ---------------------------------------------------------------------------
+// HSK4-6: level passage with focus slot, translated exercises.
+// ---------------------------------------------------------------------------
+
+const buildHighLesson = (hsk, index, topic) => {
+  const [slug, titleZh, titleEn, focus, focusPinyin] = topic;
+  const level = HIGH[hsk];
+  const titleVi = TITLES_VI[hsk][slug];
+  const gloss = FOCUS_GLOSS[hsk][slug];
+
+  const fill = (value) => String(value)
+    .replaceAll('{F}', focus)
+    .replaceAll('{FEN}', gloss.en)
+    .replaceAll('{FVI}', gloss.vi);
+
+  const passage = fill(level.passage);
+  const passageEn = fill(level.passageEn);
+  const passageVi = fill(level.passageVi);
+  const summaryVi = fill(level.summaryVi);
+
+  const coreModule = {
+    module_type: 'reading',
+    phases: [
+      {
+        type: 'reading_passage',
+        title: '课文',
+        scenario: titleEn,
+        content_zh: passage,
+        content_pinyin: '',
+        content_en: passageEn,
+        content_vi: passageVi
+      }
+    ]
+  };
+
+  const vocab = [
+    [focus, focusPinyin, 'noun/phrase', gloss.en, gloss.vi],
+    ...level.vocabBase.filter((item) => item[0] !== focus)
+  ];
+
+  const grammar = level.grammar.map((rule) => ({
+    pattern: rule.pattern,
+    explanation: rule.explanation,
+    explanation_vi: rule.explanation_vi,
+    examples: rule.examples.map(([zh, en, vi]) => ({ zh: fill(zh), simplified: fill(zh), pinyin: '', en: fill(en), english: fill(en), vi: fill(vi) })),
+    example_pinyin: [],
+    hsk_level: hsk,
+    cefr_level: CEFR_BY_HSK[hsk]
+  }));
+
+  const pools = level.pools;
+  const sentences = passage.split('。').filter(Boolean);
+  const audioLines = sentences.slice(0, level.listeningSentences).map((sentence) => ({ simplified: `${sentence}。`, pinyin: '', english: '' }));
+  const audioEnglish = passageEn.split(/(?<=\.)\s+/).slice(0, level.listeningSentences).join(' ');
+
+  const readingStim = readingStimulus({ hsk, title: titleZh, text: passage, pinyin: '', english: passageEn, vi: passageVi });
+
+  const fill1Distractors = pickPool(pools.topicNouns, index, 3);
+  const readingDistractors = pickPool(pools.readingWrong, index, 3);
+  const fill2Distractors = pickPool(pools.fill2Wrong, index, 3);
+  const mc = pools.mcQuestions[index % pools.mcQuestions.length];
+  const blooms = level.blooms;
+
+  let listeningOptions;
+  let listeningOptionsVi;
+  if (hsk === 4) {
+    const foci = TOPICS[4].map((item) => [item[3], FOCUS_GLOSS[4][item[0]].vi]);
+    const others = [1, 3, 6].map((offset) => foci[(index + offset) % foci.length]);
+    listeningOptions = [focus, ...others.map((item) => item[0])];
+    listeningOptionsVi = [gloss.vi, ...others.map((item) => item[1])];
+  } else {
+    const wrong = pickPool(pools.listeningWrong, index, 3);
+    listeningOptions = [level.listening.correct, ...wrong.map((item) => item[0])];
+    listeningOptionsVi = [level.listening.correctVi, ...wrong.map((item) => item[1])];
+  }
+
+  const exercises = [
+    choiceExercise({
+      kind: 'fill_blank', bloom: blooms[0], seed: index,
+      prompt: level.fill1.prompt,
+      promptPinyin: undefined,
+      options: [focus, ...fill1Distractors.map((item) => item[0])],
+      optionsVi: [gloss.vi, ...fill1Distractors.map((item) => item[1])],
+      correctIdx: 0,
+      explanation: fill(level.fill1.expl),
+      explanationVi: fill(level.fill1.explVi)
+    }),
+    wordOrderExercise({
+      bloom: blooms[1],
+      tokens: level.wordOrder.tokens.map(fill),
+      tokensPinyin: undefined,
+      tokensVi: level.wordOrder.tokensVi.map(fill),
+      correct: fill(level.wordOrder.correct),
+      correctVi: fill(level.wordOrder.correctVi),
+      explanation: fill(level.wordOrder.expl),
+      explanationVi: fill(level.wordOrder.explVi)
+    }),
+    choiceExercise({
+      kind: 'listening_comprehension', bloom: blooms[2], seed: index + 1,
+      prompt: level.listening.q,
+      promptPinyin: undefined,
+      options: listeningOptions,
+      optionsVi: listeningOptionsVi,
+      correctIdx: 0,
+      explanation: fill(level.listening.expl),
+      explanationVi: fill(level.listening.explVi),
+      stimulus: listeningStimulus({ hsk, title: titleZh, lines: audioLines, english: audioEnglish })
+    }),
+    choiceExercise({
+      kind: 'reading_comprehension', bloom: blooms[3], seed: index + 2,
+      prompt: fill(level.reading.q),
+      promptPinyin: undefined,
+      options: [level.reading.correct, ...readingDistractors.map((item) => item[0])],
+      optionsVi: [level.reading.correctVi, ...readingDistractors.map((item) => item[1])],
+      correctIdx: 0,
+      explanation: fill(level.reading.expl),
+      explanationVi: fill(level.reading.explVi),
+      stimulus: readingStim
+    }),
+    trueFalseExercise({
+      bloom: blooms[4],
+      statement: fill(level.trueFalse.statement),
+      statementPinyin: undefined,
+      answer: level.trueFalse.answer,
+      explanation: fill(level.trueFalse.expl),
+      explanationVi: fill(level.trueFalse.explVi)
+    }),
+    choiceExercise({
+      kind: 'multiple_choice', bloom: blooms[5], seed: index + 3,
+      prompt: mc.prompt,
+      promptPinyin: undefined,
+      options: mc.opts,
+      optionsVi: mc.optsVi,
+      correctIdx: 0,
+      explanation: mc.expl,
+      explanationVi: mc.explVi
+    }),
+    choiceExercise({
+      kind: 'fill_blank', bloom: blooms[6], seed: index + 4,
+      prompt: level.fill2.prompt,
+      promptPinyin: undefined,
+      options: [level.fill2.correct, ...fill2Distractors.map((item) => item[0])],
+      optionsVi: [level.fill2.correctVi, ...fill2Distractors.map((item) => item[1])],
+      correctIdx: 0,
+      explanation: fill(level.fill2.expl),
+      explanationVi: fill(level.fill2.explVi)
+    })
+  ];
+
+  return lessonShell({
+    hsk,
+    index,
+    topic,
+    titleEn,
+    titleVi,
+    warmup: {
+      title: '热身',
+      title_pinyin: '',
+      title_vi: 'Khởi động',
+      items: HIGH_WARMUP.items.map(fill),
+      items_vi: HIGH_WARMUP.itemsVi.map(fill)
+    },
+    vocab,
+    coreModule,
+    grammar,
+    exercises,
+    summaryVi
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Rules + validation
+// ---------------------------------------------------------------------------
+
+const ALLOWED_KINDS = ['fill_blank', 'word_order', 'multiple_choice', 'true_false', 'reading_comprehension', 'listening_comprehension'];
+const REQUIRED_KINDS = ['fill_blank', 'word_order', 'reading_comprehension'];
+
 const buildRules = () => ({
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  version: '2026-07-09-standard-hsk',
-  purpose: 'Standard HSK lesson generation with CEFR mapping and closed-loop exercise data.',
+  version: '2026-07-11-standard-hsk-v2',
+  purpose: 'Standard HSK lesson generation with CEFR mapping, closed-loop exercise data and authored translations.',
   hsk_to_cefr: CEFR_BY_HSK,
   lesson_contract: {
     required_sections: ['warm_up', 'vocabulary_focus', 'core_modules', 'grammar_focus', 'practice.exercises', 'practical_application'],
     vocabulary_per_lesson: { min: 5, max: 12 },
     grammar_rules_per_lesson: { min: 2, max: 3 },
     examples_per_grammar_rule: 3,
-    exercise_kinds_exactly: ['fill_blank', 'word_order', 'reading_comprehension'],
+    exercise_kinds_required: REQUIRED_KINDS,
+    exercise_kinds_allowed: ALLOWED_KINDS,
     closed_loop_data_rule: 'Every Chinese item in exercises must come from current lesson vocabulary, grammar, text, or lower HSK/CEFR levels.'
   },
   levels: Object.fromEntries(Object.entries(CEFR_BY_HSK).map(([hsk, cefr]) => [
@@ -706,7 +816,7 @@ const buildRules = () => ({
     {
       hsk_level: Number(hsk),
       can_do: CAN_DO[cefr],
-      allowed_kinds: ['fill_blank', 'word_order', 'reading_comprehension'],
+      allowed_kinds: ALLOWED_KINDS,
       allowed_bloom_levels: Number(hsk) <= 2
         ? ['remember', 'understand']
         : Number(hsk) === 3
@@ -714,28 +824,33 @@ const buildRules = () => ({
           : Number(hsk) === 4
             ? ['apply', 'analyze', 'evaluate']
             : ['analyze', 'evaluate', 'create'],
-      bloom_distribution: Number(hsk) <= 2
-        ? ['remember', 'understand', 'understand']
-        : Number(hsk) === 3
-          ? ['apply', 'apply', 'analyze']
-          : Number(hsk) === 4
-            ? ['apply', 'apply', 'analyze']
-            : Number(hsk) === 5
-              ? ['analyze', 'evaluate', 'evaluate']
-              : ['analyze', 'evaluate', 'evaluate'],
+      bloom_distribution: [],
+      option_count: Number(hsk) <= 3 ? 3 : 4,
       text_complexity: {
         reading: {
           hanzi: Number(hsk) <= 3 ? [50, 120] : [200, 500],
+          pinyin: Number(hsk) <= 3
+        },
+        listening: {
+          hanzi: Number(hsk) <= 3 ? [4, 120] : [15, 300],
           pinyin: Number(hsk) <= 3
         }
       }
     }
   ])),
+  distractor_rules: {
+    forbidden_options: [],
+    max_repeated_distractor_set: 2
+  },
   validation: {
     lesson_count_per_hsk: 17,
-    exercise_count: 3,
+    exercise_count: { min: 6, max: 10 },
+    min_distinct_kinds: 4,
+    min_distinct_bloom_levels: 2,
+    min_explanation_chars: 8,
+    require_prompt_english: true,
     strict_pinyin: {
-      hsk_1_to_3: 'Pinyin required in text and exercise pinyin fields.',
+      hsk_1_to_3: 'Pinyin (diacritics) required in text and exercise pinyin fields.',
       hsk_4_to_6: 'No pinyin inside Text/Dialogue or Exercises.'
     },
     anti_random_difficulty_leak: true
@@ -744,15 +859,15 @@ const buildRules = () => ({
 
 const ruleMarkdown = `# Standard HSK/CEFR Lesson Rules
 
-This directory has been reset to the standard HSK lesson framework.
+This directory holds the standard HSK lesson set with authored content and real EN/VI translations.
 
 ## Level Mapping
 
 | HSK | CEFR | Text Style |
 | --- | --- | --- |
-| 1 | A1 | Extremely simple survival phrases with full pinyin. |
-| 2 | A2 | Simple routine exchanges with full pinyin. |
-| 3 | B1 | Clear familiar dialogue with full pinyin in this app data set. |
+| 1 | A1 | Hand-authored survival dialogues with full diacritic pinyin. |
+| 2 | A2 | Hand-authored routine dialogues with full diacritic pinyin. |
+| 3 | B1 | Advice dialogue with per-topic activity, full diacritic pinyin. |
 | 4 | B2 | 200-500 character passage, no pinyin in text/exercises. |
 | 5 | C1 | Longer implicit-meaning passage, no pinyin in text/exercises. |
 | 6 | C2 | Nuanced idiomatic/cultural passage, no pinyin in text/exercises. |
@@ -762,10 +877,12 @@ This directory has been reset to the standard HSK lesson framework.
 Each lesson must include:
 
 1. Warm-up (热身)
-2. Vocabulary (生词), 5-12 words
-3. Text/Dialogue (课文)
-4. Grammar Notes (注释), 2-3 rules, exactly 3 examples per rule
-5. Exercises (练习), exactly these types: fill_blank, word_order, reading_comprehension
+2. Vocabulary (生词), 5-12 words (HSK1-2 include core function words)
+3. Text/Dialogue (课文) with per-line EN + VI translations
+4. Grammar Notes (注释), 2-3 rules, exactly 3 examples per rule, translated
+5. Exercises (练习), 6-10 per lesson. Required kinds: fill_blank, word_order,
+   reading_comprehension. Also allowed: multiple_choice, true_false,
+   listening_comprehension (with TTS-ready audioText stimulus).
 6. Practical Application (运用), CEFR can-do task
 
 ## Closed-Loop Data Rule
@@ -774,7 +891,15 @@ Chinese used in exercises must come from the current lesson vocabulary, current 
 
 ## Pinyin Rule
 
-HSK 1-3 includes pinyin in lesson text and exercise pinyin fields. HSK 4-6 has no pinyin in Text/Dialogue or Exercises.
+HSK 1-3 includes diacritic pinyin (nǐ hǎo, not Ni3 hao3) in lesson text and exercise pinyin fields. HSK 4-6 has no pinyin in Text/Dialogue or Exercises.
+
+## Content Sources
+
+- HSK1-2: fully hand-authored per lesson (server/scripts/standard-content/hsk1.mjs, hsk2.mjs).
+- HSK3: authored dialogue frame + per-topic activity (standard-content/high.mjs).
+- HSK4-6: level passage with focus slot + authored translations (standard-content/high.mjs).
+
+Regenerate with: node server/scripts/generate-standard-hsk-lessons.mjs
 `;
 
 const assertInside = (target, parent) => {
@@ -799,7 +924,8 @@ const validateLesson = (lesson) => {
   const text = phase.content_zh;
   const textCount = hanziCount(text);
   const expectedRange = hsk <= 3 ? [50, 120] : [200, 500];
-  const exerciseKinds = lesson.practice.exercises.map((exercise) => exercise.kind).sort().join(',');
+  const exercises = lesson.practice.exercises;
+  const kinds = new Set(exercises.map((exercise) => exercise.kind));
 
   if (lesson.vocabulary_focus.length < 5 || lesson.vocabulary_focus.length > 12) {
     throw new Error(`${lesson.lesson_id}: vocabulary count must be 5-12.`);
@@ -815,8 +941,32 @@ const validateLesson = (lesson) => {
     }
   }
 
-  if (exerciseKinds !== 'fill_blank,reading_comprehension,word_order') {
-    throw new Error(`${lesson.lesson_id}: exercise kinds are not exactly the required three.`);
+  if (exercises.length < 6 || exercises.length > 10) {
+    throw new Error(`${lesson.lesson_id}: expected 6-10 exercises, got ${exercises.length}.`);
+  }
+
+  for (const requiredKind of REQUIRED_KINDS) {
+    if (!kinds.has(requiredKind)) {
+      throw new Error(`${lesson.lesson_id}: missing required exercise kind ${requiredKind}.`);
+    }
+  }
+
+  for (const kind of kinds) {
+    if (!ALLOWED_KINDS.includes(kind)) {
+      throw new Error(`${lesson.lesson_id}: exercise kind ${kind} is not allowed.`);
+    }
+  }
+
+  for (const exercise of exercises) {
+    if (exercise.kind !== 'word_order') {
+      const correctIdx = exercise.options.findIndex((option) => String(option) === String(exercise.correct_answer));
+      if (correctIdx === -1) {
+        throw new Error(`${lesson.lesson_id}/${exercise.id}: correct_answer not in options.`);
+      }
+    }
+    if (exercise.options.length !== exercise.options_vi.length) {
+      throw new Error(`${lesson.lesson_id}/${exercise.id}: options_vi length mismatch.`);
+    }
   }
 
   if (textCount < expectedRange[0] || textCount > expectedRange[1]) {
@@ -832,7 +982,7 @@ const validateLesson = (lesson) => {
       throw new Error(`${lesson.lesson_id}: HSK 4-6 text must not include pinyin.`);
     }
 
-    for (const exercise of lesson.practice.exercises) {
+    for (const exercise of exercises) {
       if (exercise.prompt_pinyin || exercise.stimulus?.pinyin) {
         throw new Error(`${lesson.lesson_id}: HSK 4-6 exercises must not include pinyin.`);
       }
@@ -845,15 +995,32 @@ const validateLesson = (lesson) => {
     cefr: lesson.metadata.cefr_level,
     text_hanzi: textCount,
     vocabulary: lesson.vocabulary_focus.length,
-    exercises: lesson.practice.exercises.length,
-    chars: chars(JSON.stringify(lesson))
+    exercises: exercises.length
   };
 };
 
 const run = async () => {
-  const lessons = Object.entries(TOPICS).flatMap(([hsk, topics]) =>
-    topics.map((topic, index) => makeLesson(Number(hsk), index, topic))
-  );
+  const authoredBySlug = {
+    1: new Map(HSK1_LESSONS.map((lesson) => [lesson.slug, lesson])),
+    2: new Map(HSK2_LESSONS.map((lesson) => [lesson.slug, lesson]))
+  };
+
+  const lessons = Object.entries(TOPICS).flatMap(([hskKey, topics]) => {
+    const hsk = Number(hskKey);
+    return topics.map((topic, index) => {
+      if (hsk <= 2) {
+        const authored = authoredBySlug[hsk].get(topic[0]);
+        if (!authored) {
+          throw new Error(`Missing authored HSK${hsk} lesson for topic ${topic[0]}.`);
+        }
+        return buildLowLesson(hsk, index, topic, authored);
+      }
+      if (hsk === 3) {
+        return buildHsk3Lesson(index, topic);
+      }
+      return buildHighLesson(hsk, index, topic);
+    });
+  }).map((lesson) => convertPinyinDeep(lesson));
 
   const validation = lessons.map(validateLesson);
   const normalizedDir = resolveContentPath('data/lessons/normalized');
@@ -866,11 +1033,13 @@ const run = async () => {
 
   await writeFile(resolveContentPath('data/lessons/cefr-exercise-rules.json'), `${JSON.stringify(buildRules(), null, 2)}\n`, 'utf8');
   await writeFile(resolveContentPath('data/lessons/rule.md'), ruleMarkdown, 'utf8');
+  await writeFile(resolveContentPath('data/rule.md'), ruleMarkdown, 'utf8');
 
   console.log(JSON.stringify({
     ok: true,
     lesson_count: lessons.length,
     by_hsk: Object.fromEntries(Object.keys(TOPICS).map((hsk) => [hsk, validation.filter((lesson) => lesson.hsk === Number(hsk)).length])),
+    exercises_total: validation.reduce((sum, lesson) => sum + lesson.exercises, 0),
     normalized: path.relative(repoRoot, normalizedDir)
   }, null, 2));
 };

@@ -140,13 +140,15 @@ export const validateExercises = ({ lesson, exercises, rules, distractorUsage = 
   const expectedBloom = levelRules.bloom_distribution || [];
   const forbiddenOptions = new Set(rules.distractor_rules?.forbidden_options || []);
   const maxRepeatedDistractorSet = Number(rules.distractor_rules?.max_repeated_distractor_set || 2);
-  const exerciseCount = Number(validationRules.exercise_count || 5);
+  const exerciseCountRule = validationRules.exercise_count ?? 5;
+  const exerciseCountMin = Number(exerciseCountRule?.min ?? exerciseCountRule);
+  const exerciseCountMax = Number(exerciseCountRule?.max ?? exerciseCountRule);
   const errors = [];
   const warnings = [];
   const normalized = toArray(exercises).map((exercise, index) => normalizeExercise(exercise, lesson, index));
 
-  if (normalized.length !== exerciseCount) {
-    errors.push(`Expected ${exerciseCount} exercises, received ${normalized.length}.`);
+  if (normalized.length < exerciseCountMin || normalized.length > exerciseCountMax) {
+    errors.push(`Expected ${exerciseCountMin}-${exerciseCountMax} exercises, received ${normalized.length}.`);
   }
 
   const prompts = new Set();
@@ -198,7 +200,11 @@ export const validateExercises = ({ lesson, exercises, rules, distractorUsage = 
       if (![2, 4].includes(options.length)) {
         errors.push(`${exercise.id}: true_false should have 2 options, or 4 only if the UI needs richer choices.`);
       }
-    } else if (options.length !== levelRules.option_count) {
+    } else if (exercise.kind === 'word_order') {
+      if (options.length < 3 || options.length > 8) {
+        errors.push(`${exercise.id}: word_order should have 3-8 tokens, got ${options.length}.`);
+      }
+    } else if (levelRules.option_count && options.length !== levelRules.option_count) {
       errors.push(`${exercise.id}: expected ${levelRules.option_count} options for ${cefr}, got ${options.length}.`);
     }
 
@@ -206,16 +212,19 @@ export const validateExercises = ({ lesson, exercises, rules, distractorUsage = 
       errors.push(`${exercise.id}: options_vi length must match options length.`);
     }
 
-    if (correctIdx === -1) {
-      errors.push(`${exercise.id}: correct_answer is not in options.`);
-    }
+    // word_order: correct_answer is the assembled sentence, not one of the tokens.
+    if (exercise.kind !== 'word_order') {
+      if (correctIdx === -1) {
+        errors.push(`${exercise.id}: correct_answer is not in options.`);
+      }
 
-    if (correctViIdx === -1) {
-      errors.push(`${exercise.id}: correct_answer_vi is not in options_vi.`);
-    }
+      if (correctViIdx === -1) {
+        errors.push(`${exercise.id}: correct_answer_vi is not in options_vi.`);
+      }
 
-    if (correctIdx !== -1 && correctViIdx !== -1 && correctIdx !== correctViIdx) {
-      errors.push(`${exercise.id}: correct_answer and correct_answer_vi point to different option indexes.`);
+      if (correctIdx !== -1 && correctViIdx !== -1 && correctIdx !== correctViIdx) {
+        errors.push(`${exercise.id}: correct_answer and correct_answer_vi point to different option indexes.`);
+      }
     }
 
     correctIndexes.push(correctIdx);
@@ -240,7 +249,9 @@ export const validateExercises = ({ lesson, exercises, rules, distractorUsage = 
 
     validateStimulus(exercise, errors);
 
-    const signature = distractorSignature(exercise);
+    // word_order options are sentence tokens and true_false options are the
+    // fixed 对/错 pair, so repeated "distractor sets" are structural there.
+    const signature = ['word_order', 'true_false'].includes(exercise.kind) ? '' : distractorSignature(exercise);
     if (signature) {
       const seen = distractorUsage.get(signature) || 0;
       if (seen >= maxRepeatedDistractorSet) {

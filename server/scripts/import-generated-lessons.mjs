@@ -341,23 +341,26 @@ const ensureWord = async (client, item, lesson) => {
     return null;
   }
 
+  const pinyin = String(item.pinyin || simplified).trim();
+  const english = String(item.english || 'Lesson vocabulary').trim();
+
+  // Reuse an existing row only when the pronunciation matches exactly;
+  // a bare simplified match can land on the wrong dictionary sense
+  // (e.g. 也 "surname Ye", 吗 má "what?").
   const existing = await client.query(
     `
       SELECT id
       FROM words
-      WHERE simplified = $1 AND is_active = true
+      WHERE simplified = $1 AND lower(pinyin) = lower($2) AND is_active = true
       ORDER BY hsk_level, id
       LIMIT 1
     `,
-    [simplified]
+    [simplified, pinyin]
   );
 
   if (existing.rowCount > 0) {
     return existing.rows[0].id;
   }
-
-  const pinyin = String(item.pinyin || simplified).trim();
-  const english = String(item.english || 'Lesson vocabulary').trim();
   const pinyinPlain = toPlainPinyin(pinyin);
   const id = makeWordId({ simplified, pinyin, english });
   const category = lesson.metadata?.topic || 'lesson';
