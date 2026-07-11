@@ -1,5 +1,6 @@
 import { query } from '../config/db.config.js';
 import { badRequest, conflict, notFound } from '../utils/http-error.js';
+import { toLikePattern } from '../utils/sql.js';
 import { listCourseIssueReports, updateCourseIssueReport } from './report.service.js';
 
 const wordPartsOfSpeech = new Set([
@@ -131,7 +132,7 @@ export const listAdminLessons = async ({ q, includeInactive, limit = 100 } = {})
   }
 
   if (q) {
-    values.push(`%${q}%`);
+    values.push(toLikePattern(q));
     conditions.push(`(title ILIKE $${values.length} OR subtitle ILIKE $${values.length} OR id ILIKE $${values.length})`);
   }
 
@@ -168,7 +169,7 @@ export const upsertAdminLesson = async (payload, existingId = null) => {
   }
 
   if (!Number.isInteger(hskLevel) || hskLevel < 0 || hskLevel > 9) {
-    throw badRequest('HSK level khong hop le.');
+    throw badRequest('HSK level không hợp lệ.');
   }
 
   const dialogue =
@@ -254,7 +255,7 @@ export const listAdminWords = async ({ q, includeInactive, limit = 100 } = {}) =
   }
 
   if (q) {
-    values.push(`%${q}%`);
+    values.push(toLikePattern(q));
     conditions.push(`
       (
         simplified ILIKE $${values.length}
@@ -299,7 +300,7 @@ export const upsertAdminWord = async (payload, existingId = null) => {
   }
 
   if (!wordPartsOfSpeech.has(partOfSpeech)) {
-    throw badRequest('Loai tu khong hop le.');
+    throw badRequest('Loại từ không hợp lệ.');
   }
 
   const pinyinPlain = toPlainPinyin(pinyin);
@@ -381,7 +382,7 @@ export const listAdminUsers = async ({ q, limit = 100 } = {}) => {
   const conditions = [];
 
   if (q) {
-    values.push(`%${q}%`);
+    values.push(toLikePattern(q));
     conditions.push(`(email ILIKE $${values.length} OR name ILIKE $${values.length})`);
   }
 
@@ -407,7 +408,7 @@ export const updateAdminUser = async (adminUserId, userId, payload) => {
 
   if (Object.prototype.hasOwnProperty.call(payload, 'role')) {
     if (!userRoles.has(payload.role)) {
-      throw badRequest('Role khong hop le.');
+      throw badRequest('Role không hợp lệ.');
     }
     values.push(payload.role);
     entries.push(`role = $${values.length}`);
@@ -415,7 +416,7 @@ export const updateAdminUser = async (adminUserId, userId, payload) => {
 
   if (Object.prototype.hasOwnProperty.call(payload, 'isActive')) {
     if (userId === adminUserId && payload.isActive === false) {
-      throw conflict('Admin khong the tu khoa tai khoan dang dung.');
+      throw conflict('Admin không thể tự khóa tài khoản đang dùng.');
     }
     values.push(Boolean(payload.isActive));
     entries.push(`is_active = $${values.length}`);

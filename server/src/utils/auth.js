@@ -41,21 +41,25 @@ const verifyToken = (token, tokenName) => {
     const parts = token?.split('.');
 
     if (!parts || parts.length !== 3) {
-      throw unauthorized(`${tokenName} token khong hop le.`);
+      throw unauthorized(`${tokenName} token không hợp lệ.`);
     }
 
     const [header, body, signature] = parts;
     const expectedSignature = createSignature(`${header}.${body}`);
 
     if (!safeEqual(signature, expectedSignature)) {
-      throw unauthorized(`${tokenName} token khong hop le.`);
+      throw unauthorized(`${tokenName} token không hợp lệ.`);
     }
 
     const payload = parseJson(body);
     const now = Math.floor(Date.now() / 1000);
 
-    if (payload.exp && payload.exp < now) {
-      throw unauthorized(`${tokenName} token da het han.`);
+    if (!Number.isFinite(payload.exp)) {
+      throw unauthorized(`${tokenName} token không hợp lệ.`);
+    }
+
+    if (payload.exp < now) {
+      throw unauthorized(`${tokenName} token đã hết hạn.`);
     }
 
     return payload;
@@ -64,7 +68,7 @@ const verifyToken = (token, tokenName) => {
       throw error;
     }
 
-    throw unauthorized(`${tokenName} token khong hop le.`);
+    throw unauthorized(`${tokenName} token không hợp lệ.`);
   }
 };
 

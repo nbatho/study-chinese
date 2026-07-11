@@ -2,6 +2,7 @@ import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
 import { AppError } from '../utils/http-error.js';
 import { notFound } from '../utils/http-error.js';
+import { toLikePattern } from '../utils/sql.js';
 import {
   getAchievements as getAchievementsForUser,
   unlockAchievement as unlockEarnedAchievement
@@ -647,7 +648,7 @@ export const getOcrHistory = async (userId, options = {}) => {
   const where = ['user_id = $1'];
 
   if (filters.keyword) {
-    values.push(`%${filters.keyword}%`);
+    values.push(toLikePattern(filters.keyword));
     where.push(`(detected_text ILIKE $${values.length} OR title ILIKE $${values.length} OR note ILIKE $${values.length})`);
   }
 

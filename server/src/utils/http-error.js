@@ -14,7 +14,7 @@ export const badRequest = (message, details) =>
 export const unauthorized = (message = 'Ban can dang nhap de thuc hien thao tac nay.') =>
   new AppError(401, 'UNAUTHORIZED', message);
 
-export const forbidden = (message = 'Ban khong co quyen thuc hien thao tac nay.', details) =>
+export const forbidden = (message = 'Bạn không có quyền thực hiện thao tác này.', details) =>
   new AppError(403, 'FORBIDDEN', message, details);
 
 export const notFound = (message = 'Khong tim thay du lieu yeu cau.') =>

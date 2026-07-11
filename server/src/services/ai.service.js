@@ -102,7 +102,7 @@ const buildCorrectionMistakePayload = ({ correction, userText, sessionId, scenar
 
 const validateChatText = (text) => {
   if (!text || !String(text).trim()) {
-    throw badRequest('text khong duoc de trong.');
+    throw badRequest('text không được để trống.');
   }
 
   const userText = text.trim();

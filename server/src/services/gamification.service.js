@@ -143,7 +143,7 @@ export const awardGems = async (client, userId, amount, reason, metadata = {}) =
 
 const ensureCanSpend = (user, item) => {
   if (Number(user.gem_balance || 0) < Number(item.price_gems || 0)) {
-    throw badRequest('Ban khong du Gems de mua vat pham nay.', {
+    throw badRequest('Bạn không đủ Gems để mua vật phẩm này.', {
       gemBalance: Number(user.gem_balance || 0),
       priceGems: Number(item.price_gems || 0)
     });

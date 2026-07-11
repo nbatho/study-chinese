@@ -23,8 +23,9 @@ OCR_ENABLE_MKLDNN=false
 OCR_API_KEY=replace-with-a-random-secret
 ```
 
-`OCR_API_KEY` is optional. When it is set, `POST /scan` requires the same value in the
-`x-ocr-api-key` header.
+`OCR_API_KEY` is required by default: the service refuses `POST /scan` until it is set,
+and requests must send the same value in the `x-ocr-api-key` header. For local development
+without a key, set `OCR_REQUIRE_API_KEY=false` explicitly.
 
 ## Endpoints
 

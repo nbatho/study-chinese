@@ -1,8 +1,8 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { badRequest, conflict, notFound } from '../utils/http-error.js';
+import { emailPattern } from '../utils/patterns.js';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizeIdentifier = ({ email, userId, identifier } = {}) => {
   const raw = String(userId || email || identifier || '').trim();

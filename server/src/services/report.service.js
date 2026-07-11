@@ -31,7 +31,7 @@ export const createCourseIssueReport = async (userId, lessonId, payload) => {
   const exerciseId = payload.exerciseId ? String(payload.exerciseId).trim() : null;
 
   if (!allowedCategories.has(category)) {
-    throw badRequest('Loai bao loi khong hop le.');
+    throw badRequest('Loại báo lỗi không hợp lệ.');
   }
 
   if (!message || message.length < 5) {
@@ -121,7 +121,7 @@ export const updateCourseIssueReport = async (adminUserId, reportId, payload) =>
 
   if (Object.prototype.hasOwnProperty.call(payload, 'status')) {
     if (!allowedStatuses.has(payload.status)) {
-      throw badRequest('Trang thai bao loi khong hop le.');
+      throw badRequest('Trạng thái báo lỗi không hợp lệ.');
     }
     values.push(payload.status);
     entries.push(`status = $${values.length}`);

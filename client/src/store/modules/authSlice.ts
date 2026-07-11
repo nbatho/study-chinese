@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { AuthUser } from "../../api/auth";
-import { getAccessToken, removeAccessToken, setAccessToken } from "../../utils/localStorage";
+import { getAccessToken, removeAccessToken, setAccessToken } from "../../utils/authSession";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
 

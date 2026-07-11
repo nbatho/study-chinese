@@ -2,28 +2,16 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { env } from './src/config/env.config.js';
-import { connectDB } from './src/config/db.config.js';
+import { trustedOrigins } from './src/config/origins.js';
+import { connectDB, closeDB } from './src/config/db.config.js';
 import apiRoutes from './src/routes/api.routes.js';
 import { healthCheck } from './src/controllers/health.controller.js';
 import { requestLogger } from './src/middlewares/logger.middleware.js';
 import { errorHandler, notFoundHandler } from './src/middlewares/error.middleware.js';
 import { generalRateLimit, requestId, securityHeaders } from './src/middlewares/security.middleware.js';
-import { closeDB } from './src/config/db.config.js';
 
 const PORT = env.PORT;
 const app = express();
-const corsOrigins = new Set(
-  [
-    env.CLIENT_URL,
-    ...(env.CLIENT_URLS ? env.CLIENT_URLS.split(',') : []),
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174'
-  ]
-    .map((origin) => origin?.trim())
-    .filter(Boolean)
-);
 
 app.disable('x-powered-by');
 app.set('trust proxy', env.TRUST_PROXY);
@@ -32,7 +20,7 @@ app.use(securityHeaders);
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || corsOrigins.has(origin)) {
+      if (!origin || trustedOrigins.has(origin)) {
         callback(null, true);
         return;
       }
@@ -42,7 +30,11 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json({ limit: '10mb' }));
+// Large base64 payloads are only expected on specific endpoints;
+// everything else gets a tight default limit.
+app.use('/api/v1/ocr/scan', express.json({ limit: '10mb' }));
+app.use(['/api/v1/practice/shadowing/score', '/api/v1/practice/pronunciation/check'], express.json({ limit: '4mb' }));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(generalRateLimit);

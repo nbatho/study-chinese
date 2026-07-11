@@ -60,7 +60,7 @@ const decodeAudioBytes = (audio) => {
   const encoded = commaIndex >= 0 ? audio.slice(commaIndex + 1) : audio;
 
   if (!/^[A-Za-z0-9+/=_-]+$/.test(encoded)) {
-    throw badRequest('Audio khong hop le.');
+    throw badRequest('Audio không hợp lệ.');
   }
 
   const normalizedEncoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
@@ -78,7 +78,7 @@ const decodeAudioBytes = (audio) => {
   try {
     buffer = Buffer.from(normalizedEncoded, 'base64');
   } catch {
-    throw badRequest('Audio khong hop le.');
+    throw badRequest('Audio không hợp lệ.');
   }
 
   if (buffer.length > env.STT_MAX_AUDIO_BYTES) {
@@ -202,7 +202,7 @@ const transcribeForScoring = async ({ audio, audioMimeType }) => {
       language: 'zh'
     });
   } catch {
-    throw badRequest('Khong the nhan dien giong noi. Vui long thu lai hoac cau hinh STT provider that.');
+    throw badRequest('Không thể nhận diện giọng nói. Vui lòng thử lại hoặc cấu hình STT provider thật.');
   }
 };
 

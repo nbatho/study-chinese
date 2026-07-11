@@ -1,5 +1,6 @@
 import base64
 import binascii
+import hmac
 import os
 import tempfile
 import traceback
@@ -59,10 +60,11 @@ def decode_image(image: str) -> bytes:
 
 def verify_api_key(x_ocr_api_key: str | None) -> None:
     expected_api_key = os.getenv("OCR_API_KEY")
-    require_api_key = os.getenv("OCR_REQUIRE_API_KEY", "false").lower() == "true"
+    # Auth is on by default; set OCR_REQUIRE_API_KEY=false explicitly for local dev.
+    require_api_key = os.getenv("OCR_REQUIRE_API_KEY", "true").lower() == "true"
     if require_api_key and not expected_api_key:
         raise HTTPException(status_code=500, detail="OCR API key is required but not configured.")
-    if expected_api_key and x_ocr_api_key != expected_api_key:
+    if expected_api_key and not hmac.compare_digest(x_ocr_api_key or "", expected_api_key):
         raise HTTPException(status_code=401, detail="Invalid OCR API key.")
 
 
@@ -189,7 +191,7 @@ def scan(payload: ScanRequest, x_ocr_api_key: str | None = Header(default=None))
             results = ocr.predict(image_path)
         except Exception as exc:
             traceback.print_exc()
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
+            raise HTTPException(status_code=500, detail="OCR processing failed.") from exc
 
         regions = extract_regions(results, width, height)
         detected_text = " ".join(region["text"] for region in regions)

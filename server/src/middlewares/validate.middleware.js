@@ -1,4 +1,5 @@
 import { badRequest } from '../utils/http-error.js';
+import { emailPattern } from '../utils/patterns.js';
 
 export const requireFields = (fields) => (req, res, next) => {
   const missing = fields.filter((field) => req.body?.[field] === undefined || req.body[field] === '');
@@ -10,8 +11,6 @@ export const requireFields = (fields) => (req, res, next) => {
   return next();
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export const validators = {
   email: (value) => typeof value === 'string' && emailPattern.test(value.trim().toLowerCase()),
   nonEmptyString: (value) => typeof value === 'string' && value.trim().length > 0,
@@ -21,10 +20,7 @@ export const validators = {
     (value) =>
       value === undefined ||
       value === null ||
-      (typeof value === 'string' && value.trim().length <= max),
-  oneOf: (allowed) => (value) => allowed.includes(value),
-  numberBetween: (min, max) => (value) =>
-    typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+      (typeof value === 'string' && value.trim().length <= max)
 };
 
 export const validateBody = (schema) => (req, res, next) => {

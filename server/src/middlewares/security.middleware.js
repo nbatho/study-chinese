@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { env } from '../config/env.config.js';
+import { trustedOrigins } from '../config/origins.js';
 import { AppError } from '../utils/http-error.js';
 
 const securityHeaderMap = {
@@ -28,19 +28,6 @@ export const requestId = (req, res, next) => {
   res.setHeader('X-Request-Id', id);
   next();
 };
-
-const trustedOrigins = new Set(
-  [
-    env.CLIENT_URL,
-    ...(env.CLIENT_URLS ? env.CLIENT_URLS.split(',') : []),
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174'
-  ]
-    .map((origin) => origin?.trim())
-    .filter(Boolean)
-);
 
 const getOriginFromReferer = (referer) => {
   try {
@@ -79,6 +66,16 @@ export const createRateLimiter = ({
   message = 'Too many requests. Please try again later.'
 }) => {
   const hits = new Map();
+
+  // Sweep expired entries so the map does not grow with every unique client IP.
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits) {
+      if (entry.resetAt <= now) {
+        hits.delete(key);
+      }
+    }
+  }, windowMs).unref();
 
   return (req, res, next) => {
     const now = Date.now();

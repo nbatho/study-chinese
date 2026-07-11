@@ -1,7 +1,17 @@
 export const requestLogger = (req, res, next) => {
-  if (process.env.NODE_ENV !== 'test') {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  if (process.env.NODE_ENV === 'test') {
+    return next();
   }
 
-  next();
+  const startedAt = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    console.log(
+      `[${new Date().toISOString()}] ${req.id} ${req.method} ${req.originalUrl} ` +
+        `${res.statusCode} ${durationMs.toFixed(1)}ms`
+    );
+  });
+
+  return next();
 };

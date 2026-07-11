@@ -160,7 +160,7 @@ const normalizeCefrLevel = (value) => {
   const level = String(value || '').toUpperCase();
 
   if (!CEFR_LEVELS.includes(level)) {
-    throw badRequest('CEFR level khong hop le.');
+    throw badRequest('CEFR level không hợp lệ.');
   }
 
   return level;
@@ -170,7 +170,7 @@ const normalizeScore = (value) => {
   const score = Number(value);
 
   if (!Number.isFinite(score) || score < 0 || score > 100) {
-    throw badRequest('Placement score khong hop le.');
+    throw badRequest('Placement score không hợp lệ.');
   }
 
   return Math.round(score);

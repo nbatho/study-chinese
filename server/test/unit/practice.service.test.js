@@ -45,7 +45,7 @@ test('pronunciation score ignores hallucinated STT text flagged as no speech', (
 test('audio decoder rejects malformed and oversized payloads before STT', () => {
   assert.throws(
     () => __private__.decodeAudioBytes('not valid base64!'),
-    /Audio khong hop le/
+    /Audio không hợp lệ/
   );
 
   const oversized = Buffer.alloc(2 * 1024 * 1024 + 1).toString('base64');

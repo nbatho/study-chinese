@@ -84,7 +84,12 @@ export const withTransaction = async (callback) => {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Transaction rollback failed:', rollbackError.message);
+    }
+
     throw error;
   } finally {
     client.release();

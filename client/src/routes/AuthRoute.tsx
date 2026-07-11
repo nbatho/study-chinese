@@ -4,7 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useRefreshAuthQuery } from "../api/auth/queries";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { clearCredentials, setAuthLoading } from "../store/modules/authSlice";
-import { hasAuthSession } from "../utils/localStorage";
+import { hasAuthSession } from "../utils/authSession";
 
 interface RouteGuardProps {
   children: ReactNode;

@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 import { query, withTransaction } from '../config/db.config.js';
-import { env } from '../config/env.config.js';
+import { adminEmails, env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
+import { emailPattern } from '../utils/patterns.js';
 import {
   hashPassword,
   signAccessToken,
@@ -9,13 +10,6 @@ import {
   verifyPassword,
   verifyRefreshToken
 } from '../utils/auth.js';
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const adminEmails = new Set(
-  env.ADMIN_EMAILS.split(',')
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
-);
 
 const mapAuthUser = (row) => ({
   id: row.id,
@@ -136,11 +130,11 @@ export const refreshAuth = async (refreshToken) => {
   const payload = verifyRefreshToken(refreshToken);
 
   if (payload.tokenUse !== 'refresh') {
-    throw unauthorized('Refresh token khong hop le.');
+    throw unauthorized('Refresh token không hợp lệ.');
   }
 
   if (!payload.jti) {
-    throw unauthorized('Refresh token khong hop le.');
+    throw unauthorized('Refresh token không hợp lệ.');
   }
 
   return withTransaction(async (client) => {
@@ -161,7 +155,7 @@ export const refreshAuth = async (refreshToken) => {
     );
 
     if (result.rowCount === 0) {
-      throw unauthorized('Refresh token khong hop le hoac da bi thu hoi.');
+      throw unauthorized('Refresh token không hợp lệ hoặc đã bị thu hồi.');
     }
 
     const user = mapAuthUser(result.rows[0]);

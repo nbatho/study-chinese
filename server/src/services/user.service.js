@@ -62,7 +62,7 @@ const normalizeActivityNumber = (value, { max, field }) => {
   const normalized = Number(value || 0);
 
   if (!Number.isFinite(normalized) || normalized < 0 || normalized > max) {
-    throw badRequest(`${field} khong hop le.`);
+    throw badRequest(`${field} không hợp lệ.`);
   }
 
   return Math.round(normalized);
@@ -304,7 +304,7 @@ export const addUserActivity = async (userId, payload = {}) => {
   });
 
   if (exercisesCorrect > exercisesTotal) {
-    throw badRequest('exercisesCorrect khong duoc lon hon exercisesTotal.');
+    throw badRequest('exercisesCorrect không được lớn hơn exercisesTotal.');
   }
 
   return withTransaction(async (client) => {

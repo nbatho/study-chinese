@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { query } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
+import { toLikePattern } from '../utils/sql.js';
 
 export const mapWord = (row) => ({
   id: row.id,
@@ -49,7 +50,7 @@ export const searchVocabulary = async ({
   const conditions = ['w.is_active = true'];
 
   if (q) {
-    values.push(`%${q}%`);
+    values.push(toLikePattern(q));
     conditions.push(`
       (
         w.simplified ILIKE $${values.length}
@@ -98,7 +99,7 @@ export const searchVocabulary = async ({
   const safeLimit = clampInt(limit, { min: 1, max: 100, fallback: 24 });
   const offset = (safePage - 1) * safeLimit;
   const whereSql = conditions.join(' AND ');
-  const orderSql = SORT_SQL[sort] || SORT_SQL.hsk;
+  const orderSql = Object.hasOwn(SORT_SQL, sort) ? SORT_SQL[sort] : SORT_SQL.hsk;
 
   const countResult = await query(
     `

@@ -1,5 +1,5 @@
 import { query } from '../config/db.config.js';
-import { env } from '../config/env.config.js';
+import { adminEmails } from '../config/env.config.js';
 import { asyncHandler } from '../utils/async-handler.js';
 import { forbidden, unauthorized } from '../utils/http-error.js';
 import { verifyAccessToken } from '../utils/auth.js';
@@ -48,14 +48,8 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
 
 export const requireAdmin = (req, res, next) => {
   if (req.user?.role !== 'admin') {
-    return next(forbidden('Chi admin moi co quyen thuc hien thao tac nay.'));
+    return next(forbidden('Chỉ admin mới có quyền thực hiện thao tác này.'));
   }
 
   return next();
 };
-
-const adminEmails = new Set(
-  env.ADMIN_EMAILS.split(',')
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
-);
