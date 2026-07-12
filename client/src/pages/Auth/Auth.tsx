@@ -64,8 +64,8 @@ export default function Auth() {
     setFormError("");
   };
 
-  const finishAuth = () => {
-    navigate("/home", { replace: true });
+  const finishAuth = (destination: string) => {
+    navigate(destination, { replace: true });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -88,13 +88,14 @@ export default function Auth() {
           email: email.trim(),
           password,
         });
-        finishAuth();
+        // New accounts must complete onboarding (profile + placement test) first.
+        finishAuth("/onboarding");
       } else {
         await loginMutation.mutateAsync({
           email: email.trim(),
           password,
         });
-        finishAuth();
+        finishAuth("/home");
       }
     } catch (error) {
       setFormError(getErrorMessage(error));

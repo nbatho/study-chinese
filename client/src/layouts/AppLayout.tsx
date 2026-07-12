@@ -66,14 +66,13 @@ export default function AppLayout() {
       isAuthenticated &&
       !profileQuery.isLoading &&
       !hasCompletedOnboarding &&
-      !isHomePath &&
       location.pathname !== "/onboarding"
     ) {
       navigate("/onboarding", { replace: true });
     }
-  }, [hasCompletedOnboarding, isAuthenticated, isHomePath, location.pathname, navigate, profileQuery.isLoading]);
+  }, [hasCompletedOnboarding, isAuthenticated, location.pathname, navigate, profileQuery.isLoading]);
 
-  if (isAuthenticated && !isHomePath && (profileQuery.isLoading || !hasCompletedOnboarding)) {
+  if (isAuthenticated && !hasCompletedOnboarding) {
     return null;
   }
 
