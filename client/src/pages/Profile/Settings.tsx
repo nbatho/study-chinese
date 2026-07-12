@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ToggleLeft, ToggleRight, User } from "lucide-react";
+import { Bell, ToggleLeft, ToggleRight, User } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateProfileMutation, useUserProfileQuery } from "../../api/users/queries";
 import LoginPromptCard from "../../components/LoginPromptCard";
@@ -8,6 +8,14 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance } from "../../store/modules/appSlice";
 import type { AppAppearance } from "../../store/modules/appSlice";
 import { cn } from "../../utils/cn";
+import {
+  getNotificationPermission,
+  loadReminderPrefs,
+  notificationsSupported,
+  requestNotificationPermission,
+  saveReminderPrefs,
+  type ReminderPrefs,
+} from "../../utils/studyReminder";
 
 export default function Settings() {
   const dispatch = useAppDispatch();
@@ -28,6 +36,26 @@ export default function Settings() {
   const dailyMinutes = draftProfile.dailyMinutes ?? profile?.dailyMinutes ?? 15;
   const showPinyin = draftProfile.showPinyin ?? profile?.showPinyin ?? true;
   const audioAutoPlay = draftProfile.audioAutoPlay ?? profile?.audioAutoPlay ?? true;
+
+  const [reminder, setReminder] = useState<ReminderPrefs>(() => loadReminderPrefs());
+  const [permission, setPermission] = useState(() => getNotificationPermission());
+
+  const persistReminder = (next: ReminderPrefs) => {
+    setReminder(next);
+    saveReminderPrefs(next);
+  };
+
+  const toggleReminder = async () => {
+    const nextEnabled = !reminder.enabled;
+    if (nextEnabled && notificationsSupported() && getNotificationPermission() === "default") {
+      const result = await requestNotificationPermission();
+      setPermission(result);
+      if (result === "denied") {
+        toast.warning(t("reminder.permissionDenied"));
+      }
+    }
+    persistReminder({ ...reminder, enabled: nextEnabled });
+  };
 
   const saveProfileSettings = async () => {
     await updateProfileMutation.mutateAsync({
@@ -128,6 +156,53 @@ export default function Settings() {
             <button type="button" onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} className="text-primary">
               {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
+          </div>
+
+          <div className="rounded-xl border bg-background p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Bell size={18} />
+                </span>
+                <div>
+                  <span className="text-[0.95rem] font-semibold">{t("reminder.title")}</span>
+                  <p className="text-xs text-muted-foreground">{t("reminder.body")}</p>
+                </div>
+              </div>
+              <button type="button" onClick={toggleReminder} className="shrink-0 text-primary" aria-pressed={reminder.enabled}>
+                {reminder.enabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+            {reminder.enabled && (
+              <div className="mt-4 grid gap-3 border-t pt-4">
+                <div className="flex items-center justify-between gap-4">
+                  <label htmlFor="reminder-time" className="text-sm font-bold text-muted-foreground">{t("reminder.time")}</label>
+                  <input
+                    id="reminder-time"
+                    type="time"
+                    value={reminder.time}
+                    onChange={(e) => persistReminder({ ...reminder, time: e.target.value })}
+                    className="app-control w-36 text-foreground"
+                  />
+                </div>
+                {!notificationsSupported() ? (
+                  <p className="text-xs font-semibold text-muted-foreground">{t("reminder.unsupported")}</p>
+                ) : permission === "denied" ? (
+                  <p className="text-xs font-semibold text-destructive">{t("reminder.blocked")}</p>
+                ) : permission === "granted" ? (
+                  <p className="text-xs font-semibold text-jade">{t("reminder.enabledNote")}</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => setPermission(await requestNotificationPermission())}
+                    className="inline-flex w-fit items-center gap-2 rounded-xl border bg-card px-3 py-2 text-xs font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
+                  >
+                    <Bell size={14} /> {t("reminder.allow")}
+                  </button>
+                )}
+                <p className="text-[0.7rem] font-medium leading-relaxed text-muted-foreground">{t("reminder.limitation")}</p>
+              </div>
+            )}
           </div>
         </div>
         <button className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground" onClick={saveProfileSettings} disabled={updateProfileMutation.isPending}>

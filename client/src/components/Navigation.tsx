@@ -6,6 +6,7 @@ import {
   Compass,
   Dumbbell,
   FileText,
+  GraduationCap,
   Home,
   Languages,
   Lock,
@@ -40,6 +41,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const path = location.pathname;
   let activeTab = "home";
   if (path.startsWith("/guide")) activeTab = "guide";
+  else if (path.startsWith("/foundation")) activeTab = "foundation";
   else if (path.startsWith("/learn")) activeTab = "learn";
   else if (path.startsWith("/grammar")) activeTab = "grammar";
   else if (path.startsWith("/radicals")) activeTab = "radicals";
@@ -54,6 +56,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
 
   const tabs = [
     { id: "home", label: t("nav.home"), icon: Home },
+    { id: "foundation", label: t("nav.foundation"), icon: GraduationCap },
     { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
     { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
     { id: "radicals", label: "Bộ thủ", icon: Shapes },

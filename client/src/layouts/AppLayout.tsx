@@ -8,6 +8,9 @@ import { useUserProfileQuery } from "../api/users/queries";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice";
 import { cn } from "../utils/cn";
+import { useI18n } from "../i18n";
+import { useStudyReminder } from "../hooks/useStudyReminder";
+import { todayKey } from "../utils/studyReminder";
 
 export default function AppLayout() {
   const dispatch = useAppDispatch();
@@ -24,6 +27,15 @@ export default function AppLayout() {
   const language = useAppSelector((state) => state.app.language);
   const serverProfile = profileQuery.data?.profile;
   const isHomePath = location.pathname === "/home";
+  const { t } = useI18n();
+  const studiedToday = profileQuery.data?.streak?.lastStudyDateKey === todayKey();
+
+  useStudyReminder({
+    studiedToday: isAuthenticated ? studiedToday : true,
+    title: t("reminder.notifTitle"),
+    body: t("reminder.notifBody"),
+    href: "/learn",
+  });
 
   useEffect(() => {
     if (!serverProfile) return;

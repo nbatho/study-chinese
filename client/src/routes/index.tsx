@@ -8,6 +8,7 @@ import { OptionalAuthRoute, PrivateRoute, PublicRoute } from "./AuthRoute";
 const Home = lazy(() => import("../pages/Home"));
 const Landing = lazy(() => import("../pages/Landing"));
 const Guide = lazy(() => import("../pages/Guide"));
+const Foundation = lazy(() => import("../pages/Foundation"));
 const Learn = lazy(() => import("../pages/Learn"));
 const Grammar = lazy(() => import("../pages/Grammar"));
 const Radicals = lazy(() => import("../pages/Radicals"));
@@ -53,6 +54,10 @@ export const routes: RouteConfig[] = [
       {
         path: "guide",
         element: <Guide />
+      },
+      {
+        path: "foundation",
+        element: <Foundation />
       },
       {
         path: "learn",

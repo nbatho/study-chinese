@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, GraduationCap, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { useI18n } from "../../i18n";
@@ -334,17 +334,27 @@ export default function Learn() {
               <div>
                 <h2 className="text-2xl font-extrabold">Nền tảng phát âm và nét viết</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  Ôn nhanh nét cơ bản, bút thuận và thanh điệu trước khi vào bài để đọc, nghe và viết ổn định hơn.
+                  Chưa quen pinyin và thanh điệu? Học khóa nền tảng ~18 phút trước khi vào HSK 1 để đọc, nghe và viết ổn định hơn.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate("/practice?tool=hanzi")}
-                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
-              >
-                <PenLine size={17} />
-                Luyện viết
-              </button>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/foundation")}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
+                >
+                  <GraduationCap size={17} />
+                  Học khóa nền tảng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/practice?tool=hanzi")}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
+                >
+                  <PenLine size={17} />
+                  Luyện viết
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
