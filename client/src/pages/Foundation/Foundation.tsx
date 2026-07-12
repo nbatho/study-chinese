@@ -6,6 +6,7 @@ import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
+import { HanziText } from "../../components/HanziLookup";
 import {
   FOUNDATION_STAGES,
   FOUNDATION_TOTAL_MINUTES,
@@ -69,7 +70,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
                 <div className="min-w-0">
                   <div className="font-extrabold leading-tight">{tone.name}</div>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="font-serif text-2xl font-extrabold text-primary">{tone.hanzi}</span>
+                    <HanziText className="font-serif text-2xl font-extrabold text-primary">{tone.hanzi}</HanziText>
                     <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
                   </div>
                 </div>
@@ -90,7 +91,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
           <article key={sound.hanzi + sound.pinyin} className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
             <div className="min-w-0">
               <div className="flex items-baseline gap-2">
-                <span className="font-serif text-2xl font-extrabold text-primary">{sound.hanzi}</span>
+                <HanziText className="font-serif text-2xl font-extrabold text-primary">{sound.hanzi}</HanziText>
                 <span className="text-sm font-bold text-muted-foreground">{sound.pinyin}</span>
               </div>
               <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{sound.hint}</p>

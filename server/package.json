@@ -22,6 +22,8 @@
     "content:agent": "node scripts/content-agent.mjs",
     "content:import": "node scripts/content-import.mjs",
     "content:foundation:import": "node scripts/import-foundation-lessons.mjs",
+    "content:hanviet:migrate": "node scripts/apply-migration.js migrations/2026-07-add-han-viet.sql",
+    "content:hanviet:seed": "node scripts/seed-han-viet.mjs",
     "test": "node --test",
     "test:integration": "node --test test/integration/*.test.js"
   },

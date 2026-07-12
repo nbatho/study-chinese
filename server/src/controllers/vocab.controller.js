@@ -4,6 +4,7 @@ import {
   getVocabularyStats,
   listVocabularyRadicals,
   listVocabularyTopics,
+  lookupWord,
   searchVocabulary
 } from '../services/vocab.service.js';
 
@@ -25,4 +26,9 @@ export const listRadicals = asyncHandler(async (_req, res) => {
 export const vocabularyStats = asyncHandler(async (_req, res) => {
   const data = await getVocabularyStats();
   success(res, data);
+});
+
+export const lookupVocabulary = asyncHandler(async (req, res) => {
+  const entry = await lookupWord(req.query.q ?? req.query.text);
+  success(res, { entry });
 });

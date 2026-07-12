@@ -22,6 +22,7 @@ export const queryKeys = {
         topics: ['vocabulary', 'topics'] as const,
         radicals: ['vocabulary', 'radicals'] as const,
         stats: ['vocabulary', 'stats'] as const,
+        lookup: (text: string) => ['vocabulary', 'lookup', text] as const,
     },
     srs: {
         due: (limit?: number) => ['srs', 'due', limit ?? 20] as const,

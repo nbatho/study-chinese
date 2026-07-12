@@ -1,27 +1,9 @@
-import {
-  BookMarked,
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Compass,
-  Dumbbell,
-  FileText,
-  GraduationCap,
-  Home,
-  Languages,
-  Lock,
-  RefreshCw,
-  Shapes,
-  Shield,
-  ShoppingBag,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Compass, Lock } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDueSrsCardsQuery } from "../api/srs/queries";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
+import { resolveActiveTab, useNavTabs } from "./navConfig";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
@@ -34,52 +16,15 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
-  const authUser = useAppSelector((state) => state.auth.user);
-  const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
   const { t } = useI18n();
 
-  const path = location.pathname;
-  let activeTab = "home";
-  if (path.startsWith("/guide")) activeTab = "guide";
-  else if (path.startsWith("/foundation")) activeTab = "foundation";
-  else if (path.startsWith("/learn")) activeTab = "learn";
-  else if (path.startsWith("/grammar")) activeTab = "grammar";
-  else if (path.startsWith("/radicals")) activeTab = "radicals";
-  else if (path.startsWith("/practice")) activeTab = "practice";
-  else if (path.startsWith("/review")) activeTab = "review";
-  else if (path.startsWith("/dictionary")) activeTab = "dictionary";
-  else if (path.startsWith("/translate") || path.startsWith("/camera-translator")) activeTab = "translate";
-  else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
-  else if (path.startsWith("/shop")) activeTab = "shop";
-  else if (path.startsWith("/community")) activeTab = "community";
-  else if (path.startsWith("/admin")) activeTab = "admin";
-
-  const tabs = [
-    { id: "home", label: t("nav.home"), icon: Home },
-    { id: "foundation", label: t("nav.foundation"), icon: GraduationCap },
-    { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
-    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
-    { id: "radicals", label: "Bộ thủ", icon: Shapes },
-    { id: "practice", label: t("nav.practice"), icon: Dumbbell },
-    { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
-    { id: "translate", label: t("nav.translate"), icon: Languages },
-    {
-      id: "review",
-      label: t("nav.review"),
-      icon: RefreshCw,
-      badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0,
-      requiresAuth: true,
-    },
-    { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
-    { id: "shop", label: t("nav.shop"), icon: ShoppingBag, requiresAuth: true },
-    { id: "community", label: t("nav.community"), icon: Users, requiresAuth: true },
-    ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
-  ];
+  const activeTab = resolveActiveTab(location.pathname);
+  const tabs = useNavTabs();
 
   return (
     <aside
       className={cn(
-        "sticky top-0 z-40 flex h-[100dvh] shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
+        "sticky top-0 z-40 hidden h-[100dvh] shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300 md:flex",
         collapsed ? "w-19" : "w-66",
       )}
     >

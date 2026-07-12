@@ -24,6 +24,9 @@ const PUBLIC_ENDPOINTS = [
     'auth/register',
     'health',
     'docs',
+    // Tap-to-lookup popover works for signed-out learners too.
+    'vocabulary/lookup',
+    'vocab/lookup',
 ];
 
 const normalizeUrl = (url?: string) => {

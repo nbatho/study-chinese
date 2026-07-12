@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance } from "../../store/modules/appSlice";
 import type { AppAppearance } from "../../store/modules/appSlice";
 import { cn } from "../../utils/cn";
+import TtsSpeedControl from "../../components/TtsSpeedControl";
 import {
   getNotificationPermission,
   loadReminderPrefs,
@@ -156,6 +157,13 @@ export default function Settings() {
             <button type="button" onClick={() => setDraftProfile((draft) => ({ ...draft, audioAutoPlay: !audioAutoPlay }))} className="text-primary">
               {audioAutoPlay ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
             </button>
+          </div>
+          <div className="flex items-center justify-between gap-4 pt-2">
+            <div>
+              <span className="text-[0.95rem] font-semibold">{t("tts.speedTitle")}</span>
+              <p className="text-xs text-muted-foreground">{t("tts.speedBody")}</p>
+            </div>
+            <TtsSpeedControl showIcon={false} />
           </div>
 
           <div className="rounded-xl border bg-background p-4">

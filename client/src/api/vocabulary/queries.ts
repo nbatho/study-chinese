@@ -27,3 +27,11 @@ export const useVocabularyStatsQuery = () =>
         queryKey: queryKeys.vocabulary.stats,
         queryFn: () => unwrapApiData(vocabularyApi.stats()),
     });
+
+export const useWordLookupQuery = (text: string, enabled = true) =>
+    useQuery({
+        queryKey: queryKeys.vocabulary.lookup(text),
+        queryFn: () => unwrapApiData(vocabularyApi.lookup(text)),
+        enabled: enabled && text.length > 0,
+        staleTime: 1000 * 60 * 60,
+    });

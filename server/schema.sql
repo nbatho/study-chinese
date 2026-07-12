@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS words (
   traditional VARCHAR(100) NOT NULL,
   pinyin VARCHAR(150) NOT NULL,
   pinyin_plain VARCHAR(150) NOT NULL,
+  han_viet VARCHAR(150),
   tones SMALLINT[] NOT NULL DEFAULT '{}',
   english TEXT NOT NULL,
   part_of_speech VARCHAR(30) NOT NULL
