@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   changePasswordHandler,
+  changePasswordOtpHandler,
   deleteAccount,
   forgotPassword,
   login,
@@ -26,6 +27,7 @@ router.post('/verify-email', authRateLimit, requireTrustedOrigin, validateBody(a
 router.post('/resend-verification', authRateLimit, requireTrustedOrigin, requireAuth, resendVerification);
 router.post('/forgot-password', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.forgotPassword), forgotPassword);
 router.post('/reset-password', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.resetPassword), resetPasswordHandler);
+router.post('/change-password/otp', authRateLimit, requireTrustedOrigin, requireAuth, changePasswordOtpHandler);
 router.post('/change-password', authRateLimit, requireTrustedOrigin, requireAuth, validateBody(authSchemas.changePassword), changePasswordHandler);
 router.delete('/account', authRateLimit, requireTrustedOrigin, requireAuth, validateBody(authSchemas.deleteAccount), deleteAccount);
 

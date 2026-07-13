@@ -5,6 +5,7 @@ import type {
     ChangePasswordPayload,
     ForgotPasswordResponse,
     LoginPayload,
+    OtpSentResponse,
     RegisterPayload,
     ResendVerificationResponse,
     ResetPasswordPayload,
@@ -27,6 +28,8 @@ export const authApi = {
     forgotPassword: (email: string) => apiRequest<ForgotPasswordResponse>(beApi.post('auth/forgot-password', { email })),
 
     resetPassword: (payload: ResetPasswordPayload) => emptyRequest(beApi.post('auth/reset-password', payload)),
+
+    changePasswordOtp: () => apiRequest<OtpSentResponse>(beApi.post('auth/change-password/otp')),
 
     changePassword: (payload: ChangePasswordPayload) => apiRequest<AuthResponse>(beApi.post('auth/change-password', payload)),
 

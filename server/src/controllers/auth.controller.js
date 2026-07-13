@@ -7,6 +7,7 @@ import {
   loginUser,
   refreshAuth,
   registerUser,
+  requestChangePasswordOtp,
   requestPasswordReset,
   resendVerificationEmail,
   resetPassword,
@@ -94,12 +95,22 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 export const resetPasswordHandler = asyncHandler(async (req, res) => {
-  const data = await resetPassword(req.body.token, req.body.password);
+  const data = await resetPassword(req.body.email, req.body.otp, req.body.password);
+  success(res, data);
+});
+
+export const changePasswordOtpHandler = asyncHandler(async (req, res) => {
+  const data = await requestChangePasswordOtp(req.user.id);
   success(res, data);
 });
 
 export const changePasswordHandler = asyncHandler(async (req, res) => {
-  const data = await changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
+  const data = await changePassword(
+    req.user.id,
+    req.body.currentPassword,
+    req.body.newPassword,
+    req.body.otp
+  );
   attachRefreshCookie(res, data.refreshToken);
   success(res, publicAuthPayload(data));
 });

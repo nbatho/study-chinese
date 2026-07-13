@@ -25,11 +25,17 @@ export interface LoginPayload {
 export interface ChangePasswordPayload {
     currentPassword: string;
     newPassword: string;
+    otp: string;
 }
 
 export interface ResetPasswordPayload {
-    token: string;
+    email: string;
+    otp: string;
     password: string;
+}
+
+export interface OtpSentResponse {
+    sent: boolean;
 }
 
 export interface VerifyEmailResponse {

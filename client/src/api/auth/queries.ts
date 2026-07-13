@@ -90,6 +90,11 @@ export const useResetPasswordMutation = () =>
         mutationFn: (payload: ResetPasswordPayload) => authApi.resetPassword(payload),
     });
 
+export const useChangePasswordOtpMutation = () =>
+    useMutation({
+        mutationFn: () => unwrapApiData(authApi.changePasswordOtp()),
+    });
+
 export const useChangePasswordMutation = () => {
     const dispatch = useAppDispatch();
 

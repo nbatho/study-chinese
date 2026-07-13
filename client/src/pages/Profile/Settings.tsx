@@ -4,6 +4,7 @@ import { AlertTriangle, Bell, KeyRound, MailWarning, ToggleLeft, ToggleRight, Tr
 import { toast } from "sonner";
 import {
   useChangePasswordMutation,
+  useChangePasswordOtpMutation,
   useDeleteAccountMutation,
   useResendVerificationMutation,
 } from "../../api/auth/queries";
@@ -49,6 +50,7 @@ export default function Settings() {
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const updateProfileMutation = useUpdateProfileMutation();
   const changePasswordMutation = useChangePasswordMutation();
+  const changePasswordOtpMutation = useChangePasswordOtpMutation();
   const deleteAccountMutation = useDeleteAccountMutation();
   const resendVerificationMutation = useResendVerificationMutation();
   const profile = profileQuery.data?.profile;
@@ -67,8 +69,9 @@ export default function Settings() {
   const [reminder, setReminder] = useState<ReminderPrefs>(() => loadReminderPrefs());
   const [permission, setPermission] = useState(() => getNotificationPermission());
 
-  const [passwordForm, setPasswordForm] = useState({ current: "", next: "", confirm: "" });
+  const [passwordForm, setPasswordForm] = useState({ current: "", next: "", confirm: "", otp: "" });
   const [passwordError, setPasswordError] = useState("");
+  const [passwordOtpSent, setPasswordOtpSent] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
@@ -92,6 +95,18 @@ export default function Settings() {
     persistReminder({ ...reminder, days });
   };
 
+  const sendPasswordOtp = async () => {
+    setPasswordError("");
+
+    try {
+      await changePasswordOtpMutation.mutateAsync();
+      setPasswordOtpSent(true);
+      toast.success(t("security.otpSent"));
+    } catch (error) {
+      setPasswordError(getMutationError(error, t("security.otpSendFailed")));
+    }
+  };
+
   const submitChangePassword = async (event: React.FormEvent) => {
     event.preventDefault();
     setPasswordError("");
@@ -106,12 +121,19 @@ export default function Settings() {
       return;
     }
 
+    if (!/^\d{6}$/.test(passwordForm.otp.trim())) {
+      setPasswordError(t("security.otpInvalid"));
+      return;
+    }
+
     try {
       await changePasswordMutation.mutateAsync({
         currentPassword: passwordForm.current,
         newPassword: passwordForm.next,
+        otp: passwordForm.otp.trim(),
       });
-      setPasswordForm({ current: "", next: "", confirm: "" });
+      setPasswordForm({ current: "", next: "", confirm: "", otp: "" });
+      setPasswordOtpSent(false);
       toast.success(t("security.changed"));
     } catch (error) {
       setPasswordError(getMutationError(error, t("security.changeFailed")));
@@ -404,6 +426,34 @@ export default function Settings() {
               className="app-control w-full text-foreground"
             />
           </div>
+          <div>
+            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.otpLabel")}</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={passwordForm.otp}
+                onChange={(e) => setPasswordForm((form) => ({ ...form, otp: e.target.value.replace(/\D/g, "") }))}
+                placeholder="123456"
+                autoComplete="one-time-code"
+                className="app-control w-full text-foreground tracking-[0.3em]"
+              />
+              <button
+                type="button"
+                onClick={sendPasswordOtp}
+                disabled={changePasswordOtpMutation.isPending}
+                className="inline-flex shrink-0 items-center justify-center rounded-xl border border-primary/40 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {changePasswordOtpMutation.isPending
+                  ? t("common.saving")
+                  : passwordOtpSent
+                    ? t("security.otpResend")
+                    : t("security.otpSend")}
+              </button>
+            </div>
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{t("security.otpHint")}</p>
+          </div>
           {passwordError && (
             <div role="alert" className="rounded-xl border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive">
               {passwordError}
@@ -415,7 +465,8 @@ export default function Settings() {
               changePasswordMutation.isPending ||
               !passwordForm.current ||
               !passwordForm.next ||
-              !passwordForm.confirm
+              !passwordForm.confirm ||
+              !passwordForm.otp
             }
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
           >

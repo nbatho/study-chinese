@@ -50,7 +50,7 @@ export const env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'Study Chinese <onboarding@resend.dev>',
   EMAIL_VERIFICATION_TTL_HOURS: envNumber('EMAIL_VERIFICATION_TTL_HOURS', 24),
-  PASSWORD_RESET_TTL_MINUTES: envNumber('PASSWORD_RESET_TTL_MINUTES', 60),
+  OTP_TTL_MINUTES: envNumber('OTP_TTL_MINUTES', 10),
 
   JWT_SECRET: process.env.JWT_SECRET || 'change-this-dev-secret',
   JWT_EXPIRES_IN_SECONDS: envNumber('JWT_EXPIRES_IN_SECONDS', 900),

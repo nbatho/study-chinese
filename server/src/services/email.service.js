@@ -9,11 +9,11 @@ const SEND_TIMEOUT_MS = 10_000;
 
 export const isEmailDeliveryConfigured = () => Boolean(env.RESEND_API_KEY);
 
-const sendEmail = async ({ to, subject, html, actionUrl }) => {
+const sendEmail = async ({ to, subject, html, devNote }) => {
   if (!isEmailDeliveryConfigured()) {
     console.info(`[email] RESEND_API_KEY chưa cấu hình — bỏ qua gửi "${subject}" tới ${to}.`);
-    if (actionUrl) {
-      console.info(`[email] Link thao tác (dev): ${actionUrl}`);
+    if (devNote) {
+      console.info(`[email] (dev) ${devNote}`);
     }
     return { delivered: false, reason: 'missing_api_key' };
   }
@@ -63,13 +63,34 @@ const emailLayout = (title, bodyHtml, buttonLabel, buttonUrl) => `
   </div>
 `;
 
+// OTP emails: the code is shown big and centered, no button.
+const otpEmailLayout = (title, bodyHtml, code, ttlMinutes) => `
+  <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1a1a1e;">
+    <div style="margin-bottom:24px;">
+      <span style="display:inline-block;background:#d93f47;color:#fff;border-radius:12px;padding:8px 14px;font-weight:800;">Study Chinese</span>
+    </div>
+    <h1 style="font-size:22px;margin:0 0 12px;">${title}</h1>
+    ${bodyHtml}
+    <div style="margin:24px 0;text-align:center;">
+      <span style="display:inline-block;background:#f4f4f5;border:1px solid #e4e4e7;border-radius:12px;padding:14px 28px;font-size:30px;font-weight:800;letter-spacing:10px;color:#1a1a1e;">${code}</span>
+    </div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.6;">
+      Mã có hiệu lực trong ${ttlMinutes} phút và chỉ dùng được một lần.
+      Đừng chia sẻ mã này với bất kỳ ai.
+    </p>
+    <p style="font-size:12px;color:#9ca3af;margin-top:24px;">
+      Nếu bạn không yêu cầu email này, bạn có thể bỏ qua nó — mật khẩu của bạn vẫn an toàn.
+    </p>
+  </div>
+`;
+
 export const sendVerificationEmail = (to, token) => {
   const actionUrl = `${env.CLIENT_URL}/verify-email?token=${encodeURIComponent(token)}`;
 
   return sendEmail({
     to,
     subject: 'Xác thực email Study Chinese của bạn',
-    actionUrl,
+    devNote: `Link xác thực: ${actionUrl}`,
     html: emailLayout(
       'Xác thực địa chỉ email',
       `<p style="font-size:15px;line-height:1.6;color:#374151;">
@@ -82,21 +103,34 @@ export const sendVerificationEmail = (to, token) => {
   });
 };
 
-export const sendPasswordResetEmail = (to, token) => {
-  const actionUrl = `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`;
-
-  return sendEmail({
+export const sendPasswordResetOtpEmail = (to, code) =>
+  sendEmail({
     to,
-    subject: 'Đặt lại mật khẩu Study Chinese',
-    actionUrl,
-    html: emailLayout(
+    subject: `${code} là mã đặt lại mật khẩu Study Chinese`,
+    devNote: `Mã OTP đặt lại mật khẩu: ${code}`,
+    html: otpEmailLayout(
       'Đặt lại mật khẩu',
       `<p style="font-size:15px;line-height:1.6;color:#374151;">
          Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
-         Liên kết có hiệu lực trong ${env.PASSWORD_RESET_TTL_MINUTES} phút.
+         Nhập mã bên dưới vào ứng dụng để tiếp tục.
        </p>`,
-      'Đặt lại mật khẩu',
-      actionUrl
+      code,
+      env.OTP_TTL_MINUTES
     )
   });
-};
+
+export const sendChangePasswordOtpEmail = (to, code) =>
+  sendEmail({
+    to,
+    subject: `${code} là mã xác nhận đổi mật khẩu Study Chinese`,
+    devNote: `Mã OTP đổi mật khẩu: ${code}`,
+    html: otpEmailLayout(
+      'Xác nhận đổi mật khẩu',
+      `<p style="font-size:15px;line-height:1.6;color:#374151;">
+         Bạn (hoặc ai đó) vừa yêu cầu đổi mật khẩu tài khoản Study Chinese.
+         Nhập mã bên dưới để xác nhận thao tác.
+       </p>`,
+      code,
+      env.OTP_TTL_MINUTES
+    )
+  });

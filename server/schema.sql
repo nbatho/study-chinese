@@ -79,6 +79,17 @@ CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- One live OTP per (user, purpose); re-requesting replaces it.
+CREATE TABLE IF NOT EXISTS auth_otp_codes (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose VARCHAR(32) NOT NULL CHECK (purpose IN ('password_reset', 'change_password')),
+  code_hash VARCHAR(128) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts SMALLINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, purpose)
+);
+
 CREATE TABLE IF NOT EXISTS daily_stats (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   date_key DATE NOT NULL,

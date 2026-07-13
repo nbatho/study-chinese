@@ -15,6 +15,7 @@ export const validators = {
   email: (value) => typeof value === 'string' && emailPattern.test(value.trim().toLowerCase()),
   nonEmptyString: (value) => typeof value === 'string' && value.trim().length > 0,
   password: (value) => typeof value === 'string' && value.length >= 8,
+  otp: (value) => typeof value === 'string' && /^\d{6}$/.test(value.trim()),
   optionalString:
     (max = 255) =>
     (value) =>
@@ -56,12 +57,14 @@ export const authSchemas = {
     email: validators.email
   },
   resetPassword: {
-    token: validators.nonEmptyString,
+    email: validators.email,
+    otp: validators.otp,
     password: validators.password
   },
   changePassword: {
     currentPassword: validators.nonEmptyString,
-    newPassword: validators.password
+    newPassword: validators.password,
+    otp: validators.otp
   },
   deleteAccount: {
     password: validators.nonEmptyString

@@ -3,7 +3,11 @@ import { query, withTransaction } from '../config/db.config.js';
 import { adminEmails, env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
 import { emailPattern } from '../utils/patterns.js';
-import { sendPasswordResetEmail, sendVerificationEmail } from './email.service.js';
+import {
+  sendChangePasswordOtpEmail,
+  sendPasswordResetOtpEmail,
+  sendVerificationEmail
+} from './email.service.js';
 import {
   hashPassword,
   signAccessToken,
@@ -66,6 +70,76 @@ const createAuthResponse = async (user, client = { query }) => {
 const createEmailToken = () => {
   const token = crypto.randomBytes(32).toString('base64url');
   return { token, tokenHash: hashToken(token) };
+};
+
+const OTP_LENGTH = 6;
+const OTP_MAX_ATTEMPTS = 5;
+
+export const OTP_PURPOSES = {
+  passwordReset: 'password_reset',
+  changePassword: 'change_password'
+};
+
+const createOtpCode = () =>
+  crypto.randomInt(0, 10 ** OTP_LENGTH).toString().padStart(OTP_LENGTH, '0');
+
+// One live code per (user, purpose); re-requesting replaces it and resets attempts.
+const issueOtpCode = async (userId, purpose) => {
+  const code = createOtpCode();
+  const expiresAt = new Date(Date.now() + env.OTP_TTL_MINUTES * 60 * 1000);
+
+  await query(
+    `
+      INSERT INTO auth_otp_codes (user_id, purpose, code_hash, expires_at, attempts)
+      VALUES ($1, $2, $3, $4, 0)
+      ON CONFLICT (user_id, purpose)
+      DO UPDATE SET code_hash = EXCLUDED.code_hash,
+                    expires_at = EXCLUDED.expires_at,
+                    attempts = 0,
+                    created_at = now()
+    `,
+    [userId, purpose, hashToken(code), expiresAt]
+  );
+
+  return code;
+};
+
+// Single-use: a matching live code is deleted atomically; a wrong guess burns one
+// of OTP_MAX_ATTEMPTS. Runs outside the caller's transaction on purpose — a rolled
+// back password update must not refund a spent attempt.
+const consumeOtpCode = async (userId, purpose, code) => {
+  const invalidOtp = () => badRequest('Mã OTP không đúng hoặc đã hết hạn.', { field: 'otp' });
+
+  if (typeof code !== 'string' || !/^\d{6}$/.test(code.trim())) {
+    throw invalidOtp();
+  }
+
+  const consumed = await query(
+    `
+      DELETE FROM auth_otp_codes
+      WHERE user_id = $1
+        AND purpose = $2
+        AND code_hash = $3
+        AND expires_at > now()
+        AND attempts < $4
+    `,
+    [userId, purpose, hashToken(code.trim()), OTP_MAX_ATTEMPTS]
+  );
+
+  if (consumed.rowCount > 0) {
+    return;
+  }
+
+  await query(
+    `
+      UPDATE auth_otp_codes
+      SET attempts = attempts + 1
+      WHERE user_id = $1 AND purpose = $2
+    `,
+    [userId, purpose]
+  );
+
+  throw invalidOtp();
 };
 
 const revokeAllRefreshTokens = (client, userId) =>
@@ -299,8 +373,7 @@ export const resendVerificationEmail = async (userId) => {
   return { sent: true };
 };
 
-// Always resolves successfully so the endpoint never leaks whether an email exists.
-export const requestPasswordReset = async (email) => {
+const findActiveUserByEmail = async (email) => {
   const normalizedEmail = String(email || '').trim().toLowerCase();
 
   if (!emailPattern.test(normalizedEmail)) {
@@ -316,71 +389,90 @@ export const requestPasswordReset = async (email) => {
     [normalizedEmail]
   );
 
-  const user = result.rows[0];
+  return result.rows[0] ?? null;
+};
+
+// Always resolves successfully so the endpoint never leaks whether an email exists.
+export const requestPasswordReset = async (email) => {
+  const user = await findActiveUserByEmail(email);
 
   if (!user) {
     return { sent: true };
   }
 
-  const { token, tokenHash } = createEmailToken();
-  const expiresAt = new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
-
-  await query(
-    `
-      UPDATE users
-      SET password_reset_token_hash = $2,
-          password_reset_expires_at = $3
-      WHERE id = $1
-    `,
-    [user.id, tokenHash, expiresAt]
-  );
+  const code = await issueOtpCode(user.id, OTP_PURPOSES.passwordReset);
 
   try {
-    await sendPasswordResetEmail(user.email, token);
+    await sendPasswordResetOtpEmail(user.email, code);
   } catch (error) {
-    console.error(`[email] Gửi email đặt lại mật khẩu tới ${user.email} thất bại:`, error.message);
+    console.error(`[email] Gửi mã OTP đặt lại mật khẩu tới ${user.email} thất bại:`, error.message);
   }
 
   return { sent: true };
 };
 
-export const resetPassword = async (token, newPassword) => {
-  if (typeof token !== 'string' || token.length === 0) {
-    throw badRequest('Token đặt lại mật khẩu không hợp lệ.');
-  }
-
+export const resetPassword = async (email, otp, newPassword) => {
   if (!newPassword || newPassword.length < 8) {
     throw badRequest('Mật khẩu phải có ít nhất 8 ký tự.', { field: 'password' });
   }
 
+  const user = await findActiveUserByEmail(email);
+
+  if (!user) {
+    // Same error as a wrong code, so the endpoint never leaks whether an email exists.
+    throw badRequest('Mã OTP không đúng hoặc đã hết hạn.', { field: 'otp' });
+  }
+
+  await consumeOtpCode(user.id, OTP_PURPOSES.passwordReset, otp);
+
   const passwordHash = await hashPassword(newPassword);
 
   return withTransaction(async (client) => {
-    const result = await client.query(
+    await client.query(
       `
         UPDATE users
         SET password_hash = $2,
-            password_reset_token_hash = NULL,
-            password_reset_expires_at = NULL
-        WHERE password_reset_token_hash = $1
-          AND password_reset_expires_at > now()
-          AND is_active = true
-        RETURNING id
+            updated_at = now()
+        WHERE id = $1
       `,
-      [hashToken(token), passwordHash]
+      [user.id, passwordHash]
     );
 
-    if (result.rowCount === 0) {
-      throw badRequest('Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
-    }
-
-    await revokeAllRefreshTokens(client, result.rows[0].id);
+    await revokeAllRefreshTokens(client, user.id);
 
     return { reset: true };
   });
 };
 
-export const changePassword = async (userId, currentPassword, newPassword) => {
+export const requestChangePasswordOtp = async (userId) => {
+  const result = await query(
+    `
+      SELECT id, email
+      FROM users
+      WHERE id = $1 AND is_active = true
+    `,
+    [userId]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw unauthorized('Tài khoản không còn tồn tại.');
+  }
+
+  const code = await issueOtpCode(user.id, OTP_PURPOSES.changePassword);
+
+  try {
+    await sendChangePasswordOtpEmail(user.email, code);
+  } catch (error) {
+    console.error(`[email] Gửi mã OTP đổi mật khẩu tới ${user.email} thất bại:`, error.message);
+    throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
+  }
+
+  return { sent: true };
+};
+
+export const changePassword = async (userId, currentPassword, newPassword, otp) => {
   if (!newPassword || newPassword.length < 8) {
     throw badRequest('Mật khẩu mới phải có ít nhất 8 ký tự.', { field: 'newPassword' });
   }
@@ -403,6 +495,8 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
   if (!(await verifyPassword(currentPassword || '', user.password_hash))) {
     throw unauthorized('Mật khẩu hiện tại không đúng.');
   }
+
+  await consumeOtpCode(user.id, OTP_PURPOSES.changePassword, otp);
 
   const passwordHash = await hashPassword(newPassword);
 
