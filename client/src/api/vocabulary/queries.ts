@@ -4,10 +4,11 @@ import { unwrapApiData } from '../shared';
 import { vocabularyApi } from './index';
 import type { VocabularySearchParams } from './types';
 
-export const useVocabularyQuery = (params?: VocabularySearchParams) =>
+export const useVocabularyQuery = (params?: VocabularySearchParams, enabled = true) =>
     useQuery({
         queryKey: queryKeys.vocabulary.search(params),
         queryFn: () => unwrapApiData(vocabularyApi.search(params)),
+        enabled,
     });
 
 export const useVocabularyTopicsQuery = () =>

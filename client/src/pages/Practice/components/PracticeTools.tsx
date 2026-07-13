@@ -3,6 +3,8 @@ import {
   useAddActivityMutation,
   useEnrollWordMutation,
   useHanziStrokesQuery,
+  useLessonDetailQuery,
+  useLessonsQuery,
   useListDetailQuery,
   useListsQuery,
   useMinimalPairsQuery,
@@ -74,11 +76,33 @@ const readHanziTotalMistakes = (summary: unknown, fallback: number) => {
   return Number.isFinite(totalMistakes) ? totalMistakes : fallback;
 };
 
+// Practice words follow the lesson the user is currently on: the first
+// uncompleted course lesson (foundation stages, hsk_level 0, carry no vocab and
+// are skipped). Falls back to the HSK1 vocab list when no lesson words exist.
 function usePracticeWords() {
-  const vocabQuery = useVocabularyQuery({ hsk: 1 });
+  const lessonsQuery = useLessonsQuery();
+  const courseLessons = useMemo(
+    () => (lessonsQuery.data?.lessons ?? []).filter((lesson) => lesson.hskLevel >= 1),
+    [lessonsQuery.data?.lessons],
+  );
+  const currentLesson =
+    courseLessons.find((lesson) => !lesson.completedAt) ?? courseLessons[courseLessons.length - 1];
+  const lessonDetailQuery = useLessonDetailQuery(currentLesson?.id ?? "", Boolean(currentLesson));
+  const lessonWords = lessonDetailQuery.data?.lesson.newWords ?? [];
+
+  const lessonResolved =
+    lessonsQuery.isError ||
+    lessonDetailQuery.isError ||
+    (lessonsQuery.isSuccess && !currentLesson) ||
+    lessonDetailQuery.isSuccess;
+  const useFallback = lessonResolved && lessonWords.length === 0;
+  const vocabQuery = useVocabularyQuery({ hsk: 1 }, useFallback);
+
   return {
-    ...vocabQuery,
-    words: vocabQuery.data?.vocab ?? [],
+    isLoading:
+      lessonsQuery.isLoading || lessonDetailQuery.isLoading || (useFallback && vocabQuery.isLoading),
+    words: lessonWords.length > 0 ? lessonWords : vocabQuery.data?.vocab ?? [],
+    lessonTitle: lessonWords.length > 0 ? currentLesson?.title : undefined,
   };
 }
 
@@ -666,9 +690,14 @@ export function MinimalPairsTool() {
 }
 
 export function PinyinTypingTool() {
-  const { words, isLoading } = usePracticeWords();
+  const { words, isLoading, lessonTitle } = usePracticeWords();
   const addActivity = useAddActivityMutation();
-  const typingWords = useMemo(() => words.filter((word) => word.pinyin.split(" ").length === 1), [words]);
+  // Prefer single-syllable words for the drill, but lesson vocab is small and
+  // often multi-syllable — use every word rather than an empty/tiny pool.
+  const typingWords = useMemo(() => {
+    const singles = words.filter((word) => word.pinyin.split(" ").length === 1);
+    return singles.length >= 4 ? singles : words;
+  }, [words]);
   const [idx, setIdx] = useState(0);
   const [typed, setTyped] = useState("");
   const [checked, setChecked] = useState(false);
@@ -708,7 +737,10 @@ export function PinyinTypingTool() {
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-4 text-[1.3rem] font-extrabold">Pinyin Keyboard Typing</h3>
+      <h3 className="mb-1 text-[1.3rem] font-extrabold">Pinyin Keyboard Typing</h3>
+      <p className="mb-4 text-[0.85rem] text-muted-foreground">
+        {lessonTitle ? `Vocabulary from your current lesson: ${lessonTitle}` : "Vocabulary from HSK 1"}
+      </p>
       <div className={cn(innerCardClass, "mb-6 p-8 sm:p-9")}>
         <h1 className="mb-2 font-serif text-6xl font-extrabold text-primary">{word.simplified}</h1>
         <p className="text-[0.95rem] text-muted-foreground">Meaning: <strong>{word.english}</strong></p>
@@ -731,7 +763,7 @@ export function PinyinTypingTool() {
 }
 
 export function ListeningTool() {
-  const { words, isLoading } = usePracticeWords();
+  const { words, isLoading, lessonTitle } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -739,8 +771,11 @@ export function ListeningTool() {
   const word = words[idx % Math.max(words.length, 1)];
   const options = useMemo(() => {
     if (!word) return [];
-    const nearby = words.filter((item) => item.id !== word.id).slice(idx, idx + 3);
-    return [...nearby, word].sort((a, b) => a.id.localeCompare(b.id));
+    // Wrap around the pool so small lesson vocab sets always yield distractors.
+    const others = words.filter((item) => item.id !== word.id);
+    const start = others.length > 0 ? idx % others.length : 0;
+    const distractors = [...others, ...others].slice(start, start + Math.min(3, others.length));
+    return [...distractors, word].sort((a, b) => a.id.localeCompare(b.id));
   }, [idx, word, words]);
 
   const choose = async (wordId: string) => {
@@ -773,7 +808,10 @@ export function ListeningTool() {
   return (
     <div className={panelClass}>
       <h3 className="mb-2 text-[1.3rem] font-extrabold">Listening Check</h3>
-      <p className="mb-5 text-[0.85rem] text-muted-foreground">Listen and choose the correct meaning.</p>
+      <p className="mb-5 text-[0.85rem] text-muted-foreground">
+        Listen and choose the correct meaning.
+        {lessonTitle ? ` Vocabulary from your current lesson: ${lessonTitle}.` : ""}
+      </p>
       <button className={cn(primaryButtonClass, "mb-6 size-20 rounded-full p-0")} onClick={() => speakChinese(word.simplified)}>
         <Volume2 size={32} />
       </button>

@@ -325,7 +325,7 @@ export default function Foundation() {
                 const locked = itemIndex > 0 && !completedStageIds.has(FOUNDATION_STAGES[itemIndex - 1].id) && !done;
                 const isActive = itemIndex === activeIndex;
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="min-w-0">
                     <button
                       type="button"
                       disabled={locked}
