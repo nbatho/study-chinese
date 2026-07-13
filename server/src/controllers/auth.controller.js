@@ -1,7 +1,18 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { env, isProduction } from '../config/env.config.js';
 import { created, success } from '../utils/response.js';
-import { loginUser, refreshAuth, registerUser, revokeRefreshToken } from '../services/auth.service.js';
+import {
+  changePassword,
+  deleteUserAccount,
+  loginUser,
+  refreshAuth,
+  registerUser,
+  requestPasswordReset,
+  resendVerificationEmail,
+  resetPassword,
+  revokeRefreshToken,
+  verifyEmail
+} from '../services/auth.service.js';
 
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
@@ -63,6 +74,38 @@ export const refresh = asyncHandler(async (req, res) => {
 
 export const logout = asyncHandler(async (req, res) => {
   await revokeRefreshToken(getRefreshToken(req));
+  clearRefreshCookie(res);
+  success(res, null);
+});
+
+export const verifyEmailHandler = asyncHandler(async (req, res) => {
+  const data = await verifyEmail(req.body.token);
+  success(res, data);
+});
+
+export const resendVerification = asyncHandler(async (req, res) => {
+  const data = await resendVerificationEmail(req.user.id);
+  success(res, data);
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const data = await requestPasswordReset(req.body.email);
+  success(res, data);
+});
+
+export const resetPasswordHandler = asyncHandler(async (req, res) => {
+  const data = await resetPassword(req.body.token, req.body.password);
+  success(res, data);
+});
+
+export const changePasswordHandler = asyncHandler(async (req, res) => {
+  const data = await changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
+  attachRefreshCookie(res, data.refreshToken);
+  success(res, publicAuthPayload(data));
+});
+
+export const deleteAccount = asyncHandler(async (req, res) => {
+  await deleteUserAccount(req.user.id, req.body?.password);
   clearRefreshCookie(res);
   success(res, null);
 });

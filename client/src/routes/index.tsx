@@ -22,6 +22,9 @@ const Shop = lazy(() => import("../pages/Shop"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const PlacementTest = lazy(() => import("../pages/PlacementTest"));
 const Auth = lazy(() => import("../pages/Auth"));
+const VerifyEmail = lazy(() => import("../pages/Auth/VerifyEmail"));
+const ForgotPassword = lazy(() => import("../pages/Auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/Auth/ResetPassword"));
 const AITutor = lazy(() => import("../pages/AITutor"));
 const Admin = lazy(() => import("../pages/Admin"));
 const Community = lazy(() => import("../pages/Community"));
@@ -131,6 +134,31 @@ export const routes: RouteConfig[] = [
       <PublicRoute redirectAuthenticatedTo="/home">
         <Auth />
       </PublicRoute>
+    )
+  },
+  {
+    // Reached from an email link — works with or without a session.
+    path: "/verify-email",
+    element: (
+      <OptionalAuthRoute>
+        <VerifyEmail />
+      </OptionalAuthRoute>
+    )
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicRoute redirectAuthenticatedTo="/settings">
+        <ForgotPassword />
+      </PublicRoute>
+    )
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <OptionalAuthRoute>
+        <ResetPassword />
+      </OptionalAuthRoute>
     )
   },
   {

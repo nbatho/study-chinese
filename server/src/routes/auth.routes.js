@@ -1,5 +1,17 @@
 import { Router } from 'express';
-import { login, logout, refresh, register } from '../controllers/auth.controller.js';
+import {
+  changePasswordHandler,
+  deleteAccount,
+  forgotPassword,
+  login,
+  logout,
+  refresh,
+  register,
+  resendVerification,
+  resetPasswordHandler,
+  verifyEmailHandler
+} from '../controllers/auth.controller.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 import { authSchemas, validateBody } from '../middlewares/validate.middleware.js';
 import { authRateLimit, requireTrustedOrigin } from '../middlewares/security.middleware.js';
 
@@ -9,5 +21,12 @@ router.post('/register', authRateLimit, requireTrustedOrigin, validateBody(authS
 router.post('/login', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.login), login);
 router.post('/refresh', authRateLimit, requireTrustedOrigin, refresh);
 router.post('/logout', requireTrustedOrigin, logout);
+
+router.post('/verify-email', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.verifyEmail), verifyEmailHandler);
+router.post('/resend-verification', authRateLimit, requireTrustedOrigin, requireAuth, resendVerification);
+router.post('/forgot-password', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.forgotPassword), forgotPassword);
+router.post('/reset-password', authRateLimit, requireTrustedOrigin, validateBody(authSchemas.resetPassword), resetPasswordHandler);
+router.post('/change-password', authRateLimit, requireTrustedOrigin, requireAuth, validateBody(authSchemas.changePassword), changePasswordHandler);
+router.delete('/account', authRateLimit, requireTrustedOrigin, requireAuth, validateBody(authSchemas.deleteAccount), deleteAccount);
 
 export default router;

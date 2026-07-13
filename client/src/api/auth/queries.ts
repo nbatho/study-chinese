@@ -5,7 +5,7 @@ import { unwrapApiData } from '../shared';
 import { useAppDispatch } from '../../store/hooks';
 import { clearCredentials, setCredentials } from '../../store/modules/authSlice';
 import { authApi } from './index';
-import type { LoginPayload, RegisterPayload } from './types';
+import type { ChangePasswordPayload, LoginPayload, RegisterPayload, ResetPasswordPayload } from './types';
 
 export const useRefreshAuthQuery = (enabled = true) => {
     const dispatch = useAppDispatch();
@@ -63,6 +63,51 @@ export const useLogoutMutation = () => {
 
     return useMutation({
         mutationFn: () => authApi.logout(),
+        onSuccess: () => {
+            dispatch(clearCredentials());
+            queryClient.clear();
+        },
+    });
+};
+
+export const useVerifyEmailMutation = () =>
+    useMutation({
+        mutationFn: (token: string) => unwrapApiData(authApi.verifyEmail(token)),
+    });
+
+export const useResendVerificationMutation = () =>
+    useMutation({
+        mutationFn: () => unwrapApiData(authApi.resendVerification()),
+    });
+
+export const useForgotPasswordMutation = () =>
+    useMutation({
+        mutationFn: (email: string) => unwrapApiData(authApi.forgotPassword(email)),
+    });
+
+export const useResetPasswordMutation = () =>
+    useMutation({
+        mutationFn: (payload: ResetPasswordPayload) => authApi.resetPassword(payload),
+    });
+
+export const useChangePasswordMutation = () => {
+    const dispatch = useAppDispatch();
+
+    return useMutation({
+        mutationFn: (payload: ChangePasswordPayload) => unwrapApiData(authApi.changePassword(payload)),
+        // The server rotates every session; keep this one signed in with the new pair.
+        onSuccess: (data) => {
+            dispatch(setCredentials(data));
+        },
+    });
+};
+
+export const useDeleteAccountMutation = () => {
+    const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (password: string) => authApi.deleteAccount(password),
         onSuccess: () => {
             dispatch(clearCredentials());
             queryClient.clear();

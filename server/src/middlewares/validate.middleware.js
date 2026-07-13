@@ -48,5 +48,22 @@ export const authSchemas = {
   login: {
     email: validators.email,
     password: validators.nonEmptyString
+  },
+  verifyEmail: {
+    token: validators.nonEmptyString
+  },
+  forgotPassword: {
+    email: validators.email
+  },
+  resetPassword: {
+    token: validators.nonEmptyString,
+    password: validators.password
+  },
+  changePassword: {
+    currentPassword: validators.nonEmptyString,
+    newPassword: validators.password
+  },
+  deleteAccount: {
+    password: validators.nonEmptyString
   }
 };

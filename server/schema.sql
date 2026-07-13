@@ -63,6 +63,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_tutor_skin VARCHAR(50) NOT NULL DE
 ALTER TABLE users ADD COLUMN IF NOT EXISTS cefr_level VARCHAR(5) DEFAULT 'A1';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS placement_test_completed_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS placement_test_score INT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token_hash VARCHAR(128);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token_hash VARCHAR(128);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
   token_id UUID PRIMARY KEY,
@@ -777,6 +782,8 @@ CREATE TRIGGER trg_course_issue_reports_updated_at BEFORE UPDATE ON course_issue
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
+CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users (email_verification_token_hash) WHERE email_verification_token_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users (password_reset_token_hash) WHERE password_reset_token_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user ON auth_refresh_tokens (user_id, expires_at DESC);
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_active ON auth_refresh_tokens (token_id, token_hash) WHERE revoked_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_daily_stats_user_date ON daily_stats (user_id, date_key DESC);

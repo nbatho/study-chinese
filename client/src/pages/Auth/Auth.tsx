@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 import { useLoginMutation, useRegisterMutation } from "../../api/auth/queries";
 import { useAppSelector } from "../../store/hooks";
@@ -227,6 +227,12 @@ export default function Auth() {
                   </button>
                 </span>
               </label>
+
+              {!isRegister && (
+                <Link to="/forgot-password" className="justify-self-end text-sm font-bold text-primary">
+                  {t("auth.forgotPassword")}
+                </Link>
+              )}
             </div>
 
             {formError && (

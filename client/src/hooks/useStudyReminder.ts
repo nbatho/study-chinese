@@ -4,8 +4,11 @@ import { toast } from "sonner";
 import {
   currentMinutes,
   getNotificationPermission,
+  isReminderDay,
   loadReminderPrefs,
   markNotifiedToday,
+  registerReminderSW,
+  syncReminderToSW,
   timeToMinutes,
   wasNotifiedToday,
 } from "../utils/studyReminder";
@@ -41,6 +44,7 @@ export function useStudyReminder({ studiedToday, title, body, href = "/learn" }:
       const prefs = loadReminderPrefs();
 
       if (!prefs.enabled || studied || wasNotifiedToday()) return;
+      if (!isReminderDay(prefs)) return;
       if (currentMinutes() < timeToMinutes(prefs.time)) return;
 
       markNotifiedToday();
@@ -71,4 +75,22 @@ export function useStudyReminder({ studiedToday, title, body, href = "/learn" }:
     const timer = window.setInterval(check, CHECK_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [navigate]);
+
+  // Keep the service worker schedule in sync so the reminder can fire after the
+  // tab is closed (best-effort; the interval above covers the app-open case).
+  useEffect(() => {
+    const prefs = loadReminderPrefs();
+    if (!prefs.enabled) return;
+
+    let cancelled = false;
+    registerReminderSW().then(() => {
+      if (cancelled) return;
+      const { title: notifTitle, body: notifBody, href: target } = stateRef.current;
+      void syncReminderToSW(prefs, { title: notifTitle, body: notifBody, url: target });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [title, body, href]);
 }

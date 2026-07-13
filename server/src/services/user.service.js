@@ -11,6 +11,9 @@ import { listMistakes, practiceMistake, recordMistake } from './mistake.service.
 
 const mapProfile = (row) => ({
   name: row.name,
+  email: row.email,
+  // Treat a missing column (migration not applied yet) as verified to avoid nagging.
+  emailVerified: row.email_verified ?? true,
   avatar: row.avatar,
   startLevel: row.start_level,
   cefrLevel: row.cefr_level || 'A1',

@@ -3,6 +3,7 @@ import { query, withTransaction } from '../config/db.config.js';
 import { adminEmails, env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
 import { emailPattern } from '../utils/patterns.js';
+import { sendPasswordResetEmail, sendVerificationEmail } from './email.service.js';
 import {
   hashPassword,
   signAccessToken,
@@ -62,6 +63,44 @@ const createAuthResponse = async (user, client = { query }) => {
   };
 };
 
+const createEmailToken = () => {
+  const token = crypto.randomBytes(32).toString('base64url');
+  return { token, tokenHash: hashToken(token) };
+};
+
+const revokeAllRefreshTokens = (client, userId) =>
+  client.query(
+    `
+      UPDATE auth_refresh_tokens
+      SET revoked_at = now()
+      WHERE user_id = $1 AND revoked_at IS NULL
+    `,
+    [userId]
+  );
+
+// Stores a fresh verification token then emails it. Email failures are logged,
+// never surfaced — registration must not fail because the mail provider is down.
+const issueEmailVerification = async (userId, email) => {
+  const { token, tokenHash } = createEmailToken();
+  const expiresAt = new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1000);
+
+  await query(
+    `
+      UPDATE users
+      SET email_verification_token_hash = $2,
+          email_verification_expires_at = $3
+      WHERE id = $1
+    `,
+    [userId, tokenHash, expiresAt]
+  );
+
+  try {
+    await sendVerificationEmail(email, token);
+  } catch (error) {
+    console.error(`[email] Gửi email xác thực tới ${email} thất bại:`, error.message);
+  }
+};
+
 export const registerUser = async ({ email, password, name }) => {
   const normalizedEmail = String(email || '').trim().toLowerCase();
 
@@ -88,6 +127,8 @@ export const registerUser = async ({ email, password, name }) => {
     );
 
     const user = mapAuthUser(result.rows[0]);
+
+    await issueEmailVerification(user.id, user.email);
 
     return createAuthResponse(user);
   } catch (error) {
@@ -205,6 +246,209 @@ export const revokeRefreshToken = async (refreshToken) => {
   } catch {
     // Logout should still clear the browser cookie even if the token is malformed.
   }
+};
+
+export const verifyEmail = async (token) => {
+  if (typeof token !== 'string' || token.length === 0) {
+    throw badRequest('Token xác thực không hợp lệ.');
+  }
+
+  const result = await query(
+    `
+      UPDATE users
+      SET email_verified = true,
+          email_verification_token_hash = NULL,
+          email_verification_expires_at = NULL
+      WHERE email_verification_token_hash = $1
+        AND email_verification_expires_at > now()
+        AND is_active = true
+      RETURNING id
+    `,
+    [hashToken(token)]
+  );
+
+  if (result.rowCount === 0) {
+    throw badRequest('Token xác thực không hợp lệ hoặc đã hết hạn.');
+  }
+
+  return { verified: true };
+};
+
+export const resendVerificationEmail = async (userId) => {
+  const result = await query(
+    `
+      SELECT id, email, email_verified
+      FROM users
+      WHERE id = $1 AND is_active = true
+    `,
+    [userId]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw unauthorized('Tài khoản không còn tồn tại.');
+  }
+
+  if (user.email_verified) {
+    return { alreadyVerified: true };
+  }
+
+  await issueEmailVerification(user.id, user.email);
+
+  return { sent: true };
+};
+
+// Always resolves successfully so the endpoint never leaks whether an email exists.
+export const requestPasswordReset = async (email) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+
+  if (!emailPattern.test(normalizedEmail)) {
+    throw badRequest('Email không hợp lệ.', { field: 'email' });
+  }
+
+  const result = await query(
+    `
+      SELECT id, email
+      FROM users
+      WHERE lower(email) = $1 AND is_active = true
+    `,
+    [normalizedEmail]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    return { sent: true };
+  }
+
+  const { token, tokenHash } = createEmailToken();
+  const expiresAt = new Date(Date.now() + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+
+  await query(
+    `
+      UPDATE users
+      SET password_reset_token_hash = $2,
+          password_reset_expires_at = $3
+      WHERE id = $1
+    `,
+    [user.id, tokenHash, expiresAt]
+  );
+
+  try {
+    await sendPasswordResetEmail(user.email, token);
+  } catch (error) {
+    console.error(`[email] Gửi email đặt lại mật khẩu tới ${user.email} thất bại:`, error.message);
+  }
+
+  return { sent: true };
+};
+
+export const resetPassword = async (token, newPassword) => {
+  if (typeof token !== 'string' || token.length === 0) {
+    throw badRequest('Token đặt lại mật khẩu không hợp lệ.');
+  }
+
+  if (!newPassword || newPassword.length < 8) {
+    throw badRequest('Mật khẩu phải có ít nhất 8 ký tự.', { field: 'password' });
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  return withTransaction(async (client) => {
+    const result = await client.query(
+      `
+        UPDATE users
+        SET password_hash = $2,
+            password_reset_token_hash = NULL,
+            password_reset_expires_at = NULL
+        WHERE password_reset_token_hash = $1
+          AND password_reset_expires_at > now()
+          AND is_active = true
+        RETURNING id
+      `,
+      [hashToken(token), passwordHash]
+    );
+
+    if (result.rowCount === 0) {
+      throw badRequest('Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
+    }
+
+    await revokeAllRefreshTokens(client, result.rows[0].id);
+
+    return { reset: true };
+  });
+};
+
+export const changePassword = async (userId, currentPassword, newPassword) => {
+  if (!newPassword || newPassword.length < 8) {
+    throw badRequest('Mật khẩu mới phải có ít nhất 8 ký tự.', { field: 'newPassword' });
+  }
+
+  const result = await query(
+    `
+      SELECT id, email, password_hash, name, avatar, role
+      FROM users
+      WHERE id = $1 AND is_active = true
+    `,
+    [userId]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw unauthorized('Tài khoản không còn tồn tại.');
+  }
+
+  if (!(await verifyPassword(currentPassword || '', user.password_hash))) {
+    throw unauthorized('Mật khẩu hiện tại không đúng.');
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  return withTransaction(async (client) => {
+    await client.query(
+      `
+        UPDATE users
+        SET password_hash = $2,
+            updated_at = now()
+        WHERE id = $1
+      `,
+      [userId, passwordHash]
+    );
+
+    // Other devices are forced to re-login; this session gets a fresh token pair.
+    await revokeAllRefreshTokens(client, userId);
+
+    return createAuthResponse(mapAuthUser(user), client);
+  });
+};
+
+export const deleteUserAccount = async (userId, password) => {
+  const result = await query(
+    `
+      SELECT id, password_hash
+      FROM users
+      WHERE id = $1 AND is_active = true
+    `,
+    [userId]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw unauthorized('Tài khoản không còn tồn tại.');
+  }
+
+  if (!(await verifyPassword(password || '', user.password_hash))) {
+    throw unauthorized('Mật khẩu không đúng.');
+  }
+
+  // Hard delete: every table referencing users(id) has ON DELETE CASCADE,
+  // including auth_refresh_tokens, so all sessions and data go with the row.
+  await query('DELETE FROM users WHERE id = $1', [userId]);
+
+  return { deleted: true };
 };
 
 export const __private__ = {
