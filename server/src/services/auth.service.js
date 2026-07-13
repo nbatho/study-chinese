@@ -3,9 +3,13 @@ import { query, withTransaction } from '../config/db.config.js';
 import { adminEmails, env } from '../config/env.config.js';
 import { badRequest, conflict, unauthorized } from '../utils/http-error.js';
 import { emailPattern } from '../utils/patterns.js';
+import { isStrongPassword } from '../utils/password-policy.js';
+import { verifyGoogleIdToken } from '../utils/google-auth.js';
 import {
   sendChangePasswordOtpEmail,
+  sendDeleteAccountOtpEmail,
   sendPasswordResetOtpEmail,
+  sendRegistrationOtpEmail,
   sendVerificationEmail
 } from './email.service.js';
 import {
@@ -15,6 +19,16 @@ import {
   verifyPassword,
   verifyRefreshToken
 } from '../utils/auth.js';
+
+const PASSWORD_POLICY_MESSAGE =
+  'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số.';
+
+// Enforces the shared password policy; throws a 400 tied to the given field.
+const assertStrongPassword = (password, field = 'password') => {
+  if (!isStrongPassword(password)) {
+    throw badRequest(PASSWORD_POLICY_MESSAGE, { field });
+  }
+};
 
 const mapAuthUser = (row) => ({
   id: row.id,
@@ -77,7 +91,8 @@ const OTP_MAX_ATTEMPTS = 5;
 
 export const OTP_PURPOSES = {
   passwordReset: 'password_reset',
-  changePassword: 'change_password'
+  changePassword: 'change_password',
+  deleteAccount: 'delete_account'
 };
 
 const createOtpCode = () =>
@@ -175,6 +190,9 @@ const issueEmailVerification = async (userId, email) => {
   }
 };
 
+// Registration is a two-step, verify-first flow: this stores the details in
+// auth_pending_registrations and emails an OTP. The users row is only created once
+// verifyRegistration() confirms the code, so an unverified email never becomes an account.
 export const registerUser = async ({ email, password, name }) => {
   const normalizedEmail = String(email || '').trim().toLowerCase();
 
@@ -182,29 +200,92 @@ export const registerUser = async ({ email, password, name }) => {
     throw badRequest('Email không hợp lệ.', { field: 'email' });
   }
 
-  if (!password || password.length < 8) {
-    throw badRequest('Mật khẩu phải có ít nhất 8 ký tự.', { field: 'password' });
+  assertStrongPassword(password);
+
+  const existing = await query('SELECT 1 FROM users WHERE lower(email) = $1', [normalizedEmail]);
+
+  if (existing.rowCount > 0) {
+    throw conflict('Email đã được sử dụng.');
   }
 
   const passwordHash = await hashPassword(password);
+  const code = createOtpCode();
+  const expiresAt = new Date(Date.now() + env.REGISTRATION_OTP_TTL_MINUTES * 60 * 1000);
 
+  await query(
+    `
+      INSERT INTO auth_pending_registrations (email, password_hash, name, code_hash, expires_at, attempts)
+      VALUES ($1, $2, COALESCE(NULLIF($3, ''), 'Learner'), $4, $5, 0)
+      ON CONFLICT (email)
+      DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                    name = EXCLUDED.name,
+                    code_hash = EXCLUDED.code_hash,
+                    expires_at = EXCLUDED.expires_at,
+                    attempts = 0,
+                    created_at = now()
+    `,
+    [normalizedEmail, passwordHash, name?.trim(), hashToken(code), expiresAt]
+  );
+
+  try {
+    await sendRegistrationOtpEmail(normalizedEmail, code, env.REGISTRATION_OTP_TTL_MINUTES);
+  } catch (error) {
+    console.error(`[email] Gửi mã OTP đăng ký tới ${normalizedEmail} thất bại:`, error.message);
+    throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
+  }
+
+  return { pending: true, email: normalizedEmail, ttlMinutes: env.REGISTRATION_OTP_TTL_MINUTES };
+};
+
+// Confirms the emailed OTP and creates the account, logging the user in on success.
+export const verifyRegistration = async (email, otp) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const invalidOtp = () => badRequest('Mã OTP không đúng hoặc đã hết hạn.', { field: 'otp' });
+
+  if (typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
+    throw invalidOtp();
+  }
+
+  // Single-use: the pending row is consumed atomically only if the code is live and valid.
+  const consumed = await query(
+    `
+      DELETE FROM auth_pending_registrations
+      WHERE email = $1
+        AND code_hash = $2
+        AND expires_at > now()
+        AND attempts < $3
+      RETURNING email, password_hash, name
+    `,
+    [normalizedEmail, hashToken(otp.trim()), OTP_MAX_ATTEMPTS]
+  );
+
+  if (consumed.rowCount === 0) {
+    await query(
+      `
+        UPDATE auth_pending_registrations
+        SET attempts = attempts + 1
+        WHERE email = $1
+      `,
+      [normalizedEmail]
+    );
+
+    throw invalidOtp();
+  }
+
+  const pending = consumed.rows[0];
   const role = adminEmails.has(normalizedEmail) ? 'admin' : 'student';
 
   try {
     const result = await query(
       `
-        INSERT INTO users (email, password_hash, name, role)
-        VALUES ($1, $2, COALESCE(NULLIF($3, ''), 'Learner'), $4)
+        INSERT INTO users (email, password_hash, name, role, email_verified)
+        VALUES ($1, $2, $3, $4, true)
         RETURNING id, email, name, avatar, role
       `,
-      [normalizedEmail, passwordHash, name?.trim(), role]
+      [pending.email, pending.password_hash, pending.name, role]
     );
 
-    const user = mapAuthUser(result.rows[0]);
-
-    await issueEmailVerification(user.id, user.email);
-
-    return createAuthResponse(user);
+    return createAuthResponse(mapAuthUser(result.rows[0]));
   } catch (error) {
     if (error.code === '23505') {
       throw conflict('Email đã được sử dụng.');
@@ -212,6 +293,44 @@ export const registerUser = async ({ email, password, name }) => {
 
     throw error;
   }
+};
+
+// Reissues a registration OTP. Silent when no pending row exists so the endpoint
+// never reveals whether an email is mid-registration.
+export const resendRegistrationOtp = async (email) => {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+
+  if (!emailPattern.test(normalizedEmail)) {
+    throw badRequest('Email không hợp lệ.', { field: 'email' });
+  }
+
+  const code = createOtpCode();
+  const expiresAt = new Date(Date.now() + env.REGISTRATION_OTP_TTL_MINUTES * 60 * 1000);
+
+  const updated = await query(
+    `
+      UPDATE auth_pending_registrations
+      SET code_hash = $2,
+          expires_at = $3,
+          attempts = 0,
+          created_at = now()
+      WHERE email = $1
+    `,
+    [normalizedEmail, hashToken(code), expiresAt]
+  );
+
+  if (updated.rowCount === 0) {
+    return { sent: true };
+  }
+
+  try {
+    await sendRegistrationOtpEmail(normalizedEmail, code, env.REGISTRATION_OTP_TTL_MINUTES);
+  } catch (error) {
+    console.error(`[email] Gửi lại mã OTP đăng ký tới ${normalizedEmail} thất bại:`, error.message);
+    throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
+  }
+
+  return { sent: true };
 };
 
 export const loginUser = async ({ email, password }) => {
@@ -228,13 +347,67 @@ export const loginUser = async ({ email, password }) => {
 
   const user = result.rows[0];
 
-  if (!user || !(await verifyPassword(password || '', user.password_hash))) {
+  // A Google-only account has no local password_hash — reject it here rather than
+  // letting verifyPassword choke on a null hash, and steer the user to Google sign-in.
+  if (!user || !user.password_hash) {
+    throw unauthorized('Email hoặc mật khẩu không đúng.');
+  }
+
+  if (!(await verifyPassword(password || '', user.password_hash))) {
     throw unauthorized('Email hoặc mật khẩu không đúng.');
   }
 
   const authUser = mapAuthUser(user);
 
   return createAuthResponse(authUser);
+};
+
+// Google Sign-In: verify the ID token, then reuse the account with the same email if
+// one exists (linking the Google identity the first time) or create a fresh
+// Google-linked account. Email/password and Google sign-in therefore share one account,
+// keeping a single row per email. The upsert is race-safe against concurrent sign-ins.
+export const loginWithGoogle = async (credential) => {
+  const profile = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID);
+  const normalizedEmail = String(profile.email || '').trim().toLowerCase();
+
+  if (!emailPattern.test(normalizedEmail)) {
+    throw badRequest('Tài khoản Google không có email hợp lệ.');
+  }
+
+  // Google marks email_verified false for unverified Workspace/consumer addresses.
+  if (profile.email_verified === false || profile.email_verified === 'false') {
+    throw badRequest('Email Google chưa được xác thực.');
+  }
+
+  const googleId = String(profile.sub);
+  const name = profile.name?.trim() || 'Learner';
+  const role = adminEmails.has(normalizedEmail) ? 'admin' : 'student';
+
+  return withTransaction(async (client) => {
+    const upserted = await client.query(
+      `
+        INSERT INTO users (email, name, google_id, role, email_verified, password_hash)
+        VALUES ($1, $2, $3, $4, true, NULL)
+        ON CONFLICT (email)
+        DO UPDATE SET google_id = COALESCE(users.google_id, EXCLUDED.google_id),
+                      email_verified = true,
+                      updated_at = now()
+        RETURNING id, email, name, avatar, role, is_active,
+                  (xmax = 0) AS is_new_user
+      `,
+      [normalizedEmail, name, googleId, role]
+    );
+
+    const userRow = upserted.rows[0];
+
+    if (!userRow.is_active) {
+      throw unauthorized('Tài khoản đã bị vô hiệu hóa.');
+    }
+
+    const authResponse = await createAuthResponse(mapAuthUser(userRow), client);
+
+    return { ...authResponse, isNewUser: userRow.is_new_user };
+  });
 };
 
 export const refreshAuth = async (refreshToken) => {
@@ -412,9 +585,7 @@ export const requestPasswordReset = async (email) => {
 };
 
 export const resetPassword = async (email, otp, newPassword) => {
-  if (!newPassword || newPassword.length < 8) {
-    throw badRequest('Mật khẩu phải có ít nhất 8 ký tự.', { field: 'password' });
-  }
+  assertStrongPassword(newPassword);
 
   const user = await findActiveUserByEmail(email);
 
@@ -473,9 +644,7 @@ export const requestChangePasswordOtp = async (userId) => {
 };
 
 export const changePassword = async (userId, currentPassword, newPassword, otp) => {
-  if (!newPassword || newPassword.length < 8) {
-    throw badRequest('Mật khẩu mới phải có ít nhất 8 ký tự.', { field: 'newPassword' });
-  }
+  assertStrongPassword(newPassword, 'newPassword');
 
   const result = await query(
     `
@@ -518,10 +687,10 @@ export const changePassword = async (userId, currentPassword, newPassword, otp) 
   });
 };
 
-export const deleteUserAccount = async (userId, password) => {
+export const requestDeleteAccountOtp = async (userId) => {
   const result = await query(
     `
-      SELECT id, password_hash
+      SELECT id, email
       FROM users
       WHERE id = $1 AND is_active = true
     `,
@@ -534,9 +703,35 @@ export const deleteUserAccount = async (userId, password) => {
     throw unauthorized('Tài khoản không còn tồn tại.');
   }
 
-  if (!(await verifyPassword(password || '', user.password_hash))) {
-    throw unauthorized('Mật khẩu không đúng.');
+  const code = await issueOtpCode(user.id, OTP_PURPOSES.deleteAccount);
+
+  try {
+    await sendDeleteAccountOtpEmail(user.email, code);
+  } catch (error) {
+    console.error(`[email] Gửi mã OTP xoá tài khoản tới ${user.email} thất bại:`, error.message);
+    throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
   }
+
+  return { sent: true };
+};
+
+export const deleteUserAccount = async (userId, otp) => {
+  const result = await query(
+    `
+      SELECT id
+      FROM users
+      WHERE id = $1 AND is_active = true
+    `,
+    [userId]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw unauthorized('Tài khoản không còn tồn tại.');
+  }
+
+  await consumeOtpCode(user.id, OTP_PURPOSES.deleteAccount, otp);
 
   // Hard delete: every table referencing users(id) has ON DELETE CASCADE,
   // including auth_refresh_tokens, so all sessions and data go with the row.

@@ -5,7 +5,14 @@ import { unwrapApiData } from '../shared';
 import { useAppDispatch } from '../../store/hooks';
 import { clearCredentials, setCredentials } from '../../store/modules/authSlice';
 import { authApi } from './index';
-import type { ChangePasswordPayload, LoginPayload, RegisterPayload, ResetPasswordPayload } from './types';
+import type {
+    ChangePasswordPayload,
+    GoogleLoginPayload,
+    LoginPayload,
+    RegisterPayload,
+    ResetPasswordPayload,
+    VerifyRegistrationPayload,
+} from './types';
 
 export const useRefreshAuthQuery = (enabled = true) => {
     const dispatch = useAppDispatch();
@@ -44,18 +51,43 @@ export const useLoginMutation = () => {
     });
 };
 
-export const useRegisterMutation = () => {
+export const useGoogleLoginMutation = () => {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: RegisterPayload) => unwrapApiData(authApi.register(payload)),
+        mutationFn: (payload: GoogleLoginPayload) => unwrapApiData(authApi.googleLogin(payload)),
         onSuccess: (data) => {
             queryClient.removeQueries({ queryKey: queryKeys.auth.refresh });
             dispatch(setCredentials(data));
         },
     });
 };
+
+// Registration no longer creates an account or signs the user in — it only sends the
+// verification OTP. The account is created by useVerifyRegistrationMutation.
+export const useRegisterMutation = () =>
+    useMutation({
+        mutationFn: (payload: RegisterPayload) => unwrapApiData(authApi.register(payload)),
+    });
+
+export const useVerifyRegistrationMutation = () => {
+    const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: VerifyRegistrationPayload) => unwrapApiData(authApi.verifyRegistration(payload)),
+        onSuccess: (data) => {
+            queryClient.removeQueries({ queryKey: queryKeys.auth.refresh });
+            dispatch(setCredentials(data));
+        },
+    });
+};
+
+export const useResendRegistrationOtpMutation = () =>
+    useMutation({
+        mutationFn: (email: string) => unwrapApiData(authApi.resendRegistrationOtp(email)),
+    });
 
 export const useLogoutMutation = () => {
     const dispatch = useAppDispatch();
@@ -107,12 +139,17 @@ export const useChangePasswordMutation = () => {
     });
 };
 
+export const useDeleteAccountOtpMutation = () =>
+    useMutation({
+        mutationFn: () => unwrapApiData(authApi.deleteAccountOtp()),
+    });
+
 export const useDeleteAccountMutation = () => {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (password: string) => authApi.deleteAccount(password),
+        mutationFn: (otp: string) => authApi.deleteAccount(otp),
         onSuccess: () => {
             dispatch(clearCredentials());
             queryClient.clear();

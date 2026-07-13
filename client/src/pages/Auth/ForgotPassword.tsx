@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useForgotPasswordMutation, useResetPasswordMutation } from "../../api/auth/queries";
 import { useI18n } from "../../i18n";
 import { ApiError } from "../../utils/errorUtils";
+import { isStrongPassword } from "../../utils/passwordPolicy";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 
@@ -50,8 +51,8 @@ export default function ForgotPassword() {
       return;
     }
 
-    if (password.length < 8) {
-      setFormError(t("security.tooShort"));
+    if (!isStrongPassword(password)) {
+      setFormError(t("security.weakPassword"));
       return;
     }
 
@@ -148,6 +149,7 @@ export default function ForgotPassword() {
                   className="h-12 border-2 bg-background pl-11 text-base"
                 />
               </span>
+              <span className="text-xs font-medium text-muted-foreground">{t("security.policyHint")}</span>
             </label>
             <label className="grid gap-2 font-bold">
               {t("security.confirmPassword")}

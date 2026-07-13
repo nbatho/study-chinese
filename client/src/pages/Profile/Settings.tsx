@@ -6,6 +6,7 @@ import {
   useChangePasswordMutation,
   useChangePasswordOtpMutation,
   useDeleteAccountMutation,
+  useDeleteAccountOtpMutation,
   useResendVerificationMutation,
 } from "../../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery } from "../../api/users/queries";
@@ -16,6 +17,7 @@ import { setAppearance } from "../../store/modules/appSlice";
 import type { AppAppearance } from "../../store/modules/appSlice";
 import { cn } from "../../utils/cn";
 import { ApiError } from "../../utils/errorUtils";
+import { isStrongPassword } from "../../utils/passwordPolicy";
 import TtsSpeedControl from "../../components/TtsSpeedControl";
 import {
   getNotificationPermission,
@@ -52,6 +54,7 @@ export default function Settings() {
   const changePasswordMutation = useChangePasswordMutation();
   const changePasswordOtpMutation = useChangePasswordOtpMutation();
   const deleteAccountMutation = useDeleteAccountMutation();
+  const deleteAccountOtpMutation = useDeleteAccountOtpMutation();
   const resendVerificationMutation = useResendVerificationMutation();
   const profile = profileQuery.data?.profile;
 
@@ -74,7 +77,8 @@ export default function Settings() {
   const [passwordOtpSent, setPasswordOtpSent] = useState(false);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteOtp, setDeleteOtp] = useState("");
+  const [deleteOtpSent, setDeleteOtpSent] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
   const persistReminder = (next: ReminderPrefs) => {
@@ -111,8 +115,8 @@ export default function Settings() {
     event.preventDefault();
     setPasswordError("");
 
-    if (passwordForm.next.length < 8) {
-      setPasswordError(t("security.tooShort"));
+    if (!isStrongPassword(passwordForm.next)) {
+      setPasswordError(t("security.weakPassword"));
       return;
     }
 
@@ -140,12 +144,29 @@ export default function Settings() {
     }
   };
 
+  const sendDeleteOtp = async () => {
+    setDeleteError("");
+
+    try {
+      await deleteAccountOtpMutation.mutateAsync();
+      setDeleteOtpSent(true);
+      toast.success(t("danger.otpSent"));
+    } catch (error) {
+      setDeleteError(getMutationError(error, t("danger.otpSendFailed")));
+    }
+  };
+
   const submitDeleteAccount = async (event: React.FormEvent) => {
     event.preventDefault();
     setDeleteError("");
 
+    if (!/^\d{6}$/.test(deleteOtp.trim())) {
+      setDeleteError(t("danger.otpInvalid"));
+      return;
+    }
+
     try {
-      await deleteAccountMutation.mutateAsync(deletePassword);
+      await deleteAccountMutation.mutateAsync(deleteOtp.trim());
       toast.success(t("danger.deleted"));
       navigate("/landing", { replace: true });
     } catch (error) {
@@ -415,6 +436,7 @@ export default function Settings() {
               placeholder={t("auth.newPasswordPlaceholder")}
               className="app-control w-full text-foreground"
             />
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{t("security.policyHint")}</p>
           </div>
           <div>
             <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.confirmPassword")}</label>
@@ -490,7 +512,8 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => {
-              setDeletePassword("");
+              setDeleteOtp("");
+              setDeleteOtpSent(false);
               setDeleteError("");
               setDeleteModalOpen(true);
             }}
@@ -519,16 +542,34 @@ export default function Settings() {
             </h3>
             <p className="mb-4 text-sm text-muted-foreground">{t("danger.confirmBody")}</p>
             <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">
-              {t("danger.passwordPrompt")}
+              {t("danger.otpPrompt")}
             </label>
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              autoComplete="current-password"
-              autoFocus
-              className="app-control w-full text-foreground"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={deleteOtp}
+                onChange={(e) => setDeleteOtp(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                autoComplete="one-time-code"
+                autoFocus
+                className="app-control w-full text-foreground tracking-[0.3em]"
+              />
+              <button
+                type="button"
+                onClick={sendDeleteOtp}
+                disabled={deleteAccountOtpMutation.isPending}
+                className="inline-flex shrink-0 items-center justify-center rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive transition hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteAccountOtpMutation.isPending
+                  ? t("common.saving")
+                  : deleteOtpSent
+                    ? t("danger.otpResend")
+                    : t("danger.otpSend")}
+              </button>
+            </div>
+            <p className="mt-1.5 text-xs font-medium text-muted-foreground">{t("danger.otpHint")}</p>
             {deleteError && (
               <div role="alert" className="mt-3 rounded-xl border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive">
                 {deleteError}
@@ -545,7 +586,7 @@ export default function Settings() {
               </button>
               <button
                 type="submit"
-                disabled={!deletePassword || deleteAccountMutation.isPending}
+                disabled={deleteOtp.trim().length !== 6 || deleteAccountMutation.isPending}
                 className="inline-flex items-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-bold text-white transition hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Trash2 size={15} />

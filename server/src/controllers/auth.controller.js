@@ -5,14 +5,18 @@ import {
   changePassword,
   deleteUserAccount,
   loginUser,
+  loginWithGoogle,
   refreshAuth,
   registerUser,
   requestChangePasswordOtp,
+  requestDeleteAccountOtp,
   requestPasswordReset,
+  resendRegistrationOtp,
   resendVerificationEmail,
   resetPassword,
   revokeRefreshToken,
-  verifyEmail
+  verifyEmail,
+  verifyRegistration
 } from '../services/auth.service.js';
 
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
@@ -57,14 +61,31 @@ const publicAuthPayload = ({ accessToken, user }) => ({
 
 export const register = asyncHandler(async (req, res) => {
   const data = await registerUser(req.body);
+  // No account exists yet — the client must confirm the emailed OTP to finish signing up.
+  created(res, data);
+});
+
+export const verifyRegistrationHandler = asyncHandler(async (req, res) => {
+  const data = await verifyRegistration(req.body.email, req.body.otp);
   attachRefreshCookie(res, data.refreshToken);
   created(res, publicAuthPayload(data));
+});
+
+export const resendRegistrationHandler = asyncHandler(async (req, res) => {
+  const data = await resendRegistrationOtp(req.body.email);
+  success(res, data);
 });
 
 export const login = asyncHandler(async (req, res) => {
   const data = await loginUser(req.body);
   attachRefreshCookie(res, data.refreshToken);
   success(res, publicAuthPayload(data));
+});
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const data = await loginWithGoogle(req.body.credential);
+  attachRefreshCookie(res, data.refreshToken);
+  success(res, { ...publicAuthPayload(data), isNewUser: data.isNewUser });
 });
 
 export const refresh = asyncHandler(async (req, res) => {
@@ -115,8 +136,13 @@ export const changePasswordHandler = asyncHandler(async (req, res) => {
   success(res, publicAuthPayload(data));
 });
 
+export const deleteAccountOtpHandler = asyncHandler(async (req, res) => {
+  const data = await requestDeleteAccountOtp(req.user.id);
+  success(res, data);
+});
+
 export const deleteAccount = asyncHandler(async (req, res) => {
-  await deleteUserAccount(req.user.id, req.body?.password);
+  await deleteUserAccount(req.user.id, req.body?.otp);
   clearRefreshCookie(res);
   success(res, null);
 });

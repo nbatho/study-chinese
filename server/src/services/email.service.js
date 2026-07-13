@@ -103,6 +103,21 @@ export const sendVerificationEmail = (to, token) => {
   });
 };
 
+export const sendRegistrationOtpEmail = (to, code, ttlMinutes) =>
+  sendEmail({
+    to,
+    subject: `${code} là mã xác thực đăng ký Study Chinese`,
+    devNote: `Mã OTP xác thực đăng ký: ${code}`,
+    html: otpEmailLayout(
+      'Xác thực email đăng ký',
+      `<p style="font-size:15px;line-height:1.6;color:#374151;">
+         Cảm ơn bạn đã đăng ký Study Chinese! Nhập mã bên dưới để hoàn tất tạo tài khoản.
+       </p>`,
+      code,
+      ttlMinutes
+    )
+  });
+
 export const sendPasswordResetOtpEmail = (to, code) =>
   sendEmail({
     to,
@@ -129,6 +144,22 @@ export const sendChangePasswordOtpEmail = (to, code) =>
       `<p style="font-size:15px;line-height:1.6;color:#374151;">
          Bạn (hoặc ai đó) vừa yêu cầu đổi mật khẩu tài khoản Study Chinese.
          Nhập mã bên dưới để xác nhận thao tác.
+       </p>`,
+      code,
+      env.OTP_TTL_MINUTES
+    )
+  });
+
+export const sendDeleteAccountOtpEmail = (to, code) =>
+  sendEmail({
+    to,
+    subject: `${code} là mã xác nhận xoá tài khoản Study Chinese`,
+    devNote: `Mã OTP xoá tài khoản: ${code}`,
+    html: otpEmailLayout(
+      'Xác nhận xoá tài khoản',
+      `<p style="font-size:15px;line-height:1.6;color:#374151;">
+         Bạn vừa yêu cầu xoá vĩnh viễn tài khoản Study Chinese cùng toàn bộ dữ liệu học tập.
+         Nhập mã bên dưới để xác nhận. Thao tác này không thể hoàn tác.
        </p>`,
       code,
       env.OTP_TTL_MINUTES

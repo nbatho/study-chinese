@@ -68,6 +68,10 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token_hash VARCHAR
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token_hash VARCHAR(128);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMPTZ;
+-- Google OAuth: Google-only accounts have no local password, so password_hash is
+-- nullable and the Google subject id links the identity to a single user row.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(64);
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
   token_id UUID PRIMARY KEY,
@@ -82,12 +86,30 @@ CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
 -- One live OTP per (user, purpose); re-requesting replaces it.
 CREATE TABLE IF NOT EXISTS auth_otp_codes (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  purpose VARCHAR(32) NOT NULL CHECK (purpose IN ('password_reset', 'change_password')),
+  purpose VARCHAR(32) NOT NULL CHECK (purpose IN ('password_reset', 'change_password', 'delete_account')),
   code_hash VARCHAR(128) NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL,
   attempts SMALLINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, purpose)
+);
+
+-- Widen the purpose check on already-provisioned databases to allow account deletion.
+ALTER TABLE auth_otp_codes DROP CONSTRAINT IF EXISTS auth_otp_codes_purpose_check;
+ALTER TABLE auth_otp_codes ADD CONSTRAINT auth_otp_codes_purpose_check
+  CHECK (purpose IN ('password_reset', 'change_password', 'delete_account'));
+
+-- Registrations awaiting email verification. No users row exists yet — the account
+-- is only created once the emailed OTP is confirmed. One pending row per email;
+-- re-registering replaces it. Expired rows are cleaned up lazily on the next attempt.
+CREATE TABLE IF NOT EXISTS auth_pending_registrations (
+  email VARCHAR(255) PRIMARY KEY,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(120) NOT NULL,
+  code_hash VARCHAR(128) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts SMALLINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS daily_stats (
@@ -793,6 +815,7 @@ CREATE TRIGGER trg_course_issue_reports_updated_at BEFORE UPDATE ON course_issue
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users (google_id) WHERE google_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users (email_verification_token_hash) WHERE email_verification_token_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users (password_reset_token_hash) WHERE password_reset_token_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user ON auth_refresh_tokens (user_id, expires_at DESC);

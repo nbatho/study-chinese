@@ -17,9 +17,28 @@ export interface RegisterPayload {
     name?: string;
 }
 
+export interface RegisterPendingResponse {
+    pending: boolean;
+    email: string;
+    ttlMinutes: number;
+}
+
+export interface VerifyRegistrationPayload {
+    email: string;
+    otp: string;
+}
+
 export interface LoginPayload {
     email: string;
     password: string;
+}
+
+export interface GoogleLoginPayload {
+    credential: string;
+}
+
+export interface GoogleAuthResponse extends AuthResponse {
+    isNewUser?: boolean;
 }
 
 export interface ChangePasswordPayload {
