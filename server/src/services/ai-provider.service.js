@@ -4,6 +4,7 @@ const JSON_SCHEMA_HINT = {
   reply_simplified: 'Câu trả lời của giáo viên bằng chữ Hán giản thể.',
   reply_pinyin: 'Phiên âm pinyin đầy đủ có dấu.',
   reply_english: 'Bản dịch tiếng Anh.',
+  reply_vietnamese: 'Bản dịch tiếng Việt tự nhiên.',
   correction: {
     original: 'Tin nhắn gốc nếu có lỗi.',
     improved: 'Phiên bản đã sửa.',
@@ -141,6 +142,7 @@ const createGuardrailReply = (text, reason) => ({
   rawText: '我只能帮助你学习中文。请问一个中文学习的问题吧。',
   pinyin: 'Wǒ zhǐ néng bāngzhù nǐ xuéxí Zhōngwén. Qǐng wèn yí ge Zhōngwén xuéxí de wèntí ba.',
   english: 'I can only help you learn Chinese. Please ask a Chinese-learning question.',
+  vietnamese: 'Tôi chỉ có thể giúp bạn học tiếng Trung. Hãy đặt một câu hỏi về học tiếng Trung nhé.',
   correction: {
     original: text,
     improved: '请帮我学习中文。',
@@ -178,6 +180,9 @@ export const createMockTutorReply = (text) => {
     english: wantsTea
       ? 'Sure, would you like hot tea or iced tea?'
       : 'Good! Please answer me with one more Chinese sentence.',
+    vietnamese: wantsTea
+      ? 'Được thôi, bạn muốn trà nóng hay trà đá?'
+      : 'Tốt lắm! Hãy trả lời tôi thêm một câu tiếng Trung nữa.',
     correction: hasLatinOnly
       ? {
           original: text,
@@ -227,7 +232,7 @@ ${formatLearningContext(learningContext)}
 
 Nhiệm vụ:
 1. Trả lời bằng tiếng Trung giản thể, ngắn gọn, tự nhiên, phù hợp HSK 1-3.
-2. Cung cấp pinyin có dấu và bản dịch tiếng Anh cho câu trả lời.
+2. Cung cấp pinyin có dấu, bản dịch tiếng Anh và bản dịch tiếng Việt cho câu trả lời.
 3. Kiểm tra tin nhắn học viên để phát hiện lỗi ngữ pháp, từ vựng, pinyin không dấu hoặc câu chưa tự nhiên.
 4. Nếu có lỗi, trả correction với original, improved, explanation bằng tiếng Việt. Nếu không có lỗi, correction là null.
 
@@ -307,6 +312,7 @@ const normalizeProviderReply = (payload, { provider, modelName, tokenUsage, late
   rawText: clampText(payload.reply_simplified, '很好！请再说一句中文。'),
   pinyin: clampText(payload.reply_pinyin, 'Hěn hǎo! Qǐng zài shuō yī jù Zhōngwén.'),
   english: clampText(payload.reply_english, 'Good! Please say one more Chinese sentence.'),
+  vietnamese: clampText(payload.reply_vietnamese, 'Tốt lắm! Hãy nói thêm một câu tiếng Trung nữa.'),
   correction:
     payload.correction && typeof payload.correction === 'object'
       ? {

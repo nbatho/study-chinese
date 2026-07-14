@@ -166,12 +166,12 @@ export default function LessonPath({
             <div className="text-sm font-extrabold text-primary">HSK {curriculum.hskLevel} - CEFR {curriculum.cefrLevel}</div>
             <h3 className="mt-1 text-2xl font-extrabold">{curriculum.focus}</h3>
             <p className="mt-2 max-w-2xl text-sm font-semibold text-muted-foreground">
-              {completedCount}/{flatEntries.length} bài đã xong, {availableCount} bài có sẵn.
+              {t("learn.path.summary", { completed: completedCount, total: flatEntries.length, available: availableCount })}
             </p>
           </div>
           <div className="min-w-45 rounded-xl bg-secondary p-3">
             <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
-              <span>Tiến độ</span>
+              <span>{t("learn.path.progress")}</span>
               <span>{progressPercent}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-background">
@@ -185,10 +185,10 @@ export default function LessonPath({
         <section key={topic.id} className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <span className="text-sm font-bold text-primary">Chủ đề {topicIndex + 1}</span>
+              <span className="text-sm font-bold text-primary">{t("learn.path.topic", { index: topicIndex + 1 })}</span>
               <h3 className="mt-1 text-xl font-extrabold">{topic.title}</h3>
             </div>
-            <span className="text-xs font-bold text-muted-foreground">{topic.lessons.length} bài học</span>
+            <span className="text-xs font-bold text-muted-foreground">{t("learn.path.lessonsCount", { count: topic.lessons.length })}</span>
           </div>
           <div className="relative grid gap-3">
             <div className="absolute bottom-5 left-4 top-5 w-px bg-border" />
@@ -205,8 +205,8 @@ export default function LessonPath({
 
       <section className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
         <div className="mb-5">
-          <span className="text-sm font-bold text-primary">Kiểm tra cuối cấp</span>
-          <h3 className="mt-1 text-xl font-extrabold">Mốc năng lực</h3>
+          <span className="text-sm font-bold text-primary">{t("learn.path.finalTest")}</span>
+          <h3 className="mt-1 text-xl font-extrabold">{t("learn.path.milestone")}</h3>
         </div>
         <div className="relative">
           {renderLesson(

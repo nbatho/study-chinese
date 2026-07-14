@@ -23,6 +23,7 @@ import {
 import type { CefrLevel } from "../../api/users";
 import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
+import type { TranslationKey } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
@@ -219,7 +220,11 @@ export default function Dictionary() {
             }}
             options={[
               { value: "all", label: t("dictionary.allCategories") },
-              ...categories.map((category) => ({ value: category, label: category })),
+              ...categories.map((category) => {
+                const key = `wordCategory.${category}` as TranslationKey;
+                const label = t(key);
+                return { value: category, label: label === key ? category : label };
+              }),
             ]}
             align="left"
             className="min-w-0"

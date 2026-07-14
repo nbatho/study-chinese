@@ -8,6 +8,8 @@ import type { PlacementQuestion, PlacementResult, PlacementSection } from "../..
 import type { CefrLevel, SkillLevel } from "../../api/users";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
+import { useI18n } from "../../i18n";
+import type { TranslationKey } from "../../i18n";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -28,10 +30,10 @@ const PASS_LEVEL_ACCURACY = 2 / 3;
 const ADVANCE_LEVEL_ACCURACY = 2 / 3;
 const EMPTY_PLACEMENT_QUESTIONS: PlacementQuestion[] = [];
 
-const sectionLabels: Record<PlacementSection, string> = {
-  vocabulary: "Vocabulary",
-  grammar: "Grammar",
-  reading: "Reading",
+const sectionKeys: Record<PlacementSection, TranslationKey> = {
+  vocabulary: "placement.sectionVocabulary",
+  grammar: "placement.sectionGrammar",
+  reading: "placement.sectionReading",
 };
 
 const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
@@ -43,22 +45,22 @@ const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
   C2: "mastery",
 };
 
-const startLevelLabels: Record<SkillLevel, string> = {
-  beginner: "mới bắt đầu",
-  elementary: "sơ cấp",
-  intermediate: "trung cấp",
-  upper_intermediate: "trung cấp cao",
-  advanced: "nâng cao",
-  mastery: "thành thạo",
+const startLevelKeys: Record<SkillLevel, TranslationKey> = {
+  beginner: "placement.levelBeginner",
+  elementary: "placement.levelElementary",
+  intermediate: "placement.levelIntermediate",
+  upper_intermediate: "placement.levelUpperIntermediate",
+  advanced: "placement.levelAdvanced",
+  mastery: "placement.levelMastery",
 };
 
-const cefrDescriptions: Record<CefrLevel, string> = {
-  A1: "Start with HSK 1 foundations: greetings, numbers, simple self-introduction.",
-  A2: "HSK 1 stays open for review, and HSK 2 becomes your main path.",
-  B1: "You can work through the full current HSK 1-3 curriculum.",
-  B2: "Current lessons are open; early HSK lessons are best used as optional review.",
-  C1: "Current lessons are open; use the app for review and targeted practice.",
-  C2: "Current lessons are open; use the app for precision practice.",
+const cefrDescKeys: Record<CefrLevel, TranslationKey> = {
+  A1: "cefr.descA1",
+  A2: "cefr.descA2",
+  B1: "cefr.descB1",
+  B2: "cefr.descB2",
+  C1: "cefr.descC1",
+  C2: "cefr.descC2",
 };
 
 const calculatePlacementResult = (
@@ -159,6 +161,7 @@ interface PlacementTestProps {
 }
 
 export default function PlacementTest({ embedded = false, onComplete, onSkip }: PlacementTestProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const profileQuery = useUserProfileQuery(isAuthenticated && !embedded);
@@ -219,8 +222,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
     if (nextLevel) {
       setCurrentCeiling(nextLevel);
       setCurrentIndex(activeQuestions.length);
-      toast.success("Bài kiểm tra đã cập nhật theo trình độ hiện tại của bạn.", {
-        description: `Mức đang kiểm tra: ${nextLevel}`,
+      toast.success(t("placement.advancedToast"), {
+        description: t("placement.advancedDesc", { level: nextLevel }),
         duration: 5000,
       });
       return;
@@ -240,8 +243,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
     return (
       <LoginPromptCard
         icon={LockKeyhole}
-        title="Log in to take the entry test"
-        description="Your entry test result is saved to your profile so lessons can unlock at the right level."
+        title={t("placement.loginTitle")}
+        description={t("placement.loginBody")}
       />
     );
   }
@@ -256,9 +259,9 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
         <div className="app-page-header mb-5 flex items-center justify-between gap-3">
           <Button type="button" variant="ghost" onClick={() => navigate(-1)} className="rounded-xl">
             <ArrowLeft size={18} />
-            Back
+            {t("common.back")}
           </Button>
-          <Badge className="rounded-lg px-3 py-1">Kiểm tra đầu vào</Badge>
+          <Badge className="rounded-lg px-3 py-1">{t("placement.badge")}</Badge>
         </div>
       )}
 
@@ -268,37 +271,37 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
             <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-jade/10 text-jade">
               <CheckCircle2 size={28} />
             </div>
-            <p className="text-xs font-extrabold text-muted-foreground">Kết quả kiểm tra đầu vào</p>
+            <p className="text-xs font-extrabold text-muted-foreground">{t("placement.recommended")}</p>
             <h1 className="mt-1 text-4xl font-extrabold text-primary">{result.cefrLevel}</h1>
             <p className="mt-2 text-sm font-bold text-foreground">
-              Bạn đang ở mức {result.cefrLevel} - {startLevelLabels[result.startLevel]}.
+              {t("placement.resultLevel", { level: result.cefrLevel, label: t(startLevelKeys[result.startLevel]) })}
             </p>
             <p className="mx-auto mt-3 max-w-120 text-sm text-muted-foreground">
-              {cefrDescriptions[result.cefrLevel]}
+              {t(cefrDescKeys[result.cefrLevel])}
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {result.breakdown.map((item) => (
                 <div key={item.section} className="rounded-xl border bg-background p-4 text-left">
-                  <p className="text-xs font-extrabold text-muted-foreground">{sectionLabels[item.section]}</p>
+                  <p className="text-xs font-extrabold text-muted-foreground">{t(sectionKeys[item.section])}</p>
                   <p className="mt-2 text-2xl font-extrabold">{item.correct}/{item.total}</p>
-                  <p className="text-xs font-semibold text-muted-foreground">{item.score} weighted points</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("placement.weightedPoints", { score: item.score })}</p>
                 </div>
               ))}
             </div>
 
             <div className="mt-6 rounded-xl bg-secondary p-4 text-sm font-semibold text-muted-foreground">
-              Total score: <span className="text-foreground">{result.score}</span> · Correct answers:{" "}
+              {t("placement.totalScore")} <span className="text-foreground">{result.score}</span> · {t("placement.correctAnswers")}{" "}
               <span className="text-foreground">{result.correct}/{result.total}</span>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button type="button" variant="secondary" onClick={restart} className="rounded-xl">
                 <RotateCcw size={18} />
-                Retake
+                {t("placement.retake")}
               </Button>
               <Button type="button" onClick={() => navigate("/learn")} className="rounded-xl">
-                Bắt đầu học
+                {t("placement.startLearning")}
                 <ArrowRight size={18} />
               </Button>
             </div>
@@ -309,41 +312,41 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <ClipboardCheck className="text-primary" size={22} />
-                  <h1 className={cn("font-extrabold", embedded ? "text-xl" : "text-2xl")}>Kiểm tra đầu vào</h1>
+                  <h1 className={cn("font-extrabold", embedded ? "text-xl" : "text-2xl")}>{t("placement.title")}</h1>
                 </div>
                 <p className="max-w-150 text-sm text-muted-foreground">
-                  Answer short questions across vocabulary, grammar, and reading. The test will raise the level when your answers show you are ready.
+                  {t("placement.subtitle")}
                 </p>
               </div>
               {onSkip && (
                 <Button type="button" variant="ghost" onClick={onSkip} className="rounded-xl">
-                  Skip
+                  {t("placement.skip")}
                 </Button>
               )}
             </div>
 
             {questionsQuery.isLoading ? (
               <div className="rounded-xl bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
-                Loading questions...
+                {t("placement.loading")}
               </div>
             ) : !currentQuestion ? (
               <div className="rounded-xl bg-secondary p-6 text-center text-sm font-semibold text-muted-foreground">
-                No placement questions are available yet.
+                {t("placement.noQuestions")}
               </div>
             ) : (
               <>
                 <div className="mb-5 space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
-                    <span>Question {currentIndex + 1} of {activeQuestions.length}</span>
-                    <span>{answeredCount}/{activeQuestions.length} answered</span>
+                    <span>{t("placement.questionOf", { current: currentIndex + 1, total: activeQuestions.length })}</span>
+                    <span>{t("placement.answered", { count: answeredCount, total: activeQuestions.length })}</span>
                   </div>
                   <Progress value={progress} />
                 </div>
 
                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="rounded-lg">{sectionLabels[currentQuestion.section]}</Badge>
+                  <Badge variant="secondary" className="rounded-lg">{t(sectionKeys[currentQuestion.section])}</Badge>
                   <Badge className="rounded-lg">{currentQuestion.cefrLevel}</Badge>
-                  <Badge variant="secondary" className="rounded-lg">Mức đang kiểm tra {currentCeiling}</Badge>
+                  <Badge variant="secondary" className="rounded-lg">{t("placement.testingLevel", { level: currentCeiling })}</Badge>
                 </div>
 
                 <div className="rounded-xl border bg-background p-4">
@@ -380,7 +383,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                     disabled={currentIndex === 0 || submitMutation.isPending}
                     className="rounded-xl"
                   >
-                    Back
+                    {t("common.back")}
                   </Button>
                   <Button
                     type="button"
@@ -388,7 +391,7 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                     disabled={currentAnswer === null || currentAnswer === undefined || submitMutation.isPending}
                     className="rounded-xl"
                   >
-                    {submitMutation.isPending ? "Saving..." : currentIndex === activeQuestions.length - 1 ? "Continue" : "Next"}
+                    {submitMutation.isPending ? t("placement.saving") : currentIndex === activeQuestions.length - 1 ? t("common.continue") : t("placement.next")}
                     <ArrowRight size={18} />
                   </Button>
                 </div>

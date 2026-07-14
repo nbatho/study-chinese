@@ -10,6 +10,7 @@ export const mapWord = (row) => ({
   pinyin: row.pinyin,
   tones: row.tones || [],
   english: row.english,
+  englishVi: row.english_vi || null,
   partOfSpeech: row.part_of_speech,
   hskLevel: Number(row.hsk_level),
   cefrLevel: row.cefr_level || 'A1',

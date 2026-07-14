@@ -23,7 +23,7 @@ const PlacementTest = lazy(() => import("../pages/PlacementTest"));
 const Auth = lazy(() => import("../pages/Auth"));
 const AITutor = lazy(() => import("../pages/AITutor"));
 const Admin = lazy(() => import("../pages/Admin"));
-const Community = lazy(() => import("../pages/Community"));
+const Community = lazy(() => import("../pages/Community/Community"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const routes: RouteConfig[] = [

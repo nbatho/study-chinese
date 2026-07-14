@@ -2,22 +2,10 @@ import { useMemo, useState } from "react";
 import { BookOpen, Filter, Search, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DropdownSelect } from "../../components/ui/dropdown-select";
+import { useI18n } from "../../i18n";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 import { KANGXI_RADICALS, RADICAL_STROKE_COUNTS, type RadicalFrequency } from "./radicalCatalog";
-
-const frequencyOptions: Array<{ value: RadicalFrequency | "all"; label: string }> = [
-  { value: "all", label: "Tất cả mức phổ biến" },
-  { value: "high", label: "Rất hay gặp" },
-  { value: "medium", label: "Thường gặp" },
-  { value: "low", label: "Ít gặp hơn" },
-];
-
-const frequencyLabel: Record<RadicalFrequency, string> = {
-  high: "Rất hay gặp",
-  medium: "Thường gặp",
-  low: "Ít gặp",
-};
 
 const frequencyClass: Record<RadicalFrequency, string> = {
   high: "bg-primary/10 text-primary",
@@ -26,10 +14,24 @@ const frequencyClass: Record<RadicalFrequency, string> = {
 };
 
 export default function Radicals() {
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedStrokeCount, setSelectedStrokeCount] = useState<number | "all">("all");
   const [selectedFrequency, setSelectedFrequency] = useState<RadicalFrequency | "all">("all");
+
+  const frequencyOptions = useMemo<Array<{ value: RadicalFrequency | "all"; label: string }>>(() => [
+    { value: "all", label: t("radicals.allFrequency") },
+    { value: "high", label: t("radicals.frequencyHigh") },
+    { value: "medium", label: t("radicals.frequencyMedium") },
+    { value: "low", label: t("radicals.frequencyLow") },
+  ], [t]);
+
+  const frequencyLabel = useMemo<Record<RadicalFrequency, string>>(() => ({
+    high: t("radicals.frequencyHigh"),
+    medium: t("radicals.frequencyMedium"),
+    low: t("radicals.frequencyLow"),
+  }), [t]);
 
   const radicals = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -42,6 +44,7 @@ export default function Radicals() {
         radical.radical,
         radical.pinyin,
         radical.meaningVi,
+        radical.meaningEn,
         ...(radical.variants ?? []),
         ...radical.examples,
       ].join(" ").toLowerCase();
@@ -50,21 +53,24 @@ export default function Radicals() {
     });
   }, [query, selectedFrequency, selectedStrokeCount]);
 
+  const meaningOf = (radical: (typeof KANGXI_RADICALS)[number]) =>
+    language === "vi" ? radical.meaningVi : radical.meaningEn;
+
   return (
     <div className="app-page">
       <header className="app-page-header mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="text-left">
           <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
             <BookOpen size={17} />
-            214 bộ thủ Kangxi
+            {t("radicals.badge")}
           </div>
-          <h1 className="text-2xl font-extrabold sm:text-3xl">Học từ vựng theo bộ thủ</h1>
+          <h1 className="text-2xl font-extrabold sm:text-3xl">{t("radicals.title")}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Lọc theo số nét, tra nghĩa tiếng Việt, nghe cách đọc và mở nhanh các từ có cùng bộ thủ trong từ điển.
+            {t("radicals.subtitle")}
           </p>
         </div>
         <div className="rounded-xl border bg-background px-3 py-2 text-sm font-extrabold text-primary">
-          {radicals.length}/{KANGXI_RADICALS.length} bộ thủ
+          {t("radicals.count", { shown: radicals.length, total: KANGXI_RADICALS.length })}
         </div>
       </header>
 
@@ -75,18 +81,18 @@ export default function Radicals() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm bộ thủ, pinyin, nghĩa hoặc ví dụ..."
+              placeholder={t("radicals.searchPlaceholder")}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
             />
           </label>
           <DropdownSelect
-            label="Lọc theo số nét"
+            label={t("radicals.filterStrokes")}
             icon={<Filter size={16} />}
             value={String(selectedStrokeCount)}
             onChange={(value) => setSelectedStrokeCount(value === "all" ? "all" : Number(value))}
             options={[
-              { value: "all", label: "Tất cả số nét" },
-              ...RADICAL_STROKE_COUNTS.map((count) => ({ value: String(count), label: `${count} nét` })),
+              { value: "all", label: t("radicals.allStrokes") },
+              ...RADICAL_STROKE_COUNTS.map((count) => ({ value: String(count), label: t("radicals.strokeUnit", { count }) })),
             ]}
             align="left"
             className="min-w-0"
@@ -94,7 +100,7 @@ export default function Radicals() {
             menuClassName="w-full min-w-48"
           />
           <DropdownSelect
-            label="Lọc theo mức phổ biến"
+            label={t("radicals.filterFrequency")}
             icon={<Filter size={16} />}
             value={selectedFrequency}
             onChange={setSelectedFrequency}
@@ -110,8 +116,8 @@ export default function Radicals() {
       {radicals.length === 0 ? (
         <section className="app-surface px-5 py-10 text-center">
           <Search className="mx-auto mb-3 text-muted-foreground" size={36} />
-          <h3 className="font-extrabold">Không tìm thấy bộ thủ phù hợp</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Thử đổi từ khóa, số nét hoặc mức phổ biến.</p>
+          <h3 className="font-extrabold">{t("radicals.emptyTitle")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("radicals.emptyBody")}</p>
         </section>
       ) : (
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -124,8 +130,8 @@ export default function Radicals() {
                       {radical.radical}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-extrabold text-muted-foreground">#{radical.number} - {radical.strokeCount} nét</div>
-                      <h2 className="mt-1 text-lg font-extrabold">{radical.meaningVi}</h2>
+                      <div className="text-xs font-extrabold text-muted-foreground">{t("radicals.strokeInfo", { number: radical.number, count: radical.strokeCount })}</div>
+                      <h2 className="mt-1 text-lg font-extrabold">{meaningOf(radical)}</h2>
                       <p className="text-sm font-semibold text-muted-foreground">{radical.pinyin}</p>
                     </div>
                   </div>
@@ -133,8 +139,8 @@ export default function Radicals() {
                     type="button"
                     onClick={() => speakChinese(radical.radical)}
                     className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition hover:border-primary hover:text-primary"
-                    aria-label={`Nghe ${radical.radical}`}
-                    title={`Nghe ${radical.radical}`}
+                    aria-label={t("radicals.listenAria", { char: radical.radical })}
+                    title={t("radicals.listenAria", { char: radical.radical })}
                   >
                     <Volume2 size={17} />
                   </button>
@@ -165,7 +171,7 @@ export default function Radicals() {
                 onClick={() => navigate(`/dictionary?radical=${encodeURIComponent(radical.radical)}`)}
                 className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
               >
-                Mở từ cùng bộ thủ
+                {t("radicals.openWords")}
               </button>
             </article>
           ))}

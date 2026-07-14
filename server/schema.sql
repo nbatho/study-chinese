@@ -180,6 +180,7 @@ ALTER TABLE words ADD COLUMN IF NOT EXISTS is_variant BOOLEAN DEFAULT false;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS level_sources JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS all_forms JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS classifiers TEXT[] DEFAULT '{}';
+ALTER TABLE words ADD COLUMN IF NOT EXISTS english_vi TEXT;
 ALTER TABLE words DROP CONSTRAINT IF EXISTS words_part_of_speech_check;
 ALTER TABLE words ADD CONSTRAINT words_part_of_speech_check
   CHECK (part_of_speech IN (
@@ -511,6 +512,9 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   token_usage JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE chat_scenarios ADD COLUMN IF NOT EXISTS init_msg_vi TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS vietnamese TEXT;
 
 CREATE TABLE IF NOT EXISTS daily_phrases (
   id SERIAL PRIMARY KEY,

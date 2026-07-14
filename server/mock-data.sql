@@ -134,6 +134,117 @@ DO UPDATE SET release_id = EXCLUDED.release_id,
               search_text = EXCLUDED.search_text,
               is_active = true;
 
+-- Vietnamese glosses for the seed vocabulary. Review (SRS) and Dictionary show
+-- these when the UI language is Vietnamese, falling back to `english` otherwise.
+-- Backfill the full imported dictionary with: node server/scripts/translate-word-glosses.mjs
+UPDATE words AS w
+SET english_vi = v.vi, updated_at = now()
+FROM (VALUES
+  ('wd_hello', 'xin chào'),
+  ('wd_goodbye', 'tạm biệt'),
+  ('wd_thankyou', 'cảm ơn'),
+  ('wd_youre_welcome', 'không có chi'),
+  ('wd_sorry', 'xin lỗi'),
+  ('wd_no_problem', 'không sao / không có gì'),
+  ('wd_i', 'tôi / mình'),
+  ('wd_you', 'bạn'),
+  ('wd_you_formal', 'ngài (bạn - trang trọng)'),
+  ('wd_one', 'một'),
+  ('wd_two', 'hai'),
+  ('wd_three', 'ba'),
+  ('wd_four', 'bốn'),
+  ('wd_water', 'nước'),
+  ('wd_tea', 'trà'),
+  ('wd_coffee', 'cà phê'),
+  ('wd_drink', 'uống'),
+  ('wd_eat', 'ăn'),
+  ('wd_china', 'Trung Quốc'),
+  ('wd_station', 'ga / trạm'),
+  ('wd_name', 'tên'),
+  ('wd_called', 'được gọi là / tên là'),
+  ('wd_chinese', 'tiếng Trung'),
+  ('wd_five', 'năm'),
+  ('wd_six', 'sáu'),
+  ('wd_seven', 'bảy'),
+  ('wd_eight', 'tám'),
+  ('wd_nine', 'chín'),
+  ('wd_ten', 'mười'),
+  ('wd_dad', 'bố'),
+  ('wd_mom', 'mẹ'),
+  ('wd_older_brother', 'anh trai'),
+  ('wd_older_sister', 'chị gái'),
+  ('wd_younger_brother', 'em trai'),
+  ('wd_younger_sister', 'em gái'),
+  ('wd_friend', 'bạn bè'),
+  ('wd_yes', 'phải / là'),
+  ('wd_no', 'không'),
+  ('wd_student', 'học sinh'),
+  ('wd_teacher', 'giáo viên'),
+  ('wd_doctor', 'bác sĩ'),
+  ('wd_rice', 'cơm'),
+  ('wd_noodles', 'mì'),
+  ('wd_apple', 'táo'),
+  ('wd_how_much', 'bao nhiêu'),
+  ('wd_money', 'tiền'),
+  ('wd_yuan', 'nhân dân tệ (đồng)'),
+  ('wd_kuai', 'tệ (đồng, khẩu ngữ)'),
+  ('wd_buy', 'mua'),
+  ('wd_sell', 'bán'),
+  ('wd_today', 'hôm nay'),
+  ('wd_yesterday', 'hôm qua'),
+  ('wd_tomorrow', 'ngày mai'),
+  ('wd_morning', 'buổi sáng'),
+  ('wd_afternoon', 'buổi chiều'),
+  ('wd_evening', 'buổi tối'),
+  ('wd_now', 'bây giờ'),
+  ('wd_week', 'tuần'),
+  ('wd_go', 'đi'),
+  ('wd_school', 'trường học'),
+  ('wd_bus', 'xe buýt'),
+  ('wd_taxi', 'taxi'),
+  ('wd_train', 'tàu hỏa'),
+  ('wd_airport', 'sân bay'),
+  ('wd_subway', 'tàu điện ngầm'),
+  ('wd_left_turn', 'rẽ trái'),
+  ('wd_right_turn', 'rẽ phải'),
+  ('wd_straight', 'đi thẳng'),
+  ('wd_delicious', 'ngon'),
+  ('wd_spicy', 'cay'),
+  ('wd_beef', 'thịt bò'),
+  ('wd_chicken', 'thịt gà'),
+  ('wd_suggest', 'đề nghị / gợi ý'),
+  ('wd_decide', 'quyết định'),
+  ('wd_help', 'giúp đỡ'),
+  ('wd_big', 'to / lớn'),
+  ('wd_small', 'nhỏ'),
+  ('wd_good', 'tốt'),
+  ('wd_expensive', 'đắt'),
+  ('wd_meeting', 'cuộc họp'),
+  ('wd_schedule', 'lịch trình'),
+  ('wd_contract', 'hợp đồng'),
+  ('wd_opportunity', 'cơ hội'),
+  ('wd_experience', 'kinh nghiệm'),
+  ('wd_practice', 'luyện tập / bài tập'),
+  ('wd_exam', 'kỳ thi'),
+  ('wd_homework', 'bài tập về nhà'),
+  ('wd_library', 'thư viện'),
+  ('wd_difficult', 'khó'),
+  ('wd_easy', 'dễ'),
+  ('wd_important', 'quan trọng'),
+  ('wd_culture', 'văn hóa'),
+  ('wd_history', 'lịch sử'),
+  ('wd_environment', 'môi trường'),
+  ('wd_future', 'tương lai'),
+  ('wd_memory', 'ký ức'),
+  ('wd_opinion', 'ý kiến'),
+  ('wd_remember', 'nhớ'),
+  ('wd_forget', 'quên'),
+  ('wd_interesting', 'thú vị'),
+  ('wd_boring', 'nhàm chán'),
+  ('wd_feel', 'cảm thấy / nghĩ rằng')
+) AS v(id, vi)
+WHERE w.id = v.id;
+
 INSERT INTO lessons (
   id, release_id, title, subtitle, hsk_level, order_num, skill,
   estimated_minutes, xp_reward, intro, dialogue
@@ -699,12 +810,12 @@ DO UPDATE SET title = EXCLUDED.title,
               is_active = true;
 
 INSERT INTO chat_scenarios (
-  id, title, emoji, description, init_msg_simplified, init_msg_pinyin, init_msg_english
+  id, title, emoji, description, init_msg_simplified, init_msg_pinyin, init_msg_english, init_msg_vi
 )
 VALUES
-('general', 'Free Talk', '💬', 'Practice conversational Chinese on any topic with Xiao Hong.', '你好！很高兴认识你。我们今天聊点什么？', 'Nǐ hǎo! Hěn gāoxìng rènshí nǐ. Wǒmen jīntiān liáo diǎn shénme?', 'Hello! Nice to meet you. What shall we talk about today?'),
-('cafe', 'At the Coffee Shop', '☕', 'Practice ordering coffee, tea, and juice in Chinese.', '欢迎光临！请问您要喝点什么？我们有咖啡、茶和果汁。', 'Huānyíng guānglín! Qǐngwèn nín yào hē diǎn shénme? Wǒmen yǒu kāfēi, chá hé guǒzhī.', 'Welcome! What would you like to drink? We have coffee, tea and juice.'),
-('directions', 'Asking Directions', '🧭', 'Practice finding your way around town to the station or airport.', '你好！请问地铁站怎么走？', 'Nǐ hǎo! Qǐngwèn dìtiězhàn zěnme zǒu?', 'Hello! Excuse me, how do I get to the subway station?')
+('general', 'Free Talk', '💬', 'Practice conversational Chinese on any topic with Xiao Hong.', '你好！很高兴认识你。我们今天聊点什么？', 'Nǐ hǎo! Hěn gāoxìng rènshí nǐ. Wǒmen jīntiān liáo diǎn shénme?', 'Hello! Nice to meet you. What shall we talk about today?', 'Xin chào! Rất vui được gặp bạn. Hôm nay chúng ta trò chuyện về chủ đề gì nhỉ?'),
+('cafe', 'At the Coffee Shop', '☕', 'Practice ordering coffee, tea, and juice in Chinese.', '欢迎光临！请问您要喝点什么？我们有咖啡、茶和果汁。', 'Huānyíng guānglín! Qǐngwèn nín yào hē diǎn shénme? Wǒmen yǒu kāfēi, chá hé guǒzhī.', 'Welcome! What would you like to drink? We have coffee, tea and juice.', 'Chào mừng quý khách! Bạn muốn uống gì ạ? Chúng tôi có cà phê, trà và nước ép.'),
+('directions', 'Asking Directions', '🧭', 'Practice finding your way around town to the station or airport.', '你好！请问地铁站怎么走？', 'Nǐ hǎo! Qǐngwèn dìtiězhàn zěnme zǒu?', 'Hello! Excuse me, how do I get to the subway station?', 'Xin chào! Cho hỏi ga tàu điện ngầm đi đường nào ạ?')
 ON CONFLICT (id)
 DO UPDATE SET title = EXCLUDED.title,
               emoji = EXCLUDED.emoji,
@@ -712,15 +823,16 @@ DO UPDATE SET title = EXCLUDED.title,
               init_msg_simplified = EXCLUDED.init_msg_simplified,
               init_msg_pinyin = EXCLUDED.init_msg_pinyin,
               init_msg_english = EXCLUDED.init_msg_english,
+              init_msg_vi = EXCLUDED.init_msg_vi,
               is_active = true;
 
 INSERT INTO chat_scenarios (
-  id, title, emoji, description, init_msg_simplified, init_msg_pinyin, init_msg_english
+  id, title, emoji, description, init_msg_simplified, init_msg_pinyin, init_msg_english, init_msg_vi
 )
 VALUES
-('personal-weak', 'Luyen diem yeu', U&'\+01F3AF', 'Hoi thoai dung cac tu va ky nang ban hay sai.', '我们来练习你的难点吧。', 'Wǒmen lái liànxí nǐ de nándiǎn ba.', 'Let us practice your weak spots.'),
-('personal-list', 'Luyen tu trong list', U&'\+01F4CB', 'AI Tutor uu tien tu vung trong danh sach ban luu gan day.', '请用你保存的词说一句话。', 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.', 'Please make a sentence with a word you saved.'),
-('personal-lesson', 'On bai vua hoc', U&'\+01F9E0', 'Luyen hoi thoai xoay quanh bai hoc gan nhat.', '我们复习你刚学的内容。', 'Wǒmen fùxí nǐ gāng xué de nèiróng.', 'Let us review what you just learned.')
+('personal-weak', 'Luyện điểm yếu', U&'\+01F3AF', 'Hội thoại dùng các từ và kỹ năng bạn hay sai.', '我们来练习你的难点吧。', 'Wǒmen lái liànxí nǐ de nándiǎn ba.', 'Let us practice your weak spots.', 'Chúng ta cùng luyện những điểm khó của bạn nhé.'),
+('personal-list', 'Luyện từ trong list', U&'\+01F4CB', 'AI Tutor ưu tiên từ vựng trong danh sách bạn lưu gần đây.', '请用你保存的词说一句话。', 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.', 'Please make a sentence with a word you saved.', 'Hãy dùng một từ bạn đã lưu để đặt một câu.'),
+('personal-lesson', 'Ôn bài vừa học', U&'\+01F9E0', 'Luyện hội thoại xoay quanh bài học gần nhất.', '我们复习你刚学的内容。', 'Wǒmen fùxí nǐ gāng xué de nèiróng.', 'Let us review what you just learned.', 'Chúng ta cùng ôn lại nội dung bạn vừa học.')
 ON CONFLICT (id)
 DO UPDATE SET title = EXCLUDED.title,
               emoji = EXCLUDED.emoji,
@@ -728,6 +840,7 @@ DO UPDATE SET title = EXCLUDED.title,
               init_msg_simplified = EXCLUDED.init_msg_simplified,
               init_msg_pinyin = EXCLUDED.init_msg_pinyin,
               init_msg_english = EXCLUDED.init_msg_english,
+              init_msg_vi = EXCLUDED.init_msg_vi,
               is_active = true;
 
 INSERT INTO practice_minimal_pairs (

@@ -5,6 +5,7 @@ export interface SrsDueCard {
     simplified: string;
     pinyin: string;
     english: string;
+    englishVi?: string | null;
     dueCardDetails: {
         easeFactor: number;
         intervalDays: number;

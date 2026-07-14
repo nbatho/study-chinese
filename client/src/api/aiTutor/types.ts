@@ -10,6 +10,7 @@ export interface ChatScenario {
         simplified: string;
         pinyin: string;
         english: string;
+        vietnamese?: string | null;
     };
 }
 
@@ -19,6 +20,7 @@ export interface ChatMessage {
     simplified: string;
     pinyin?: string | null;
     english?: string | null;
+    vietnamese?: string | null;
     correction?: {
         original: string;
         improved: string;

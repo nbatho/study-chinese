@@ -26,6 +26,7 @@ const mapDueCard = (row) => ({
   simplified: row.simplified,
   pinyin: row.pinyin,
   english: row.english,
+  englishVi: row.english_vi || null,
   dueCardDetails: {
     easeFactor: Number(row.ease_factor),
     intervalDays: Number(row.interval_days),
@@ -94,7 +95,7 @@ export const getDueCards = async (userId, limit = 20) => {
   const normalizedLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
   const result = await query(
     `
-      SELECT sc.*, w.simplified, w.pinyin, w.english
+      SELECT sc.*, w.simplified, w.pinyin, w.english, w.english_vi
       FROM srs_cards sc
       JOIN words w ON w.id = sc.word_id
       WHERE sc.user_id = $1

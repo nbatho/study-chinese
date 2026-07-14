@@ -15,7 +15,8 @@ const mapScenario = (row) => ({
   initialMessage: {
     simplified: row.init_msg_simplified,
     pinyin: row.init_msg_pinyin,
-    english: row.init_msg_english
+    english: row.init_msg_english,
+    vietnamese: row.init_msg_vi
   }
 });
 
@@ -25,6 +26,7 @@ const mapMessage = (row) => ({
   simplified: row.normalized_simplified || row.raw_text,
   pinyin: row.pinyin,
   english: row.english,
+  vietnamese: row.vietnamese,
   correction: row.correction
 });
 
@@ -166,16 +168,18 @@ export const startChatSession = async (userId, { scenarioId } = {}) =>
           raw_text,
           normalized_simplified,
           pinyin,
-          english
+          english,
+          vietnamese
         )
-        VALUES ($1, 'tutor', $2, $2, $3, $4)
+        VALUES ($1, 'tutor', $2, $2, $3, $4, $5)
         RETURNING *
       `,
       [
         sessionResult.rows[0].id,
         scenario.init_msg_simplified,
         scenario.init_msg_pinyin,
-        scenario.init_msg_english
+        scenario.init_msg_english,
+        scenario.init_msg_vi
       ]
     );
 
@@ -283,11 +287,12 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
           normalized_simplified,
           pinyin,
           english,
+          vietnamese,
           correction,
           model_name,
           token_usage
         )
-        VALUES ($1, 'tutor', $2, $2, $3, $4, $5, $6, $7)
+        VALUES ($1, 'tutor', $2, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
       `,
       [
@@ -295,6 +300,7 @@ export const sendChatMessage = async (userId, sessionId, { text }) => {
         reply.rawText,
         reply.pinyin,
         reply.english,
+        reply.vietnamese,
         reply.correction ? JSON.stringify(reply.correction) : null,
         reply.modelName,
         reply.tokenUsage ? JSON.stringify(reply.tokenUsage) : null

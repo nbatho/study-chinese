@@ -148,7 +148,7 @@ export default function Translate() {
     setDetectedText(response.detectedText || payload.text || "");
 
     if (!response.detectedText && response.boxes.length === 0) {
-      toast.info("Không nhận diện được chữ trong nội dung này.");
+      toast.info(t("translate.toastNoDetected"));
     }
   };
 
@@ -156,7 +156,7 @@ export default function Translate() {
     const text = sourceText.trim();
 
     if (!text) {
-      toast.info("Nhập tiếng Trung trước khi dịch.");
+      toast.info(t("translate.toastInputRequired"));
       return;
     }
 
@@ -166,7 +166,7 @@ export default function Translate() {
     try {
       await runScan({ text });
     } catch {
-      toast.error("Không thể dịch văn bản này. Hãy thử lại.");
+      toast.error(t("translate.toastTranslateError"));
     }
   };
 
@@ -197,7 +197,7 @@ export default function Translate() {
     try {
       await runScan({ image });
     } catch {
-      toast.error("Không thể quét OCR ảnh này. Hãy thử ảnh khác.");
+      toast.error(t("translate.toastScanError"));
     }
   };
 
@@ -205,7 +205,7 @@ export default function Translate() {
     const image = captureCameraFrame();
 
     if (!image) {
-      toast.error("Camera chưa sẵn sàng. Hãy thử lại hoặc tải ảnh lên.");
+      toast.error(t("translate.toastCameraNotReady"));
       return;
     }
 
@@ -230,7 +230,7 @@ export default function Translate() {
       }
       setCameraActive(true);
     } catch {
-      toast.error("Không thể mở camera. Bạn có thể tải ảnh lên thay thế.");
+      toast.error(t("translate.toastCameraError"));
     }
   };
 
@@ -272,7 +272,7 @@ export default function Translate() {
     if (!translatedText) return;
 
     await navigator.clipboard.writeText(translatedText);
-    toast.success("Đã sao chép bản dịch.");
+    toast.success(t("translate.toastCopied"));
   };
 
   const createOcrList = async () => {
@@ -281,27 +281,31 @@ export default function Translate() {
       emoji: "OCR",
     });
     setSelectedOcrListId(response.list.id);
-    toast.success("Đã tạo danh sách OCR.");
+    toast.success(t("translate.toastListCreated"));
   };
 
   const saveSegmentToList = async (segment: OcrSegment) => {
     if (!activeOcrListId) {
-      toast.info("Chọn hoặc tạo danh sách trước.");
+      toast.info(t("translate.toastSelectList"));
       return;
     }
 
     await addWordMutation.mutateAsync(toLearningPayload(segment));
-    toast.success(`Đã lưu "${segment.text}" vào danh sách.`);
+    toast.success(t("translate.toastSaved", { word: segment.text }));
   };
 
   const saveSegmentToSrs = async (segment: OcrSegment) => {
     const response = await enrollMutation.mutateAsync(toLearningPayload(segment));
-    toast.success(response.enrolled ? `Đã thêm "${segment.text}" vào ôn tập.` : `"${segment.text}" đã có trong ôn tập.`);
+    toast.success(
+      response.enrolled
+        ? t("translate.toastSrsAdded", { word: segment.text })
+        : t("translate.toastSrsExists", { word: segment.text }),
+    );
   };
 
   const saveActiveSegmentsToList = async () => {
     if (!activeOcrListId) {
-      toast.info("Chọn hoặc tạo danh sách trước.");
+      toast.info(t("translate.toastSelectList"));
       return;
     }
 
@@ -339,7 +343,7 @@ export default function Translate() {
       },
     });
     setEditingHistoryId(null);
-    toast.success("Đã lưu ghi chú OCR.");
+    toast.success(t("translate.toastNoteSaved"));
   };
 
   const toggleHistoryFavorite = async (event: OcrHistoryEvent) => {
@@ -350,7 +354,7 @@ export default function Translate() {
   };
 
   const deleteHistoryEvent = async (event: OcrHistoryEvent) => {
-    const confirmed = window.confirm("Xóa mục lịch sử OCR này?");
+    const confirmed = window.confirm(t("translate.toastDeleteConfirm"));
 
     if (!confirmed) return;
 
@@ -360,17 +364,17 @@ export default function Translate() {
       setEditingHistoryId(null);
     }
 
-    toast.success("Đã xóa mục lịch sử OCR.");
+    toast.success(t("translate.toastDeleted"));
   };
 
   const clearHistory = async () => {
-    const confirmed = window.confirm("Xóa toàn bộ lịch sử OCR của bạn?");
+    const confirmed = window.confirm(t("translate.toastClearConfirm"));
 
     if (!confirmed) return;
 
     const response = await clearOcrHistoryMutation.mutateAsync();
     setEditingHistoryId(null);
-    toast.success(`Đã xóa ${response.deletedCount} mục lịch sử OCR.`);
+    toast.success(t("translate.toastCleared", { count: response.deletedCount }));
   };
 
   useEffect(() => () => stopCamera(), []);
@@ -381,10 +385,10 @@ export default function Translate() {
         <div className="text-left">
           <div className="mb-2 flex items-center gap-2">
             <Languages size={24} className="text-primary" />
-            <h1 className="text-2xl font-extrabold">Dịch tiếng Trung</h1>
+            <h1 className="text-2xl font-extrabold">{t("translate.title")}</h1>
           </div>
           <p className="max-w-2xl text-[0.9rem] text-muted-foreground">
-            Nhập văn bản hoặc quét chữ bằng camera/OCR để lấy pinyin và nghĩa từ vựng.
+            {t("translate.subtitle")}
           </p>
         </div>
 
@@ -396,7 +400,7 @@ export default function Translate() {
             className="rounded-lg"
           >
             <Languages size={16} />
-            Văn bản
+            {t("translate.textTab")}
           </Button>
           <Button
             type="button"
@@ -405,7 +409,7 @@ export default function Translate() {
             className="rounded-lg"
           >
             <Camera size={16} />
-            OCR
+            {t("translate.ocrTab")}
           </Button>
         </div>
       </header>
@@ -414,9 +418,9 @@ export default function Translate() {
         <section className="app-surface-padded text-left">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-extrabold">Nguồn tiếng Trung</h2>
+              <h2 className="text-base font-extrabold">{t("translate.sourceTitle")}</h2>
               <p className="text-xs text-muted-foreground">
-                {mode === "text" ? "Gõ hoặc dán chữ cần dịch." : "Quét trực tiếp hoặc tải ảnh có chữ Trung."}
+                {mode === "text" ? t("translate.sourceTextHint") : t("translate.sourceCameraHint")}
               </p>
             </div>
             {currentSourceText && (
@@ -425,8 +429,8 @@ export default function Translate() {
                 variant="outline"
                 size="icon"
                 onClick={() => speakChinese(currentSourceText)}
-                aria-label="Nghe tiếng Trung"
-                title="Nghe tiếng Trung"
+                aria-label={t("translate.listenAria")}
+                title={t("translate.listenAria")}
               >
                 <Volume2 size={18} />
               </Button>
@@ -438,7 +442,7 @@ export default function Translate() {
               <textarea
                 value={sourceText}
                 onChange={(event) => setSourceText(event.target.value)}
-                placeholder="Ví dụ: 你好，我想喝茶。"
+                placeholder={t("translate.placeholder")}
                 className="min-h-55 resize-y rounded-xl border bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -456,11 +460,11 @@ export default function Translate() {
                   disabled={loading}
                 >
                   <X size={16} />
-                  Xóa
+                  {t("translate.clear")}
                 </Button>
                 <Button type="button" onClick={translateText} disabled={loading || !sourceText.trim()}>
                   {loading ? <Loader2 className="animate-spin" size={16} /> : <Languages size={16} />}
-                  Dịch
+                  {t("translate.translate")}
                 </Button>
               </div>
             </div>
@@ -472,7 +476,7 @@ export default function Translate() {
               <div>
                 <h3 className="text-base font-extrabold">{t("loginPrompt.translateTitle")}</h3>
                 <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                  Quét OCR bằng camera/ảnh cần đăng nhập. Bạn vẫn có thể dịch văn bản mà không cần tài khoản.
+                  {t("translate.ocrLoginHint")}
                 </p>
               </div>
               <Button type="button" onClick={() => navigate("/auth")}>
@@ -486,7 +490,7 @@ export default function Translate() {
                 {loading && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/45 text-white">
                     <RefreshCw className="recording-pulse" size={36} />
-                    <span className="text-sm font-bold">Đang chạy OCR...</span>
+                    <span className="text-sm font-bold">{t("translate.ocrRunning")}</span>
                   </div>
                 )}
 
@@ -501,7 +505,7 @@ export default function Translate() {
                 {!cameraActive && !imagePreview && (
                   <div className="px-6 text-center text-white/50">
                     <FileImage size={48} className="mx-auto mb-3" />
-                    <p className="text-sm font-semibold">Mở camera hoặc tải ảnh để OCR.</p>
+                    <p className="text-sm font-semibold">{t("translate.cameraPlaceholder")}</p>
                   </div>
                 )}
 
@@ -535,17 +539,17 @@ export default function Translate() {
                 {!cameraActive ? (
                   <Button type="button" onClick={startCamera} disabled={loading}>
                     <Camera size={16} />
-                    Mở camera
+                    {t("translate.openCamera")}
                   </Button>
                 ) : (
                   <Button type="button" onClick={scanCameraFrame} disabled={loading}>
                     <ScanLine size={16} />
-                    Quét
+                    {t("translate.scan")}
                   </Button>
                 )}
                 <Button type="button" variant="outline" onClick={stopCamera} disabled={!cameraActive}>
                   <X size={16} />
-                  Tắt
+                  {t("translate.stopCamera")}
                 </Button>
                 <Button
                   type="button"
@@ -554,7 +558,7 @@ export default function Translate() {
                   disabled={loading}
                 >
                   <Upload size={16} />
-                  Tải ảnh
+                  {t("translate.uploadImage")}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -571,9 +575,9 @@ export default function Translate() {
         <section className="app-surface-padded text-left">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-extrabold">Kết quả dịch</h2>
+              <h2 className="text-base font-extrabold">{t("translate.resultTitle")}</h2>
               <p className="text-xs text-muted-foreground">
-                Chọn từng cụm OCR để xem nghĩa riêng hoặc để trống để ghép toàn bộ.
+                {t("translate.resultHint")}
               </p>
             </div>
             <Button
@@ -582,8 +586,8 @@ export default function Translate() {
               size="icon"
               onClick={copyTranslation}
               disabled={!translatedText}
-              aria-label="Sao chép bản dịch"
-              title="Sao chép bản dịch"
+              aria-label={t("translate.copyAria")}
+              title={t("translate.copyAria")}
             >
               <Clipboard size={18} />
             </Button>
@@ -593,7 +597,7 @@ export default function Translate() {
             {loading ? (
               <div className="flex h-29 items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
                 <Loader2 className="animate-spin" size={18} />
-                Đang xử lý...
+                {t("translate.processing")}
               </div>
             ) : translatedText ? (
               <div>
@@ -602,25 +606,25 @@ export default function Translate() {
               </div>
             ) : (
               <div className="flex h-29 items-center justify-center text-center text-sm font-semibold text-muted-foreground">
-                Kết quả sẽ xuất hiện sau khi bạn dịch văn bản hoặc quét OCR.
+                {t("translate.resultEmpty")}
               </div>
             )}
           </div>
 
           {detectedText && (
             <div className="mb-4 rounded-xl border bg-secondary/60 p-3">
-              <h3 className="mb-1 text-xs font-bold text-muted-foreground">Văn bản nhận diện</h3>
+              <h3 className="mb-1 text-xs font-bold text-muted-foreground">{t("translate.detectedText")}</h3>
               <p className="break-words font-serif text-2xl font-extrabold">{detectedText}</p>
             </div>
           )}
 
           {selectedBox && (
             <div className="mb-4 rounded-xl border border-jade/30 bg-jade/10 p-3">
-              <h3 className="mb-1 text-xs font-bold text-jade">Vùng đang chọn</h3>
+              <h3 className="mb-1 text-xs font-bold text-jade">{t("translate.selectedBox")}</h3>
               <p className="font-serif text-3xl font-extrabold">{selectedBox.text}</p>
               {selectedBox.pinyin && <p className="mt-1 text-sm font-bold text-primary">{selectedBox.pinyin}</p>}
               <p className="mt-2 text-sm font-semibold">
-                {selectedBox.english || "Chưa có nghĩa từ điển cho vùng này."}
+                {selectedBox.english || t("translate.noBoxMeaning")}
               </p>
             </div>
           )}
@@ -628,14 +632,14 @@ export default function Translate() {
           {segments.length > 0 && (
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
-                <h3 className="text-xs font-bold text-muted-foreground">Từ/cụm đã tách</h3>
+                <h3 className="text-xs font-bold text-muted-foreground">{t("translate.segments")}</h3>
                 {selectedSegmentIds.length > 0 && (
                   <button
                     type="button"
                     className="text-xs font-bold text-primary"
                     onClick={() => setSelectedSegmentIds([])}
                   >
-                    Bỏ chọn
+                    {t("translate.clearSegments")}
                   </button>
                 )}
               </div>
@@ -647,7 +651,7 @@ export default function Translate() {
                     onChange={(event) => setSelectedOcrListId(event.target.value)}
                     className="min-w-0 rounded-xl border bg-card px-3 py-2 text-sm font-semibold outline-none"
                   >
-                    <option value="">Chọn danh sách</option>
+                    <option value="">{t("translate.selectList")}</option>
                     {lists.map((list) => (
                       <option key={list.id} value={list.id}>
                         {list.name} ({list.wordIds.length})
@@ -661,13 +665,13 @@ export default function Translate() {
                     disabled={createListMutation.isPending}
                   >
                     <ListPlus size={16} />
-                    Tạo danh sách
+                    {t("translate.createList")}
                   </Button>
                 </div>
                 <input
                   value={newOcrListName}
                   onChange={(event) => setNewOcrListName(event.target.value)}
-                  placeholder="Tên danh sách OCR"
+                  placeholder={t("translate.ocrListPlaceholder")}
                   className="rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 />
                 <div className="grid grid-cols-2 gap-2">
@@ -678,7 +682,7 @@ export default function Translate() {
                     disabled={!activeOcrListId || addWordMutation.isPending}
                   >
                     <ListPlus size={16} />
-                    Lưu danh sách
+                    {t("translate.saveToList")}
                   </Button>
                   <Button
                     type="button"
@@ -687,7 +691,7 @@ export default function Translate() {
                     disabled={enrollMutation.isPending}
                   >
                     <BookmarkPlus size={16} />
-                    Thêm SRS
+                    {t("translate.addSrs")}
                   </Button>
                 </div>
               </div>
@@ -735,7 +739,7 @@ export default function Translate() {
           {isAuthenticated && (
           <div className="mt-6 border-t pt-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xs font-bold text-muted-foreground">Lịch sử OCR</h3>
+              <h3 className="text-xs font-bold text-muted-foreground">{t("translate.historyTitle")}</h3>
               <div className="flex items-center gap-2">
                 {ocrHistoryQuery.isFetching && <Loader2 className="animate-spin text-muted-foreground" size={14} />}
                 {historyEvents.length > 0 && (
@@ -747,7 +751,7 @@ export default function Translate() {
                     disabled={clearOcrHistoryMutation.isPending || deleteOcrHistoryMutation.isPending}
                   >
                     <Trash2 size={15} />
-                    Xóa tất cả
+                    {t("translate.clearAll")}
                   </Button>
                 )}
               </div>
@@ -758,7 +762,7 @@ export default function Translate() {
                 <input
                   value={historyKeyword}
                   onChange={(event) => setHistoryKeyword(event.target.value)}
-                  placeholder="Lọc bản quét"
+                  placeholder={t("translate.filterScans")}
                   className="min-w-0 flex-1 bg-transparent outline-none"
                 />
               </label>
@@ -778,13 +782,13 @@ export default function Translate() {
                   onClick={() => setHistoryFavoritesOnly((value) => !value)}
                 >
                   <Heart size={16} fill={historyFavoritesOnly ? "currentColor" : "none"} />
-                  Yêu thích
+                  {t("translate.favorites")}
                 </Button>
               </div>
             </div>
             {historyEvents.length === 0 ? (
               <div className="rounded-xl border bg-background p-3 text-sm font-semibold text-muted-foreground">
-                Chưa có lịch sử quét.
+                {t("translate.noHistory")}
               </div>
             ) : (
               <div className="grid max-h-65 gap-2 overflow-y-auto pr-1">
@@ -800,10 +804,10 @@ export default function Translate() {
                     className="rounded-xl border bg-background p-3 text-left transition hover:border-primary/60"
                   >
                     <span className="line-clamp-1 font-serif text-xl font-extrabold">
-                      {event.detectedText || "Không có chữ"}
+                      {event.detectedText || t("translate.noText")}
                     </span>
                     <span className="mt-1 block text-xs font-semibold text-muted-foreground">
-                      {new Date(event.createdAt).toLocaleString()} - {event.matchedWordIds.length} từ khớp
+                      {new Date(event.createdAt).toLocaleString()} - {t("translate.matchedWords", { count: event.matchedWordIds.length })}
                     </span>
                   </button>
                 ))}
@@ -820,10 +824,10 @@ export default function Translate() {
                         className="min-w-0 flex-1 text-left"
                       >
                         <span className="line-clamp-1 text-sm font-extrabold">
-                          {event.title || "Ghi chú"}
+                          {event.title || t("translate.noteLabel")}
                         </span>
                         <span className="mt-0.5 line-clamp-1 font-serif text-lg font-extrabold">
-                          {event.detectedText || "Không có chữ"}
+                          {event.detectedText || t("translate.noText")}
                         </span>
                       </button>
                       <Button
@@ -832,8 +836,8 @@ export default function Translate() {
                         size="icon"
                         onClick={() => void toggleHistoryFavorite(event)}
                         disabled={updateOcrHistoryMutation.isPending}
-                        aria-label="Toggle favorite"
-                        title="Toggle favorite"
+                        aria-label={t("translate.favorites")}
+                        title={t("translate.favorites")}
                       >
                         <Heart size={17} fill={event.isFavorite ? "currentColor" : "none"} />
                       </Button>
@@ -843,8 +847,8 @@ export default function Translate() {
                         size="icon"
                         onClick={() => void deleteHistoryEvent(event)}
                         disabled={deleteOcrHistoryMutation.isPending || clearOcrHistoryMutation.isPending}
-                        aria-label="Delete history"
-                        title="Delete history"
+                        aria-label={t("translate.clearAll")}
+                        title={t("translate.clearAll")}
                       >
                         <Trash2 size={17} />
                       </Button>
@@ -861,7 +865,7 @@ export default function Translate() {
                           onChange={(inputEvent) =>
                             setHistoryDraft((draft) => ({ ...draft, title: inputEvent.target.value }))
                           }
-                          placeholder="Tiêu đề bản quét"
+                          placeholder={t("translate.noteTitle")}
                           className="rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                         />
                         <textarea
@@ -869,12 +873,12 @@ export default function Translate() {
                           onChange={(inputEvent) =>
                             setHistoryDraft((draft) => ({ ...draft, note: inputEvent.target.value }))
                           }
-                          placeholder="Ghi chú khi đọc"
+                          placeholder={t("translate.notePlaceholder")}
                           className="min-h-20 resize-y rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                         />
                         <div className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={() => setEditingHistoryId(null)}>
-                            Hủy
+                            {t("translate.cancel")}
                           </Button>
                           <Button
                             type="button"
@@ -882,7 +886,7 @@ export default function Translate() {
                             disabled={updateOcrHistoryMutation.isPending}
                           >
                             <Save size={16} />
-                            Lưu
+                            {t("translate.save")}
                           </Button>
                         </div>
                       </div>
@@ -892,7 +896,7 @@ export default function Translate() {
                         onClick={() => startEditingHistory(event)}
                         className="mt-2 text-xs font-bold text-primary"
                       >
-                        Sửa ghi chú
+                        {t("translate.editNote")}
                       </button>
                     )}
                   </div>

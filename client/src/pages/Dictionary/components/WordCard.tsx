@@ -1,6 +1,7 @@
 import { BookmarkPlus, Check, Heart, ListPlus, Volume2 } from "lucide-react";
 import type { Word } from "../../../api/vocabulary";
 import { useI18n } from "../../../i18n";
+import type { TranslationKey } from "../../../i18n";
 
 interface WordCardProps {
   word: Word;
@@ -27,7 +28,15 @@ export default function WordCard({
   busy,
   showActions = true,
 }: WordCardProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  // Localize DB labels (stored as English keys) to the app language,
+  // falling back to the raw value for any unmapped category/part of speech.
+  const localizeLabel = (prefix: string, raw: string) => {
+    const key = `${prefix}.${raw}` as TranslationKey;
+    const label = t(key);
+    return label === key ? raw : label;
+  };
 
   return (
     <article className="app-card-button p-4">
@@ -41,10 +50,10 @@ export default function WordCard({
               {word.cefrLevel}
             </span>
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
-              {word.category}
+              {localizeLabel("wordCategory", word.category)}
             </span>
             <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
-              {word.partOfSpeech}
+              {localizeLabel("pos", word.partOfSpeech)}
             </span>
             {word.radical && (
               <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-muted-foreground">
@@ -64,7 +73,9 @@ export default function WordCard({
             </div>
           )}
           <div className="mt-1 text-base font-bold text-primary">{word.pinyin}</div>
-          <p className="mt-2 text-[0.95rem] font-medium">{word.english}</p>
+          <p className="mt-2 text-[0.95rem] font-medium">
+            {language === "vi" && word.englishVi ? word.englishVi : word.english}
+          </p>
         </div>
         <button
           type="button"

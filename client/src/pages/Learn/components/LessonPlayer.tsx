@@ -51,10 +51,10 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
   const exerciseCount = lesson?.exercises.length ?? 0;
   const finalAccuracy = exerciseCount ? Math.round((correctAnswersCount / exerciseCount) * 100) : 0;
   const lessonSteps = [
-    { id: "intro", label: "Tổng quan" },
-    ...(lesson?.dialogue ? [{ id: "dialogue", label: "Hội thoại" }] : []),
-    { id: "exercises", label: "Bài tập" },
-    { id: "completed", label: "Kết quả" },
+    { id: "intro", label: t("learn.player.stepIntro") },
+    ...(lesson?.dialogue ? [{ id: "dialogue", label: t("learn.player.stepDialogue") }] : []),
+    { id: "exercises", label: t("learn.player.stepExercises") },
+    { id: "completed", label: t("learn.player.stepCompleted") },
   ] as const;
   const activeStepIndex = Math.max(0, lessonSteps.findIndex((step) => step.id === stage));
   // The "Kết quả" (completed) step is only shown once the exercises are done.
@@ -164,13 +164,13 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               type="button"
               onClick={onClose}
               className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground transition hover:border-primary hover:text-primary active:translate-y-px"
-              aria-label="Về lộ trình"
-              title="Về lộ trình"
+              aria-label={t("learn.player.backToPath")}
+              title={t("learn.player.backToPath")}
             >
               <ArrowLeft size={19} />
             </button>
             <div className="min-w-0 text-left">
-              <div className="text-xs font-extrabold text-primary">HSK {lesson.hskLevel} - {lesson.estimatedMinutes} phút</div>
+              <div className="text-xs font-extrabold text-primary">HSK {lesson.hskLevel} - {lesson.estimatedMinutes} {t("learn.player.minutes")}</div>
               <h2 className="truncate text-lg font-extrabold sm:text-xl">{lesson.title}</h2>
             </div>
           </div>
@@ -223,7 +223,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
           {!demo && (
             <button type="button" onClick={() => setIsReportOpen(true)} className="mb-3 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-primary">
               <Flag size={14} />
-              Báo lỗi
+              {t("learn.player.reportIssue")}
             </button>
           )}
           <h2 className="text-left text-2xl font-extrabold sm:text-[1.6rem]">{lesson.title}</h2>
@@ -325,14 +325,14 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               {!demo && (
                 <button type="button" onClick={() => setIsReportOpen(true)} className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition hover:text-primary">
                   <Flag size={14} />
-                  Báo lỗi
+                  {t("learn.player.reportIssue")}
                 </button>
               )}
               <span className="text-[0.8rem] font-bold text-jade">{t("learn.score", { count: correctAnswersCount })}</span>
             </div>
           </div>
           <div className="mb-6 rounded-lg border bg-card px-5 py-7.5 text-center shadow-sm">
-            <h4 className="mb-3 text-base uppercase text-muted-foreground">{isShortAnswerExercise ? "Trả lời ngắn" : kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
+            <h4 className="mb-3 text-base uppercase text-muted-foreground">{isShortAnswerExercise ? t("learn.player.shortAnswer") : kindLabelKey ? t(kindLabelKey) : currentExercise.kind}</h4>
             {currentExercise.kind === "listening" && (
               <button className="mb-5 inline-flex size-20 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" onClick={() => speakChinese(currentExercise.correctText)}>
                 <Volume2 size={36} />
@@ -422,7 +422,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
                 disabled={isAnswerChecked}
                 onChange={(event) => setShortAnswer(event.target.value)}
                 className="min-h-28 rounded-xl border bg-card px-4 py-3 text-base font-semibold outline-none transition focus:border-primary disabled:cursor-default disabled:opacity-80"
-                placeholder="Nhập câu trả lời bằng tiếng Trung"
+                placeholder={t("learn.player.answerPlaceholder")}
               />
             ) : (
               (currentExercise.options || []).map((option, idx) => {
@@ -503,29 +503,29 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
         <div className="fixed inset-0 z-1200 flex items-center justify-center bg-black/35 px-4">
           <div className="w-full max-w-md rounded-lg border bg-card p-4 text-left shadow-xl">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="font-extrabold">Báo lỗi nội dung</h3>
+              <h3 className="font-extrabold">{t("learn.player.reportTitle")}</h3>
               <button type="button" onClick={() => setIsReportOpen(false)} className="text-muted-foreground">
                 <XCircle size={20} />
               </button>
             </div>
             <label className="mb-3 block">
-              <span className="mb-1.5 block text-xs font-bold uppercase text-muted-foreground">Loại lỗi</span>
+              <span className="mb-1.5 block text-xs font-bold uppercase text-muted-foreground">{t("learn.player.issueType")}</span>
               <select value={reportCategory} onChange={(event) => setReportCategory(event.target.value as typeof reportCategory)} className="h-10 w-full rounded-lg border bg-background px-3 text-sm font-semibold outline-none">
-                <option value="content">Nội dung</option>
-                <option value="translation">Dịch nghĩa</option>
-                <option value="audio">Âm thanh</option>
-                <option value="exercise">Bài tập</option>
-                <option value="technical">Kỹ thuật</option>
-                <option value="other">Khác</option>
+                <option value="content">{t("learn.player.issueContent")}</option>
+                <option value="translation">{t("learn.player.issueTranslation")}</option>
+                <option value="audio">{t("learn.player.issueAudio")}</option>
+                <option value="exercise">{t("learn.player.issueExercise")}</option>
+                <option value="technical">{t("learn.player.issueTechnical")}</option>
+                <option value="other">{t("learn.player.issueOther")}</option>
               </select>
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase text-muted-foreground">Mô tả</span>
+              <span className="mb-1.5 block text-xs font-bold uppercase text-muted-foreground">{t("learn.player.reportDescription")}</span>
               <textarea
                 value={reportMessage}
                 onChange={(event) => setReportMessage(event.target.value)}
                 className="min-h-28 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                placeholder="Ví dụ: đáp án đúng bị sai, pinyin chưa chuẩn..."
+                placeholder={t("learn.player.reportPlaceholder")}
               />
             </label>
             <button
@@ -534,7 +534,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               disabled={reportIssueMutation.isPending || !reportMessage.trim()}
               className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
             >
-              {reportIssueMutation.isPending ? "Đang gửi..." : "Gửi báo lỗi"}
+              {reportIssueMutation.isPending ? t("learn.player.sending") : t("learn.player.sendReport")}
             </button>
           </div>
         </div>

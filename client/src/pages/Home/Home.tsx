@@ -34,27 +34,13 @@ import { Progress } from "../../components/ui/progress";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
-
+import DashboardAvatar from "./component/DashboardAvatar";
 const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
 const clampPercent = (current: number, goal: number) => {
   if (!goal) return 0;
   return Math.max(0, Math.min(100, Math.round((current / goal) * 100)));
 };
-
-function DashboardAvatar({ avatar, name }: { avatar?: string | null; name: string }) {
-  const isImage = Boolean(avatar && /^(https?:|data:image|blob:)/.test(avatar));
-
-  return (
-    <span className="flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/25 bg-white/20 text-6xl font-extrabold shadow-lg backdrop-blur sm:size-[6.5rem]">
-      {isImage ? (
-        <img src={avatar ?? ""} alt={name} className="size-full object-cover" />
-      ) : (
-        <span aria-hidden="true">{avatar || "学"}</span>
-      )}
-    </span>
-  );
-}
 
 export default function Home() {
   const { language, t } = useI18n();

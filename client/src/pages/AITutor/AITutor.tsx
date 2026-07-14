@@ -22,7 +22,7 @@ interface AITutorProps {
 }
 
 export default function AITutor({ onClose }: AITutorProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const navigate = useNavigate();
   const isOverlay = Boolean(onClose);
@@ -244,7 +244,7 @@ export default function AITutor({ onClose }: AITutorProps) {
                         {message.pinyin ?? ""}
                       </div>
                       <div className="mt-1.5 border-t border-black/5 pt-1 text-[0.85rem] text-foreground">
-                        {message.english ?? ""}
+                        {(language === "vi" ? message.vietnamese || message.english : message.english) ?? ""}
                       </div>
                     </div>
                   ) : (

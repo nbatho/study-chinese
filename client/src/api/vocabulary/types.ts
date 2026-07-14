@@ -7,6 +7,7 @@ export interface Word {
     pinyin: string;
     tones: number[];
     english: string;
+    englishVi?: string | null;
     partOfSpeech: string;
     hskLevel: number;
     cefrLevel: CefrLevel;
