@@ -26,12 +26,18 @@ export default function LessonPath({
   onSelectLesson,
   isLessonLocked,
   isCurriculumLocked,
+  guestMode = false,
+  guestUnlockedOrders,
+  onLockedClick,
 }: {
   curriculum: HskCurriculumLevel;
   lessons: LessonSummary[];
   onSelectLesson: (lessonId: string) => void;
   isLessonLocked?: (lesson: LessonSummary) => boolean;
   isCurriculumLocked?: (lesson: CurriculumLesson) => boolean;
+  guestMode?: boolean;
+  guestUnlockedOrders?: Set<number>;
+  onLockedClick?: () => void;
 }) {
   const { t } = useI18n();
   const lessonsByOrder = new Map(lessons.map((lesson) => [lesson.order, lesson]));
@@ -70,7 +76,11 @@ export default function LessonPath({
     const isCurrent = Boolean(serverLesson) && !isLockedByLevel && (firstIncompleteIndex === index || (firstIncompleteIndex === -1 && index === flatEntries.length - 1));
     const isUnlockedByProgress = isCompleted || firstIncompleteIndex === -1 || index === firstIncompleteIndex;
     const isMissingContent = !serverLesson;
-    const isLocked = isLockedByLevel || isMissingContent || !isUnlockedByProgress;
+    // Guests: only lessons in the free trial set (HSK1 topic 1) are open; every
+    // other lesson is locked and prompts login when clicked.
+    const isLocked = guestMode
+      ? !(serverLesson && guestUnlockedOrders?.has(curriculumLesson.order))
+      : isLockedByLevel || isMissingContent || !isUnlockedByProgress;
     const statusKey: TranslationKey = isCompleted
       ? "learn.pathCompleted"
       : isLocked
@@ -94,15 +104,20 @@ export default function LessonPath({
         </div>
         <button
           type="button"
-          disabled={isLocked}
+          disabled={isLocked && !(guestMode && onLockedClick)}
           onClick={() => {
-            if (!isLocked && serverLesson) onSelectLesson(serverLesson.id);
+            if (isLocked) {
+              if (guestMode) onLockedClick?.();
+              return;
+            }
+            if (serverLesson) onSelectLesson(serverLesson.id);
           }}
           className={cn(
             "group flex w-full flex-col gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition sm:p-5",
             isCompleted && "border-jade/40 bg-jade/5",
             isCurrent && !isCompleted && "border-primary/50 bg-primary/5 ring-2 ring-primary/10 hover:-translate-y-0.5 hover:shadow-md",
-            isLocked && "cursor-not-allowed border-dashed bg-secondary/70 opacity-75",
+            isLocked && !(guestMode && onLockedClick) && "cursor-not-allowed border-dashed bg-secondary/70 opacity-75",
+            isLocked && guestMode && onLockedClick && "cursor-pointer border-dashed bg-secondary/60 opacity-90 hover:-translate-y-0.5 hover:shadow-md",
             !isLocked && !isCurrent && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md",
           )}
         >

@@ -36,6 +36,27 @@ export const useLessonDetailQuery = (lessonId: string, enabled = true) => {
     });
 };
 
+// Public HSK1 trial for guests (no account needed, no progress saved).
+export const useSampleLessonsQuery = (enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.lessons.list(`sample:${locale}`),
+        queryFn: () => unwrapApiData(lessonsApi.sampleList(locale)),
+        enabled,
+    });
+};
+
+export const usePublicLessonDetailQuery = (lessonId: string, enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.lessons.detail(`public:${lessonId}`, locale),
+        queryFn: () => unwrapApiData(lessonsApi.publicDetail(lessonId, locale)),
+        enabled: enabled && Boolean(lessonId),
+    });
+};
+
 export const useCompleteLessonMutation = (lessonId: string) => {
     const queryClient = useQueryClient();
 

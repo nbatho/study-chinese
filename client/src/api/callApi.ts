@@ -24,6 +24,11 @@ const PUBLIC_ENDPOINTS = [
     'auth/register',
     'health',
     'docs',
+    'ocr/translate',
+    'vocab',
+    'vocabulary',
+    'lessons/sample-list',
+    'lessons/public',
 ];
 
 const normalizeUrl = (url?: string) => {

@@ -5,14 +5,16 @@ import {
   listVocabulary,
   vocabularyStats
 } from '../controllers/vocab.controller.js';
-import { requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.get('/topics', requireAuth, listTopics);
-router.get('/radicals', requireAuth, listRadicals);
-router.get('/stats', requireAuth, vocabularyStats);
-router.get('/search', requireAuth, listVocabulary);
-router.get('/', requireAuth, listVocabulary);
+// Dictionary/vocabulary lookup is public reference content (no user data), so
+// it stays browsable without an account. Personalized features (word lists,
+// favorites, SRS) live on their own authenticated routes.
+router.get('/topics', listTopics);
+router.get('/radicals', listRadicals);
+router.get('/stats', vocabularyStats);
+router.get('/search', listVocabulary);
+router.get('/', listVocabulary);
 
 export default router;

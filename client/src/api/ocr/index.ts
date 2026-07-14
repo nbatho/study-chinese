@@ -22,6 +22,8 @@ export interface OcrHistoryParams {
 
 export const ocrApi = {
     scan: (payload: OcrScanPayload) => apiRequest<OcrScanResponse>(beApi.post('ocr/scan', payload)),
+    translate: (payload: { text: string }) =>
+        apiRequest<OcrScanResponse>(beApi.post('ocr/translate', payload)),
     history: (params?: OcrHistoryParams) => apiRequest<OcrHistoryResponse>(beApi.get('ocr/history', { params })),
     detail: (eventId: string) => apiRequest<OcrHistoryDetailResponse>(beApi.get(`ocr/history/${eventId}`)),
     update: (eventId: string, payload: UpdateOcrHistoryPayload) =>

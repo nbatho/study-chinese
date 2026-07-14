@@ -369,6 +369,31 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
   };
 };
 
+// HSK level that guests can study for free (no account, no saved progress).
+const PUBLIC_TRIAL_HSK_LEVEL = 1;
+
+// Public trial: the real HSK1 lesson list, without any user progress join.
+export const getSampleLessons = async (localeInput = 'en') =>
+  getLessons(null, { hsk: PUBLIC_TRIAL_HSK_LEVEL, locale: localeInput });
+
+// Public trial: full detail for an HSK1 lesson only. Higher levels stay gated.
+export const getPublicLessonDetails = async (lessonId, localeInput = 'en') => {
+  const lessonResult = await query(
+    'SELECT hsk_level FROM lessons WHERE id = $1 AND is_active = true',
+    [lessonId]
+  );
+
+  if (lessonResult.rowCount === 0) {
+    throw notFound('Không tìm thấy bài học.');
+  }
+
+  if (Number(lessonResult.rows[0].hsk_level) !== PUBLIC_TRIAL_HSK_LEVEL) {
+    throw notFound('Bài học này cần đăng nhập để học.');
+  }
+
+  return getLessonDetails(lessonId, localeInput);
+};
+
 export const getLessonModules = async (lessonId) => {
   const lessonResult = await query(
     'SELECT id FROM lessons WHERE id = $1 AND is_active = true',

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Activity, ArrowLeft, Ear, Keyboard, Mic, PencilLine, Target, Volume2 } from "lucide-react";
+import { Activity, ArrowLeft, Dumbbell, Ear, Keyboard, Mic, PencilLine, Target, Volume2 } from "lucide-react";
 import { useI18n } from "../../i18n";
+import { useAppSelector } from "../../store/hooks";
+import LoginPromptCard from "../../components/LoginPromptCard";
 import { cn } from "../../utils/cn";
 import {
   HanziDrawingTool,
@@ -18,9 +20,20 @@ import type { Tool } from "./components/practiceToolTypes";
 
 export default function Practice() {
   const { t } = useI18n();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const [searchParams] = useSearchParams();
   const initialTool = searchParams.get("tool");
   const [activeTool, setActiveTool] = useState<Tool>(isPracticeTool(initialTool) ? initialTool : "menu");
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPromptCard
+        icon={Dumbbell}
+        title={t("loginPrompt.practiceTitle")}
+        description={t("loginPrompt.practiceBody")}
+      />
+    );
+  }
 
   return (
     <div className="app-page">

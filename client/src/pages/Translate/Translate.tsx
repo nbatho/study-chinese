@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Camera,
   BookmarkPlus,
@@ -9,6 +10,8 @@ import {
   Languages,
   ListPlus,
   Loader2,
+  Lock,
+  LogIn,
   RefreshCw,
   Save,
   ScanLine,
@@ -30,10 +33,13 @@ import {
   useDeleteOcrHistoryMutation,
   useOcrHistoryQuery,
   useOcrScanMutation,
+  usePublicTranslateMutation,
   useUpdateOcrHistoryMutation,
 } from "../../api/ocr/queries";
 import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment } from "../../api/ocr";
 import { Button } from "../../components/ui/button";
+import { useI18n } from "../../i18n";
+import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 
@@ -54,7 +60,11 @@ const getCombinedMeaning = (segments: OcrSegment[]) =>
     .join("; ");
 
 export default function Translate() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const scanMutation = useOcrScanMutation();
+  const publicTranslateMutation = usePublicTranslateMutation();
   const [historyKeyword, setHistoryKeyword] = useState("");
   const [historyDate, setHistoryDate] = useState("");
   const [historyFavoritesOnly, setHistoryFavoritesOnly] = useState(false);
@@ -93,7 +103,7 @@ export default function Translate() {
   const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null);
   const [historyDraft, setHistoryDraft] = useState({ title: "", note: "" });
 
-  const loading = scanMutation.isPending;
+  const loading = scanMutation.isPending || publicTranslateMutation.isPending;
   const lists = listsQuery.data?.lists ?? [];
   const historyEvents = ocrHistoryQuery.data?.events ?? [];
   const activeOcrListId = selectedOcrListId || lists[0]?.id || "";
@@ -124,7 +134,12 @@ export default function Translate() {
   const runScan = async (payload: OcrScanPayload) => {
     setSelectedBox(null);
     setSelectedSegmentIds([]);
-    const response = await scanMutation.mutateAsync(payload);
+    // Text translation works without an account via the public endpoint (no
+    // history saved); image OCR and history always use the authenticated scan.
+    const response =
+      isAuthenticated || payload.image
+        ? await scanMutation.mutateAsync(payload)
+        : await publicTranslateMutation.mutateAsync({ text: payload.text ?? "" });
     const nextSegments = response.segments ?? response.boxes;
 
     setBoxes(response.boxes);
@@ -266,27 +281,27 @@ export default function Translate() {
       emoji: "OCR",
     });
     setSelectedOcrListId(response.list.id);
-    toast.success("Da tao danh sach OCR.");
+    toast.success("Đã tạo danh sách OCR.");
   };
 
   const saveSegmentToList = async (segment: OcrSegment) => {
     if (!activeOcrListId) {
-      toast.info("Chon hoac tao danh sach truoc.");
+      toast.info("Chọn hoặc tạo danh sách trước.");
       return;
     }
 
     await addWordMutation.mutateAsync(toLearningPayload(segment));
-    toast.success(`Da luu "${segment.text}" vao danh sach.`);
+    toast.success(`Đã lưu "${segment.text}" vào danh sách.`);
   };
 
   const saveSegmentToSrs = async (segment: OcrSegment) => {
     const response = await enrollMutation.mutateAsync(toLearningPayload(segment));
-    toast.success(response.enrolled ? `Da them "${segment.text}" vao on tap.` : `"${segment.text}" da co trong on tap.`);
+    toast.success(response.enrolled ? `Đã thêm "${segment.text}" vào ôn tập.` : `"${segment.text}" đã có trong ôn tập.`);
   };
 
   const saveActiveSegmentsToList = async () => {
     if (!activeOcrListId) {
-      toast.info("Chon hoac tao danh sach truoc.");
+      toast.info("Chọn hoặc tạo danh sách trước.");
       return;
     }
 
@@ -324,7 +339,7 @@ export default function Translate() {
       },
     });
     setEditingHistoryId(null);
-    toast.success("Da luu ghi chu OCR.");
+    toast.success("Đã lưu ghi chú OCR.");
   };
 
   const toggleHistoryFavorite = async (event: OcrHistoryEvent) => {
@@ -335,7 +350,7 @@ export default function Translate() {
   };
 
   const deleteHistoryEvent = async (event: OcrHistoryEvent) => {
-    const confirmed = window.confirm("Xoa muc lich su OCR nay?");
+    const confirmed = window.confirm("Xóa mục lịch sử OCR này?");
 
     if (!confirmed) return;
 
@@ -345,17 +360,17 @@ export default function Translate() {
       setEditingHistoryId(null);
     }
 
-    toast.success("Da xoa muc lich su OCR.");
+    toast.success("Đã xóa mục lịch sử OCR.");
   };
 
   const clearHistory = async () => {
-    const confirmed = window.confirm("Xoa toan bo lich su OCR cua ban?");
+    const confirmed = window.confirm("Xóa toàn bộ lịch sử OCR của bạn?");
 
     if (!confirmed) return;
 
     const response = await clearOcrHistoryMutation.mutateAsync();
     setEditingHistoryId(null);
-    toast.success(`Da xoa ${response.deletedCount} muc lich su OCR.`);
+    toast.success(`Đã xóa ${response.deletedCount} mục lịch sử OCR.`);
   };
 
   useEffect(() => () => stopCamera(), []);
@@ -448,6 +463,22 @@ export default function Translate() {
                   Dịch
                 </Button>
               </div>
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="flex min-h-65 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-background p-6 text-center">
+              <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Lock size={26} />
+              </span>
+              <div>
+                <h3 className="text-base font-extrabold">{t("loginPrompt.translateTitle")}</h3>
+                <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                  Quét OCR bằng camera/ảnh cần đăng nhập. Bạn vẫn có thể dịch văn bản mà không cần tài khoản.
+                </p>
+              </div>
+              <Button type="button" onClick={() => navigate("/auth")}>
+                <LogIn size={16} />
+                {t("loginPrompt.login")}
+              </Button>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -608,6 +639,7 @@ export default function Translate() {
                   </button>
                 )}
               </div>
+              {isAuthenticated && (
               <div className="mb-3 grid gap-2 rounded-xl border bg-background p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <select
@@ -615,7 +647,7 @@ export default function Translate() {
                     onChange={(event) => setSelectedOcrListId(event.target.value)}
                     className="min-w-0 rounded-xl border bg-card px-3 py-2 text-sm font-semibold outline-none"
                   >
-                    <option value="">Chon danh sach</option>
+                    <option value="">Chọn danh sách</option>
                     {lists.map((list) => (
                       <option key={list.id} value={list.id}>
                         {list.name} ({list.wordIds.length})
@@ -629,13 +661,13 @@ export default function Translate() {
                     disabled={createListMutation.isPending}
                   >
                     <ListPlus size={16} />
-                    Tao list
+                    Tạo danh sách
                   </Button>
                 </div>
                 <input
                   value={newOcrListName}
                   onChange={(event) => setNewOcrListName(event.target.value)}
-                  placeholder="Ten list OCR"
+                  placeholder="Tên danh sách OCR"
                   className="rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 />
                 <div className="grid grid-cols-2 gap-2">
@@ -646,7 +678,7 @@ export default function Translate() {
                     disabled={!activeOcrListId || addWordMutation.isPending}
                   >
                     <ListPlus size={16} />
-                    Luu list
+                    Lưu danh sách
                   </Button>
                   <Button
                     type="button"
@@ -655,10 +687,11 @@ export default function Translate() {
                     disabled={enrollMutation.isPending}
                   >
                     <BookmarkPlus size={16} />
-                    Them SRS
+                    Thêm SRS
                   </Button>
                 </div>
               </div>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 {segments.map((segment) => {
@@ -699,6 +732,7 @@ export default function Translate() {
             </div>
           )}
 
+          {isAuthenticated && (
           <div className="mt-6 border-t pt-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-xs font-bold text-muted-foreground">Lịch sử OCR</h3>
@@ -713,7 +747,7 @@ export default function Translate() {
                     disabled={clearOcrHistoryMutation.isPending || deleteOcrHistoryMutation.isPending}
                   >
                     <Trash2 size={15} />
-                    Xoa tat ca
+                    Xóa tất cả
                   </Button>
                 )}
               </div>
@@ -724,7 +758,7 @@ export default function Translate() {
                 <input
                   value={historyKeyword}
                   onChange={(event) => setHistoryKeyword(event.target.value)}
-                  placeholder="Filter scans"
+                  placeholder="Lọc bản quét"
                   className="min-w-0 flex-1 bg-transparent outline-none"
                 />
               </label>
@@ -744,7 +778,7 @@ export default function Translate() {
                   onClick={() => setHistoryFavoritesOnly((value) => !value)}
                 >
                   <Heart size={16} fill={historyFavoritesOnly ? "currentColor" : "none"} />
-                  Favorites
+                  Yêu thích
                 </Button>
               </div>
             </div>
@@ -766,10 +800,10 @@ export default function Translate() {
                     className="rounded-xl border bg-background p-3 text-left transition hover:border-primary/60"
                   >
                     <span className="line-clamp-1 font-serif text-xl font-extrabold">
-                      {event.detectedText || "Không có text"}
+                      {event.detectedText || "Không có chữ"}
                     </span>
                     <span className="mt-1 block text-xs font-semibold text-muted-foreground">
-                      {new Date(event.createdAt).toLocaleString()} - {event.matchedWordIds.length} từ match
+                      {new Date(event.createdAt).toLocaleString()} - {event.matchedWordIds.length} từ khớp
                     </span>
                   </button>
                 ))}
@@ -786,10 +820,10 @@ export default function Translate() {
                         className="min-w-0 flex-1 text-left"
                       >
                         <span className="line-clamp-1 text-sm font-extrabold">
-                          {event.title || "Notebook entry"}
+                          {event.title || "Ghi chú"}
                         </span>
                         <span className="mt-0.5 line-clamp-1 font-serif text-lg font-extrabold">
-                          {event.detectedText || "No text"}
+                          {event.detectedText || "Không có chữ"}
                         </span>
                       </button>
                       <Button
@@ -827,7 +861,7 @@ export default function Translate() {
                           onChange={(inputEvent) =>
                             setHistoryDraft((draft) => ({ ...draft, title: inputEvent.target.value }))
                           }
-                          placeholder="Scan title"
+                          placeholder="Tiêu đề bản quét"
                           className="rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                         />
                         <textarea
@@ -835,12 +869,12 @@ export default function Translate() {
                           onChange={(inputEvent) =>
                             setHistoryDraft((draft) => ({ ...draft, note: inputEvent.target.value }))
                           }
-                          placeholder="Reading note"
+                          placeholder="Ghi chú khi đọc"
                           className="min-h-20 resize-y rounded-md border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                         />
                         <div className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={() => setEditingHistoryId(null)}>
-                            Cancel
+                            Hủy
                           </Button>
                           <Button
                             type="button"
@@ -848,7 +882,7 @@ export default function Translate() {
                             disabled={updateOcrHistoryMutation.isPending}
                           >
                             <Save size={16} />
-                            Save
+                            Lưu
                           </Button>
                         </div>
                       </div>
@@ -858,7 +892,7 @@ export default function Translate() {
                         onClick={() => startEditingHistory(event)}
                         className="mt-2 text-xs font-bold text-primary"
                       >
-                        Edit note
+                        Sửa ghi chú
                       </button>
                     )}
                   </div>
@@ -866,6 +900,7 @@ export default function Translate() {
               </div>
             )}
           </div>
+          )}
         </section>
       </div>
     </div>

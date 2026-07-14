@@ -12,6 +12,7 @@ interface WordCardProps {
   onEnroll: () => void;
   onAddToList: () => void;
   busy: boolean;
+  showActions?: boolean;
 }
 
 export default function WordCard({
@@ -24,6 +25,7 @@ export default function WordCard({
   onEnroll,
   onAddToList,
   busy,
+  showActions = true,
 }: WordCardProps) {
   const { t } = useI18n();
 
@@ -74,6 +76,7 @@ export default function WordCard({
         </button>
       </div>
 
+      {showActions && (
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button
           type="button"
@@ -103,6 +106,7 @@ export default function WordCard({
           {inSelectedList ? t("dictionary.inList") : t("dictionary.addToList")}
         </button>
       </div>
+      )}
     </article>
   );
 }

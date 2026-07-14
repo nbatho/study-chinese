@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, PenLine, Search, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
-import LoginPromptCard from "../../components/LoginPromptCard";
+import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
@@ -85,7 +85,17 @@ export default function Learn() {
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const [manualHskSelection, setManualHskSelection] = useState<{ placementAt: string | null; level: number } | null>(null);
-  const lessons = lessonsQuery.data?.lessons ?? [];
+  const sampleLessonsQuery = useSampleLessonsQuery(!isAuthenticated);
+  // Guests get the same UI, fed by the public HSK1 trial lessons.
+  const lessons = isAuthenticated
+    ? (lessonsQuery.data?.lessons ?? [])
+    : (sampleLessonsQuery.data?.lessons ?? []);
+  // Guests may only open HSK1's first topic (chủ đề 1); everything else is
+  // locked and prompts login on click.
+  const guestUnlockedOrders = useMemo(() => {
+    const hsk1 = HSK_CURRICULUM.find((level) => level.hskLevel === 1);
+    return new Set<number>(hsk1?.topics[0]?.lessons.map((lesson) => lesson.order) ?? []);
+  }, []);
   const profile = profileQuery.data?.profile;
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const placementAt = profile?.placementTestCompletedAt ?? null;
@@ -158,23 +168,27 @@ export default function Learn() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <LoginPromptCard
-        icon={Search}
-        title={t("loginPrompt.learnTitle")}
-        description={t("loginPrompt.learnBody")}
-      />
-    );
-  }
-
   return (
     <div className="app-page">
       {selectedLessonId ? (
-        <LessonPlayer lessonId={selectedLessonId} onClose={closeSelectedLesson} />
+        <LessonPlayer lessonId={selectedLessonId} demo={!isAuthenticated} onClose={closeSelectedLesson} />
       ) : (
         <div className="grid gap-5">
-          {needsPlacementTest && (
+          {!isAuthenticated && (
+            <div className="app-surface-padded flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-muted-foreground">{t("learn.guestBody")}</p>
+              <button
+                type="button"
+                onClick={() => navigate("/auth")}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
+              >
+                <LogIn size={16} />
+                {t("loginPrompt.login")}
+              </button>
+            </div>
+          )}
+
+          {isAuthenticated && needsPlacementTest && (
             <div className="app-surface-padded flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -417,6 +431,9 @@ export default function Learn() {
             onSelectLesson={setSelectedLessonId}
             isLessonLocked={isLessonLockedByCefr}
             isCurriculumLocked={isCurriculumLessonLocked}
+            guestMode={!isAuthenticated}
+            guestUnlockedOrders={guestUnlockedOrders}
+            onLockedClick={() => navigate("/auth")}
           />
         </div>
       )}

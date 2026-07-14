@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDueSrsCardsQuery, useReviewSrsMutation } from "../../api/srs/queries";
-import type { ReviewQuality } from "../../api/srs";
+import type { ReviewQuality, SrsDueCard } from "../../api/srs";
 import { Layers, RefreshCw } from "lucide-react";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
@@ -14,10 +14,24 @@ export default function Review() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const dueCardsQuery = useDueSrsCardsQuery(15);
   const reviewMutation = useReviewSrsMutation();
+  const [sessionQueue, setSessionQueue] = useState<SrsDueCard[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const dueCards = dueCardsQuery.data?.cards ?? [];
-  const activeCard = dueCards[activeIdx] ?? dueCards[0];
+  const fetchedCards = dueCardsQuery.data?.cards ?? [];
+
+  // Seed the session queue once cards arrive and advance through it locally.
+  // Reviewing invalidates the "due" query, so reading length off the live
+  // query would keep the counter pinned (the server keeps returning a full
+  // batch); a stable per-session queue makes progress move 1/15 -> 2/15 ...
+  // Guarded setState during render (React's derived-state-on-change pattern):
+  // it converges immediately since sessionQueue becomes non-empty.
+  if (sessionQueue.length === 0 && fetchedCards.length > 0) {
+    setSessionQueue(fetchedCards);
+  }
+
+  const sessionTotal = sessionQueue.length;
+  const activeCard = sessionQueue[activeIdx];
+  const sessionFinished = sessionTotal > 0 && activeIdx >= sessionTotal;
 
   const handleQualitySelect = async (quality: ReviewQuality) => {
     if (!activeCard) return;
@@ -37,7 +51,13 @@ export default function Review() {
       } : undefined,
     });
     setFlipped(false);
-    setActiveIdx((idx) => Math.max(0, Math.min(idx, dueCards.length - 2)));
+    setActiveIdx((idx) => idx + 1);
+  };
+
+  const loadNextBatch = () => {
+    setActiveIdx(0);
+    setFlipped(false);
+    setSessionQueue(fetchedCards);
   };
 
   if (!isAuthenticated) {
@@ -55,7 +75,7 @@ export default function Review() {
       <div className="app-page-header mb-5 flex items-center justify-between gap-3">
         <h2 className="text-left text-2xl font-extrabold">{t("review.title")}</h2>
         <span className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-1.5 text-[0.8rem] font-bold text-gold">
-          <Layers size={14} /> {t("review.due", { count: dueCards.length })}
+          <Layers size={14} /> {t("review.due", { count: Math.max(0, sessionTotal - activeIdx) })}
         </span>
       </div>
 
@@ -66,7 +86,7 @@ export default function Review() {
       {activeCard ? (
         <div>
           <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
-            {t("review.progress", { current: activeIdx + 1, total: dueCards.length })}
+            {t("review.progress", { current: activeIdx + 1, total: sessionTotal })}
           </div>
 
           <div
@@ -136,6 +156,14 @@ export default function Review() {
           <p className="mt-2 inline-block max-w-80 text-[0.9rem] text-muted-foreground">
             {t("review.doneBody")}
           </p>
+          {sessionFinished && fetchedCards.length > 0 && (
+            <button
+              onClick={loadNextBatch}
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
+            >
+              <RefreshCw size={16} /> {t("common.continue")}
+            </button>
+          )}
         </div>
       )}
     </div>

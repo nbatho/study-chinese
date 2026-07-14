@@ -16,6 +16,12 @@ export const useOcrScanMutation = () => {
     });
 };
 
+// Text-only translation that works without an account (no history persisted).
+export const usePublicTranslateMutation = () =>
+    useMutation({
+        mutationFn: (payload: { text: string }) => unwrapApiData(ocrApi.translate(payload)),
+    });
+
 export const useOcrHistoryQuery = (options: number | OcrHistoryParams = 20) => {
     const params = typeof options === 'number' ? { limit: options } : options;
 

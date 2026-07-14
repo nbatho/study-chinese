@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Award, CheckCircle2, Flag, Gem, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
 import { useLessonDetailQuery, useRecordMistakeMutation } from "../../../api";
-import { useCompleteLessonMutation, useReportLessonIssueMutation } from "../../../api/lessons/queries";
+import { useCompleteLessonMutation, usePublicLessonDetailQuery, useReportLessonIssueMutation } from "../../../api/lessons/queries";
 import type { LessonDetail } from "../../../api/lessons";
 import type { MistakePayload } from "../../../api/users";
 import { useI18n } from "../../../i18n";
@@ -24,9 +24,11 @@ const exerciseKindTranslationKeys: Record<string, TranslationKey> = {
   trueFalse: "learn.exerciseKind.trueFalse",
 };
 
-export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; onClose: () => void }) {
+export default function LessonPlayer({ lessonId, onClose, demo = false }: { lessonId: string; onClose: () => void; demo?: boolean }) {
   const { t } = useI18n();
-  const lessonQuery = useLessonDetailQuery(lessonId);
+  const detailQuery = useLessonDetailQuery(lessonId, !demo);
+  const publicDetailQuery = usePublicLessonDetailQuery(lessonId, demo);
+  const lessonQuery = demo ? publicDetailQuery : detailQuery;
   const completeLessonMutation = useCompleteLessonMutation(lessonId);
   const reportIssueMutation = useReportLessonIssueMutation(lessonId);
   const recordMistakeMutation = useRecordMistakeMutation();
@@ -55,6 +57,24 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
     { id: "completed", label: "Kết quả" },
   ] as const;
   const activeStepIndex = Math.max(0, lessonSteps.findIndex((step) => step.id === stage));
+  // The "Kết quả" (completed) step is only shown once the exercises are done.
+  // The other steps (intro / dialogue / exercises) are freely navigable tabs.
+  const visibleSteps = lessonSteps.filter((step) => step.id !== "completed" || stage === "completed");
+
+  const canNavigateToStep = (index: number) => {
+    const target = lessonSteps[index];
+    return (
+      stage !== "completed" &&
+      Boolean(target) &&
+      target.id !== "completed" &&
+      index !== activeStepIndex
+    );
+  };
+
+  const goToStep = (index: number) => {
+    if (!canNavigateToStep(index)) return;
+    setStage(lessonSteps[index].id as typeof stage);
+  };
 
   const initExerciseState = () => {
     setSelectedOptionIdx(null);
@@ -85,7 +105,7 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
       ? arrangedWords.join("") === currentExercise.correctText.replace(/\s+/g, "")
       : selectedOptionIdx === currentExercise.correctIndex;
     if (correct) setCorrectAnswersCount((prev) => prev + 1);
-    if (!correct) {
+    if (!correct && !demo) {
       void recordMistakeMutation
         .mutateAsync(buildLessonMistakePayload(lesson, currentExercise, selectedOptionIdx, arrangedWords, shortAnswer))
         .catch(() => undefined);
@@ -101,6 +121,12 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
     if (exerciseIdx + 1 < lesson.exercises.length) {
       setExerciseIdx((prev) => prev + 1);
       initExerciseState();
+      return;
+    }
+    if (demo) {
+      // Trial lessons don't persist progress or award rewards.
+      setGemsEarned(0);
+      setStage("completed");
       return;
     }
     const result = await completeLessonMutation.mutateAsync({ accuracy: finalAccuracy, minutes: lesson.estimatedMinutes });
@@ -150,22 +176,29 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           </div>
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              {lessonSteps.map((step, index) => {
+              {visibleSteps.map((step, visibleIndex) => {
+                const index = lessonSteps.findIndex((item) => item.id === step.id);
                 const isActive = index === activeStepIndex;
                 const isDone = index < activeStepIndex;
+                const isNavigable = canNavigateToStep(index);
                 return (
                   <div key={step.id} className="flex items-center gap-2">
-                    <span
+                    <button
+                      type="button"
+                      onClick={() => goToStep(index)}
+                      disabled={!isNavigable}
+                      aria-current={isActive ? "step" : undefined}
                       className={cn(
-                        "inline-flex min-h-8 items-center justify-center rounded-xl px-3 text-xs font-extrabold",
+                        "inline-flex min-h-8 items-center justify-center rounded-xl px-3 text-xs font-extrabold transition",
                         isActive && "bg-primary text-primary-foreground",
                         isDone && "bg-jade/10 text-jade",
                         !isActive && !isDone && "bg-secondary text-muted-foreground",
+                        isNavigable ? "cursor-pointer hover:opacity-80 active:translate-y-px" : "cursor-default",
                       )}
                     >
                       {step.label}
-                    </span>
-                    {index < lessonSteps.length - 1 && <span className="hidden h-px w-5 bg-border sm:block" />}
+                    </button>
+                    {visibleIndex < visibleSteps.length - 1 && <span className="hidden h-px w-5 bg-border sm:block" />}
                   </div>
                 );
               })}
@@ -180,12 +213,19 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
         </div>
       </div>
       <div className="p-4 sm:p-6">
+      {demo && (
+        <div className="mb-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-2.5 text-center text-xs font-bold text-primary">
+          {t("learn.demoBanner")}
+        </div>
+      )}
       {stage === "intro" && (
         <div className="anim-slide">
-          <button type="button" onClick={() => setIsReportOpen(true)} className="mb-3 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-primary">
-            <Flag size={14} />
-            Báo lỗi
-          </button>
+          {!demo && (
+            <button type="button" onClick={() => setIsReportOpen(true)} className="mb-3 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-primary">
+              <Flag size={14} />
+              Báo lỗi
+            </button>
+          )}
           <h2 className="text-left text-2xl font-extrabold sm:text-[1.6rem]">{lesson.title}</h2>
           <p className="mb-4 text-left text-[0.9rem] text-muted-foreground">{lesson.subtitle}</p>
           <div className="mb-6 rounded-xl bg-background p-4 text-left text-[0.9rem] leading-relaxed">
@@ -282,10 +322,12 @@ export default function LessonPlayer({ lessonId, onClose }: { lessonId: string; 
           <div className="mb-4.5 flex items-center justify-between gap-3">
             <span className="text-[0.8rem] font-bold text-muted-foreground">{t("learn.question", { current: exerciseIdx + 1, total: lesson.exercises.length })}</span>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setIsReportOpen(true)} className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition hover:text-primary">
-                <Flag size={14} />
-                Báo lỗi
-              </button>
+              {!demo && (
+                <button type="button" onClick={() => setIsReportOpen(true)} className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition hover:text-primary">
+                  <Flag size={14} />
+                  Báo lỗi
+                </button>
+              )}
               <span className="text-[0.8rem] font-bold text-jade">{t("learn.score", { count: correctAnswersCount })}</span>
             </div>
           </div>

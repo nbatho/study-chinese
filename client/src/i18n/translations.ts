@@ -364,6 +364,10 @@ export const translations = {
     "cefr.C1": "C1 Advanced",
     "cefr.C2": "C2 Mastery",
     "learn.cefrLocked": "Lessons above your entry test level stay visible but locked.",
+    "learn.demoBanner": "Trial lesson — progress and rewards aren't saved. Log in to track your learning.",
+    "learn.guestTitle": "Try a sample lesson",
+    "learn.guestBody": "Preview how lessons work with a free sample. Log in to unlock the full HSK curriculum and save your progress.",
+    "learn.trySample": "Try the sample lesson",
 
     "practice.title": "Practice Suite",
     "practice.subtitle": "Practice tools now load prompts, pairs, and stroke data from the server.",
@@ -424,7 +428,22 @@ export const translations = {
     "loginPrompt.aiTutorTitle": "Log in to chat with AI Tutor",
     "loginPrompt.aiTutorBody": "The AI tutor provides personalized Chinese conversation practice. Sign in to start a session.",
     "loginPrompt.learnTitle": "Log in to continue your lessons",
-    "loginPrompt.learnBody": "Your curriculum, grammar notes, and lesson progress are tied to your account. Sign in to keep learning."
+    "loginPrompt.learnBody": "Your curriculum, grammar notes, and lesson progress are tied to your account. Sign in to keep learning.",
+    "loginPrompt.practiceTitle": "Log in to use the practice suite",
+    "loginPrompt.practiceBody": "Practice tools load vocabulary, minimal pairs, and stroke data tied to your account. Sign in to start practicing.",
+    "loginPrompt.dictionaryTitle": "Log in to search the dictionary",
+    "loginPrompt.dictionaryBody": "The dictionary and your saved word lists use your learning data. Sign in to search words and build lists.",
+    "loginPrompt.translateTitle": "Log in to translate and scan",
+    "loginPrompt.translateBody": "Text translation and OCR scanning save to your personal history. Sign in to translate Chinese and keep your scans.",
+
+    "nav.radicals": "Radicals",
+    "dictionary.guestHint": "You're browsing as a guest. Log in to save favorites, build word lists, and add words to SRS review.",
+    "dictionary.allCefr": "All CEFR",
+    "dictionary.allRadicals": "All radicals",
+    "dictionary.allTopics": "All topics",
+    "dictionary.sortHsk": "HSK level",
+    "dictionary.sortFrequency": "Frequency",
+    "dictionary.sortAlphabetical": "Alphabetical"
   },
   vi: {
     "nav.shop": "Cửa hàng",
@@ -766,6 +785,10 @@ export const translations = {
     "cefr.C1": "C1 Nang cao",
     "cefr.C2": "C2 Thanh thao",
     "learn.cefrLocked": "Bai hoc cao hon muc kiem tra dau vao van hien thi nhung bi khoa.",
+    "learn.demoBanner": "Bài học thử — tiến độ và phần thưởng không được lưu. Đăng nhập để lưu quá trình học.",
+    "learn.guestTitle": "Học thử một bài mẫu",
+    "learn.guestBody": "Xem trước cách các bài học hoạt động với một bài mẫu miễn phí. Đăng nhập để mở khóa toàn bộ lộ trình HSK và lưu tiến độ.",
+    "learn.trySample": "Học thử bài mẫu",
 
     "practice.title": "Bộ luyện tập",
     "practice.subtitle": "Công cụ luyện tập tải prompt, cặp âm và nét chữ từ server.",
@@ -847,7 +870,22 @@ export const translations = {
     "loginPrompt.aiTutorTitle": "Đăng nhập để trò chuyện với AI Tutor",
     "loginPrompt.aiTutorBody": "AI tutor cung cấp luyện hội thoại tiếng Trung cá nhân hóa. Đăng nhập để bắt đầu.",
     "loginPrompt.learnTitle": "Đăng nhập để tiếp tục bài học",
-    "loginPrompt.learnBody": "Lộ trình, ghi chú ngữ pháp và tiến độ bài học gắn với tài khoản của bạn. Đăng nhập để tiếp tục học."
+    "loginPrompt.learnBody": "Lộ trình, ghi chú ngữ pháp và tiến độ bài học gắn với tài khoản của bạn. Đăng nhập để tiếp tục học.",
+    "loginPrompt.practiceTitle": "Đăng nhập để dùng bộ luyện tập",
+    "loginPrompt.practiceBody": "Công cụ luyện tập tải từ vựng, cặp âm và dữ liệu nét chữ gắn với tài khoản của bạn. Đăng nhập để bắt đầu luyện tập.",
+    "loginPrompt.dictionaryTitle": "Đăng nhập để tra từ điển",
+    "loginPrompt.dictionaryBody": "Từ điển và danh sách từ đã lưu dùng dữ liệu học của bạn. Đăng nhập để tra từ và tạo danh sách.",
+    "loginPrompt.translateTitle": "Đăng nhập để dịch và quét OCR",
+    "loginPrompt.translateBody": "Dịch văn bản và quét OCR sẽ lưu vào lịch sử cá nhân của bạn. Đăng nhập để dịch tiếng Trung và lưu bản quét.",
+
+    "nav.radicals": "Bộ thủ",
+    "dictionary.guestHint": "Bạn đang xem ở chế độ khách. Đăng nhập để lưu yêu thích, tạo danh sách từ và thêm từ vào ôn tập SRS.",
+    "dictionary.allCefr": "Tất cả CEFR",
+    "dictionary.allRadicals": "Tất cả bộ thủ",
+    "dictionary.allTopics": "Tất cả chủ đề",
+    "dictionary.sortHsk": "Cấp HSK",
+    "dictionary.sortFrequency": "Tần suất",
+    "dictionary.sortAlphabetical": "Bảng chữ cái"
   }
 } as const;
 

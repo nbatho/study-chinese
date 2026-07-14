@@ -38,8 +38,11 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const { t } = useI18n();
 
   const path = location.pathname;
-  let activeTab = "home";
-  if (path.startsWith("/guide")) activeTab = "guide";
+  // Resolve exactly one active tab; default to none so unmatched routes
+  // (e.g. /profile, /settings) don't spuriously highlight Home.
+  let activeTab = "";
+  if (path === "/home" || path.startsWith("/home/")) activeTab = "home";
+  else if (path.startsWith("/guide")) activeTab = "guide";
   else if (path.startsWith("/learn")) activeTab = "learn";
   else if (path.startsWith("/grammar")) activeTab = "grammar";
   else if (path.startsWith("/radicals")) activeTab = "radicals";
@@ -53,13 +56,15 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   else if (path.startsWith("/admin")) activeTab = "admin";
 
   const tabs = [
+    // Public (no login required) — kept at the top.
     { id: "home", label: t("nav.home"), icon: Home },
     { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
-    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
-    { id: "radicals", label: "Bộ thủ", icon: Shapes },
-    { id: "practice", label: t("nav.practice"), icon: Dumbbell },
+    { id: "radicals", label: t("nav.radicals"), icon: Shapes },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },
+    // Login required — grouped below the public items.
+    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
+    { id: "practice", label: t("nav.practice"), icon: Dumbbell, requiresAuth: true },
     {
       id: "review",
       label: t("nav.review"),

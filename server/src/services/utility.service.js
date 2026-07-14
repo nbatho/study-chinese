@@ -1,7 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { env } from '../config/env.config.js';
 import { AppError } from '../utils/http-error.js';
-import { notFound } from '../utils/http-error.js';
+import { badRequest, notFound } from '../utils/http-error.js';
 import { toLikePattern } from '../utils/sql.js';
 import {
   getAchievements as getAchievementsForUser,
@@ -158,6 +158,74 @@ const getDetectedText = async (payload = {}) => {
 };
 
 const countChars = (value) => [...String(value || '')].length;
+
+// CC-CEDICT stores pinyin with trailing tone numbers ("he1 cha2") and "u:" for
+// ü. Convert to proper tone-marked pinyin ("hē chá") for display.
+const PINYIN_TONE_MARKS = {
+  a: ['a', 'ā', 'á', 'ǎ', 'à'],
+  e: ['e', 'ē', 'é', 'ě', 'è'],
+  i: ['i', 'ī', 'í', 'ǐ', 'ì'],
+  o: ['o', 'ō', 'ó', 'ǒ', 'ò'],
+  u: ['u', 'ū', 'ú', 'ǔ', 'ù'],
+  'ü': ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ']
+};
+
+const convertPinyinSyllable = (syllable) => {
+  const match = syllable.match(/^([a-zA-Zü:]+?)([1-5])$/);
+
+  if (!match) {
+    return syllable.replace(/u:/g, 'ü').replace(/U:/g, 'Ü');
+  }
+
+  const tone = Number(match[2]);
+  const letters = match[1].replace(/u:/g, 'ü').replace(/U:/g, 'Ü');
+
+  if (tone === 5) {
+    return letters;
+  }
+
+  const lower = letters.toLowerCase();
+  let target = -1;
+
+  if (lower.includes('a')) {
+    target = lower.indexOf('a');
+  } else if (lower.includes('e')) {
+    target = lower.indexOf('e');
+  } else if (lower.includes('ou')) {
+    target = lower.indexOf('o');
+  } else {
+    for (let index = letters.length - 1; index >= 0; index -= 1) {
+      if ('aeiouü'.includes(lower[index])) {
+        target = index;
+        break;
+      }
+    }
+  }
+
+  const marks = target >= 0 ? PINYIN_TONE_MARKS[lower[target]] : null;
+
+  if (!marks) {
+    return letters;
+  }
+
+  const isUpper = letters[target] !== lower[target];
+  const marked = isUpper ? marks[tone].toUpperCase() : marks[tone];
+
+  return letters.slice(0, target) + marked + letters.slice(target + 1);
+};
+
+const numberedPinyinToToneMarks = (pinyin) => {
+  const value = String(pinyin || '').trim();
+
+  if (!value || !/[1-5]/.test(value)) {
+    return value;
+  }
+
+  return value
+    .split(/(\s+)/)
+    .map((token) => (/^\s+$/.test(token) ? token : convertPinyinSyllable(token)))
+    .join('');
+};
 
 const countPrefixChars = (value, target) => {
   const index = String(value || '').indexOf(target);
@@ -398,7 +466,10 @@ const getDictionaryEntriesForText = async (detectedText) => {
       [text, compactText]
     );
 
-    return result.rows;
+    return result.rows.map((row) => ({
+      ...row,
+      pinyin: numberedPinyinToToneMarks(row.pinyin)
+    }));
   } catch (error) {
     if (error.code === '42P01') {
       return [];
@@ -546,8 +617,7 @@ export const getOcrSamples = async () => ({
   samples: []
 });
 
-export const scanOcr = async (userId, payload) => {
-  assertImageWithinLimit(payload?.image);
+const computeTranslationResult = async (payload) => {
   const { detectedText, regions, mode } = await getDetectedText(payload);
   const compactDetectedText = compactForLookup(detectedText);
 
@@ -568,7 +638,12 @@ export const scanOcr = async (userId, payload) => {
     [detectedText, compactDetectedText]
   );
 
-  const matchedBoxes = result.rows.map((word, index) => ({
+  const wordRows = result.rows.map((word) => ({
+    ...word,
+    pinyin: numberedPinyinToToneMarks(word.pinyin)
+  }));
+
+  const matchedBoxes = wordRows.map((word, index) => ({
     id: `box_${index + 1}`,
     wordId: word.id,
     text: word.simplified,
@@ -581,7 +656,7 @@ export const scanOcr = async (userId, payload) => {
   const rawRegionBoxes = getOcrRegionBoxes(regions, detectedText);
   const dictionaryEntries = await getDictionaryEntriesForText(detectedText);
   const textLookupEntries = [
-    ...result.rows.map((word) => ({
+    ...wordRows.map((word) => ({
       ...word,
       wordId: word.id
     })),
@@ -607,6 +682,39 @@ export const scanOcr = async (userId, payload) => {
   });
   const combinedMeaning = contextualTranslation.translation || dictionaryFallbackMeaning;
 
+  return {
+    mode,
+    regions,
+    matchedWordIds,
+    dictionaryBoxes,
+    textLookupBoxes,
+    contextualTranslation,
+    result: {
+      boxes,
+      regions: rawRegionBoxes,
+      segments: boxes.map(toSegment),
+      combinedMeaning,
+      detectedText,
+      provider: getOcrProvider(),
+      translationProvider: contextualTranslation.provider,
+      translationModel: contextualTranslation.modelName
+    }
+  };
+};
+
+export const scanOcr = async (userId, payload) => {
+  assertImageWithinLimit(payload?.image);
+
+  const {
+    mode,
+    regions,
+    matchedWordIds,
+    dictionaryBoxes,
+    textLookupBoxes,
+    contextualTranslation,
+    result
+  } = await computeTranslationResult(payload);
+
   await query(
     `
       INSERT INTO ocr_scan_events (user_id, provider, detected_text, matched_word_ids, metadata)
@@ -615,7 +723,7 @@ export const scanOcr = async (userId, payload) => {
     [
       userId,
       env.OCR_PROVIDER,
-      detectedText,
+      result.detectedText,
       JSON.stringify(matchedWordIds),
       JSON.stringify({
         mode,
@@ -630,16 +738,21 @@ export const scanOcr = async (userId, payload) => {
     ]
   );
 
-  return {
-    boxes,
-    regions: rawRegionBoxes,
-    segments: boxes.map(toSegment),
-    combinedMeaning,
-    detectedText,
-    provider: getOcrProvider(),
-    translationProvider: contextualTranslation.provider,
-    translationModel: contextualTranslation.modelName
-  };
+  return result;
+};
+
+// Public text-only translation: no image OCR and no history persistence, so it
+// can be used without an account. Images are rejected — those still require the
+// authenticated /ocr/scan endpoint.
+export const translatePublicText = async (payload = {}) => {
+  const text = asText(payload.text);
+
+  if (!text) {
+    throw badRequest('Vui lòng nhập nội dung tiếng Trung cần dịch.');
+  }
+
+  const { result } = await computeTranslationResult({ text });
+  return result;
 };
 
 export const getOcrHistory = async (userId, options = {}) => {

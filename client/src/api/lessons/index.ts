@@ -19,6 +19,12 @@ export const lessonsApi = {
     detail: (lessonId: string, locale = 'en') =>
         apiRequest<LessonDetailResponse>(beApi.get(`lessons/${lessonId}`, { params: { locale } })),
 
+    sampleList: (locale = 'en') =>
+        apiRequest<LessonsResponse>(beApi.get('lessons/sample-list', { params: { locale } })),
+
+    publicDetail: (lessonId: string, locale = 'en') =>
+        apiRequest<LessonDetailResponse>(beApi.get(`lessons/public/${lessonId}`, { params: { locale } })),
+
     complete: (lessonId: string, payload: CompleteLessonPayload) =>
         apiRequest<CompleteLessonResponse>(beApi.post(`lessons/${lessonId}/complete`, payload)),
 

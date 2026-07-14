@@ -7,7 +7,9 @@ import {
   getLessonDetails,
   getLessonModules,
   getLessons,
-  getReadingPassage
+  getPublicLessonDetails,
+  getReadingPassage,
+  getSampleLessons
 } from '../services/lesson.service.js';
 import { createCourseIssueReport } from '../services/report.service.js';
 
@@ -23,6 +25,16 @@ export const listLessonGrammar = asyncHandler(async (req, res) => {
 
 export const showLesson = asyncHandler(async (req, res) => {
   const data = await getLessonDetails(req.params.id, req.query.locale);
+  success(res, data);
+});
+
+export const listSampleLessons = asyncHandler(async (req, res) => {
+  const data = await getSampleLessons(req.query.locale);
+  success(res, data);
+});
+
+export const showPublicLesson = asyncHandler(async (req, res) => {
+  const data = await getPublicLessonDetails(req.params.id, req.query.locale);
   success(res, data);
 });
 

@@ -1,11 +1,12 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
   Filter,
+  LogIn,
   Plus,
   Search,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import {
 import type { CefrLevel } from "../../api/users";
 import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
+import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 import { DropdownSelect } from "../../components/ui/dropdown-select";
@@ -30,15 +32,17 @@ import WordCard from "./components/WordCard";
 
 const hskLevels = [1, 2, 3, 4, 5, 6, 7];
 const cefrLevels: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
-const sortOptions: Array<{ value: VocabularySort; label: string }> = [
-  { value: "hsk", label: "HSK level" },
-  { value: "frequency", label: "Frequency" },
-  { value: "alphabetical", label: "Alphabetical" },
-];
 const pageSize = 24;
 const listEmojis = ["📘", "⭐", "🧠", "✍️"];
 export default function Dictionary() {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const sortOptions: Array<{ value: VocabularySort; label: string }> = [
+    { value: "hsk", label: t("dictionary.sortHsk") },
+    { value: "frequency", label: t("dictionary.sortFrequency") },
+    { value: "alphabetical", label: t("dictionary.sortAlphabetical") },
+  ];
   const [urlSearchParams, setUrlSearchParams] = useSearchParams();
   const radicalParam = urlSearchParams.get("radical");
   const [query, setQuery] = useState("");
@@ -158,6 +162,20 @@ export default function Dictionary() {
         <p className="text-[0.9rem] text-muted-foreground">{t("dictionary.subtitle")}</p>
       </header>
 
+      {!isAuthenticated && (
+        <div className="app-surface-padded mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-muted-foreground">{t("dictionary.guestHint")}</p>
+          <button
+            type="button"
+            onClick={() => navigate("/auth")}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px"
+          >
+            <LogIn size={16} />
+            {t("loginPrompt.login")}
+          </button>
+        </div>
+      )}
+
       <section className="app-surface-padded mb-4">
         <div className="mb-3 flex items-center gap-2 rounded-xl border bg-background px-3 py-2.5">
           <Search size={18} className="shrink-0 text-muted-foreground" />
@@ -218,7 +236,7 @@ export default function Dictionary() {
               resetPage();
             }}
             options={[
-              { value: "all", label: "All CEFR" },
+              { value: "all", label: t("dictionary.allCefr") },
               ...cefrLevels.map((level) => ({ value: level, label: level })),
             ]}
             align="left"
@@ -233,7 +251,7 @@ export default function Dictionary() {
             value={selectedRadical}
             onChange={updateRadicalFilter}
             options={[
-              { value: "all", label: "All radicals" },
+              { value: "all", label: t("dictionary.allRadicals") },
               ...radicals.map((item) => ({ value: item.radical, label: `${item.radical} (${item.count})` })),
             ]}
             align="left"
@@ -251,7 +269,7 @@ export default function Dictionary() {
               resetPage();
             }}
             options={[
-              { value: "all", label: "All topics" },
+              { value: "all", label: t("dictionary.allTopics") },
               ...topics.map((topic) => ({
                 value: topic.id,
                 label: `${topic.emoji ? `${topic.emoji} ` : ""}${topic.nameEn}`,
@@ -280,6 +298,7 @@ export default function Dictionary() {
         </div>
       </section>
 
+      {isAuthenticated && (
       <section className="app-surface-padded mb-5">
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-left">
@@ -344,6 +363,7 @@ export default function Dictionary() {
           </button>
         </form>
       </section>
+      )}
 
       <section className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-left text-base font-extrabold">
@@ -375,6 +395,7 @@ export default function Dictionary() {
               onFavorite={() => void handleFavorite(word)}
               onEnroll={() => void handleEnroll(word)}
               onAddToList={() => void handleAddToList(word)}
+              showActions={isAuthenticated}
               busy={
                 favoriteMutation.isPending ||
                 enrollMutation.isPending ||
