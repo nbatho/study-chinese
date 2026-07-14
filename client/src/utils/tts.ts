@@ -1,5 +1,3 @@
-import { getTtsSpeed } from "./ttsSettings";
-
 let currentAudio: HTMLAudioElement | null = null;
 
 const getAudioApiBaseUrl = () => {
@@ -12,21 +10,19 @@ const getAudioApiBaseUrl = () => {
   return `${window.location.origin}/api/v1`;
 };
 
-const speakWithBrowser = (text: string, lang: string, speed: number) => {
+const speakWithBrowser = (text: string, lang: string) => {
   if (!("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
-  utterance.rate = speed;
   window.speechSynthesis.speak(utterance);
 };
 
-const speakWithEdgeAudio = async (text: string, lang: string, speed: number) => {
+const speakWithEdgeAudio = async (text: string, lang: string) => {
   const url = new URL(`${getAudioApiBaseUrl()}/audio`);
   url.searchParams.set("text", text);
   url.searchParams.set("language", lang);
-  url.searchParams.set("speed", String(speed));
 
   currentAudio?.pause();
   currentAudio = new Audio(url.toString());
@@ -44,21 +40,14 @@ const speakWithEdgeAudio = async (text: string, lang: string, speed: number) => 
   });
 };
 
-interface SpeakOptions {
-  /** Playback rate. Defaults to the user's persisted TTS speed preference. */
-  speed?: number;
-}
-
-export async function speakChinese(text: string, lang = "zh-CN", options: SpeakOptions = {}) {
+export async function speakChinese(text: string, lang = "zh-CN") {
   const normalizedText = text.trim();
 
   if (!normalizedText) return;
 
-  const speed = options.speed ?? getTtsSpeed();
-
   try {
-    await speakWithEdgeAudio(normalizedText, lang, speed);
+    await speakWithEdgeAudio(normalizedText, lang);
   } catch {
-    speakWithBrowser(normalizedText, lang, speed);
+    speakWithBrowser(normalizedText, lang);
   }
 }

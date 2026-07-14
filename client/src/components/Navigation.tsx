@@ -1,9 +1,26 @@
-import { ChevronLeft, ChevronRight, Compass, Lock } from "lucide-react";
+import {
+  BookMarked,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  Dumbbell,
+  FileText,
+  Home,
+  Languages,
+  Lock,
+  RefreshCw,
+  Shapes,
+  Shield,
+  ShoppingBag,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDueSrsCardsQuery } from "../api/srs/queries";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
-import { resolveActiveTab, useNavTabs } from "./navConfig";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
@@ -16,6 +33,8 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const authUser = useAppSelector((state) => state.auth.user);
+  const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
   const { t } = useI18n();
 
   const path = location.pathname;
@@ -62,7 +81,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   return (
     <aside
       className={cn(
-        "sticky top-0 z-40 hidden h-[100dvh] shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300 md:flex",
+        "sticky top-0 z-40 flex h-[100dvh] shrink-0 flex-col border-r bg-card/95 shadow-[8px_0_24px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-[width] duration-300",
         collapsed ? "w-19" : "w-66",
       )}
     >

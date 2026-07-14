@@ -23,9 +23,6 @@ services:
     container_name: study-chinese-client
     build:
       context: ./client
-      args:
-        VITE_API_GATEWAY_URL: ${VITE_API_GATEWAY_URL:-}
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     ports:
       - "5173:80"
     depends_on:

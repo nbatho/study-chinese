@@ -52,11 +52,6 @@ export const securityHeaders = (req, res, next) => {
     res.setHeader(header, value);
   });
 
-  // HSTS only makes sense over HTTPS; browsers ignore it on plain HTTP anyway.
-  if (req.secure) {
-    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
-  }
-
   next();
 };
 
@@ -114,15 +109,12 @@ export const generalRateLimit = createRateLimiter({
   max: 300
 });
 
-// Separate buckets per auth flow so e.g. routine token refreshes from users
-// behind a shared NAT cannot exhaust the login/OTP budget for everyone.
-export const createAuthRateLimit = (scope, max = 20) =>
-  createRateLimiter({
-    keyPrefix: `auth:${scope}`,
-    windowMs: 15 * 60 * 1000,
-    max,
-    message: 'Too many authentication attempts. Please try again later.'
-  });
+export const authRateLimit = createRateLimiter({
+  keyPrefix: 'auth',
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many authentication attempts. Please try again later.'
+});
 
 export const aiRateLimit = createRateLimiter({
   keyPrefix: 'ai',

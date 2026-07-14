@@ -9,7 +9,6 @@ import { healthCheck } from './src/controllers/health.controller.js';
 import { requestLogger } from './src/middlewares/logger.middleware.js';
 import { errorHandler, notFoundHandler } from './src/middlewares/error.middleware.js';
 import { generalRateLimit, requestId, securityHeaders } from './src/middlewares/security.middleware.js';
-import { AppError } from './src/utils/http-error.js';
 
 const PORT = env.PORT;
 const app = express();
@@ -26,7 +25,7 @@ app.use(
         return;
       }
 
-      callback(new AppError(403, 'UNTRUSTED_ORIGIN', 'Request origin is not allowed.'));
+      callback(new Error(`CORS origin not allowed: ${origin}`));
     },
     credentials: true
   })

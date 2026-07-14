@@ -103,6 +103,7 @@ Root scripts:
 - `npm run lint`
 - `npm run test`
 - `npm run db:init`
+- `npm --prefix server run db:migrate -- migrations/<file>.sql`
 
 Client scripts:
 
@@ -117,7 +118,7 @@ Server scripts:
 - `npm --prefix server test`
 - `npm --prefix server run test:integration`
 - `npm --prefix server run db:init`
-- `npm --prefix server run db:migrate -- <file>.sql` (áp dụng một file SQL lẻ khi cần; schema hiện tại đã gộp đủ trong `server/schema.sql`, thư mục `server/migrations/` trống)
+- `npm --prefix server run db:migrate -- migrations/<file>.sql`
 
 ## API Chính
 

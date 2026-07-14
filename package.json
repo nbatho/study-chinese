@@ -15,7 +15,6 @@
     "content:audit": "npm --prefix server run content:audit",
     "content:agent": "npm --prefix server run content:agent",
     "content:import": "npm --prefix server run content:import",
-    "content:foundation:import": "npm --prefix server run content:foundation:import",
     "db:init": "npm --prefix server run db:init",
     "build": "npm --prefix client run build",
     "lint": "npm --prefix client run lint && npm --prefix server run lint",

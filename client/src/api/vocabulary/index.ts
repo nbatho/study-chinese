@@ -6,7 +6,6 @@ import type {
     VocabularySearchParams,
     VocabularyStatsResponse,
     VocabularyTopicsResponse,
-    WordLookupResponse,
 } from './types';
 
 export const vocabularyApi = {
@@ -14,7 +13,6 @@ export const vocabularyApi = {
     topics: () => apiRequest<VocabularyTopicsResponse>(beApi.get('vocabulary/topics')),
     radicals: () => apiRequest<VocabularyRadicalsResponse>(beApi.get('vocabulary/radicals')),
     stats: () => apiRequest<VocabularyStatsResponse>(beApi.get('vocabulary/stats')),
-    lookup: (text: string) => apiRequest<WordLookupResponse>(beApi.get('vocabulary/lookup', { params: { q: text } })),
 };
 
 export * from './types';

@@ -1,6 +1,5 @@
 import { badRequest } from '../utils/http-error.js';
 import { emailPattern } from '../utils/patterns.js';
-import { isStrongPassword } from '../utils/password-policy.js';
 
 export const requireFields = (fields) => (req, res, next) => {
   const missing = fields.filter((field) => req.body?.[field] === undefined || req.body[field] === '');
@@ -15,8 +14,7 @@ export const requireFields = (fields) => (req, res, next) => {
 export const validators = {
   email: (value) => typeof value === 'string' && emailPattern.test(value.trim().toLowerCase()),
   nonEmptyString: (value) => typeof value === 'string' && value.trim().length > 0,
-  password: (value) => isStrongPassword(value),
-  otp: (value) => typeof value === 'string' && /^\d{6}$/.test(value.trim()),
+  password: (value) => typeof value === 'string' && value.length >= 8,
   optionalString:
     (max = 255) =>
     (value) =>
@@ -47,34 +45,8 @@ export const authSchemas = {
     password: validators.password,
     name: validators.optionalString(80)
   },
-  verifyRegistration: {
-    email: validators.email,
-    otp: validators.otp
-  },
   login: {
     email: validators.email,
     password: validators.nonEmptyString
-  },
-  googleLogin: {
-    credential: validators.nonEmptyString
-  },
-  verifyEmail: {
-    token: validators.nonEmptyString
-  },
-  forgotPassword: {
-    email: validators.email
-  },
-  resetPassword: {
-    email: validators.email,
-    otp: validators.otp,
-    password: validators.password
-  },
-  changePassword: {
-    currentPassword: validators.nonEmptyString,
-    newPassword: validators.password,
-    otp: validators.otp
-  },
-  deleteAccount: {
-    otp: validators.otp
   }
 };

@@ -7,11 +7,8 @@ import type { MistakePayload } from "../../../api/users";
 import { useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
 import LoadingCard from "../../../components/LoadingCard";
-import Confetti from "../../../components/Confetti";
 import { cn } from "../../../utils/cn";
 import { speakChinese } from "../../../utils/tts";
-import TtsSpeedControl from "../../../components/TtsSpeedControl";
-import { HanziText } from "../../../components/HanziLookup";
 import ArrangeExercise from "./ArrangeExercise";
 import WordList from "./WordList";
 
@@ -276,8 +273,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
         <div className="anim-slide">
           <div className="mb-4.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-left text-[1.2rem] font-extrabold">{t("learn.dialogue")} {lesson.dialogue.title}</h3>
-            <div className="flex flex-wrap items-center gap-3">
-              <TtsSpeedControl label={t("tts.speed")} />
+            <div className="flex flex-wrap gap-3">
               <button onClick={() => setShowPinyin(!showPinyin)} className={cn("flex items-center gap-1 text-xs font-semibold", showPinyin ? "text-primary" : "text-muted-foreground")}>
                 {t("learn.pinyin")} {showPinyin ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
               </button>
@@ -294,7 +290,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
                   <span className="text-[0.7rem] font-extrabold text-muted-foreground">{line.speaker}</span>
                   <Volume2 size={12} className="text-muted-foreground" />
                 </div>
-                <HanziText as="h3" className="font-serif text-[1.45rem] font-bold">{line.simplified}</HanziText>
+                <h3 className="font-serif text-[1.45rem] font-bold">{line.simplified}</h3>
                 {showPinyin && <div className="mt-0.5 text-[0.85rem] text-muted-foreground">{line.pinyin}</div>}
                 {showTranslation && <p className="mt-1.5 border-t border-black/5 pt-1 text-[0.85rem]">{line.english}</p>}
               </div>
@@ -383,7 +379,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
                 <span className="text-xs font-bold uppercase text-muted-foreground">{t("learn.readingPassage")}</span>
                 {currentExercise.stimulus.title && <span className="text-xs font-bold text-primary">{currentExercise.stimulus.title}</span>}
               </div>
-              <HanziText as="p" className="font-serif text-2xl font-bold leading-relaxed">{currentExercise.stimulus.text}</HanziText>
+              <p className="font-serif text-2xl font-bold leading-relaxed">{currentExercise.stimulus.text}</p>
               {currentExercise.stimulus.pinyin && <p className="mt-2 text-sm font-semibold text-muted-foreground">{currentExercise.stimulus.pinyin}</p>}
               {currentExercise.stimulus.english && <p className="mt-2 border-t border-border pt-2 text-sm text-muted-foreground">{currentExercise.stimulus.english}</p>}
               {!!currentExercise.stimulus.vocabulary?.length && (
@@ -479,24 +475,23 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
 
       {stage === "completed" && (
         <div className="anim-slide py-5 text-center">
-          <Confetti />
           <Award size={72} className="mx-auto mb-4 text-gold" />
           <h2 className="text-3xl font-extrabold">{t("learn.completed")}</h2>
           <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
           <div className="mx-auto mb-9 grid max-w-105 grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.xpReward")}</span>
-              <h3 className="anim-xp-rise mt-1 text-2xl font-extrabold text-gold">+{lesson.xpReward}</h3>
+              <h3 className="mt-1 text-2xl font-extrabold text-gold">+{lesson.xpReward}</h3>
             </div>
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.gemsReward")}</span>
-              <h3 className="anim-xp-rise mt-1 flex items-center justify-center gap-1 text-2xl font-extrabold text-tone-1" style={{ animationDelay: "0.12s" }}>
+              <h3 className="mt-1 flex items-center justify-center gap-1 text-2xl font-extrabold text-tone-1">
                 <Gem size={20} /> +{gemsEarned}
               </h3>
             </div>
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.accuracy")}</span>
-              <h3 className="anim-xp-rise mt-1 text-2xl font-extrabold text-jade" style={{ animationDelay: "0.24s" }}>{finalAccuracy}%</h3>
+              <h3 className="mt-1 text-2xl font-extrabold text-jade">{finalAccuracy}%</h3>
             </div>
           </div>
           <WordList lesson={lesson} compact />

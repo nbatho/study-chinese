@@ -7,8 +7,6 @@ export type AppAppearance = 'light' | 'dark' | 'system';
 
 export interface UserProfile {
     name: string;
-    email?: string;
-    emailVerified?: boolean;
     avatar: string;
     startLevel: SkillLevel;
     cefrLevel: CefrLevel;
