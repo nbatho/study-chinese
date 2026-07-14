@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CefrLevel, LearningGoal, SkillLevel } from "../../api/users";
 import { useAddActivityMutation, useUpdateProfileMutation, useUserProfileQuery } from "../../api/users/queries";
-import { ArrowRight, BookOpen, ClipboardCheck, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardCheck, GraduationCap, Sparkles, Target } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../../store/modules/appSlice";
@@ -35,6 +35,11 @@ export default function Onboarding() {
   }, [hasCompletedOnboarding, location.pathname, navigate, profileQuery.data]);
 
   const avatars = ["🐼", "🐯", "🐉", "🦊", "🐵", "🦁", "🐱", "🐶", "🦉", "🐨"];
+  const highlights: Array<{ emoji: string; title: string; desc: string }> = [
+    { emoji: "📖", title: t("onboarding.why1"), desc: t("onboarding.why1Sub") },
+    { emoji: "⚡", title: t("onboarding.why2"), desc: t("onboarding.why2Sub") },
+    { emoji: "🎵", title: t("onboarding.why3"), desc: t("onboarding.why3Sub") },
+  ];
   const levels: Array<{ id: SkillLevel; title: string; emoji: string; sub: string }> = [
     { id: "beginner", title: t("onboarding.beginner"), emoji: "🌱", sub: t("onboarding.beginnerSub") },
     { id: "elementary", title: t("onboarding.elementary"), emoji: "🌿", sub: t("onboarding.elementarySub") },
@@ -84,7 +89,9 @@ export default function Onboarding() {
     dispatch(setOnboardingCompleted(true));
     dispatch(setAppearance(profileQuery.data?.profile.appAppearance ?? "light"));
     await addActivityMutation.mutateAsync({ xp: 5 });
-    navigate("/home", { replace: true });
+    // Send brand-new learners straight into the pinyin/tones foundation course.
+    const destination = selectedLevel === "beginner" ? "/foundation" : "/home";
+    navigate(destination, { replace: true });
   };
 
   const handleBack = () => {
@@ -106,9 +113,23 @@ export default function Onboarding() {
               <Sparkles className="text-tone-1" size={24} />
               <h2 className="text-2xl sm:text-[1.7rem]">{t("onboarding.welcome")}</h2>
             </div>
-            <p className="mb-7 text-muted-foreground">
+            <p className="mb-5 text-muted-foreground">
               {t("onboarding.welcomeBody")}
             </p>
+            <div className="mb-7 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+              <p className="mb-3 text-[0.8rem] font-extrabold uppercase tracking-wide text-primary">{t("onboarding.whyTitle")}</p>
+              <div className="grid gap-2.5">
+                {highlights.map((item) => (
+                  <div key={item.title} className="flex items-start gap-3">
+                    <span className="text-xl leading-none">{item.emoji}</span>
+                    <div>
+                      <div className="text-[0.9rem] font-bold leading-tight">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="mb-8">
               <label className="mb-2 block text-[0.9rem] font-semibold">{t("onboarding.yourName")}</label>
               <input
@@ -254,9 +275,15 @@ export default function Onboarding() {
               <br />
               {t("onboarding.readyBody")}
             </p>
-            <div className="mb-9 rounded-xl border border-dashed border-jade bg-jade/10 px-5 py-4 text-[0.9rem] font-semibold text-jade">
+            <div className="mb-4 rounded-xl border border-dashed border-jade bg-jade/10 px-5 py-4 text-[0.9rem] font-semibold text-jade">
               {t("onboarding.seed")}
             </div>
+            {selectedLevel === "beginner" && (
+              <div className="mb-9 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 px-5 py-4 text-left text-[0.85rem] font-semibold text-primary">
+                <GraduationCap size={20} className="shrink-0" />
+                {t("onboarding.foundationNote")}
+              </div>
+            )}
           </div>
         )}
 

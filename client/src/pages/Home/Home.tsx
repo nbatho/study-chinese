@@ -14,6 +14,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Star,
+  Target,
   Trophy,
 } from "lucide-react";
 import {
@@ -24,6 +25,7 @@ import {
   useLessonsQuery,
   usePurchaseShopItemMutation,
   useTodayPlanQuery,
+  useUserMistakesQuery,
   useUserProfileQuery,
   useUserStatsQuery,
 } from "../../api";
@@ -31,6 +33,7 @@ import TtsButton from "../../components/TtsButton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
+import { Skeleton } from "../../components/ui/skeleton";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
@@ -71,6 +74,7 @@ export default function Home() {
   const achievementsQuery = useAchievementsQuery(isAuthenticated);
   const dailyContentQuery = useDailyContentQuery(isAuthenticated);
   const todayPlanQuery = useTodayPlanQuery(isAuthenticated);
+  const mistakesQuery = useUserMistakesQuery(20, isAuthenticated);
   const leaderboardQuery = useLeaderboardQuery({
     scope: leaderboardScope,
     timeframe: "weekly",
@@ -100,6 +104,9 @@ export default function Home() {
   const nextLesson = lessons.find((lesson) => !lesson.completedAt) ?? lessons[0];
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
+  const weakSpots = (mistakesQuery.data?.mistakes ?? [])
+    .filter((item) => item.needsPracticeCount > 0)
+    .slice(0, 4);
   const displayName = profile?.name || t("common.learner");
   const xpTarget = todayPlan?.xpTarget ?? Math.max((profile?.dailyMinutes ?? 15) * 3, 50);
   const lessonTarget = 1;
@@ -299,6 +306,68 @@ export default function Home() {
           </section>
 
           <section className="app-surface-padded min-w-0">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-extrabold">{t("home.weakSpots")}</h2>
+                <p className="text-sm font-medium text-muted-foreground">{t("home.weakSpotsHint")}</p>
+              </div>
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Target size={22} />
+              </span>
+            </div>
+
+            {!isAuthenticated ? (
+              <div className="rounded-xl border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
+                {t("home.loginToPersonalize")}
+              </div>
+            ) : mistakesQuery.isLoading ? (
+              <div className="grid gap-2.5">
+                {[0, 1, 2].map((index) => (
+                  <Skeleton key={index} className="h-15 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : weakSpots.length ? (
+              <>
+                <div className="grid gap-2.5">
+                  {weakSpots.map((spot) => (
+                    <div
+                      key={spot.id}
+                      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border bg-background/80 px-3 py-2.5"
+                    >
+                      <span className="font-serif text-2xl font-extrabold text-primary">
+                        {spot.simplified || spot.prompt || "?"}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-extrabold">
+                          {spot.pinyin || spot.skill}
+                        </span>
+                        <span className="block truncate text-xs font-medium text-muted-foreground">
+                          {spot.english || spot.correctAnswer || spot.prompt}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
+                        x{spot.needsPracticeCount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => navigate("/practice?tool=weak")}
+                  className="mt-4 w-full rounded-xl"
+                >
+                  <Target size={17} />
+                  {t("home.weakSpotsReview")}
+                </Button>
+              </>
+            ) : (
+              <div className="rounded-xl border border-dashed bg-background p-5 text-center text-sm font-semibold text-muted-foreground">
+                {t("home.weakSpotsEmpty")}
+              </div>
+            )}
+          </section>
+
+          <section className="app-surface-padded min-w-0">
             <h2 className="mb-4 text-lg font-extrabold">{t("home.phrase")}</h2>
             {currentPhrase ? (
               <div>
@@ -316,9 +385,16 @@ export default function Home() {
                   {t("common.listen")}
                 </TtsButton>
               </div>
+            ) : isAuthenticated ? (
+              <div className="grid gap-3">
+                <Skeleton className="h-14 w-40" />
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-9 w-28 rounded-lg" />
+              </div>
             ) : (
               <div className="rounded-xl border border-dashed bg-background p-5 text-sm font-semibold text-muted-foreground">
-                {isAuthenticated ? t("common.loading") : t("home.loginToPersonalize")}
+                {t("home.loginToPersonalize")}
               </div>
             )}
           </section>
@@ -386,8 +462,21 @@ export default function Home() {
             </div>
 
             {leaderboardQuery.isLoading ? (
-              <div className="rounded-lg border border-dashed bg-background p-4 text-center text-sm font-semibold text-muted-foreground">
-                {t("common.loading")}
+              <div className="grid gap-2">
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-[32px_36px_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border bg-background px-2.5 py-2.5"
+                  >
+                    <Skeleton className="size-8 rounded-md" />
+                    <Skeleton className="size-9 rounded-md" />
+                    <div className="grid gap-1.5">
+                      <Skeleton className="h-3.5 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                ))}
               </div>
             ) : leaderboardEntries.length ? (
               <ol className="grid gap-2">

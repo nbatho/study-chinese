@@ -1,5 +1,6 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { badRequest } from '../utils/http-error.js';
+import { getDateKey } from '../utils/date.js';
 import { mapDailyStats, mapStreak, recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
 import {
@@ -11,6 +12,9 @@ import { listMistakes, practiceMistake, recordMistake } from './mistake.service.
 
 const mapProfile = (row) => ({
   name: row.name,
+  email: row.email,
+  // Treat a missing column (migration not applied yet) as verified to avoid nagging.
+  emailVerified: row.email_verified ?? true,
   avatar: row.avatar,
   startLevel: row.start_level,
   cefrLevel: row.cefr_level || 'A1',
@@ -68,7 +72,7 @@ const normalizeActivityNumber = (value, { max, field }) => {
   return Math.round(normalized);
 };
 
-const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null } = {}) => {
+const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null, dateKey = getDateKey() } = {}) => {
   const normalizedDailyMinutes = Number(dailyMinutes || 15);
   const normalizedDueCount = Number(dueCount || 0);
   const xpTarget = Math.max(normalizedDailyMinutes * 3, 45);
@@ -134,7 +138,7 @@ const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = n
 
   return {
     plan: {
-      dateKey: new Date().toISOString().slice(0, 10),
+      dateKey,
       xpTarget,
       todayXp: todayStats?.xp || 0,
       dailyMinutes: normalizedDailyMinutes,
@@ -215,21 +219,22 @@ export const getUserStats = async (userId, days = 7) => {
 };
 
 export const getTodayPlan = async (userId) => {
+  const profileResult = await query(
+    `
+      SELECT daily_minutes, cefr_level, timezone
+      FROM users
+      WHERE id = $1
+    `,
+    [userId]
+  );
+  const dateKey = getDateKey(profileResult.rows[0]?.timezone || 'UTC');
+
   const [
-    profileResult,
     dueResult,
     mistakesResult,
     lessonsResult,
     statsResult
   ] = await Promise.all([
-    query(
-      `
-        SELECT daily_minutes, cefr_level
-        FROM users
-        WHERE id = $1
-      `,
-      [userId]
-    ),
     query(
       `
         SELECT count(*)::int AS due_count
@@ -272,11 +277,10 @@ export const getTodayPlan = async (userId) => {
       `
         SELECT *
         FROM daily_stats
-        WHERE user_id = $1
-        ORDER BY date_key DESC
+        WHERE user_id = $1 AND date_key = $2
         LIMIT 1
       `,
-      [userId]
+      [userId, dateKey]
     )
   ]);
 
@@ -285,7 +289,8 @@ export const getTodayPlan = async (userId) => {
     dueCount: Number(dueResult.rows[0]?.due_count || 0),
     weakSkill: mistakesResult.rows[0] || null,
     nextLesson: lessonsResult.rows[0] || null,
-    todayStats: statsResult.rows[0] ? mapDailyStats(statsResult.rows[0]) : null
+    todayStats: statsResult.rows[0] ? mapDailyStats(statsResult.rows[0]) : null,
+    dateKey
   });
 };
 

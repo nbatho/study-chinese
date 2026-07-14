@@ -15,7 +15,10 @@ export default function WordList({ lesson, compact = false }: { lesson: LessonDe
         {lesson.newWords.map((word) => (
           <button key={word.id} onClick={() => speakChinese(word.simplified)} className="flex items-center gap-1.5 rounded-[10px] border bg-secondary px-3 py-2">
             <span className="font-serif text-[1.1rem] font-bold">{word.simplified}</span>
-            <span className="text-xs text-muted-foreground">({word.pinyin})</span>
+            <span className="text-xs text-muted-foreground">
+              ({word.pinyin}
+              {word.hanViet ? <span className="capitalize"> · {word.hanViet}</span> : null})
+            </span>
             <Volume2 size={12} className="text-tone-1" />
           </button>
         ))}

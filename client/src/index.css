@@ -154,6 +154,30 @@ body.dark {
     animation: voice-recording-pulse 1.5s infinite;
   }
 
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--muted) 70%, transparent);
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--foreground) 8%, transparent),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  .anim-xp-rise {
+    animation: xp-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   .landing-float {
     animation: landing-float 7s ease-in-out infinite;
   }
@@ -242,6 +266,41 @@ body.dark {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes xp-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.6);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.12);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-x, 0), 105vh, 0) rotate(var(--confetti-rot, 720deg));
   }
 }
 
@@ -365,11 +424,13 @@ body.dark {
 @media (prefers-reduced-motion: reduce) {
   .anim-pop,
   .anim-slide,
+  .anim-xp-rise,
   .recording-pulse,
   .landing-float,
   .landing-card-rise,
   .landing-scan,
-  .landing-drift {
+  .landing-drift,
+  .skeleton::after {
     animation: none;
   }
 }

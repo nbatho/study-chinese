@@ -206,7 +206,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
       score: placementResult.score,
       completedAt: new Date().toISOString(),
     });
-    onComplete?.(placementResult);
+    // Do not auto-advance: show the result screen so the learner can see their
+    // level. onComplete is fired when they press Continue on that screen.
   };
 
   const goNext = async () => {
@@ -295,10 +296,14 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button type="button" variant="secondary" onClick={restart} className="rounded-xl">
                 <RotateCcw size={18} />
-                Retake
+                Làm lại
               </Button>
-              <Button type="button" onClick={() => navigate("/learn")} className="rounded-xl">
-                Bắt đầu học
+              <Button
+                type="button"
+                onClick={() => (onComplete ? onComplete(result) : navigate("/learn"))}
+                className="rounded-xl"
+              >
+                {onComplete ? "Tiếp tục" : "Bắt đầu học"}
                 <ArrowRight size={18} />
               </Button>
             </div>

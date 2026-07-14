@@ -1,5 +1,6 @@
 import { BookmarkPlus, Check, Heart, ListPlus, Volume2 } from "lucide-react";
 import type { Word } from "../../../api/vocabulary";
+import { HanziText } from "../../../components/HanziLookup";
 import { useI18n } from "../../../i18n";
 
 interface WordCardProps {
@@ -57,13 +58,18 @@ export default function WordCard({
               </span>
             )}
           </div>
-          <h3 className="font-serif text-4xl font-extrabold text-foreground">{word.simplified}</h3>
+          <HanziText as="h3" className="font-serif text-4xl font-extrabold text-foreground">{word.simplified}</HanziText>
           {word.traditional !== word.simplified && (
             <div className="mt-0.5 text-sm font-semibold text-muted-foreground">
               {t("dictionary.traditional")} {word.traditional}
             </div>
           )}
           <div className="mt-1 text-base font-bold text-primary">{word.pinyin}</div>
+          {word.hanViet && (
+            <div className="mt-0.5 text-sm font-semibold capitalize text-muted-foreground">
+              {t("lookup.hanViet")}: {word.hanViet}
+            </div>
+          )}
           <p className="mt-2 text-[0.95rem] font-medium">{word.english}</p>
         </div>
         <button
