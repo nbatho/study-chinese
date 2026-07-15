@@ -127,12 +127,12 @@ export default function HanziLookupPopover({ text, anchor, onClose }: HanziLooku
                 <span className="font-bold capitalize text-foreground">{entry.hanViet}</span>
               </div>
             )}
-            {entry?.english && (
+            {entry?.gloss && (
               <div className="px-1">
                 <span className="mr-2 text-[0.65rem] font-extrabold uppercase tracking-wide text-muted-foreground">
                   {t("lookup.meaning")}
                 </span>
-                <span className="font-medium text-foreground">{entry.english}</span>
+                <span className="font-medium text-foreground">{entry.gloss}</span>
               </div>
             )}
             {typeof entry?.hskLevel === "number" && entry.hskLevel > 0 && (

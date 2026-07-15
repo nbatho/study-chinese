@@ -220,6 +220,52 @@ ALTER TABLE words ADD COLUMN IF NOT EXISTS level_sources JSONB DEFAULT '[]'::jso
 ALTER TABLE words ADD COLUMN IF NOT EXISTS all_forms JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS classifiers TEXT[] DEFAULT '{}';
 ALTER TABLE words ADD COLUMN IF NOT EXISTS english_vi TEXT;
+ALTER TABLE dictionary_entries ADD COLUMN IF NOT EXISTS english_vi TEXT;
+
+-- Localized glosses, one row per (entry, locale). `english` on the base tables
+-- stays the source text these are translated from; adding a UI language means
+-- inserting rows here rather than adding an `english_<lang>` column.
+--
+-- Populate with: node server/scripts/translate-word-glosses.mjs --locale=<lang>
+--                node server/scripts/translate-dictionary-glosses.mjs --locale=<lang>
+CREATE TABLE IF NOT EXISTS word_glosses (
+  word_id VARCHAR(50) NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  locale VARCHAR(10) NOT NULL,
+  gloss TEXT NOT NULL,
+  source VARCHAR(20) NOT NULL DEFAULT 'ai',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (word_id, locale)
+);
+
+CREATE TABLE IF NOT EXISTS dictionary_entry_glosses (
+  entry_id UUID NOT NULL REFERENCES dictionary_entries(id) ON DELETE CASCADE,
+  locale VARCHAR(10) NOT NULL,
+  gloss TEXT NOT NULL,
+  source VARCHAR(20) NOT NULL DEFAULT 'ai',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (entry_id, locale)
+);
+
+CREATE INDEX IF NOT EXISTS idx_word_glosses_locale ON word_glosses (locale);
+CREATE INDEX IF NOT EXISTS idx_dictionary_entry_glosses_locale ON dictionary_entry_glosses (locale);
+
+-- Backfill the Vietnamese glosses that predate this table. `english_vi` is the
+-- legacy home for them and is still written by mock-data.sql, so this runs on
+-- every schema apply and only fills gaps.
+INSERT INTO word_glosses (word_id, locale, gloss, source)
+SELECT id, 'vi', english_vi, 'legacy'
+FROM words
+WHERE english_vi IS NOT NULL AND english_vi <> ''
+ON CONFLICT (word_id, locale) DO NOTHING;
+
+INSERT INTO dictionary_entry_glosses (entry_id, locale, gloss, source)
+SELECT id, 'vi', english_vi, 'legacy'
+FROM dictionary_entries
+WHERE english_vi IS NOT NULL AND english_vi <> ''
+ON CONFLICT (entry_id, locale) DO NOTHING;
+
 ALTER TABLE words DROP CONSTRAINT IF EXISTS words_part_of_speech_check;
 ALTER TABLE words ADD CONSTRAINT words_part_of_speech_check
   CHECK (part_of_speech IN (

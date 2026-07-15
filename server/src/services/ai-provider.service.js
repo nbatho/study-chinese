@@ -1,4 +1,5 @@
 import { env } from '../config/env.config.js';
+import { LOCALE_NAMES, normalizeLocale } from '../utils/locale.js';
 
 const JSON_SCHEMA_HINT = {
   reply_simplified: 'Câu trả lời của giáo viên bằng chữ Hán giản thể.',
@@ -12,13 +13,7 @@ const JSON_SCHEMA_HINT = {
   }
 };
 
-const TRANSLATION_TARGET_LANGUAGES = {
-  vi: 'Vietnamese',
-  en: 'English'
-};
-
-const normalizeTranslationTargetLang = (value) =>
-  value === 'en' ? 'en' : 'vi';
+const normalizeTranslationTargetLang = (value) => normalizeLocale(value, 'vi');
 
 const buildTranslationJsonSchemaHint = (languageName) => ({
   translation: `Natural ${languageName} translation of the full Chinese text.`,
@@ -255,7 +250,7 @@ ${JSON.stringify(JSON_SCHEMA_HINT)}
 `;
 
 const buildTranslationSystemPrompt = (targetLang = 'vi') => {
-  const languageName = TRANSLATION_TARGET_LANGUAGES[normalizeTranslationTargetLang(targetLang)];
+  const languageName = LOCALE_NAMES[normalizeTranslationTargetLang(targetLang)];
 
   return `
 You are a Chinese-to-${languageName} translator for an OCR study app.

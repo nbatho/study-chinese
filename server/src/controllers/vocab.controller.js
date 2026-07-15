@@ -29,6 +29,6 @@ export const vocabularyStats = asyncHandler(async (_req, res) => {
 });
 
 export const lookupVocabulary = asyncHandler(async (req, res) => {
-  const entry = await lookupWord(req.query.q ?? req.query.text);
+  const entry = await lookupWord(req.query.q ?? req.query.text, req.query.locale);
   success(res, { entry });
 });

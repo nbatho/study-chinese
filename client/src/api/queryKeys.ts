@@ -22,10 +22,12 @@ export const queryKeys = {
         topics: ['vocabulary', 'topics'] as const,
         radicals: ['vocabulary', 'radicals'] as const,
         stats: ['vocabulary', 'stats'] as const,
-        lookup: (text: string) => ['vocabulary', 'lookup', text] as const,
+        lookup: (text: string, locale: string) => ['vocabulary', 'lookup', text, locale] as const,
     },
     srs: {
-        due: (limit?: number) => ['srs', 'due', limit ?? 20] as const,
+        // Prefix of every `due` key — use it to invalidate them across limits and locales.
+        dueAll: ['srs', 'due'] as const,
+        due: (limit: number | undefined, locale: string) => ['srs', 'due', limit ?? 20, locale] as const,
     },
     favorites: {
         all: ['favorites'] as const,

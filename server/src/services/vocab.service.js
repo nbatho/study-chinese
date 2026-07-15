@@ -3,6 +3,7 @@ import { query } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { toLikePattern } from '../utils/sql.js';
 import { toHanViet } from '../utils/han-viet.js';
+import { normalizeLocale } from '../utils/locale.js';
 
 export const mapWord = (row) => ({
   id: row.id,
@@ -12,7 +13,10 @@ export const mapWord = (row) => ({
   hanViet: row.han_viet || toHanViet(row.simplified),
   tones: row.tones || [],
   english: row.english,
-  englishVi: row.english_vi || null,
+  // Definition in the caller's language. Queries that join word_glosses supply
+  // `gloss`; everything else falls back to the English source text, as does any
+  // word the requested locale has no translation for yet.
+  gloss: row.gloss || row.english,
   partOfSpeech: row.part_of_speech,
   hskLevel: Number(row.hsk_level),
   cefrLevel: row.cefr_level || 'A1',
@@ -47,7 +51,8 @@ export const searchVocabulary = async ({
   topic,
   sort = 'hsk',
   page = 1,
-  limit = 24
+  limit = 24,
+  locale
 } = {}) => {
   const values = [];
   const conditions = ['w.is_active = true'];
@@ -113,11 +118,14 @@ export const searchVocabulary = async ({
     values
   );
 
-  const dataValues = [...values, safeLimit, offset];
+  // `locale` only ever selects a gloss, never filters, so it is appended after
+  // the WHERE values and never affects `countResult`.
+  const dataValues = [...values, normalizeLocale(locale), safeLimit, offset];
   const result = await query(
     `
       SELECT
         w.*,
+        wg.gloss AS gloss,
         COALESCE(
           json_agg(
             json_build_object(
@@ -131,13 +139,14 @@ export const searchVocabulary = async ({
           '[]'
         ) AS topics
       FROM words w
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $${values.length + 1}
       LEFT JOIN word_topic_map wtm ON wtm.word_id = w.id
       LEFT JOIN word_topics wt ON wt.id = wtm.topic_id AND wt.is_active = true
       WHERE ${whereSql}
-      GROUP BY w.id
+      GROUP BY w.id, wg.gloss
       ORDER BY ${orderSql}
-      LIMIT $${values.length + 1}
-      OFFSET $${values.length + 2}
+      LIMIT $${values.length + 2}
+      OFFSET $${values.length + 3}
     `,
     dataValues
   );
@@ -234,7 +243,7 @@ export const getVocabularyStats = async () => {
  * table first, falls back to the CC-CEDICT dictionary, and always returns a
  * Sino-Vietnamese reading when one can be composed.
  */
-export const lookupWord = async (rawQuery) => {
+export const lookupWord = async (rawQuery, locale) => {
   const text = String(rawQuery || '').trim();
 
   if (!text) {
@@ -245,16 +254,19 @@ export const lookupWord = async (rawQuery) => {
     throw badRequest('Chuỗi tra cứu quá dài.');
   }
 
+  const glossLocale = normalizeLocale(locale);
+
   const wordResult = await query(
     `
-      SELECT *
-      FROM words
-      WHERE is_active = true
-        AND (simplified = $1 OR traditional = $1)
-      ORDER BY hsk_level ASC, frequency ASC NULLS LAST, id ASC
+      SELECT w.*, wg.gloss AS gloss
+      FROM words w
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $2
+      WHERE w.is_active = true
+        AND (w.simplified = $1 OR w.traditional = $1)
+      ORDER BY w.hsk_level ASC, w.frequency ASC NULLS LAST, w.id ASC
       LIMIT 1
     `,
-    [text]
+    [text, glossLocale]
   );
 
   if (wordResult.rowCount > 0) {
@@ -264,13 +276,14 @@ export const lookupWord = async (rawQuery) => {
 
   const dictResult = await query(
     `
-      SELECT traditional, simplified, pinyin, english
-      FROM dictionary_entries
-      WHERE simplified = $1 OR traditional = $1
-      ORDER BY length(english) DESC
+      SELECT d.traditional, d.simplified, d.pinyin, d.english, dg.gloss AS gloss
+      FROM dictionary_entries d
+      LEFT JOIN dictionary_entry_glosses dg ON dg.entry_id = d.id AND dg.locale = $2
+      WHERE d.simplified = $1 OR d.traditional = $1
+      ORDER BY length(d.english) DESC
       LIMIT 1
     `,
-    [text]
+    [text, glossLocale]
   );
 
   if (dictResult.rowCount > 0) {
@@ -283,6 +296,7 @@ export const lookupWord = async (rawQuery) => {
       pinyin: entry.pinyin,
       hanViet: toHanViet(entry.simplified),
       english: entry.english,
+      gloss: entry.gloss || entry.english,
       hskLevel: null,
       source: 'dictionary'
     };
@@ -296,6 +310,7 @@ export const lookupWord = async (rawQuery) => {
     pinyin: null,
     hanViet: toHanViet(text),
     english: null,
+    gloss: null,
     hskLevel: null,
     source: 'none'
   };

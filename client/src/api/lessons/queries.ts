@@ -65,7 +65,7 @@ export const useCompleteLessonMutation = (lessonId: string) => {
             unwrapApiData(lessonsApi.complete(lessonId, payload)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.srs.due() });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
             queryClient.invalidateQueries({ queryKey: ['users'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });
@@ -85,7 +85,7 @@ export const useCompleteLessonByIdMutation = () => {
             unwrapApiData(lessonsApi.complete(lessonId, payload)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.srs.due() });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
             queryClient.invalidateQueries({ queryKey: ['users'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });

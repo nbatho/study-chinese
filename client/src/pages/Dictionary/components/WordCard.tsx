@@ -29,7 +29,7 @@ export default function WordCard({
   busy,
   showActions = true,
 }: WordCardProps) {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
 
   // Localize DB labels (stored as English keys) to the app language,
   // falling back to the raw value for any unmapped category/part of speech.
@@ -79,9 +79,7 @@ export default function WordCard({
               {t("lookup.hanViet")}: {word.hanViet}
             </div>
           )}
-          <p className="mt-2 text-[0.95rem] font-medium">
-            {language === "vi" && word.englishVi ? word.englishVi : word.english}
-          </p>
+          <p className="mt-2 text-[0.95rem] font-medium">{word.gloss}</p>
         </div>
         <button
           type="button"

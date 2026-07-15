@@ -3,6 +3,7 @@ import { env } from '../config/env.config.js';
 import { AppError } from '../utils/http-error.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { toLikePattern } from '../utils/sql.js';
+import { normalizeLocale } from '../utils/locale.js';
 import {
   getAchievements as getAchievementsForUser,
   unlockAchievement as unlockEarnedAchievement
@@ -335,17 +336,26 @@ const normalizeLookupEntries = (entries) => {
     .sort((first, second) => getEntryLength(second) - getEntryLength(first));
 };
 
+const matchesAt = (entry, remaining) =>
+  remaining.startsWith(entry.simplified) || remaining.startsWith(entry.traditional);
+
 const segmentDictionaryText = (text, entries) => {
   const normalizedText = compactForLookup(text);
   const lookupEntries = normalizeLookupEntries(entries);
+  // `words` is the curated HSK vocabulary; the dictionary is raw CC-CEDICT and
+  // carries rare readings that beat the everyday one on length alone (我去 is
+  // slang for "oh my god!", swallowing 我 + 去). A curated entry therefore wins
+  // its position outright; the dictionary only fills positions none covers.
+  // Both lists are length-sorted, so the first hit is the longest.
+  const curatedEntries = lookupEntries.filter((entry) => entry.wordId);
   const segments = [];
   let cursor = 0;
 
   while (cursor < normalizedText.length) {
     const remaining = normalizedText.slice(cursor);
-    const match = lookupEntries.find(
-      (entry) => remaining.startsWith(entry.simplified) || remaining.startsWith(entry.traditional)
-    );
+    const match =
+      curatedEntries.find((entry) => matchesAt(entry, remaining)) ||
+      lookupEntries.find((entry) => matchesAt(entry, remaining));
 
     if (!match) {
       cursor += 1;
@@ -443,7 +453,7 @@ const buildTextLookupBoxes = (text, entries) => {
     });
 };
 
-const getDictionaryEntriesForText = async (detectedText) => {
+const getDictionaryEntriesForText = async (detectedText, targetLang = 'vi') => {
   const text = asText(detectedText);
   const compactText = compactForLookup(detectedText);
 
@@ -454,21 +464,26 @@ const getDictionaryEntriesForText = async (detectedText) => {
   try {
     const result = await query(
       `
-        SELECT *
-        FROM dictionary_entries
-        WHERE position(simplified in $1) > 0
-           OR position(traditional in $1) > 0
-           OR position(simplified in $2) > 0
-           OR position(traditional in $2) > 0
-        ORDER BY char_length(simplified) DESC, simplified
+        SELECT d.*, dg.gloss AS gloss
+        FROM dictionary_entries d
+        LEFT JOIN dictionary_entry_glosses dg ON dg.entry_id = d.id AND dg.locale = $3
+        WHERE position(d.simplified in $1) > 0
+           OR position(d.traditional in $1) > 0
+           OR position(d.simplified in $2) > 0
+           OR position(d.traditional in $2) > 0
+        ORDER BY char_length(d.simplified) DESC, d.simplified
         LIMIT 100
       `,
-      [text, compactText]
+      [text, compactText, normalizeLocale(targetLang)]
     );
 
     return result.rows.map((row) => ({
       ...row,
-      pinyin: numberedPinyinToToneMarks(row.pinyin)
+      pinyin: numberedPinyinToToneMarks(row.pinyin),
+      // Mirrors the words lookup: prefer the gloss in the target language so a
+      // sentence does not come back with some segments glossed in the target
+      // language and the rest in English.
+      english: row.gloss || row.english
     }));
   } catch (error) {
     if (error.code === '42P01') {
@@ -617,7 +632,7 @@ export const getOcrSamples = async () => ({
   samples: []
 });
 
-const normalizeTargetLang = (value) => (value === 'en' ? 'en' : 'vi');
+const normalizeTargetLang = (value) => normalizeLocale(value, 'vi');
 
 const computeTranslationResult = async (payload) => {
   const targetLang = normalizeTargetLang(payload?.targetLang);
@@ -626,27 +641,31 @@ const computeTranslationResult = async (payload) => {
 
   const result = await query(
     `
-      SELECT *
-      FROM words
-      WHERE is_active = true
+      SELECT w.*, wg.gloss AS gloss
+      FROM words w
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $3
+      WHERE w.is_active = true
         AND (
-          position(simplified in $1) > 0
-          OR position(traditional in $1) > 0
-          OR position(simplified in $2) > 0
-          OR position(traditional in $2) > 0
+          position(w.simplified in $1) > 0
+          OR position(w.traditional in $1) > 0
+          OR position(w.simplified in $2) > 0
+          OR position(w.traditional in $2) > 0
         )
-      ORDER BY char_length(simplified) DESC, simplified
-      LIMIT 10
+      -- Every candidate feeds segmentation, so a low limit silently drops the
+      -- shortest words and sends them to the dictionary fallback, which is
+      -- English-only for most entries. Matches the dictionary lookup's limit.
+      ORDER BY char_length(w.simplified) DESC, w.simplified
+      LIMIT 100
     `,
-    [detectedText, compactDetectedText]
+    [detectedText, compactDetectedText, normalizeLocale(targetLang)]
   );
 
   const wordRows = result.rows.map((word) => ({
     ...word,
     pinyin: numberedPinyinToToneMarks(word.pinyin),
-    // Curated Vietnamese glosses exist for part of the vocabulary; prefer them
-    // when translating to Vietnamese and keep the English gloss otherwise.
-    english: targetLang === 'vi' && word.english_vi ? word.english_vi : word.english
+    // Glosses exist for part of the vocabulary; prefer the one in the target
+    // language and keep the English gloss otherwise.
+    english: word.gloss || word.english
   }));
 
   const matchedBoxes = wordRows.map((word, index) => ({
@@ -660,7 +679,7 @@ const computeTranslationResult = async (payload) => {
   }));
 
   const rawRegionBoxes = getOcrRegionBoxes(regions, detectedText);
-  const dictionaryEntries = await getDictionaryEntriesForText(detectedText);
+  const dictionaryEntries = await getDictionaryEntriesForText(detectedText, targetLang);
   const textLookupEntries = [
     ...wordRows.map((word) => ({
       ...word,

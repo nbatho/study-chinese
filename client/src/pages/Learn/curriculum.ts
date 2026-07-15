@@ -339,3 +339,44 @@ export const getCurriculumLessons = (level: HskCurriculumLevel) => [
   ...level.topics.flatMap((topic) => topic.lessons),
   level.endTest,
 ];
+
+export const CEFR_RANK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+
+const CEFR_RECOMMENDED_HSK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+
+export const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
+
+/** Highest published HSK level the learner's CEFR level has reached. */
+export const getRecommendedHsk = (cefrLevel: CefrLevel) => {
+  const target = CEFR_RECOMMENDED_HSK[cefrLevel];
+
+  return VISIBLE_HSK_LEVELS.reduce(
+    (best, level) => (level <= target && level > best ? level : best),
+    VISIBLE_HSK_LEVELS[0],
+  );
+};
+
+export const getCurriculumLevel = (hskLevel: number) =>
+  HSK_CURRICULUM.find((level) => level.hskLevel === hskLevel) ?? HSK_CURRICULUM[0];
+
+/**
+ * Progress within one HSK level. The denominator is that level's curriculum, not
+ * every lesson in the database, and only server lessons whose `order` is part of
+ * the curriculum count — so an out-of-syllabus lesson cannot push it past 100%.
+ */
+export const getLevelProgress = (
+  level: HskCurriculumLevel,
+  lessons: Array<{ hskLevel: number; order: number; completedAt: string | null }>,
+) => {
+  const completedOrders = new Set(
+    lessons.filter((lesson) => lesson.hskLevel === level.hskLevel && lesson.completedAt).map((lesson) => lesson.order),
+  );
+  const completedCount = getCurriculumLessons(level).filter((lesson) => completedOrders.has(lesson.order)).length;
+  const lessonCount = getCurriculumLessonCount(level);
+
+  return {
+    completedCount,
+    lessonCount,
+    percent: lessonCount ? Math.round((completedCount / lessonCount) * 100) : 0,
+  };
+};

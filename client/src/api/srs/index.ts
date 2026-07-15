@@ -9,7 +9,7 @@ import type {
 } from './types';
 
 export const srsApi = {
-    due: (params?: { limit?: number }) => apiRequest<DueCardsResponse>(beApi.get('srs/due', { params })),
+    due: (params?: { limit?: number; locale?: string }) => apiRequest<DueCardsResponse>(beApi.get('srs/due', { params })),
 
     review: (payload: ReviewCardPayload) => apiRequest<ReviewCardResponse>(beApi.post('srs/review', payload)),
 

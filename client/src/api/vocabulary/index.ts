@@ -14,7 +14,8 @@ export const vocabularyApi = {
     topics: () => apiRequest<VocabularyTopicsResponse>(beApi.get('vocabulary/topics')),
     radicals: () => apiRequest<VocabularyRadicalsResponse>(beApi.get('vocabulary/radicals')),
     stats: () => apiRequest<VocabularyStatsResponse>(beApi.get('vocabulary/stats')),
-    lookup: (text: string) => apiRequest<WordLookupResponse>(beApi.get('vocabulary/lookup', { params: { q: text } })),
+    lookup: (text: string, locale?: string) =>
+        apiRequest<WordLookupResponse>(beApi.get('vocabulary/lookup', { params: { q: text, locale } })),
 };
 
 export * from './types';

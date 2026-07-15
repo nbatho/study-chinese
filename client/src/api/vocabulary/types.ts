@@ -7,8 +7,10 @@ export interface Word {
     pinyin: string;
     hanViet?: string | null;
     tones: number[];
+    /** English definition — the source text every gloss is translated from. */
     english: string;
-    englishVi?: string | null;
+    /** Definition in the requested locale; falls back to `english` when untranslated. */
+    gloss: string;
     partOfSpeech: string;
     hskLevel: number;
     cefrLevel: CefrLevel;
@@ -44,6 +46,8 @@ export interface VocabularySearchParams {
     sort?: VocabularySort;
     page?: number;
     limit?: number;
+    /** Language for `gloss`. Injected by useVocabularyQuery from the app language. */
+    locale?: string;
 }
 
 export interface VocabularyResponse {
@@ -74,6 +78,7 @@ export interface WordLookupEntry {
     pinyin: string | null;
     hanViet: string | null;
     english: string | null;
+    gloss: string | null;
     hskLevel: number | null;
     source: 'words' | 'dictionary' | 'none';
 }

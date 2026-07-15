@@ -5,6 +5,7 @@ import { recordActivity } from './activity.service.js';
 import { evaluateAchievements } from './achievement.service.js';
 import { recordMistake } from './mistake.service.js';
 import { ensureVocabularyWord, getWordOrThrow } from './vocab.service.js';
+import { normalizeLocale } from '../utils/locale.js';
 
 const qualityMap = {
   again: { easeDelta: -0.2, xp: 0 },
@@ -26,7 +27,7 @@ const mapDueCard = (row) => ({
   simplified: row.simplified,
   pinyin: row.pinyin,
   english: row.english,
-  englishVi: row.english_vi || null,
+  gloss: row.gloss || row.english,
   dueCardDetails: {
     easeFactor: Number(row.ease_factor),
     intervalDays: Number(row.interval_days),
@@ -91,20 +92,21 @@ const calculateReview = (card, quality) => {
   };
 };
 
-export const getDueCards = async (userId, limit = 20) => {
+export const getDueCards = async (userId, limit = 20, locale) => {
   const normalizedLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
   const result = await query(
     `
-      SELECT sc.*, w.simplified, w.pinyin, w.english, w.english_vi
+      SELECT sc.*, w.simplified, w.pinyin, w.english, wg.gloss AS gloss
       FROM srs_cards sc
       JOIN words w ON w.id = sc.word_id
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $3
       WHERE sc.user_id = $1
         AND sc.due_date <= now()
         AND w.is_active = true
       ORDER BY sc.due_date ASC
       LIMIT $2
     `,
-    [userId, normalizedLimit]
+    [userId, normalizedLimit, normalizeLocale(locale)]
   );
 
   return {

@@ -1,20 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, GraduationCap, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
+import { useSelectedHskLevel } from "../../hooks/useSelectedHskLevel";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
-import { getCurriculumLessonCount, getCurriculumLessons, HSK_CURRICULUM } from "./curriculum";
-
-const CEFR_RANK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
-const CEFR_RECOMMENDED_HSK = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 } as const;
-const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
+import { CEFR_RANK, getCurriculumLessons, getLevelProgress, HSK_CURRICULUM } from "./curriculum";
 type StrokeInfo = { nameKey: TranslationKey; descKey: TranslationKey; mark: string; example: string };
 const BASIC_STROKES: StrokeInfo[] = [
   { nameKey: "learn.stroke.heng.name", descKey: "learn.stroke.heng.desc", mark: "一", example: "一" },
@@ -86,7 +83,7 @@ export default function Learn() {
   }>();
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const profileQuery = useUserProfileQuery(isAuthenticated);
-  const [manualHskSelection, setManualHskSelection] = useState<{ placementAt: string | null; level: number } | null>(null);
+  const lessonPathRef = useRef<HTMLDivElement | null>(null);
   const sampleLessonsQuery = useSampleLessonsQuery(!isAuthenticated);
   // Guests get the same UI, fed by the public HSK1 trial lessons.
   const lessons = isAuthenticated
@@ -102,14 +99,10 @@ export default function Learn() {
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const placementAt = profile?.placementTestCompletedAt ?? null;
   const needsPlacementTest = !profile?.placementTestCompletedAt;
-  const visibleHskLevels = VISIBLE_HSK_LEVELS;
-  const targetHsk = CEFR_RECOMMENDED_HSK[userCefrLevel];
-  const recommendedHsk = visibleHskLevels.reduce((best, level) => {
-    if (level <= targetHsk && level > best) return level;
-    return best;
-  }, visibleHskLevels[0]);
-  const selectedHSK = manualHskSelection?.placementAt === placementAt ? manualHskSelection.level : recommendedHsk;
-  const selectedCurriculum = HSK_CURRICULUM.find((level) => level.hskLevel === selectedHSK) ?? HSK_CURRICULUM[0];
+  const { selectedHsk: selectedHSK, selectedCurriculum, selectHskLevel: selectHskLevelState } = useSelectedHskLevel(
+    userCefrLevel,
+    placementAt,
+  );
 
   const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null }) =>
     CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
@@ -119,10 +112,7 @@ export default function Learn() {
     const level = curriculumLevel.hskLevel;
     const hskLessons = lessons.filter((lesson) => lesson.hskLevel === level);
     const curriculumLessons = getCurriculumLessons(curriculumLevel);
-    const curriculumOrders = new Set(curriculumLessons.map((lesson) => lesson.order));
-    const completedCount = hskLessons.filter((lesson) => curriculumOrders.has(lesson.order) && lesson.completedAt).length;
-    const lessonCount = getCurriculumLessonCount(curriculumLevel);
-    const percent = Math.round(lessonCount ? (completedCount / lessonCount) * 100 : 0);
+    const { completedCount, lessonCount, percent } = getLevelProgress(curriculumLevel, lessons);
     const skills = Array.from(new Set(curriculumLessons.map((lesson) => lesson.skill))).slice(0, 4);
     const cefrLevel = curriculumLevel.cefrLevel;
     const isLocked = CEFR_RANK[cefrLevel] > CEFR_RANK[userCefrLevel];
@@ -150,20 +140,11 @@ export default function Learn() {
     return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
   }, [levelLessons]);
 
-  const selectedLessonCount = getCurriculumLessonCount(selectedCurriculum);
-
-  const selectedCompletedCount = useMemo(() => {
-    let count = 0;
-    getCurriculumLessons(selectedCurriculum).forEach((currLesson) => {
-      const serverLesson = lessonsByOrder.get(currLesson.order);
-      if (serverLesson?.completedAt) {
-        count++;
-      }
-    });
-    return count;
-  }, [selectedCurriculum, lessonsByOrder]);
-
-  const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
+  const {
+    completedCount: selectedCompletedCount,
+    lessonCount: selectedLessonCount,
+    percent: selectedProgressPercent,
+  } = useMemo(() => getLevelProgress(selectedCurriculum, lessons), [selectedCurriculum, lessons]);
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
 
   const nextLesson = useMemo(() => {
@@ -184,6 +165,19 @@ export default function Learn() {
       setSelectedLessonId(lessonIdFromUrl);
     }
   }, [searchParams, selectedLessonId, setSelectedLessonId]);
+
+  // The lesson path sits below the foundation section, so picking a level has no
+  // visible result without scrolling to it.
+  const selectHskLevel = (level: number) => {
+    selectHskLevelState(level);
+
+    requestAnimationFrame(() => {
+      lessonPathRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  };
 
   const closeSelectedLesson = () => {
     setSelectedLessonId(null);
@@ -325,7 +319,7 @@ export default function Learn() {
                 <button
                   key={levelStats.level}
                   type="button"
-                  onClick={() => setManualHskSelection({ placementAt, level: levelStats.level })}
+                  onClick={() => selectHskLevel(levelStats.level)}
                   className={cn(
                     "group min-h-31 rounded-2xl border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-md active:translate-y-px",
                     selectedHSK === levelStats.level && "border-primary bg-primary/5 ring-2 ring-primary/10",
@@ -466,16 +460,18 @@ export default function Learn() {
             </div>
           </section>
 
-          <LessonPath
-            curriculum={selectedCurriculum}
-            lessons={levelLessons}
-            onSelectLesson={setSelectedLessonId}
-            isLessonLocked={isLessonLockedByCefr}
-            isCurriculumLocked={isCurriculumLessonLocked}
-            guestMode={!isAuthenticated}
-            guestUnlockedOrders={guestUnlockedOrders}
-            onLockedClick={() => navigate("/auth")}
-          />
+          <div ref={lessonPathRef} className="scroll-mt-24">
+            <LessonPath
+              curriculum={selectedCurriculum}
+              lessons={levelLessons}
+              onSelectLesson={setSelectedLessonId}
+              isLessonLocked={isLessonLockedByCefr}
+              isCurriculumLocked={isCurriculumLessonLocked}
+              guestMode={!isAuthenticated}
+              guestUnlockedOrders={guestUnlockedOrders}
+              onLockedClick={() => navigate("/auth")}
+            />
+          </div>
         </div>
       )}
     </div>

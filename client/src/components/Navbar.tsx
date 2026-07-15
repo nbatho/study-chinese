@@ -12,7 +12,9 @@ import { useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth/queries";
 import { useLessonsQuery } from "../api/lessons/queries";
 import { useUserProfileQuery } from "../api/users/queries";
+import { useSelectedHskLevel } from "../hooks/useSelectedHskLevel";
 import { useI18n } from "../i18n";
+import { getLevelProgress } from "../pages/Learn/curriculum";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
@@ -60,9 +62,17 @@ export default function Navbar() {
 
   const profile = profileQuery.data?.profile;
   const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
-  const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const totalLessons = lessons.length;
-  const progressPercent = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  // Progress for the HSK level the Learn roadmap is showing, not every lesson in
+  // the database — the two headline numbers have to agree.
+  const { selectedHsk, selectedCurriculum } = useSelectedHskLevel(
+    profile?.cefrLevel ?? "A1",
+    profile?.placementTestCompletedAt ?? null,
+  );
+  const {
+    completedCount: completedLessons,
+    lessonCount: totalLessons,
+    percent: progressPercent,
+  } = useMemo(() => getLevelProgress(selectedCurriculum, lessons), [selectedCurriculum, lessons]);
   const displayName = profile?.name || authUser?.name || t("common.learner");
   const displayEmail = authUser?.email ?? "";
   const avatar = profile?.avatar || authUser?.avatar;
@@ -109,7 +119,7 @@ export default function Navbar() {
                 </div>
                 <div className="mt-1 flex min-w-0 items-center gap-2">
                   <Badge className="rounded-md px-2.5 py-1 text-xs">
-                    {profile?.cefrLevel ?? "A1"}
+                    HSK {selectedHsk}
                   </Badge>
                   <span className="truncate text-xs font-semibold text-muted-foreground">
                     {t("navbar.lessonsComplete", { completed: completedLessons, total: totalLessons })}

@@ -52,6 +52,7 @@
   --tone-3: #f59e0b;
   --tone-4: #ef4444;
   --tone-neutral: #9ca3af;
+  --hanzi-outline: rgba(26, 26, 30, 0.22);
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: "Noto Serif SC", serif;
@@ -100,6 +101,7 @@ body.dark {
   --accent-foreground: #f3f4f6;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.12);
+  --hanzi-outline: rgba(255, 255, 255, 0.32);
   --bg-app: var(--background);
   --bg-card: var(--card);
   --bg-card-hover: var(--secondary);

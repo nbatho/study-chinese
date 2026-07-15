@@ -4,8 +4,10 @@ export interface SrsDueCard {
     wordId: string;
     simplified: string;
     pinyin: string;
+    /** English definition — the source text every gloss is translated from. */
     english: string;
-    englishVi?: string | null;
+    /** Definition in the requested locale; falls back to `english` when untranslated. */
+    gloss: string;
     dueCardDetails: {
         easeFactor: number;
         intervalDays: number;

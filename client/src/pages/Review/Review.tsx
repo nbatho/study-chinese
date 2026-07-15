@@ -10,7 +10,7 @@ import LoadingCard from "../../components/LoadingCard";
 import TtsButton from "../../components/TtsButton";
 
 export default function Review() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const dueCardsQuery = useDueSrsCardsQuery(100);
   const reviewMutation = useReviewSrsMutation();
@@ -114,9 +114,7 @@ export default function Review() {
                   />
                 </div>
                 <div className="text-xl font-bold text-primary">{activeCard.pinyin}</div>
-                <p className="mt-5 text-lg font-semibold sm:text-xl">
-                  {language === "vi" && activeCard.englishVi ? activeCard.englishVi : activeCard.english}
-                </p>
+                <p className="mt-5 text-lg font-semibold sm:text-xl">{activeCard.gloss}</p>
                 <div className="mt-4.5 text-[0.8rem] text-muted-foreground">
                   {t("review.mastery", { value: activeCard.dueCardDetails.masteryLevel })}
                 </div>

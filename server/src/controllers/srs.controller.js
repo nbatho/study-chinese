@@ -3,7 +3,7 @@ import { success } from '../utils/response.js';
 import { enrollWord, getDueCards, reviewCard } from '../services/srs.service.js';
 
 export const listDueCards = asyncHandler(async (req, res) => {
-  const data = await getDueCards(req.user.id, req.query.limit);
+  const data = await getDueCards(req.user.id, req.query.limit, req.query.locale);
   success(res, data);
 });
 

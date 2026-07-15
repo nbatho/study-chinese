@@ -16,10 +16,18 @@ type HanziStrokePracticeProps = {
   onComplete?: HanziWriterQuizOptions["onComplete"];
 };
 
+// Hanzi Writer paints into a raw SVG, so it needs concrete colors rather than
+// CSS variables. Resolving them against a probe in the live DOM keeps the
+// palette in index.css and lets both themes drive it.
 const resolveHanziWriterColor = (scope: HTMLElement, color: string, fallback: string) => {
   const probe = document.createElement("span");
 
   probe.style.color = color;
+
+  if (!probe.style.color) {
+    return fallback;
+  }
+
   probe.style.position = "absolute";
   probe.style.visibility = "hidden";
   probe.style.pointerEvents = "none";
@@ -29,6 +37,24 @@ const resolveHanziWriterColor = (scope: HTMLElement, color: string, fallback: st
   probe.remove();
 
   return resolvedColor || fallback;
+};
+
+// The writer resolves its palette once per mount, so track the theme class the
+// app layout toggles on <body> and remount when it flips.
+const useIsDarkTheme = () => {
+  const [isDark, setIsDark] = useState(() => document.body.classList.contains("dark"));
+
+  useEffect(() => {
+    const syncTheme = () => setIsDark(document.body.classList.contains("dark"));
+    const observer = new MutationObserver(syncTheme);
+
+    syncTheme();
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
 };
 
 export function HanziStrokePractice({
@@ -48,6 +74,7 @@ export function HanziStrokePractice({
   const [outlineVisible, setOutlineVisible] = useState(showOutline);
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const isDark = useIsDarkTheme();
   const resolvedSize = Math.min(360, Math.max(180, size));
 
   useEffect(() => {
@@ -97,6 +124,7 @@ export function HanziStrokePractice({
         const drawingColor = resolveHanziWriterColor(host, "var(--primary)", "rgb(217, 63, 71)");
         const strokeColor = resolveHanziWriterColor(host, "var(--foreground)", "rgb(44, 44, 53)");
         const radicalColor = resolveHanziWriterColor(host, "var(--jade)", "rgb(60, 170, 137)");
+        const outlineColor = resolveHanziWriterColor(host, "var(--hanzi-outline)", "rgba(26, 26, 30, 0.22)");
 
         writer = module.default.create(host, selectedCharacter, {
           width: resolvedSize,
@@ -109,7 +137,7 @@ export function HanziStrokePractice({
           drawingWidth: 28,
           drawingColor,
           strokeColor,
-          outlineColor: "rgba(26, 26, 30, 0.18)",
+          outlineColor,
           radicalColor,
         });
 
@@ -142,7 +170,7 @@ export function HanziStrokePractice({
         writerRef.current = null;
       }
     };
-  }, [activeMode, character, getQuizOptions, outlineVisible, resolvedSize, revision]);
+  }, [activeMode, character, getQuizOptions, isDark, outlineVisible, resolvedSize, revision]);
 
   const replay = () => {
     setActiveMode("demo");

@@ -403,6 +403,14 @@ export default function Translate() {
     toast.success(t("translate.toastCleared", { count: response.deletedCount }));
   };
 
+  // The result language follows the app language, so switching VI/EN in the
+  // navbar re-translates instead of leaving a stale result in the old language.
+  // Skipped on mount: targetLang already starts from `language`.
+  useEffect(() => {
+    void changeTargetLang(language === "en" ? "en" : "vi");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
   useEffect(() => () => stopCamera(), []);
 
   return (
