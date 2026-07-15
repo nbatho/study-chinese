@@ -7,6 +7,7 @@ import type {
     OcrHistoryResponse,
     OcrScanPayload,
     OcrScanResponse,
+    TranslateTargetLang,
     UpdateOcrHistoryPayload,
     UpdateOcrHistoryResponse,
 } from './types';
@@ -22,7 +23,7 @@ export interface OcrHistoryParams {
 
 export const ocrApi = {
     scan: (payload: OcrScanPayload) => apiRequest<OcrScanResponse>(beApi.post('ocr/scan', payload)),
-    translate: (payload: { text: string }) =>
+    translate: (payload: { text: string; targetLang?: TranslateTargetLang }) =>
         apiRequest<OcrScanResponse>(beApi.post('ocr/translate', payload)),
     history: (params?: OcrHistoryParams) => apiRequest<OcrHistoryResponse>(beApi.get('ocr/history', { params })),
     detail: (eventId: string) => apiRequest<OcrHistoryDetailResponse>(beApi.get(`ocr/history/${eventId}`)),

@@ -36,7 +36,7 @@ import {
   usePublicTranslateMutation,
   useUpdateOcrHistoryMutation,
 } from "../../api/ocr/queries";
-import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment } from "../../api/ocr";
+import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment, TranslateTargetLang } from "../../api/ocr";
 import { Button } from "../../components/ui/button";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
@@ -60,7 +60,7 @@ const getCombinedMeaning = (segments: OcrSegment[]) =>
     .join("; ");
 
 export default function Translate() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const scanMutation = useOcrScanMutation();
@@ -89,6 +89,7 @@ export default function Translate() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [mode, setMode] = useState<InputMode>("text");
+  const [targetLang, setTargetLang] = useState<TranslateTargetLang>(language === "en" ? "en" : "vi");
   const [sourceText, setSourceText] = useState("");
   const [detectedText, setDetectedText] = useState("");
   const [combinedMeaning, setCombinedMeaning] = useState("");
@@ -134,12 +135,16 @@ export default function Translate() {
   const runScan = async (payload: OcrScanPayload) => {
     setSelectedBox(null);
     setSelectedSegmentIds([]);
+    const scanPayload = { ...payload, targetLang: payload.targetLang ?? targetLang };
     // Text translation works without an account via the public endpoint (no
     // history saved); image OCR and history always use the authenticated scan.
     const response =
-      isAuthenticated || payload.image
-        ? await scanMutation.mutateAsync(payload)
-        : await publicTranslateMutation.mutateAsync({ text: payload.text ?? "" });
+      isAuthenticated || scanPayload.image
+        ? await scanMutation.mutateAsync(scanPayload)
+        : await publicTranslateMutation.mutateAsync({
+            text: scanPayload.text ?? "",
+            targetLang: scanPayload.targetLang,
+          });
     const nextSegments = response.segments ?? response.boxes;
 
     setBoxes(response.boxes);
@@ -149,6 +154,27 @@ export default function Translate() {
 
     if (!response.detectedText && response.boxes.length === 0) {
       toast.info(t("translate.toastNoDetected"));
+    }
+  };
+
+  const changeTargetLang = async (lang: TranslateTargetLang) => {
+    if (lang === targetLang || loading) {
+      setTargetLang(lang);
+      return;
+    }
+
+    setTargetLang(lang);
+
+    // Re-translate the current text right away so the result follows the
+    // newly picked language. Image scans keep their result until re-scanned.
+    const text = mode === "text" ? getCombinedText(segments) || detectedText || sourceText.trim() : "";
+
+    if (!text) return;
+
+    try {
+      await runScan({ text, targetLang: lang });
+    } catch {
+      toast.error(t("translate.toastTranslateError"));
     }
   };
 
@@ -580,17 +606,47 @@ export default function Translate() {
                 {t("translate.resultHint")}
               </p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={copyTranslation}
-              disabled={!translatedText}
-              aria-label={t("translate.copyAria")}
-              title={t("translate.copyAria")}
-            >
-              <Clipboard size={18} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <div
+                className="grid grid-cols-2 gap-1 rounded-xl border bg-background p-1"
+                role="group"
+                aria-label={t("translate.targetLabel")}
+              >
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={targetLang === "vi" ? "default" : "ghost"}
+                  onClick={() => void changeTargetLang("vi")}
+                  disabled={loading}
+                  className="rounded-lg px-2.5"
+                  title={t("translate.targetVi")}
+                >
+                  VI
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={targetLang === "en" ? "default" : "ghost"}
+                  onClick={() => void changeTargetLang("en")}
+                  disabled={loading}
+                  className="rounded-lg px-2.5"
+                  title={t("translate.targetEn")}
+                >
+                  EN
+                </Button>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={copyTranslation}
+                disabled={!translatedText}
+                aria-label={t("translate.copyAria")}
+                title={t("translate.copyAria")}
+              >
+                <Clipboard size={18} />
+              </Button>
+            </div>
           </div>
 
           <div className="mb-4 min-h-37 rounded-xl border bg-background p-4">

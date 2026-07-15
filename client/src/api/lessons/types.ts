@@ -62,6 +62,8 @@ export interface LessonDetail extends Omit<LessonSummary, 'grammarCount' | 'comp
             traditional: string;
             pinyin: string;
             english: string;
+            en?: string;
+            vi?: string | null;
         }>;
     } | null;
     exercises: Array<{

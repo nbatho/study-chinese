@@ -3,7 +3,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import type { OcrHistoryParams } from './index';
 import { ocrApi } from './index';
-import type { OcrScanPayload, UpdateOcrHistoryPayload } from './types';
+import type { OcrScanPayload, TranslateTargetLang, UpdateOcrHistoryPayload } from './types';
 
 export const useOcrScanMutation = () => {
     const queryClient = useQueryClient();
@@ -19,7 +19,8 @@ export const useOcrScanMutation = () => {
 // Text-only translation that works without an account (no history persisted).
 export const usePublicTranslateMutation = () =>
     useMutation({
-        mutationFn: (payload: { text: string }) => unwrapApiData(ocrApi.translate(payload)),
+        mutationFn: (payload: { text: string; targetLang?: TranslateTargetLang }) =>
+            unwrapApiData(ocrApi.translate(payload)),
     });
 
 export const useOcrHistoryQuery = (options: number | OcrHistoryParams = 20) => {

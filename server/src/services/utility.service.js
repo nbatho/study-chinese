@@ -617,7 +617,10 @@ export const getOcrSamples = async () => ({
   samples: []
 });
 
+const normalizeTargetLang = (value) => (value === 'en' ? 'en' : 'vi');
+
 const computeTranslationResult = async (payload) => {
+  const targetLang = normalizeTargetLang(payload?.targetLang);
   const { detectedText, regions, mode } = await getDetectedText(payload);
   const compactDetectedText = compactForLookup(detectedText);
 
@@ -640,7 +643,10 @@ const computeTranslationResult = async (payload) => {
 
   const wordRows = result.rows.map((word) => ({
     ...word,
-    pinyin: numberedPinyinToToneMarks(word.pinyin)
+    pinyin: numberedPinyinToToneMarks(word.pinyin),
+    // Curated Vietnamese glosses exist for part of the vocabulary; prefer them
+    // when translating to Vietnamese and keep the English gloss otherwise.
+    english: targetLang === 'vi' && word.english_vi ? word.english_vi : word.english
   }));
 
   const matchedBoxes = wordRows.map((word, index) => ({
@@ -678,12 +684,14 @@ const computeTranslationResult = async (payload) => {
   const contextualTranslation = await translateChineseText({
     text: detectedText,
     glossary: translatedBoxes,
-    fallbackTranslation: dictionaryFallbackMeaning
+    fallbackTranslation: dictionaryFallbackMeaning,
+    targetLang
   });
   const combinedMeaning = contextualTranslation.translation || dictionaryFallbackMeaning;
 
   return {
     mode,
+    targetLang,
     regions,
     matchedWordIds,
     dictionaryBoxes,
@@ -695,6 +703,7 @@ const computeTranslationResult = async (payload) => {
       segments: boxes.map(toSegment),
       combinedMeaning,
       detectedText,
+      targetLang,
       provider: getOcrProvider(),
       translationProvider: contextualTranslation.provider,
       translationModel: contextualTranslation.modelName
@@ -707,6 +716,7 @@ export const scanOcr = async (userId, payload) => {
 
   const {
     mode,
+    targetLang,
     regions,
     matchedWordIds,
     dictionaryBoxes,
@@ -727,6 +737,7 @@ export const scanOcr = async (userId, payload) => {
       JSON.stringify(matchedWordIds),
       JSON.stringify({
         mode,
+        targetLang,
         regionCount: regions.length,
         matchedCount: matchedWordIds.length,
         dictionaryMatchCount: dictionaryBoxes.length,
@@ -751,7 +762,7 @@ export const translatePublicText = async (payload = {}) => {
     throw badRequest('Vui lòng nhập nội dung tiếng Trung cần dịch.');
   }
 
-  const { result } = await computeTranslationResult({ text });
+  const { result } = await computeTranslationResult({ text, targetLang: payload.targetLang });
   return result;
 };
 

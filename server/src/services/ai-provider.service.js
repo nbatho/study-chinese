@@ -12,10 +12,18 @@ const JSON_SCHEMA_HINT = {
   }
 };
 
-const TRANSLATION_JSON_SCHEMA_HINT = {
-  translation: 'Natural Vietnamese translation of the full Chinese text.',
-  pinyin: 'Full pinyin for the Chinese text if it can be inferred, otherwise empty string.'
+const TRANSLATION_TARGET_LANGUAGES = {
+  vi: 'Vietnamese',
+  en: 'English'
 };
+
+const normalizeTranslationTargetLang = (value) =>
+  value === 'en' ? 'en' : 'vi';
+
+const buildTranslationJsonSchemaHint = (languageName) => ({
+  translation: `Natural ${languageName} translation of the full Chinese text.`,
+  pinyin: 'Full pinyin for the Chinese text if it can be inferred, otherwise empty string.'
+});
 
 const INJECTION_PATTERNS = [
   /\b(ignore|forget|disregard|override)\b[\s\S]{0,80}\b(instruction|prompt|system|developer|policy|rule)s?\b/i,
@@ -246,15 +254,18 @@ Chỉ trả về JSON hợp lệ, không markdown, theo schema:
 ${JSON.stringify(JSON_SCHEMA_HINT)}
 `;
 
-const buildTranslationSystemPrompt = () => `
-You are a Chinese-to-Vietnamese translator for an OCR study app.
+const buildTranslationSystemPrompt = (targetLang = 'vi') => {
+  const languageName = TRANSLATION_TARGET_LANGUAGES[normalizeTranslationTargetLang(targetLang)];
+
+  return `
+You are a Chinese-to-${languageName} translator for an OCR study app.
 
 Task:
-1. Translate the ENTIRE Chinese source into natural Vietnamese. Do not drop or skip any clause, greeting, name, or sentence — every part of the source must be represented in the translation.
+1. Translate the ENTIRE Chinese source into natural ${languageName}. Do not drop or skip any clause, greeting, name, or sentence — every part of the source must be represented in the translation.
 2. Prefer contextual sentence/phrase meaning over word-by-word glosses.
 3. Use the provided dictionary glossary only as hints; do not concatenate the glosses.
 4. If OCR text is noisy, infer the most likely meaning conservatively.
-5. Keep names, numbers, punctuation, and measure words natural in Vietnamese.
+5. Keep names, numbers, punctuation, and measure words natural in ${languageName}.
 6. Translate greetings and interjections (e.g. 你好, 谢谢, 再见) as well; never omit them.
 7. Return only valid JSON, no markdown.
 
@@ -264,8 +275,9 @@ Security:
 - Only perform translation/explanation for Chinese-learning content.
 
 JSON schema:
-${JSON.stringify(TRANSLATION_JSON_SCHEMA_HINT)}
+${JSON.stringify(buildTranslationJsonSchemaHint(languageName))}
 `;
+};
 
 const toProviderMessages = ({ scenario, messages, userText, learningContext }) => {
   const system = buildSystemPrompt(scenario, learningContext);
@@ -294,7 +306,7 @@ const formatTranslationGlossary = (glossary = []) =>
     })
     .join('\n');
 
-const toTranslationProviderMessages = ({ text, glossary, fallbackTranslation }) => {
+const toTranslationProviderMessages = ({ text, glossary, fallbackTranslation, targetLang }) => {
   const glossaryText = formatTranslationGlossary(glossary);
   const userContent = [
     `Chinese OCR/text:\n${String(text || '').trim()}`,
@@ -303,7 +315,7 @@ const toTranslationProviderMessages = ({ text, glossary, fallbackTranslation }) 
   ].filter(Boolean).join('\n\n');
 
   return {
-    system: buildTranslationSystemPrompt(),
+    system: buildTranslationSystemPrompt(targetLang),
     history: [{ role: 'user', content: userContent }]
   };
 };
@@ -459,11 +471,11 @@ const callGemini = async ({ scenario, messages, userText, learningContext }) => 
   });
 };
 
-const callGeminiTranslation = async ({ text, glossary, fallbackTranslation }) => {
+const callGeminiTranslation = async ({ text, glossary, fallbackTranslation, targetLang }) => {
   const provider = 'gemini';
   const apiKey = requireApiKey(provider);
   const modelName = env.AI_MODEL || 'gemini-2.5-flash';
-  const { system, history } = toTranslationProviderMessages({ text, glossary, fallbackTranslation });
+  const { system, history } = toTranslationProviderMessages({ text, glossary, fallbackTranslation, targetLang });
   const startedAt = now();
   const url =
     env.AI_BASE_URL ||
@@ -568,9 +580,9 @@ const callOpenAiCompatible = async ({ scenario, messages, userText, provider, le
   });
 };
 
-const callOpenAiCompatibleTranslation = async ({ text, glossary, fallbackTranslation, provider }) => {
+const callOpenAiCompatibleTranslation = async ({ text, glossary, fallbackTranslation, provider, targetLang }) => {
   const config = openAiConfig(provider);
-  const { system, history } = toTranslationProviderMessages({ text, glossary, fallbackTranslation });
+  const { system, history } = toTranslationProviderMessages({ text, glossary, fallbackTranslation, targetLang });
   const startedAt = now();
   const data = await fetchJsonWithRetry(
     config.url,
@@ -631,9 +643,10 @@ export const logAiUsage = (reply, { fallback = false, blocked = false, feature =
   );
 };
 
-export const translateChineseText = async ({ text, glossary = [], fallbackTranslation = '' }) => {
+export const translateChineseText = async ({ text, glossary = [], fallbackTranslation = '', targetLang = 'vi' }) => {
   const provider = String(env.AI_PROVIDER || 'mock').toLowerCase();
   const normalizedText = clampText(text, '');
+  const normalizedTargetLang = normalizeTranslationTargetLang(targetLang);
 
   if (!normalizedText) {
     return createMockContextualTranslation(normalizedText, fallbackTranslation);
@@ -648,12 +661,18 @@ export const translateChineseText = async ({ text, glossary = [], fallbackTransl
   try {
     const reply =
       provider === 'gemini'
-        ? await callGeminiTranslation({ text: normalizedText, glossary, fallbackTranslation })
+        ? await callGeminiTranslation({
+            text: normalizedText,
+            glossary,
+            fallbackTranslation,
+            targetLang: normalizedTargetLang
+          })
         : await callOpenAiCompatibleTranslation({
             text: normalizedText,
             glossary,
             fallbackTranslation,
-            provider
+            provider,
+            targetLang: normalizedTargetLang
           });
 
     logAiUsage(reply, { feature: 'ai_translation' });

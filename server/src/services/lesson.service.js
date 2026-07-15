@@ -121,6 +121,26 @@ const mapLessonModule = (row) => ({
   phases: row.phases || []
 });
 
+// The lessons.dialogue JSON column stores the legacy embedded dialogue used by
+// the lesson player. Newer imports include a per-line `vi` translation; expose
+// both languages and localize the default `english` field like the rest of the
+// lesson content so the player can switch EN/VI.
+const mapEmbeddedDialogue = (dialogue, locale = 'en') => {
+  if (!dialogue || typeof dialogue !== 'object') {
+    return dialogue ?? null;
+  }
+
+  return {
+    ...dialogue,
+    lines: (dialogue.lines || []).map((line) => ({
+      ...line,
+      english: chooseLocalizedText(line.english || line.en || '', line.vi, locale),
+      en: line.en || line.english || '',
+      vi: line.vi || null
+    }))
+  };
+};
+
 const mapDialogue = (row, locale = 'en') => ({
   id: row.id,
   lessonId: row.lesson_id,
@@ -360,7 +380,7 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
       introVi: lesson.intro_vi || null,
       newWords: wordsResult.rows.map(mapWord),
       grammar: grammarResult.rows.map((row) => mapGrammarPoint(row, locale)),
-      dialogue: lesson.dialogue,
+      dialogue: mapEmbeddedDialogue(lesson.dialogue, locale),
       modules: modulesResult.rows.map(mapLessonModule),
       dialogues: dialoguesResult.rows.map((row) => mapDialogue(row, locale)),
       readingPassages: passagesResult.rows.map((row) => mapReadingPassage(row, locale)),

@@ -26,10 +26,13 @@ export interface OcrSegment {
     matched?: boolean;
 }
 
+export type TranslateTargetLang = 'vi' | 'en';
+
 export interface OcrScanPayload {
     image?: string;
     text?: string;
     detectedText?: string;
+    targetLang?: TranslateTargetLang;
 }
 
 export interface OcrScanResponse {
@@ -38,6 +41,7 @@ export interface OcrScanResponse {
     segments?: OcrSegment[];
     combinedMeaning?: string;
     detectedText?: string;
+    targetLang?: TranslateTargetLang;
     provider?: string;
     translationProvider?: string;
     translationModel?: string;
