@@ -11,6 +11,7 @@
     "db:init": "node scripts/init-db.js",
     "db:migrate": "node scripts/apply-migration.js",
     "db:remove-legacy-lessons": "node scripts/remove-legacy-mock-lessons.mjs",
+    "db:merge-duplicate-words": "node scripts/merge-duplicate-words.mjs",
     "dict:import": "node scripts/import-cc-cedict.js",
     "hsk:import": "node scripts/import-hsk-vocabulary.js",
     "lessons:import": "node scripts/import-generated-lessons.mjs",
