@@ -70,4 +70,10 @@ Desktop.ini
 **/Desktop.ini
 
 *.codex
-*data
+
+# Authored lesson content, kept outside the repo on purpose
+/data/
+
+# Python bytecode
+**/__pycache__/
+**/*.pyc
