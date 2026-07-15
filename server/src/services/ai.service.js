@@ -67,6 +67,7 @@ const getLearningContext = async (client, userId) => {
         FROM user_lesson_progress ulp
         JOIN lessons l ON l.id = ulp.lesson_id
         WHERE ulp.user_id = $1
+          AND l.is_active = true
         ORDER BY ulp.completed_at DESC NULLS LAST, ulp.updated_at DESC
         LIMIT 1
       `,

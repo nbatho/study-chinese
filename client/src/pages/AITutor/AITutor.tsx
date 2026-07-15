@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  useChatScenariosQuery,
   useSendChatMessageMutation,
   useStartChatSessionMutation,
 } from "../../api/aiTutor/queries";
@@ -12,8 +11,10 @@ import { toast } from "sonner";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import TtsButton from "../../components/TtsButton";
+import { chatScenarios } from "./chatScenarios";
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 
@@ -27,7 +28,6 @@ export default function AITutor({ onClose }: AITutorProps) {
   const navigate = useNavigate();
   const isOverlay = Boolean(onClose);
   const handleClose = onClose || (() => navigate("/home"));
-  const scenariosQuery = useChatScenariosQuery();
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const startSessionMutation = useStartChatSessionMutation();
   const [selectedScenario, setSelectedScenario] = useState<ChatScenario | null>(null);
@@ -35,9 +35,9 @@ export default function AITutor({ onClose }: AITutorProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [aiUsage, setAiUsage] = useState<AiUsage | null>(null);
   const [userInput, setUserInput] = useState("");
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const sendMessageMutation = useSendChatMessageMutation(sessionId ?? "");
   const isThinking = startSessionMutation.isPending || sendMessageMutation.isPending;
-  const scenarios = scenariosQuery.data?.scenarios ?? [];
   const profileAiUsage = profileQuery.data
     ? {
         used: 0,
@@ -104,15 +104,25 @@ export default function AITutor({ onClose }: AITutorProps) {
     }
   };
 
+  const leaveScenario = () => {
+    setSelectedScenario(null);
+    setSessionId(null);
+    setMessages([]);
+    setAiUsage(null);
+  };
+
   const handleBackClick = () => {
-    if (selectedScenario) {
-      setSelectedScenario(null);
-      setSessionId(null);
-      setMessages([]);
-      setAiUsage(null);
-    } else {
+    if (!selectedScenario) {
       handleClose();
+      return;
     }
+    // Only worth confirming once the learner has actually said something —
+    // the opening tutor greeting alone is nothing to lose.
+    if (messages.some((message) => message.role === "user")) {
+      setIsExitConfirmOpen(true);
+      return;
+    }
+    leaveScenario();
   };
 
   if (!isAuthenticated) {
@@ -200,17 +210,7 @@ export default function AITutor({ onClose }: AITutorProps) {
             </div>
           )}
           <div className="grid gap-3">
-            {scenariosQuery.isLoading && (
-              <div className="app-surface p-4 text-muted-foreground">
-                {t("ai.loadingScenarios")}
-              </div>
-            )}
-            {scenariosQuery.isError && (
-              <div className="app-surface p-4 text-primary">
-                {t("ai.loadError")}
-              </div>
-            )}
-            {scenarios.map((scenario) => (
+            {chatScenarios.map((scenario) => (
               <button
                 key={scenario.id}
                 type="button"
@@ -310,6 +310,19 @@ export default function AITutor({ onClose }: AITutorProps) {
           </form>
         </div>
       )}
+
+      <ConfirmDialog
+        open={isExitConfirmOpen}
+        title={t("ai.confirmExitTitle")}
+        description={t("ai.confirmExitBody")}
+        confirmLabel={t("common.exit")}
+        cancelLabel={t("common.stay")}
+        onConfirm={() => {
+          setIsExitConfirmOpen(false);
+          leaveScenario();
+        }}
+        onCancel={() => setIsExitConfirmOpen(false)}
+      />
     </div>
   );
 }

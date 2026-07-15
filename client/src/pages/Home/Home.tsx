@@ -37,6 +37,7 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
+import { formatLessonTitle } from "../../utils/lessonTitle";
 import DashboardAvatar from "./component/DashboardAvatar";
 const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
@@ -219,7 +220,7 @@ export default function Home() {
                       {nextLesson.estimatedMinutes} min · +{nextLesson.xpReward} XP
                     </span>
                   </div>
-                  <h3 className="truncate text-xl font-extrabold">{nextLesson.title}</h3>
+                  <h3 className="truncate text-xl font-extrabold">{formatLessonTitle(t, nextLesson)}</h3>
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{nextLesson.subtitle}</p>
                 </div>
                 <span className="flex size-16 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_0_rgba(217,63,71,0)] transition group-hover:scale-105 group-hover:shadow-[0_0_28px_rgba(217,63,71,0.35)]">

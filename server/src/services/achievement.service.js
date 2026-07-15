@@ -56,10 +56,12 @@ const getUserAchievementProgress = async (client, userId) => {
     `
       SELECT
         COUNT(*) AS lessons_completed,
-        COALESCE(MAX(best_accuracy), 0) AS best_lesson_accuracy
-      FROM user_lesson_progress
-      WHERE user_id = $1
-        AND completed_at IS NOT NULL
+        COALESCE(MAX(ulp.best_accuracy), 0) AS best_lesson_accuracy
+      FROM user_lesson_progress ulp
+      JOIN lessons l ON l.id = ulp.lesson_id
+      WHERE ulp.user_id = $1
+        AND ulp.completed_at IS NOT NULL
+        AND l.is_active = true
     `,
     [userId]
   );

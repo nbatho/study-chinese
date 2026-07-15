@@ -8,7 +8,9 @@ import { useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
 import LoadingCard from "../../../components/LoadingCard";
 import Confetti from "../../../components/Confetti";
+import ConfirmDialog from "../../../components/ConfirmDialog";
 import { cn } from "../../../utils/cn";
+import { formatLessonTitle } from "../../../utils/lessonTitle";
 import { speakChinese } from "../../../utils/tts";
 import TtsSpeedControl from "../../../components/TtsSpeedControl";
 import { HanziText } from "../../../components/HanziLookup";
@@ -49,6 +51,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
   const [reportCategory, setReportCategory] = useState<"content" | "translation" | "audio" | "exercise" | "technical" | "other">("content");
   const [reportMessage, setReportMessage] = useState("");
   const [gemsEarned, setGemsEarned] = useState(0);
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
 
   const currentExercise = lesson?.exercises[exerciseIdx];
   const exerciseCount = lesson?.exercises.length ?? 0;
@@ -169,8 +172,8 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
       setStage("intro");
     } else {
       if (stage !== "completed" && (exerciseIdx > 0 || isAnswerChecked || correctAnswersCount > 0)) {
-        const confirmExit = window.confirm(t("learn.player.confirmExit"));
-        if (!confirmExit) return;
+        setIsExitConfirmOpen(true);
+        return;
       }
       onClose();
     }
@@ -179,6 +182,8 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
   if (lessonQuery.isLoading || !lesson) {
     return <LoadingCard label={t("learn.loading")} />;
   }
+
+  const numberedTitle = formatLessonTitle(t, lesson);
 
   return (
     <div className="anim-pop mx-auto max-w-5xl overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -196,7 +201,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
             </button>
             <div className="min-w-0 text-left">
               <div className="text-xs font-extrabold text-primary">HSK {lesson.hskLevel} - {lesson.estimatedMinutes} {t("learn.player.minutes")}</div>
-              <h2 className="truncate text-lg font-extrabold sm:text-xl">{lesson.title}</h2>
+              <h2 className="truncate text-lg font-extrabold sm:text-xl">{numberedTitle}</h2>
             </div>
           </div>
           <div className="grid gap-2">
@@ -251,7 +256,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               {t("learn.player.reportIssue")}
             </button>
           )}
-          <h2 className="text-left text-2xl font-extrabold sm:text-[1.6rem]">{lesson.title}</h2>
+          <h2 className="text-left text-2xl font-extrabold sm:text-[1.6rem]">{numberedTitle}</h2>
           <p className="mb-4 text-left text-[0.9rem] text-muted-foreground">{lesson.subtitle}</p>
           <div className="mb-6 rounded-xl bg-background p-4 text-left text-[0.9rem] leading-relaxed">
             {lesson.intro}
@@ -507,7 +512,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
           <Confetti />
           <Award size={72} className="mx-auto mb-4 text-gold" />
           <h2 className="text-3xl font-extrabold">{t("learn.completed")}</h2>
-          <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{lesson.title}</strong></p>
+          <p className="mb-6 mt-2 text-muted-foreground">{t("learn.completedBody")} <strong>{numberedTitle}</strong></p>
           <div className="mx-auto mb-9 grid max-w-105 grid-cols-3 gap-3">
             <div className="rounded-lg border bg-card px-2 py-4 shadow-sm">
               <span className="text-xs font-bold text-muted-foreground">{t("learn.xpReward")}</span>
@@ -528,6 +533,19 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
           <button className="mt-6 inline-flex w-full max-w-60 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90" onClick={onClose}>{t("learn.backPath")}</button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={isExitConfirmOpen}
+        title={t("learn.player.confirmExitTitle")}
+        description={t("learn.player.confirmExit")}
+        confirmLabel={t("common.exit")}
+        cancelLabel={t("common.stay")}
+        onConfirm={() => {
+          setIsExitConfirmOpen(false);
+          onClose();
+        }}
+        onCancel={() => setIsExitConfirmOpen(false)}
+      />
 
       {isReportOpen && (
         <div className="fixed inset-0 z-1200 flex items-center justify-center bg-black/35 px-4">

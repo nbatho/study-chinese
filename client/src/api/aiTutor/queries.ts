@@ -1,15 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { aiTutorApi } from './index';
 import type { SendMessagePayload, StartSessionPayload } from './types';
 import { showAchievementToasts } from '../../utils/achievementToast';
-
-export const useChatScenariosQuery = () =>
-    useQuery({
-        queryKey: queryKeys.aiTutor.scenarios,
-        queryFn: () => unwrapApiData(aiTutorApi.scenarios()),
-    });
 
 export const useStartChatSessionMutation = () =>
     useMutation({

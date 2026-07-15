@@ -3,6 +3,7 @@ import type { LessonSummary } from "../../../api/lessons";
 import { useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
 import { cn } from "../../../utils/cn";
+import { formatLessonTitle } from "../../../utils/lessonTitle";
 import type { CurriculumLesson, CurriculumSkill, HskCurriculumLevel } from "../curriculum";
 
 const SKILL_ICON = {
@@ -71,7 +72,11 @@ export default function LessonPath({
 
   const renderLesson = (entry: CurriculumLessonEntry, index: number) => {
     const { curriculumLesson, serverLesson } = entry;
-    const title = serverLesson?.title || curriculumLesson.title;
+    const title = formatLessonTitle(t, {
+      order: curriculumLesson.order,
+      title: serverLesson?.title || curriculumLesson.title,
+      hskLevel: serverLesson?.hskLevel ?? curriculum.hskLevel,
+    });
     const objective = serverLesson?.subtitle || curriculumLesson.objective;
     const isCompleted = !!serverLesson?.completedAt;
     const isLockedByLevel = !isCompleted && (serverLesson ? Boolean(isLessonLocked?.(serverLesson)) : Boolean(isCurriculumLocked?.(curriculumLesson)));
@@ -127,7 +132,7 @@ export default function LessonPath({
             <div className="min-w-0">
               <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", isCompleted ? "text-jade" : isLocked ? "text-muted-foreground" : "text-primary")}>
                 <SkillIcon size={14} />
-                {t("learn.lesson")} {curriculumLesson.order} - {curriculumLesson.skill}
+                {curriculumLesson.skill}
               </span>
               <h4 className="mt-1 line-clamp-2 text-[1.05rem] font-extrabold">{title}</h4>
             </div>

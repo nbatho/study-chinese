@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Activity, ArrowLeft, Dumbbell, Ear, Keyboard, Mic, PencilLine, Target, Volume2 } from "lucide-react";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { cn } from "../../utils/cn";
 import {
@@ -26,8 +27,9 @@ export default function Practice() {
   const initialTool = searchParams.get("tool");
   const from = searchParams.get("from");
   const [activeTool, setActiveTool] = useState<Tool>(isPracticeTool(initialTool) ? initialTool : "menu");
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
 
-  const handleBack = () => {
+  const leaveTool = () => {
     if (from) {
       navigate(from === "learn" ? "/learn" : from === "home" ? "/home" : `/${from}`);
     } else {
@@ -48,10 +50,23 @@ export default function Practice() {
   return (
     <div className="app-page">
       {activeTool !== "menu" && (
-        <button onClick={handleBack} className="mb-5 inline-flex items-center gap-1.5 rounded-xl border bg-card/90 px-3 py-2 font-bold text-primary shadow-sm transition hover:bg-secondary active:translate-y-px">
+        <button onClick={() => setIsExitConfirmOpen(true)} className="mb-5 inline-flex items-center gap-1.5 rounded-xl border bg-card/90 px-3 py-2 font-bold text-primary shadow-sm transition hover:bg-secondary active:translate-y-px">
           <ArrowLeft size={16} /> {from ? t("notFound.goBack") : t("practice.back")}
         </button>
       )}
+
+      <ConfirmDialog
+        open={isExitConfirmOpen}
+        title={t("practice.confirmExitTitle")}
+        description={t("practice.confirmExitBody")}
+        confirmLabel={t("common.exit")}
+        cancelLabel={t("common.stay")}
+        onConfirm={() => {
+          setIsExitConfirmOpen(false);
+          leaveTool();
+        }}
+        onCancel={() => setIsExitConfirmOpen(false)}
+      />
 
       {activeTool === "menu" && (
         <div className="grid gap-4">

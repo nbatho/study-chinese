@@ -34,9 +34,6 @@ export const queryKeys = {
         all: ['lists'] as const,
         detail: (listId: string) => ['lists', listId] as const,
     },
-    aiTutor: {
-        scenarios: ['ai-tutor', 'scenarios'] as const,
-    },
     ocr: {
         scan: ['ocr', 'scan'] as const,
         history: (params?: unknown) => ['ocr', 'history', params ?? { limit: 20 }] as const,

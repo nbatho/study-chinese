@@ -44,10 +44,6 @@ export interface AiUsage {
     aiTutorSkin: string;
 }
 
-export interface ChatScenariosResponse {
-    scenarios: ChatScenario[];
-}
-
 export interface StartSessionPayload {
     scenarioId?: string | null;
 }

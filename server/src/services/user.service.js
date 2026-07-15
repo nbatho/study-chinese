@@ -108,11 +108,16 @@ const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = n
   }
 
   if (nextLesson) {
+    const lessonOrder = nextLesson.order_num ?? nextLesson.orderNum;
+    const lessonHsk = nextLesson.hsk_level ?? nextLesson.hskLevel;
+    const lessonLabel = lessonOrder
+      ? `Bài ${lessonOrder} - ${nextLesson.title}${lessonHsk ? ` (HSK ${lessonHsk})` : ''}`
+      : nextLesson.title;
     steps.push({
       id: 'next-lesson',
       kind: 'lesson',
       title: 'Học bài tiếp theo',
-      description: `${nextLesson.title} - ${nextLesson.skill}`,
+      description: `${lessonLabel} - ${nextLesson.skill}`,
       estimateMinutes: Number(nextLesson.estimated_minutes || nextLesson.estimatedMinutes || 5),
       href: `/learn?lesson=${nextLesson.id}`,
       status: steps.length === 0 ? 'current' : 'next',
@@ -259,7 +264,7 @@ export const getTodayPlan = async (userId) => {
     ),
     query(
       `
-        SELECT l.id, l.title, l.skill, l.estimated_minutes
+        SELECT l.id, l.title, l.skill, l.estimated_minutes, l.order_num, l.hsk_level
         FROM users u
         JOIN lessons l
           ON l.is_active = true

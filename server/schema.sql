@@ -830,7 +830,10 @@ CREATE INDEX IF NOT EXISTS idx_daily_stats_date_user_xp ON daily_stats (date_key
 CREATE INDEX IF NOT EXISTS idx_friendships_requester_status ON friendships (requester_id, status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_friendships_addressee_status ON friendships (addressee_id, status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_friendships_pair_status ON friendships (user_low_id, user_high_id, status);
-CREATE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
+-- Two active lessons in the same curriculum slot silently break progress counts
+-- and the "continue" button, so the slot is unique rather than merely indexed.
+DROP INDEX IF EXISTS idx_lessons_hsk_order;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_lessons_hsk_order ON lessons (hsk_level, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lessons_cefr_order ON lessons (cefr_level, hsk_level, order_num) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_lessons_skill_topic ON lessons (primary_skill, topic, hsk_level) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_placement_questions_order ON placement_questions (section, difficulty, order_num) WHERE is_active = true;
