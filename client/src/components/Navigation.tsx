@@ -19,45 +19,9 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
   const { t } = useI18n();
 
   const path = location.pathname;
-  // Resolve exactly one active tab; default to none so unmatched routes
-  // (e.g. /profile, /settings) don't spuriously highlight Home.
-  let activeTab = "";
-  if (path === "/home" || path.startsWith("/home/")) activeTab = "home";
-  else if (path.startsWith("/guide")) activeTab = "guide";
-  else if (path.startsWith("/learn")) activeTab = "learn";
-  else if (path.startsWith("/grammar")) activeTab = "grammar";
-  else if (path.startsWith("/radicals")) activeTab = "radicals";
-  else if (path.startsWith("/practice")) activeTab = "practice";
-  else if (path.startsWith("/review")) activeTab = "review";
-  else if (path.startsWith("/dictionary")) activeTab = "dictionary";
-  else if (path.startsWith("/translate") || path.startsWith("/camera-translator")) activeTab = "translate";
-  else if (path.startsWith("/ai-tutor")) activeTab = "ai-tutor";
-  else if (path.startsWith("/shop")) activeTab = "shop";
-  else if (path.startsWith("/community")) activeTab = "community";
-  else if (path.startsWith("/admin")) activeTab = "admin";
-
-  const tabs = [
-    // Public (no login required) — kept at the top.
-    { id: "home", label: t("nav.home"), icon: Home },
-    { id: "learn", label: t("learn.curriculum"), icon: BookOpen },
-    { id: "radicals", label: t("nav.radicals"), icon: Shapes },
-    { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
-    { id: "translate", label: t("nav.translate"), icon: Languages },
-    // Login required — grouped below the public items.
-    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
-    { id: "practice", label: t("nav.practice"), icon: Dumbbell, requiresAuth: true },
-    {
-      id: "review",
-      label: t("nav.review"),
-      icon: RefreshCw,
-      badge: isAuthenticated ? (dueCardsQuery.data?.cards.length ?? 0) : 0,
-      requiresAuth: true,
-    },
-    { id: "ai-tutor", label: t("nav.aiTutor"), icon: Sparkles, requiresAuth: true },
-    { id: "shop", label: t("nav.shop"), icon: ShoppingBag, requiresAuth: true },
-    { id: "community", label: t("nav.community"), icon: Users, requiresAuth: true },
-    ...(authUser?.role === "admin" ? [{ id: "admin", label: "Admin", icon: Shield, requiresAuth: true }] : []),
-  ];
+  // Resolve exactly one active tab; default to "home" for unmatched routes.
+  const activeTab = path === "/home" || path.startsWith("/home/") ? "home" : resolveActiveTab(path);
+  const tabs = useNavTabs();
 
   return (
     <aside
