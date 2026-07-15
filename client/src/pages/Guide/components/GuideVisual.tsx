@@ -58,7 +58,7 @@ export default function GuideVisual({ type }: { type: GuideVisualType }) {
 
 function VisualFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-110 rounded-lg border bg-background p-4">
+    <div className="min-h-[440px] rounded-lg border bg-background p-4">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-1.5">
           <span className="size-2.5 rounded-full bg-tone-4" />
@@ -105,7 +105,7 @@ function HomeVisual() {
 function GuideTourVisual() {
   return (
     <VisualFrame>
-      <div className="grid gap-4 lg:grid-cols-[170px_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[170px_1fr]">
         <div className="rounded-lg bg-card p-3">
           {["Trang chủ", "Học", "Luyện tập", "Dịch", "AI Tutor", "Shop"].map((label, index) => (
             <div
@@ -231,7 +231,7 @@ function DictionaryVisual() {
 function TranslateVisual() {
   return (
     <VisualFrame>
-      <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+      <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
         <div className="rounded-lg bg-card p-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-extrabold">
             <Languages size={18} className="text-primary" />

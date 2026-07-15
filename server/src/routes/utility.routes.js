@@ -19,16 +19,16 @@ const router = Router();
 // Public: text-only translation works without an account (no history saved).
 router.post('/ocr/translate', ocrRateLimit, translateText);
 
-router.use(requireAuth);
-
-router.get('/achievements', listAchievements);
-router.post('/achievements/:id/unlock', unlockSpecialAchievement);
-router.get('/dashboard/daily-content', showDailyContent);
-router.get('/ocr/history', listOcrHistory);
-router.delete('/ocr/history', clearOcrScanHistory);
-router.get('/ocr/history/:id', showOcrScan);
-router.patch('/ocr/history/:id', updateOcrScan);
-router.delete('/ocr/history/:id', deleteOcrScanHistory);
-router.post('/ocr/scan', ocrRateLimit, scanImage);
+// requireAuth is attached per route (not router.use) so unknown paths under
+// /api/v1 fall through to the 404 handler instead of returning 401.
+router.get('/achievements', requireAuth, listAchievements);
+router.post('/achievements/:id/unlock', requireAuth, unlockSpecialAchievement);
+router.get('/dashboard/daily-content', requireAuth, showDailyContent);
+router.get('/ocr/history', requireAuth, listOcrHistory);
+router.delete('/ocr/history', requireAuth, clearOcrScanHistory);
+router.get('/ocr/history/:id', requireAuth, showOcrScan);
+router.patch('/ocr/history/:id', requireAuth, updateOcrScan);
+router.delete('/ocr/history/:id', requireAuth, deleteOcrScanHistory);
+router.post('/ocr/scan', requireAuth, ocrRateLimit, scanImage);
 
 export default router;

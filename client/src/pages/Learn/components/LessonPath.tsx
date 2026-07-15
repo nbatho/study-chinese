@@ -71,6 +71,8 @@ export default function LessonPath({
 
   const renderLesson = (entry: CurriculumLessonEntry, index: number) => {
     const { curriculumLesson, serverLesson } = entry;
+    const title = serverLesson?.title || curriculumLesson.title;
+    const objective = serverLesson?.subtitle || curriculumLesson.objective;
     const isCompleted = !!serverLesson?.completedAt;
     const isLockedByLevel = !isCompleted && (serverLesson ? Boolean(isLessonLocked?.(serverLesson)) : Boolean(isCurriculumLocked?.(curriculumLesson)));
     const isCurrent = Boolean(serverLesson) && !isLockedByLevel && (firstIncompleteIndex === index || (firstIncompleteIndex === -1 && index === flatEntries.length - 1));
@@ -127,7 +129,7 @@ export default function LessonPath({
                 <SkillIcon size={14} />
                 {t("learn.lesson")} {curriculumLesson.order} - {curriculumLesson.skill}
               </span>
-              <h4 className="mt-1 line-clamp-2 text-[1.05rem] font-extrabold">{curriculumLesson.title}</h4>
+              <h4 className="mt-1 line-clamp-2 text-[1.05rem] font-extrabold">{title}</h4>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span
@@ -143,7 +145,7 @@ export default function LessonPath({
               {!isLocked && <ChevronRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
             </div>
           </div>
-          <p className="mt-2 line-clamp-2 text-[0.84rem] text-muted-foreground">{curriculumLesson.objective}</p>
+          <p className="mt-2 line-clamp-2 text-[0.84rem] text-muted-foreground">{objective}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-bold text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Clock3 size={14} />
@@ -169,7 +171,7 @@ export default function LessonPath({
               {t("learn.path.summary", { completed: completedCount, total: flatEntries.length, available: availableCount })}
             </p>
           </div>
-          <div className="min-w-45 rounded-xl bg-secondary p-3">
+          <div className="min-w-[180px] rounded-xl bg-secondary p-3">
             <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
               <span>{t("learn.path.progress")}</span>
               <span>{progressPercent}%</span>
@@ -178,6 +180,7 @@ export default function LessonPath({
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
+
         </div>
       </div>
 

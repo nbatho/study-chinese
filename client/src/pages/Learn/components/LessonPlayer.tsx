@@ -154,6 +154,28 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
     setIsReportOpen(false);
   };
 
+  const handleBack = () => {
+    if (!lesson) {
+      onClose();
+      return;
+    }
+    if (stage === "exercises") {
+      if (lesson.dialogue) {
+        setStage("dialogue");
+      } else {
+        setStage("intro");
+      }
+    } else if (stage === "dialogue") {
+      setStage("intro");
+    } else {
+      if (stage !== "completed" && (exerciseIdx > 0 || isAnswerChecked || correctAnswersCount > 0)) {
+        const confirmExit = window.confirm(t("learn.player.confirmExit"));
+        if (!confirmExit) return;
+      }
+      onClose();
+    }
+  };
+
   if (lessonQuery.isLoading || !lesson) {
     return <LoadingCard label={t("learn.loading")} />;
   }
@@ -165,7 +187,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleBack}
               className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground transition hover:border-primary hover:text-primary active:translate-y-px"
               aria-label={t("learn.player.backToPath")}
               title={t("learn.player.backToPath")}
@@ -318,7 +340,8 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
             const promptZh = currentExercise.promptZh || currentExercise.prompt;
             const promptEn = currentExercise.promptEn || currentExercise.promptEnglish;
             const promptVi = currentExercise.promptVi;
-            const usePinyinPrompt = lesson.hskLevel <= 3 && Boolean(currentExercise.promptPinyin);
+            const isPinyinTested = currentExercise.kind === "matchPinyin" || currentExercise.kind === "tonePicker";
+            const usePinyinPrompt = lesson.hskLevel <= 3 && Boolean(currentExercise.promptPinyin) && !isPinyinTested;
             const primaryPrompt = usePinyinPrompt ? currentExercise.promptPinyin : promptZh;
 
             return (
@@ -352,7 +375,9 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               </button>
             )}
             {currentExercise.promptHanzi && <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">{currentExercise.promptHanzi}</h2>}
-            {!usePinyinPrompt && currentExercise.promptPinyin && <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>}
+            {!usePinyinPrompt && currentExercise.promptPinyin && !isPinyinTested && (
+              <p className="mb-2 text-base font-semibold text-muted-foreground">{currentExercise.promptPinyin}</p>
+            )}
             <h3 className={cn(usePinyinPrompt ? "text-[1.45rem]" : "font-serif text-[1.35rem]", "font-bold leading-relaxed")}>{primaryPrompt}</h3>
             {(promptEn || promptVi) && (
               <div className="mx-auto mt-4 grid max-w-2xl gap-2 text-left">

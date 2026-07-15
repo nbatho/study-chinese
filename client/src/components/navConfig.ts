@@ -52,7 +52,7 @@ export const useNavTabs = (): NavTab[] => {
   const { t } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const authUser = useAppSelector((state) => state.auth.user);
-  const dueCardsQuery = useDueSrsCardsQuery(99, isAuthenticated);
+  const dueCardsQuery = useDueSrsCardsQuery(100, isAuthenticated);
 
   return [
     { id: "home", label: t("nav.home"), icon: Home },

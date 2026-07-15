@@ -104,6 +104,17 @@ export default function AITutor({ onClose }: AITutorProps) {
     }
   };
 
+  const handleBackClick = () => {
+    if (selectedScenario) {
+      setSelectedScenario(null);
+      setSessionId(null);
+      setMessages([]);
+      setAiUsage(null);
+    } else {
+      handleClose();
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -131,7 +142,7 @@ export default function AITutor({ onClose }: AITutorProps) {
       >
         <button
           type="button"
-          onClick={handleClose}
+          onClick={handleBackClick}
           className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-secondary hover:text-foreground active:translate-y-px"
         >
           <ArrowLeft size={20} />

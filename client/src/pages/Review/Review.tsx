@@ -12,19 +12,14 @@ import TtsButton from "../../components/TtsButton";
 export default function Review() {
   const { t, language } = useI18n();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
-  const dueCardsQuery = useDueSrsCardsQuery(15);
+  const dueCardsQuery = useDueSrsCardsQuery(100);
   const reviewMutation = useReviewSrsMutation();
   const [sessionQueue, setSessionQueue] = useState<SrsDueCard[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const fetchedCards = dueCardsQuery.data?.cards ?? [];
 
-  // Seed the session queue once cards arrive and advance through it locally.
-  // Reviewing invalidates the "due" query, so reading length off the live
-  // query would keep the counter pinned (the server keeps returning a full
-  // batch); a stable per-session queue makes progress move 1/15 -> 2/15 ...
-  // Guarded setState during render (React's derived-state-on-change pattern):
-  // it converges immediately since sessionQueue becomes non-empty.
+
   if (sessionQueue.length === 0 && fetchedCards.length > 0) {
     setSessionQueue(fetchedCards);
   }

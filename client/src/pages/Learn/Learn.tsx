@@ -142,15 +142,40 @@ export default function Learn() {
         : curriculumLessons.reduce((total, lesson) => total + lesson.xpReward, 0),
     };
   });
-  const levelLessons = lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
+  const levelLessons = useMemo(() => {
+    return lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
+  }, [lessons, selectedHSK]);
+
+  const lessonsByOrder = useMemo(() => {
+    return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
+  }, [levelLessons]);
+
   const selectedLessonCount = getCurriculumLessonCount(selectedCurriculum);
-  const selectedCurriculumOrders = new Set(getCurriculumLessons(selectedCurriculum).map((lesson) => lesson.order));
-  const selectedCompletedCount = levelLessons.filter((lesson) => selectedCurriculumOrders.has(lesson.order) && lesson.completedAt).length;
+
+  const selectedCompletedCount = useMemo(() => {
+    let count = 0;
+    getCurriculumLessons(selectedCurriculum).forEach((currLesson) => {
+      const serverLesson = lessonsByOrder.get(currLesson.order);
+      if (serverLesson?.completedAt) {
+        count++;
+      }
+    });
+    return count;
+  }, [selectedCurriculum, lessonsByOrder]);
+
   const selectedProgressPercent = Math.round(selectedLessonCount ? (selectedCompletedCount / selectedLessonCount) * 100 : 0);
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
-  const nextLesson = levelLessons.find(
-    (lesson) => selectedCurriculumOrders.has(lesson.order) && !lesson.completedAt && !isLessonLockedByCefr(lesson),
-  );
+
+  const nextLesson = useMemo(() => {
+    const curriculumLessons = getCurriculumLessons(selectedCurriculum);
+    for (const currLesson of curriculumLessons) {
+      const serverLesson = lessonsByOrder.get(currLesson.order);
+      if (serverLesson && !serverLesson.completedAt && !isLessonLockedByCefr(serverLesson)) {
+        return serverLesson;
+      }
+    }
+    return null;
+  }, [selectedCurriculum, lessonsByOrder, userCefrLevel]);
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");
@@ -242,7 +267,7 @@ export default function Learn() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate("/practice?tool=hanzi")}
+                    onClick={() => navigate("/practice?tool=hanzi&from=learn")}
                     className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border bg-background px-5 py-3 text-sm font-extrabold transition hover:border-primary hover:text-primary active:translate-y-px"
                   >
                     <PenLine size={17} />
@@ -368,7 +393,7 @@ export default function Learn() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/practice?tool=hanzi")}
+                  onClick={() => navigate("/practice?tool=hanzi&from=learn")}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
                 >
                   <PenLine size={17} />

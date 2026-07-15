@@ -339,7 +339,7 @@ export default function Home() {
                 </div>
                 <Button
                   type="button"
-                  onClick={() => navigate("/practice?tool=weak")}
+                  onClick={() => navigate("/practice?tool=weak&from=home")}
                   className="mt-4 w-full rounded-xl"
                 >
                   <Target size={17} />

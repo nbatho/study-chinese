@@ -962,7 +962,16 @@ DO UPDATE SET section = EXCLUDED.section,
               explanation = EXCLUDED.explanation,
               difficulty = EXCLUDED.difficulty,
               order_num = EXCLUDED.order_num,
-              is_active = true,
+               is_active = true,
               updated_at = now();
 
+UPDATE lessons
+SET is_active = false, updated_at = now()
+WHERE id IN (
+  'l1_1', 'l1_2', 'l1_3', 'l1_4', 'l1_5', 'l1_6', 'l1_7', 'l1_8', 'l1_9', 'l1_10',
+  'l2_1', 'l2_2', 'l2_3',
+  'l3_1', 'l3_2', 'l3_3', 'l3_4', 'l3_5', 'l3_6'
+);
+
 COMMIT;
+

@@ -99,7 +99,7 @@ const scoreLanguageText = (value) => {
   const text = String(value || '');
 
   return {
-    hasChinese: CJK_PATTERN.test(text),
+    hasChinese: CJK_PATTERN.test(text) || /^[\d\s:.,?!\-+/*%()#@$[\]{}]+$/.test(text),
     hasVietnamese: VIETNAMESE_MARK_PATTERN.test(text),
     hasEnglish: ENGLISH_WORD_PATTERN.test(text)
   };

@@ -1,9 +1,12 @@
+import dotenv from 'dotenv';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { closeDB, query } from '../src/config/db.config.js';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+dotenv.config({ path: path.join(serverRoot, '.env') });
+
+const { closeDB, query } = await import('../src/config/db.config.js');
 
 const runSqlFile = async (filename) => {
   const sqlPath = path.join(serverRoot, filename);

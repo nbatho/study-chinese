@@ -230,7 +230,7 @@ export default function Guide() {
                 <h2 className="truncate text-xl font-extrabold sm:text-2xl">{activeStep.title}</h2>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:w-57.5">
+            <div className="grid grid-cols-2 gap-2 sm:w-[230px]">
               <button
                 type="button"
                 onClick={() => goToStep(activeIndex - 1)}
