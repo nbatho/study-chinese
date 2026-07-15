@@ -63,10 +63,11 @@ export const usePurchaseShopItemMutation = () => {
     });
 };
 
-export const useUserMistakesQuery = (limit = 30) =>
+export const useUserMistakesQuery = (limit = 30, enabled = true) =>
     useQuery({
         queryKey: queryKeys.users.mistakes(limit),
         queryFn: () => unwrapApiData(usersApi.getMistakes({ limit })),
+        enabled,
     });
 
 export const useAddActivityMutation = () => {

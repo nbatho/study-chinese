@@ -8,6 +8,7 @@ import { OptionalAuthRoute, PrivateRoute, PublicRoute } from "./AuthRoute";
 const Home = lazy(() => import("../pages/Home"));
 const Landing = lazy(() => import("../pages/Landing"));
 const Guide = lazy(() => import("../pages/Guide"));
+const Foundation = lazy(() => import("../pages/Foundation"));
 const Learn = lazy(() => import("../pages/Learn"));
 const Grammar = lazy(() => import("../pages/Grammar"));
 const Radicals = lazy(() => import("../pages/Radicals"));
@@ -21,6 +22,9 @@ const Shop = lazy(() => import("../pages/Shop"));
 const Onboarding = lazy(() => import("../pages/Onboarding"));
 const PlacementTest = lazy(() => import("../pages/PlacementTest"));
 const Auth = lazy(() => import("../pages/Auth"));
+const VerifyEmail = lazy(() => import("../pages/Auth/VerifyEmail"));
+const ForgotPassword = lazy(() => import("../pages/Auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/Auth/ResetPassword"));
 const AITutor = lazy(() => import("../pages/AITutor"));
 const Admin = lazy(() => import("../pages/Admin"));
 const Community = lazy(() => import("../pages/Community/Community"));
@@ -53,6 +57,10 @@ export const routes: RouteConfig[] = [
       {
         path: "guide",
         element: <Guide />
+      },
+      {
+        path: "foundation",
+        element: <Foundation />
       },
       {
         path: "learn",
@@ -126,6 +134,31 @@ export const routes: RouteConfig[] = [
       <PublicRoute redirectAuthenticatedTo="/home">
         <Auth />
       </PublicRoute>
+    )
+  },
+  {
+    // Reached from an email link — works with or without a session.
+    path: "/verify-email",
+    element: (
+      <OptionalAuthRoute>
+        <VerifyEmail />
+      </OptionalAuthRoute>
+    )
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicRoute redirectAuthenticatedTo="/settings">
+        <ForgotPassword />
+      </PublicRoute>
+    )
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <OptionalAuthRoute>
+        <ResetPassword />
+      </OptionalAuthRoute>
     )
   },
   {

@@ -2,12 +2,14 @@ import crypto from 'crypto';
 import { query } from '../config/db.config.js';
 import { badRequest, notFound } from '../utils/http-error.js';
 import { toLikePattern } from '../utils/sql.js';
+import { toHanViet } from '../utils/han-viet.js';
 
 export const mapWord = (row) => ({
   id: row.id,
   simplified: row.simplified,
   traditional: row.traditional,
   pinyin: row.pinyin,
+  hanViet: row.han_viet || toHanViet(row.simplified),
   tones: row.tones || [],
   english: row.english,
   englishVi: row.english_vi || null,
@@ -223,6 +225,79 @@ export const getVocabularyStats = async () => {
     hsk: hskResult.rows,
     cefr: cefrResult.rows,
     topics: topicResult.rows
+  };
+};
+
+/**
+ * Look up the best dictionary match for a character or short word. Used by the global
+ * tap-to-lookup popover, so it is public and resilient: it tries the curated HSK words
+ * table first, falls back to the CC-CEDICT dictionary, and always returns a
+ * Sino-Vietnamese reading when one can be composed.
+ */
+export const lookupWord = async (rawQuery) => {
+  const text = String(rawQuery || '').trim();
+
+  if (!text) {
+    throw badRequest('Thiếu ký tự cần tra cứu.');
+  }
+
+  if ([...text].length > 12) {
+    throw badRequest('Chuỗi tra cứu quá dài.');
+  }
+
+  const wordResult = await query(
+    `
+      SELECT *
+      FROM words
+      WHERE is_active = true
+        AND (simplified = $1 OR traditional = $1)
+      ORDER BY hsk_level ASC, frequency ASC NULLS LAST, id ASC
+      LIMIT 1
+    `,
+    [text]
+  );
+
+  if (wordResult.rowCount > 0) {
+    const word = mapWord(wordResult.rows[0]);
+    return { ...word, hanViet: word.hanViet || toHanViet(text), source: 'words' };
+  }
+
+  const dictResult = await query(
+    `
+      SELECT traditional, simplified, pinyin, english
+      FROM dictionary_entries
+      WHERE simplified = $1 OR traditional = $1
+      ORDER BY length(english) DESC
+      LIMIT 1
+    `,
+    [text]
+  );
+
+  if (dictResult.rowCount > 0) {
+    const entry = dictResult.rows[0];
+    return {
+      id: null,
+      wordId: null,
+      simplified: entry.simplified,
+      traditional: entry.traditional,
+      pinyin: entry.pinyin,
+      hanViet: toHanViet(entry.simplified),
+      english: entry.english,
+      hskLevel: null,
+      source: 'dictionary'
+    };
+  }
+
+  return {
+    id: null,
+    wordId: null,
+    simplified: text,
+    traditional: text,
+    pinyin: null,
+    hanViet: toHanViet(text),
+    english: null,
+    hskLevel: null,
+    source: 'none'
   };
 };
 

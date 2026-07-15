@@ -33,6 +33,7 @@ export const env = {
       : false),
   API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000/api/v1',
   ADMIN_EMAILS: process.env.ADMIN_EMAILS || '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
 
   DATABASE_URL: process.env.DATABASE_URL,
   DB_HOST: process.env.DB_HOST,
@@ -46,6 +47,12 @@ export const env = {
   DB_MAX_CONNECTIONS: envNumber('DB_MAX_CONNECTIONS', 10),
   DB_IDLE_TIMEOUT_MS: envNumber('DB_IDLE_TIMEOUT_MS', 30000),
   SKIP_DB_CONNECT: process.env.SKIP_DB_CONNECT === 'true',
+
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'Study Chinese <onboarding@resend.dev>',
+  EMAIL_VERIFICATION_TTL_HOURS: envNumber('EMAIL_VERIFICATION_TTL_HOURS', 24),
+  OTP_TTL_MINUTES: envNumber('OTP_TTL_MINUTES', 10),
+  REGISTRATION_OTP_TTL_MINUTES: envNumber('REGISTRATION_OTP_TTL_MINUTES', 5),
 
   JWT_SECRET: process.env.JWT_SECRET || 'change-this-dev-secret',
   JWT_EXPIRES_IN_SECONDS: envNumber('JWT_EXPIRES_IN_SECONDS', 900),

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, GraduationCap, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
@@ -357,14 +357,24 @@ export default function Learn() {
                   {t("learn.foundationSubtitle")}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate("/practice?tool=hanzi")}
-                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
-              >
-                <PenLine size={17} />
-                {t("learn.practiceWriting")}
-              </button>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/foundation")}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
+                >
+                  <GraduationCap size={17} />
+                  {t("learn.startFoundation")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/practice?tool=hanzi")}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
+                >
+                  <PenLine size={17} />
+                  {t("learn.practiceWriting")}
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">

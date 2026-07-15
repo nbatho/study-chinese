@@ -3,6 +3,7 @@ import {
   listRadicals,
   listTopics,
   listVocabulary,
+  lookupVocabulary,
   vocabularyStats
 } from '../controllers/vocab.controller.js';
 

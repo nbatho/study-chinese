@@ -17,7 +17,8 @@ test('requireFields reports missing fields', () => {
 test('auth schema validates email and password shape', () => {
   assert.equal(validators.email('learner@example.com'), true);
   assert.equal(validators.email('bad-email'), false);
-  assert.equal(authSchemas.register.password('12345678'), true);
+  assert.equal(authSchemas.register.password('Abcd1234'), true);
+  assert.equal(authSchemas.register.password('12345678'), false);
   assert.equal(authSchemas.register.password('short'), false);
 });
 

@@ -209,7 +209,8 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
       score: placementResult.score,
       completedAt: new Date().toISOString(),
     });
-    onComplete?.(placementResult);
+    // Do not auto-advance: show the result screen so the learner can see their
+    // level. onComplete is fired when they press Continue on that screen.
   };
 
   const goNext = async () => {
@@ -300,8 +301,12 @@ export default function PlacementTest({ embedded = false, onComplete, onSkip }: 
                 <RotateCcw size={18} />
                 {t("placement.retake")}
               </Button>
-              <Button type="button" onClick={() => navigate("/learn")} className="rounded-xl">
-                {t("placement.startLearning")}
+              <Button
+                type="button"
+                onClick={() => (onComplete ? onComplete(result) : navigate("/learn"))}
+                className="rounded-xl"
+              >
+                {onComplete ? t("common.continue") : t("placement.startLearning")}
                 <ArrowRight size={18} />
               </Button>
             </div>

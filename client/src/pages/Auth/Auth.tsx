@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BookOpen, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
-import { useLoginMutation, useRegisterMutation } from "../../api/auth/queries";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, BookOpen, Eye, EyeOff, Lock, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { toast } from "sonner";
+import {
+  useGoogleLoginMutation,
+  useLoginMutation,
+  useRegisterMutation,
+  useResendRegistrationOtpMutation,
+  useVerifyRegistrationMutation,
+} from "../../api/auth/queries";
+import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 import { useAppSelector } from "../../store/hooks";
 import { ApiError } from "../../utils/errorUtils";
 import { useI18n } from "../../i18n";
@@ -9,6 +17,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { cn } from "../../utils/cn";
+import { isStrongPassword } from "../../utils/passwordPolicy";
 
 type AuthMode = "login" | "register";
 
@@ -29,13 +38,21 @@ export default function Auth() {
   const { t } = useI18n();
   const authStatus = useAppSelector((state) => state.auth.status);
   const loginMutation = useLoginMutation();
+  const googleLoginMutation = useGoogleLoginMutation();
   const registerMutation = useRegisterMutation();
+  const verifyRegistrationMutation = useVerifyRegistrationMutation();
+  const resendRegistrationMutation = useResendRegistrationOtpMutation();
   const [mode, setMode] = useState<AuthMode>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // When set, registration succeeded and we're collecting the emailed OTP for this address.
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [verifyError, setVerifyError] = useState("");
 
   const isRegister = mode === "register";
   const isSubmitting = loginMutation.isPending || registerMutation.isPending;
@@ -48,7 +65,7 @@ export default function Auth() {
       return false;
     }
 
-    if (isRegister && password.length < 8) {
+    if (isRegister && !isStrongPassword(password)) {
       return false;
     }
 
@@ -64,8 +81,8 @@ export default function Auth() {
     setFormError("");
   };
 
-  const finishAuth = () => {
-    navigate("/home", { replace: true });
+  const finishAuth = (destination: string) => {
+    navigate(destination, { replace: true });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -83,22 +100,73 @@ export default function Auth() {
 
     try {
       if (isRegister) {
-        await registerMutation.mutateAsync({
+        const result = await registerMutation.mutateAsync({
           name: name.trim(),
           email: email.trim(),
           password,
         });
-        finishAuth();
+        // No account yet — move to OTP entry. It's created only after verification.
+        setOtp("");
+        setVerifyError("");
+        setPendingEmail(result.email);
+        toast.success(t("register.otpSent"));
       } else {
         await loginMutation.mutateAsync({
           email: email.trim(),
           password,
         });
-        finishAuth();
+        finishAuth("/home");
       }
     } catch (error) {
       setFormError(getErrorMessage(error));
     }
+  };
+
+  const handleVerify = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setVerifyError("");
+
+    if (!/^\d{6}$/.test(otp.trim())) {
+      setVerifyError(t("register.otpInvalid"));
+      return;
+    }
+
+    try {
+      await verifyRegistrationMutation.mutateAsync({ email: pendingEmail, otp: otp.trim() });
+      // New accounts must complete onboarding (profile + placement test) first.
+      finishAuth("/onboarding");
+    } catch (error) {
+      setVerifyError(getErrorMessage(error));
+    }
+  };
+
+  const handleGoogleCredential = async (credential: string) => {
+    setFormError("");
+
+    try {
+      const data = await googleLoginMutation.mutateAsync({ credential });
+      // New Google accounts still need onboarding; returning users go straight home.
+      finishAuth(data.isNewUser ? "/onboarding" : "/home");
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  };
+
+  const resendRegistrationOtp = async () => {
+    setVerifyError("");
+
+    try {
+      await resendRegistrationMutation.mutateAsync(pendingEmail);
+      toast.success(t("register.otpResent"));
+    } catch (error) {
+      setVerifyError(getErrorMessage(error));
+    }
+  };
+
+  const cancelVerification = () => {
+    setPendingEmail("");
+    setOtp("");
+    setVerifyError("");
   };
 
   return (
@@ -133,6 +201,70 @@ export default function Auth() {
         </aside>
 
         <div className="flex items-center p-5 sm:p-7 md:p-9">
+          {pendingEmail ? (
+            <form onSubmit={handleVerify} className="w-full animate-[auth-panel-in_0.32s_cubic-bezier(0.16,1,0.3,1)]">
+              <button
+                type="button"
+                onClick={cancelVerification}
+                className="mb-6 inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground transition hover:text-primary"
+              >
+                <ArrowLeft size={16} /> {t("register.back")}
+              </button>
+
+              <span className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <ShieldCheck size={24} />
+              </span>
+              <h2 className="mb-2 text-2xl sm:text-[1.9rem]">{t("register.verifyTitle")}</h2>
+              <p className="text-muted-foreground">
+                {t("register.verifyBody").replace("{email}", pendingEmail)}
+              </p>
+
+              <label className="mt-6 grid gap-2 font-bold">
+                {t("register.otpLabel")}
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  className="h-12 border-2 bg-background text-center text-lg tracking-[0.5em]"
+                />
+              </label>
+
+              {verifyError && (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-xl border border-destructive/25 bg-destructive/10 px-3.5 py-3 text-sm font-bold text-destructive"
+                >
+                  {verifyError}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                variant={otp.trim().length === 6 && !verifyRegistrationMutation.isPending ? "default" : "secondary"}
+                disabled={otp.trim().length !== 6 || verifyRegistrationMutation.isPending}
+                className="mt-5.5 h-12 w-full rounded-xl"
+              >
+                {verifyRegistrationMutation.isPending ? t("auth.wait") : t("register.verifySubmit")}
+              </Button>
+
+              <p className="mt-4.5 text-center text-sm text-muted-foreground">
+                {t("register.otpNotReceived")}{" "}
+                <button
+                  type="button"
+                  onClick={resendRegistrationOtp}
+                  disabled={resendRegistrationMutation.isPending}
+                  className="font-extrabold text-primary disabled:opacity-60"
+                >
+                  {resendRegistrationMutation.isPending ? t("auth.wait") : t("register.otpResend")}
+                </button>
+              </p>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="w-full">
             <div className="mb-7">
               <div
@@ -226,6 +358,16 @@ export default function Auth() {
                   </button>
                 </span>
               </label>
+
+              {isRegister && (
+                <p className="text-xs font-medium text-muted-foreground">{t("security.policyHint")}</p>
+              )}
+
+              {!isRegister && (
+                <Link to="/forgot-password" className="justify-self-end text-sm font-bold text-primary">
+                  {t("auth.forgotPassword")}
+                </Link>
+              )}
             </div>
 
             {formError && (
@@ -246,6 +388,21 @@ export default function Auth() {
               {isSubmitting ? t("auth.wait") : submitLabel}
             </Button>
 
+            <div className="my-5 flex items-center gap-3 text-xs font-bold text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              {t("auth.orContinue")}
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <GoogleSignInButton
+              onCredential={handleGoogleCredential}
+              text={isRegister ? "signup_with" : "signin_with"}
+            />
+
+            {googleLoginMutation.isPending && (
+              <p className="mt-3 text-center text-sm text-muted-foreground">{t("auth.wait")}</p>
+            )}
+
             <p className="mt-4.5 text-center text-sm text-muted-foreground">
               {isRegister ? t("auth.hasAccount") : t("auth.newHere")}{" "}
               <button
@@ -263,6 +420,7 @@ export default function Auth() {
               </p>
             )}
           </form>
+          )}
         </div>
       </section>
     </main>

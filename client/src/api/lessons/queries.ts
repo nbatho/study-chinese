@@ -75,6 +75,26 @@ export const useCompleteLessonMutation = (lessonId: string) => {
     });
 };
 
+// Completes a lesson chosen at call time (e.g. foundation stages), rather than one
+// bound at hook-creation time. Same cache invalidation as useCompleteLessonMutation.
+export const useCompleteLessonByIdMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ lessonId, ...payload }: CompleteLessonPayload & { lessonId: string }) =>
+            unwrapApiData(lessonsApi.complete(lessonId, payload)),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['lessons'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.due() });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });
+            queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
+            showAchievementToasts(data.unlockedAchievements);
+        },
+    });
+};
+
 export const useReportLessonIssueMutation = (lessonId: string) =>
     useMutation({
         mutationFn: (payload: ReportLessonIssuePayload) =>

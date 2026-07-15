@@ -5,6 +5,7 @@ export interface Word {
     simplified: string;
     traditional: string;
     pinyin: string;
+    hanViet?: string | null;
     tones: number[];
     english: string;
     englishVi?: string | null;
@@ -63,6 +64,22 @@ export interface VocabularyTopicsResponse {
 
 export interface VocabularyRadicalsResponse {
     radicals: VocabularyRadical[];
+}
+
+export interface WordLookupEntry {
+    id: string | null;
+    wordId?: string | null;
+    simplified: string;
+    traditional: string;
+    pinyin: string | null;
+    hanViet: string | null;
+    english: string | null;
+    hskLevel: number | null;
+    source: 'words' | 'dictionary' | 'none';
+}
+
+export interface WordLookupResponse {
+    entry: WordLookupEntry;
 }
 
 export interface VocabularyStatsResponse {

@@ -21,7 +21,13 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
 
 const PUBLIC_ENDPOINTS = [
     'auth/login',
+    'auth/google',
     'auth/register',
+    // Email verification + password recovery are reachable from email links
+    // where the visitor usually has no session.
+    'auth/verify-email',
+    'auth/forgot-password',
+    'auth/reset-password',
     'health',
     'docs',
     'ocr/translate',
