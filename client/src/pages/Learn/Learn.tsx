@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, GraduationCap, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, LogIn, PenLine, Trophy } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
@@ -8,69 +8,11 @@ import type { TranslationKey } from "../../i18n";
 import { useSelectedHskLevel } from "../../hooks/useSelectedHskLevel";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
-import { speakChinese } from "../../utils/tts";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 import { CEFR_RANK, getCurriculumLessons, getLevelProgress, HSK_CURRICULUM } from "./curriculum";
-type StrokeInfo = { nameKey: TranslationKey; descKey: TranslationKey; mark: string; example: string };
-const BASIC_STROKES: StrokeInfo[] = [
-  { nameKey: "learn.stroke.heng.name", descKey: "learn.stroke.heng.desc", mark: "一", example: "一" },
-  { nameKey: "learn.stroke.shu.name", descKey: "learn.stroke.shu.desc", mark: "丨", example: "十" },
-  { nameKey: "learn.stroke.dian.name", descKey: "learn.stroke.dian.desc", mark: "丶", example: "六" },
-  { nameKey: "learn.stroke.pie.name", descKey: "learn.stroke.pie.desc", mark: "丿", example: "八" },
-  { nameKey: "learn.stroke.na.name", descKey: "learn.stroke.na.desc", mark: "㇏", example: "八" },
-  { nameKey: "learn.stroke.ti.name", descKey: "learn.stroke.ti.desc", mark: "㇀", example: "冰" },
-  { nameKey: "learn.stroke.zhe.name", descKey: "learn.stroke.zhe.desc", mark: "𠃍", example: "口" },
-  { nameKey: "learn.stroke.gou.name", descKey: "learn.stroke.gou.desc", mark: "亅", example: "小" },
-];
-const STROKE_RULES: TranslationKey[] = [
-  "learn.strokeRule.horizontalVertical",
-  "learn.strokeRule.leftRightFalling",
-  "learn.strokeRule.topBottom",
-  "learn.strokeRule.leftRight",
-  "learn.strokeRule.outsideInside",
-  "learn.strokeRule.insideClose",
-];
-type ToneContour = "level" | "rising" | "dipping" | "falling" | "neutral";
-type ToneInfo = {
-  nameKey: TranslationKey;
-  pinyin: string;
-  contour: ToneContour;
-  example: string;
-  descKey: TranslationKey;
-};
-const TONES: ToneInfo[] = [
-  { nameKey: "learn.tone.first.name", pinyin: "mā", contour: "level", example: "妈", descKey: "learn.tone.first.desc" },
-  { nameKey: "learn.tone.second.name", pinyin: "má", contour: "rising", example: "麻", descKey: "learn.tone.second.desc" },
-  { nameKey: "learn.tone.third.name", pinyin: "mǎ", contour: "dipping", example: "马", descKey: "learn.tone.third.desc" },
-  { nameKey: "learn.tone.fourth.name", pinyin: "mà", contour: "falling", example: "骂", descKey: "learn.tone.fourth.desc" },
-  { nameKey: "learn.tone.neutral.name", pinyin: "ma", contour: "neutral", example: "吗", descKey: "learn.tone.neutral.desc" },
-];
+import { FOUNDATION_STAGES, isFoundationComplete, loadFoundationProgress } from "../Foundation/foundationCourse";
 
-function ToneContourIcon({ contour }: { contour: ToneContour }) {
-  if (contour === "neutral") {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 72 56" className="size-14 overflow-visible">
-        <path d="M10 48H62" className="stroke-primary/15" strokeWidth="5" strokeLinecap="round" fill="none" />
-        <circle cx="36" cy="28" r="9" className="fill-primary" />
-      </svg>
-    );
-  }
-
-  const path = {
-    level: "M14 18H58",
-    rising: "M16 42L58 14",
-    dipping: "M14 22C24 45 43 45 58 18",
-    falling: "M16 14L58 42",
-  }[contour];
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 72 56" className="size-14 overflow-visible">
-      <path d="M10 48H62" className="stroke-primary/15" strokeWidth="5" strokeLinecap="round" fill="none" />
-      <path d={path} className="stroke-primary" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-  );
-}
 
 export default function Learn() {
   const { t } = useI18n();
@@ -104,9 +46,59 @@ export default function Learn() {
     placementAt,
   );
 
-  const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null }) =>
-    CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
-  const isCurriculumLessonLocked = () => CEFR_RANK[selectedCurriculum.cefrLevel] > CEFR_RANK[userCefrLevel];
+  // Foundation completion check: DB (signed-in) or localStorage (guest/offline).
+  const foundationComplete = useMemo(() => {
+    const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
+    const dbFoundationDone = FOUNDATION_STAGES.every((stage) =>
+      dbLessons.some((l) => l.id === stage.lessonId),
+    );
+    return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
+  }, [lessons]);
+
+  // Per-level progress lookup for prerequisite checks.
+  const levelProgressMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const curriculum of HSK_CURRICULUM) {
+      map.set(curriculum.hskLevel, getLevelProgress(curriculum, lessons).percent);
+    }
+    return map;
+  }, [lessons]);
+
+  /**
+   * HSK locking with prerequisites:
+   * - HSK1: always open
+   * - HSK2+: requires Foundation complete AND the previous HSK level at 100%
+   */
+  const isHskLevelLocked = (hskLevel: number): boolean => {
+    if (hskLevel <= 1) return false;
+    if (!foundationComplete) return true;
+    // Check all previous levels are complete
+    for (let prev = 1; prev < hskLevel; prev++) {
+      if ((levelProgressMap.get(prev) ?? 0) < 100) return true;
+    }
+    return false;
+  };
+
+  /** Human-readable reason why a level is locked, or null if open. */
+  const getLockReason = (hskLevel: number): string | null => {
+    if (hskLevel <= 1) return null;
+    if (!foundationComplete) return t("learn.lockReasonFoundation");
+    for (let prev = 1; prev < hskLevel; prev++) {
+      if ((levelProgressMap.get(prev) ?? 0) < 100) {
+        return t("learn.lockReasonPrevLevel", { level: prev });
+      }
+    }
+    return null;
+  };
+
+  const isLessonLockedByCefr = (lesson: { cefrLevel?: keyof typeof CEFR_RANK; completedAt?: string | null; hskLevel?: number }) => {
+    if (lesson.hskLevel !== undefined && isHskLevelLocked(lesson.hskLevel)) return true;
+    return CEFR_RANK[lesson.cefrLevel ?? "A1"] > CEFR_RANK[userCefrLevel];
+  };
+  const isCurriculumLessonLocked = () => {
+    if (isHskLevelLocked(selectedCurriculum.hskLevel)) return true;
+    return CEFR_RANK[selectedCurriculum.cefrLevel] > CEFR_RANK[userCefrLevel];
+  };
 
   const hskStats = HSK_CURRICULUM.map((curriculumLevel) => {
     const level = curriculumLevel.hskLevel;
@@ -115,12 +107,14 @@ export default function Learn() {
     const { completedCount, lessonCount, percent } = getLevelProgress(curriculumLevel, lessons);
     const skills = Array.from(new Set(curriculumLessons.map((lesson) => lesson.skill))).slice(0, 4);
     const cefrLevel = curriculumLevel.cefrLevel;
-    const isLocked = CEFR_RANK[cefrLevel] > CEFR_RANK[userCefrLevel];
+    const isLocked = isHskLevelLocked(level);
+    const lockReason = getLockReason(level);
 
     return {
       level,
       cefrLevel,
       isLocked,
+      lockReason,
       completedCount,
       lessonCount,
       percent,
@@ -156,7 +150,7 @@ export default function Learn() {
       }
     }
     return null;
-  }, [selectedCurriculum, lessonsByOrder, userCefrLevel]);
+  }, [selectedCurriculum, lessonsByOrder, userCefrLevel, foundationComplete, levelProgressMap]);
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");
@@ -363,102 +357,18 @@ export default function Learn() {
                       </span>
                     ))}
                   </div>
+                  {levelStats.isLocked && levelStats.lockReason && (
+                    <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-amber-600">
+                      <Lock size={12} />
+                      {levelStats.lockReason}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="app-surface-padded text-left">
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h2 className="text-2xl font-extrabold">{t("learn.foundationTitle")}</h2>
-                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  {t("learn.foundationSubtitle")}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate("/foundation")}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
-                >
-                  <GraduationCap size={17} />
-                  {t("learn.startFoundation")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/practice?tool=hanzi&from=learn")}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-background px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
-                >
-                  <PenLine size={17} />
-                  {t("learn.practiceWriting")}
-                </button>
-              </div>
-            </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-              <div>
-                <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">{t("learn.strokesTitle")}</h3>
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  {BASIC_STROKES.map((stroke) => (
-                    <article key={stroke.nameKey} className="rounded-xl border bg-background p-3">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <span className="font-serif text-4xl font-extrabold text-primary">{stroke.mark}</span>
-                        <span className="rounded-lg bg-secondary px-2 py-1 font-serif text-lg font-bold">{stroke.example}</span>
-                      </div>
-                      <h4 className="font-extrabold">{t(stroke.nameKey)}</h4>
-                      <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{t(stroke.descKey)}</p>
-                    </article>
-                  ))}
-                </div>
-                <div className="mt-4 rounded-xl border bg-background p-4">
-                  <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">{t("learn.strokeRulesTitle")}</h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {STROKE_RULES.map((ruleKey, index) => (
-                      <div key={ruleKey} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm font-bold">
-                        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs text-primary">{index + 1}</span>
-                        <span>{t(ruleKey)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3 text-sm font-extrabold text-muted-foreground">{t("learn.tonesTitle")}</h3>
-                <div className="grid gap-2">
-                  {TONES.map((tone) => (
-                    <article key={tone.nameKey} className="rounded-xl border bg-background p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <span className="grid size-16 shrink-0 place-items-center rounded-lg bg-primary/10">
-                            <ToneContourIcon contour={tone.contour} />
-                          </span>
-                          <div className="min-w-0">
-                            <div className="font-extrabold leading-tight">{t(tone.nameKey)}</div>
-                            <div className="mt-1 flex items-center gap-2">
-                              <span className="font-serif text-2xl font-extrabold text-primary">{tone.example}</span>
-                              <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => speakChinese(tone.example)}
-                          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card text-muted-foreground transition hover:border-primary hover:text-primary"
-                          aria-label={t("learn.listenTone", { pinyin: tone.pinyin })}
-                          title={t("learn.listenTone", { pinyin: tone.pinyin })}
-                        >
-                          <Volume2 size={18} />
-                        </button>
-                      </div>
-                      <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground">{t(tone.descKey)}</p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
 
           <div ref={lessonPathRef} className="scroll-mt-24">
             <LessonPath

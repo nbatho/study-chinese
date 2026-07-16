@@ -24,7 +24,7 @@ export const unlockSpecialAchievement = asyncHandler(async (req, res) => {
 });
 
 export const showDailyContent = asyncHandler(async (req, res) => {
-  const data = await getDailyContent();
+  const data = await getDailyContent(req.query.locale);
   success(res, data);
 });
 

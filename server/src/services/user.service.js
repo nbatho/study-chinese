@@ -9,6 +9,8 @@ import {
   purchaseShopItem
 } from './gamification.service.js';
 import { listMistakes, practiceMistake, recordMistake } from './mistake.service.js';
+import { chooseLocalizedText } from './content-language.service.js';
+import { normalizeLocale } from '../utils/locale.js';
 
 const mapProfile = (row) => ({
   name: row.name,
@@ -72,18 +74,19 @@ const normalizeActivityNumber = (value, { max, field }) => {
   return Math.round(normalized);
 };
 
-const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null, dateKey = getDateKey() } = {}) => {
+const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = null, nextLesson = null, todayStats = null, dateKey = getDateKey(), locale = 'en' } = {}) => {
   const normalizedDailyMinutes = Number(dailyMinutes || 15);
   const normalizedDueCount = Number(dueCount || 0);
   const xpTarget = Math.max(normalizedDailyMinutes * 3, 45);
   const steps = [];
 
+  // Steps carry a stable `id` plus the numbers/names the copy interpolates; the
+  // client turns each `id` into localized text. Nothing user-facing is written
+  // here -- a hardcoded language would leak past the language switch.
   if (normalizedDueCount > 0) {
     steps.push({
       id: 'srs-review',
       kind: 'review',
-      title: 'Ôn SRS đến hạn',
-      description: `${normalizedDueCount} thẻ đang chờ ôn`,
       estimateMinutes: Math.min(10, Math.max(3, Math.ceil(normalizedDueCount / 3))),
       href: '/review',
       status: 'current',
@@ -95,8 +98,6 @@ const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = n
     steps.push({
       id: 'weak-practice',
       kind: 'practice',
-      title: 'Luyện điểm yếu',
-      description: `${weakSkill.needs_practice} lỗi cần luyện - ${weakSkill.skill}`,
       estimateMinutes: 5,
       href: '/practice?tool=weak',
       status: steps.length === 0 ? 'current' : 'next',
@@ -108,22 +109,20 @@ const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = n
   }
 
   if (nextLesson) {
-    const lessonOrder = nextLesson.order_num ?? nextLesson.orderNum;
-    const lessonHsk = nextLesson.hsk_level ?? nextLesson.hskLevel;
-    const lessonLabel = lessonOrder
-      ? `Bài ${lessonOrder} - ${nextLesson.title}${lessonHsk ? ` (HSK ${lessonHsk})` : ''}`
-      : nextLesson.title;
     steps.push({
       id: 'next-lesson',
       kind: 'lesson',
-      title: 'Học bài tiếp theo',
-      description: `${lessonLabel} - ${nextLesson.skill}`,
       estimateMinutes: Number(nextLesson.estimated_minutes || nextLesson.estimatedMinutes || 5),
       href: `/learn?lesson=${nextLesson.id}`,
       status: steps.length === 0 ? 'current' : 'next',
       meta: {
         lessonId: nextLesson.id,
-        skill: nextLesson.skill
+        skill: nextLesson.skill,
+        // Lesson titles are authored content, so they localize here rather than
+        // in the client bundle -- same source of truth as lesson.service.
+        lessonTitle: chooseLocalizedText(nextLesson.title, nextLesson.title_vi ?? nextLesson.titleVi, locale),
+        lessonOrder: nextLesson.order_num ?? nextLesson.orderNum ?? null,
+        hskLevel: nextLesson.hsk_level ?? nextLesson.hskLevel ?? null
       }
     });
   }
@@ -131,8 +130,6 @@ const buildTodayPlanResponse = ({ dailyMinutes = 15, dueCount = 0, weakSkill = n
   steps.push({
     id: 'ai-warmup',
     kind: 'ai',
-    title: 'Nói 3 câu với AI Tutor',
-    description: weakSkill ? `Dùng điểm yếu ${weakSkill.skill} trong hội thoại` : 'Khởi động hội thoại ngắn',
     estimateMinutes: 4,
     href: '/ai-tutor',
     status: steps.length === 0 ? 'current' : 'next',
@@ -223,7 +220,8 @@ export const getUserStats = async (userId, days = 7) => {
   };
 };
 
-export const getTodayPlan = async (userId) => {
+export const getTodayPlan = async (userId, locale) => {
+  const glossLocale = normalizeLocale(locale);
   const profileResult = await query(
     `
       SELECT daily_minutes, cefr_level, timezone
@@ -264,7 +262,7 @@ export const getTodayPlan = async (userId) => {
     ),
     query(
       `
-        SELECT l.id, l.title, l.skill, l.estimated_minutes, l.order_num, l.hsk_level
+        SELECT l.id, l.title, l.title_vi, l.skill, l.estimated_minutes, l.order_num, l.hsk_level
         FROM users u
         JOIN lessons l
           ON l.is_active = true
@@ -295,7 +293,8 @@ export const getTodayPlan = async (userId) => {
     weakSkill: mistakesResult.rows[0] || null,
     nextLesson: lessonsResult.rows[0] || null,
     todayStats: statsResult.rows[0] ? mapDailyStats(statsResult.rows[0]) : null,
-    dateKey
+    dateKey,
+    locale: glossLocale
   });
 };
 

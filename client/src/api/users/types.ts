@@ -70,11 +70,13 @@ export interface UserStatsResponse {
     stats: DailyStat[];
 }
 
+/**
+ * Copy lives in the client i18n bundle, keyed by `id`; the server sends only
+ * the `id` and the values that copy interpolates.
+ */
 export interface TodayPlanStep {
     id: string;
     kind: 'review' | 'practice' | 'lesson' | 'ai';
-    title: string;
-    description: string;
     estimateMinutes: number;
     href: string;
     status: 'done' | 'current' | 'next';
@@ -160,6 +162,8 @@ export interface MistakeItem {
     correctAnswer?: string | null;
     simplified?: string | null;
     pinyin?: string | null;
+    /** Meaning in the requested locale, falling back to `english`. */
+    gloss?: string | null;
     english?: string | null;
     context?: Record<string, unknown>;
     mistakeCount: number;

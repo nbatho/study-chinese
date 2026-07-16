@@ -36,7 +36,7 @@ const cefrLevels: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const pageSize = 24;
 const listEmojis = ["📘", "⭐", "🧠", "✍️"];
 export default function Dictionary() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const sortOptions: Array<{ value: VocabularySort; label: string }> = [
@@ -277,7 +277,7 @@ export default function Dictionary() {
               { value: "all", label: t("dictionary.allTopics") },
               ...topics.map((topic) => ({
                 value: topic.id,
-                label: `${topic.emoji ? `${topic.emoji} ` : ""}${topic.nameEn}`,
+                label: `${topic.emoji ? `${topic.emoji} ` : ""}${(language === "vi" && topic.nameVi) || topic.nameEn}`,
               })),
             ]}
             align="left"

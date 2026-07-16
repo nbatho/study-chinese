@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { query } from '../config/db.config.js';
 import { notFound } from '../utils/http-error.js';
+import { normalizeLocale } from '../utils/locale.js';
 
 const compact = (value) => String(value || '').trim();
 
@@ -42,6 +43,8 @@ export const mapMistake = (row) => ({
   simplified: row.word_simplified || row.simplified,
   pinyin: row.word_pinyin || row.pinyin,
   english: row.word_english || row.english,
+  // Meaning in the caller's language; falls back to the English source text.
+  gloss: row.word_gloss || row.word_english || row.english,
   context: row.context || {},
   mistakeCount: Number(row.mistake_count),
   resolvedCount: Number(row.resolved_count),
@@ -104,24 +107,27 @@ export const recordMistake = async (client, userId, payload = {}) => {
   return mapMistake(result.rows[0]);
 };
 
-export const listMistakes = async (userId, { limit = 30 } = {}) => {
+export const listMistakes = async (userId, { limit = 30, locale } = {}) => {
   const normalizedLimit = Math.min(Math.max(Number(limit) || 30, 1), 100);
+  const glossLocale = normalizeLocale(locale);
   const result = await query(
     `
       SELECT
         um.*,
         w.simplified AS word_simplified,
         w.pinyin AS word_pinyin,
-        w.english AS word_english
+        w.english AS word_english,
+        wg.gloss AS word_gloss
       FROM user_mistakes um
       LEFT JOIN words w ON w.id = um.word_id
+      LEFT JOIN word_glosses wg ON wg.word_id = um.word_id AND wg.locale = $3
       WHERE um.user_id = $1
       ORDER BY
         GREATEST(um.mistake_count - um.resolved_count, 0) DESC,
         um.last_mistake_at DESC
       LIMIT $2
     `,
-    [userId, normalizedLimit]
+    [userId, normalizedLimit, glossLocale]
   );
 
   return {

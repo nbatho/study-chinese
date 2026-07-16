@@ -12,6 +12,8 @@
 //   --locale=X  Target language; must be listed in GLOSS_LOCALES (default vi).
 //   --dry-run   Print translations without writing to the database.
 //   --force     Re-translate phrases that already have a gloss for this locale.
+//               Rows with source = 'human' are skipped either way -- a
+//               hand-written gloss outranks anything this script produces.
 //   --limit=N   Only process the first N eligible rows.
 //   --batch=N   Phrases per AI request (default 25).
 
@@ -30,6 +32,7 @@ await runGlossBackfill({
         LEFT JOIN daily_phrase_glosses dpg ON dpg.phrase_id = dp.id AND dpg.locale = $1
         WHERE dp.is_active = true
           AND dp.english IS NOT NULL AND dp.english <> ''
+          AND (dpg.source IS NULL OR dpg.source <> 'human')
           ${force ? '' : 'AND dpg.gloss IS NULL'}
         ORDER BY dp.id
         ${limit ? `LIMIT ${limit}` : ''}

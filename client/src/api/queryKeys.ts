@@ -5,8 +5,12 @@ export const queryKeys = {
     users: {
         profile: ['users', 'profile'] as const,
         stats: (days?: number) => ['users', 'stats', days ?? 7] as const,
-        mistakes: (limit?: number) => ['users', 'mistakes', limit ?? 30] as const,
-        todayPlan: ['users', 'today-plan'] as const,
+        // Prefix of every `mistakes` key — use it to invalidate them across limits and locales.
+        mistakesAll: ['users', 'mistakes'] as const,
+        mistakes: (limit?: number, locale = 'en') => ['users', 'mistakes', limit ?? 30, locale] as const,
+        // Prefix of every `todayPlan` key — use it to invalidate them across locales.
+        todayPlanAll: ['users', 'today-plan'] as const,
+        todayPlan: (locale = 'en') => ['users', 'today-plan', locale] as const,
         shop: ['users', 'shop'] as const,
     },
     lessons: {
@@ -44,7 +48,7 @@ export const queryKeys = {
         all: ['achievements'] as const,
     },
     dashboard: {
-        dailyContent: ['dashboard', 'daily-content'] as const,
+        dailyContent: (locale = 'en') => ['dashboard', 'daily-content', locale] as const,
     },
     practice: {
         catalog: ['practice'] as const,

@@ -24,14 +24,15 @@ export const usersApi = {
 
     getStats: (params?: { days?: number }) => apiRequest<UserStatsResponse>(beApi.get('users/stats', { params })),
 
-    getTodayPlan: () => apiRequest<TodayPlanResponse>(beApi.get('users/today-plan')),
+    getTodayPlan: (locale = 'en') =>
+        apiRequest<TodayPlanResponse>(beApi.get('users/today-plan', { params: { locale } })),
 
     getShop: () => apiRequest<ShopResponse>(beApi.get('users/shop')),
 
     purchaseShopItem: (itemId: string) =>
         apiRequest<PurchaseShopItemResponse>(beApi.post(`users/shop/${itemId}/purchase`)),
 
-    getMistakes: (params?: { limit?: number }) =>
+    getMistakes: (params?: { limit?: number; locale?: string }) =>
         apiRequest<MistakesResponse>(beApi.get('users/mistakes', { params })),
 
     recordMistake: (payload: MistakePayload) =>

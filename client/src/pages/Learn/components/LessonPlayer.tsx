@@ -12,6 +12,7 @@ import ConfirmDialog from "../../../components/ConfirmDialog";
 import { cn } from "../../../utils/cn";
 import { formatLessonTitle } from "../../../utils/lessonTitle";
 import { speakChinese } from "../../../utils/tts";
+import { playCorrectSound, playIncorrectSound } from "../../../utils/sfx";
 import TtsSpeedControl from "../../../components/TtsSpeedControl";
 import { HanziText } from "../../../components/HanziLookup";
 import ArrangeExercise from "./ArrangeExercise";
@@ -110,7 +111,12 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
       : currentExercise.kind === "arrangeSentence"
       ? arrangedWords.join("") === currentExercise.correctText.replace(/\s+/g, "")
       : selectedOptionIdx === currentExercise.correctIndex;
-    if (correct) setCorrectAnswersCount((prev) => prev + 1);
+    if (correct) {
+      setCorrectAnswersCount((prev) => prev + 1);
+      void playCorrectSound();
+    } else {
+      void playIncorrectSound();
+    }
     if (!correct && !demo) {
       void recordMistakeMutation
         .mutateAsync(buildLessonMistakePayload(lesson, currentExercise, selectedOptionIdx, arrangedWords, shortAnswer))

@@ -296,6 +296,8 @@ CREATE TABLE IF NOT EXISTS word_topics (
   is_active BOOLEAN NOT NULL DEFAULT true
 );
 
+ALTER TABLE word_topics ADD COLUMN IF NOT EXISTS name_vi VARCHAR(100);
+
 CREATE TABLE IF NOT EXISTS word_topic_map (
   word_id VARCHAR(50) NOT NULL REFERENCES words(id) ON DELETE CASCADE,
   topic_id VARCHAR(50) NOT NULL REFERENCES word_topics(id) ON DELETE CASCADE,
@@ -617,6 +619,9 @@ CREATE TABLE IF NOT EXISTS daily_phrase_glosses (
   phrase_id INTEGER NOT NULL REFERENCES daily_phrases(id) ON DELETE CASCADE,
   locale VARCHAR(10) NOT NULL,
   gloss TEXT NOT NULL,
+  -- Translation of daily_phrases.note (an English usage tip, not a meaning).
+  -- Nullable: not every phrase carries a note.
+  note TEXT,
   source VARCHAR(20) NOT NULL DEFAULT 'ai',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -805,47 +810,48 @@ CREATE TRIGGER trg_shop_items_updated_at BEFORE UPDATE ON shop_items
 
 CREATE INDEX IF NOT EXISTS idx_gem_transactions_user_time ON gem_transactions (user_id, created_at DESC);
 
-INSERT INTO word_topics (id, name_en, name_zh, emoji, display_order, is_active)
+INSERT INTO word_topics (id, name_en, name_vi, name_zh, emoji, display_order, is_active)
 VALUES
-  ('greetings', 'Greetings', NULL, U&'\+01F44B', 10, true),
-  ('numbers', 'Numbers', NULL, U&'\+01F522', 20, true),
-  ('food', 'Food & Drink', NULL, U&'\+01F35C', 30, true),
-  ('family', 'Family', NULL, U&'\+01F46A', 40, true),
-  ('body', 'Body & Health', NULL, U&'\+01F3E5', 50, true),
-  ('time', 'Time & Date', NULL, U&'\23F0', 60, true),
-  ('weather', 'Weather', NULL, U&'\2601', 70, true),
-  ('colors', 'Colors', NULL, U&'\+01F3A8', 80, true),
-  ('animals', 'Animals', NULL, U&'\+01F43C', 90, true),
-  ('clothing', 'Clothing', NULL, U&'\+01F454', 100, true),
-  ('transportation', 'Transportation', NULL, U&'\+01F687', 110, true),
-  ('shopping', 'Shopping', NULL, U&'\+01F6D2', 120, true),
-  ('education', 'Education', NULL, U&'\+01F4DA', 130, true),
-  ('work', 'Work & Career', NULL, U&'\+01F4BC', 140, true),
-  ('travel', 'Travel', NULL, U&'\2708', 150, true),
-  ('nature', 'Nature', NULL, U&'\+01F33F', 160, true),
-  ('technology', 'Technology', NULL, U&'\+01F4BB', 170, true),
-  ('sports', 'Sports', NULL, U&'\26BD', 180, true),
-  ('emotions', 'Emotions', NULL, U&'\+01F496', 190, true),
-  ('home', 'Home & Living', NULL, U&'\+01F3E0', 200, true),
-  ('geography', 'Geography', NULL, U&'\+01F30D', 210, true),
-  ('culture', 'Culture', NULL, U&'\+01F3EE', 220, true),
-  ('business', 'Business', NULL, U&'\+01F4CA', 230, true),
-  ('general', 'General', NULL, U&'\+01F4DD', 240, true)
+  ('greetings', 'Greetings', 'Chào hỏi', NULL, U&'\+01F44B', 10, true),
+  ('numbers', 'Numbers', 'Con số', NULL, U&'\+01F522', 20, true),
+  ('food', 'Food & Drink', 'Ăn uống', NULL, U&'\+01F35C', 30, true),
+  ('family', 'Family', 'Gia đình', NULL, U&'\+01F46A', 40, true),
+  ('body', 'Body & Health', 'Cơ thể & Sức khỏe', NULL, U&'\+01F3E5', 50, true),
+  ('time', 'Time & Date', 'Thời gian & Ngày tháng', NULL, U&'\23F0', 60, true),
+  ('weather', 'Weather', 'Thời tiết', NULL, U&'\2601', 70, true),
+  ('colors', 'Colors', 'Màu sắc', NULL, U&'\+01F3A8', 80, true),
+  ('animals', 'Animals', 'Động vật', NULL, U&'\+01F43C', 90, true),
+  ('clothing', 'Clothing', 'Trang phục', NULL, U&'\+01F454', 100, true),
+  ('transportation', 'Transportation', 'Giao thông', NULL, U&'\+01F687', 110, true),
+  ('shopping', 'Shopping', 'Mua sắm', NULL, U&'\+01F6D2', 120, true),
+  ('education', 'Education', 'Giáo dục', NULL, U&'\+01F4DA', 130, true),
+  ('work', 'Work & Career', 'Công việc & Sự nghiệp', NULL, U&'\+01F4BC', 140, true),
+  ('travel', 'Travel', 'Du lịch', NULL, U&'\2708', 150, true),
+  ('nature', 'Nature', 'Thiên nhiên', NULL, U&'\+01F33F', 160, true),
+  ('technology', 'Technology', 'Công nghệ', NULL, U&'\+01F4BB', 170, true),
+  ('sports', 'Sports', 'Thể thao', NULL, U&'\26BD', 180, true),
+  ('emotions', 'Emotions', 'Cảm xúc', NULL, U&'\+01F496', 190, true),
+  ('home', 'Home & Living', 'Nhà cửa & Đời sống', NULL, U&'\+01F3E0', 200, true),
+  ('geography', 'Geography', 'Địa lý', NULL, U&'\+01F30D', 210, true),
+  ('culture', 'Culture', 'Văn hóa', NULL, U&'\+01F3EE', 220, true),
+  ('business', 'Business', 'Kinh doanh', NULL, U&'\+01F4CA', 230, true),
+  ('general', 'General', 'Tổng hợp', NULL, U&'\+01F4DD', 240, true)
 ON CONFLICT (id)
 DO UPDATE SET
   name_en = EXCLUDED.name_en,
+  name_vi = EXCLUDED.name_vi,
   emoji = EXCLUDED.emoji,
   display_order = EXCLUDED.display_order,
   is_active = EXCLUDED.is_active;
 
 INSERT INTO shop_items (id, name, description, emoji, category, price_gems, grant_type, grant_quantity, metadata)
 VALUES
-  ('streak_freeze_1', 'Streak Freeze', 'Bao ve chuoi ngay hoc neu ban bo lo 1 ngay.', '🧊', 'streak', 60, 'streak_freeze', 1, '{"label":"1 freeze"}'::jsonb),
-  ('premium_30_days', 'Premium 30 ngay', 'Mo gioi han AI Tutor trong 30 ngay. Hien mua bang Gems, chua ket noi thanh toan.', '👑', 'premium', 500, 'premium_days', 30, '{"aiDailyLimit":null}'::jsonb),
-  ('avatar_panda', 'Avatar Panda', 'Doi avatar thanh panda hoc tieng Trung.', '🐼', 'avatar', 120, 'avatar', 1, '{"avatar":"🐼"}'::jsonb),
-  ('avatar_dragon', 'Avatar Rong', 'Doi avatar thanh rong do may man.', '🐉', 'avatar', 180, 'avatar', 1, '{"avatar":"🐉"}'::jsonb),
-  ('ai_skin_scholar', 'AI Tutor Scholar', 'Trang bi phong cach hoc gia cho AI Tutor.', '🎓', 'ai_tutor', 220, 'ai_tutor_skin', 1, '{"skin":"scholar","label":"Scholar"}'::jsonb),
-  ('ai_skin_chef', 'AI Tutor Chef', 'Trang bi phong cach nha hang de luyen hoi thoai an uong.', '🥟', 'ai_tutor', 220, 'ai_tutor_skin', 1, '{"skin":"chef","label":"Chef"}'::jsonb)
+  ('streak_freeze_1', 'Streak Freeze', 'Protect your study streak if you miss one day.', '🧊', 'streak', 60, 'streak_freeze', 1, '{"label":"1 freeze"}'::jsonb),
+  ('premium_30_days', 'Premium 30 days', 'Remove the AI Tutor daily message limit for 30 days. Purchased with Gems for now.', '👑', 'premium', 500, 'premium_days', 30, '{"aiDailyLimit":null}'::jsonb),
+  ('avatar_panda', 'Panda Avatar', 'Change your avatar to a Chinese-learning panda.', '🐼', 'avatar', 120, 'avatar', 1, '{"avatar":"🐼"}'::jsonb),
+  ('avatar_dragon', 'Dragon Avatar', 'Change your avatar to a lucky red dragon.', '🐉', 'avatar', 180, 'avatar', 1, '{"avatar":"🐉"}'::jsonb),
+  ('ai_skin_scholar', 'AI Tutor Scholar', 'Give your AI Tutor a scholar style.', '🎓', 'ai_tutor', 220, 'ai_tutor_skin', 1, '{"skin":"scholar","label":"Scholar"}'::jsonb),
+  ('ai_skin_chef', 'AI Tutor Chef', 'Give your AI Tutor a restaurant-practice style.', '🥟', 'ai_tutor', 220, 'ai_tutor_skin', 1, '{"skin":"chef","label":"Chef"}'::jsonb)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,

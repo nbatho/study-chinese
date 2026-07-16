@@ -29,7 +29,7 @@ export const getStats = asyncHandler(async (req, res) => {
 });
 
 export const showTodayPlan = asyncHandler(async (req, res) => {
-  const data = await getTodayPlan(req.user.id);
+  const data = await getTodayPlan(req.user.id, req.query.locale);
   success(res, data);
 });
 

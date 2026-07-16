@@ -19,7 +19,7 @@ export const useSubmitPlacementMutation = () => {
         onSuccess: (data) => {
             queryClient.setQueryData(queryKeys.users.profile, data);
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
         },
     });
 };

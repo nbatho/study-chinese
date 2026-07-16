@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import {
   type LeaderboardScope,
+  type TodayPlanStep,
   useAchievementsQuery,
   useDailyContentQuery,
   useLeaderboardQuery,
@@ -35,6 +36,7 @@ import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
 import { Skeleton } from "../../components/ui/skeleton";
 import { useI18n } from "../../i18n";
+import type { TranslationKey } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { formatLessonTitle } from "../../utils/lessonTitle";
@@ -46,8 +48,11 @@ const clampPercent = (current: number, goal: number) => {
   return Math.max(0, Math.min(100, Math.round((current / goal) * 100)));
 };
 
+const asString = (value: unknown) => (typeof value === "string" && value ? value : null);
+const asNumber = (value: unknown) => (typeof value === "number" ? value : null);
+
 export default function Home() {
-  const { language, t } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { setSelectedLessonId } = useOutletContext<{
     setSelectedLessonId: (lessonId: string | null) => void;
@@ -95,6 +100,51 @@ export default function Home() {
     .filter((item) => item.needsPracticeCount > 0)
     .slice(0, 4);
   const displayName = profile?.name || t("common.learner");
+
+  // The server sends skills as bare ids; an id with no `skill.<id>` entry falls
+  // back to the id itself rather than rendering an empty label.
+  const skillLabel = (skill: unknown) => {
+    const id = asString(skill);
+    if (!id) return "";
+    const key = `skill.${id}` as TranslationKey;
+    const label = t(key);
+    return label === key ? id : label;
+  };
+
+  const planStepTitle = (step: TodayPlanStep) => t(`home.planStep.${step.id}.title` as TranslationKey);
+
+  const planStepDescription = (step: TodayPlanStep) => {
+    const meta = step.meta ?? {};
+
+    switch (step.id) {
+      case "srs-review":
+        return t("home.planStep.srs-review.desc", { count: asNumber(meta.dueCount) ?? 0 });
+      case "weak-practice":
+        return t("home.planStep.weak-practice.desc", {
+          count: asNumber(meta.needsPracticeCount) ?? 0,
+          skill: skillLabel(meta.skill),
+        });
+      case "next-lesson": {
+        const title = asString(meta.lessonTitle) ?? "";
+        const order = asNumber(meta.lessonOrder);
+        const hsk = asNumber(meta.hskLevel);
+        const lesson = order
+          ? hsk
+            ? t("home.planLessonLabelHsk", { order, title, hsk })
+            : t("home.planLessonLabel", { order, title })
+          : title;
+        return t("home.planStep.next-lesson.desc", { lesson, skill: skillLabel(meta.skill) });
+      }
+      case "ai-warmup": {
+        const focusSkill = asString(meta.focusSkill);
+        return focusSkill
+          ? t("home.planStep.ai-warmup.descFocus", { skill: skillLabel(focusSkill) })
+          : t("home.planStep.ai-warmup.desc");
+      }
+      default:
+        return "";
+    }
+  };
   const xpTarget = todayPlan?.xpTarget ?? Math.max((profile?.dailyMinutes ?? 15) * 3, 50);
   const lessonTarget = 1;
   const reviewTarget = 10;
@@ -275,9 +325,9 @@ export default function Home() {
                         {isDone ? <CheckCircle2 size={17} /> : index + 1}
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-extrabold">{step.title}</span>
+                        <span className="block truncate text-sm font-extrabold">{planStepTitle(step)}</span>
                         <span className="block truncate text-xs font-medium text-muted-foreground">
-                          {step.description}
+                          {planStepDescription(step)}
                         </span>
                       </span>
                       <span className="shrink-0 text-xs font-extrabold text-primary">{step.estimateMinutes}m</span>
@@ -326,10 +376,10 @@ export default function Home() {
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-extrabold">
-                          {spot.pinyin || spot.skill}
+                          {spot.pinyin || skillLabel(spot.skill)}
                         </span>
                         <span className="block truncate text-xs font-medium text-muted-foreground">
-                          {spot.english || spot.correctAnswer || spot.prompt}
+                          {spot.gloss || spot.correctAnswer || spot.prompt}
                         </span>
                       </span>
                       <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
@@ -362,12 +412,17 @@ export default function Home() {
                   {currentPhrase.simplified}
                 </div>
                 <div className="mt-2 text-base font-semibold text-muted-foreground">{currentPhrase.pinyin}</div>
-                <p className="mt-3 text-base font-bold">
-                  {language === "vi" && currentPhrase.note ? currentPhrase.note : currentPhrase.english}
-                </p>
-                <p className="mt-2 border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground">
-                  {currentPhrase.english}
-                </p>
+                <p className="mt-3 text-base font-bold">{currentPhrase.gloss}</p>
+                {currentPhrase.note ? (
+                  <p className="mt-2 border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground">
+                    {currentPhrase.note}
+                  </p>
+                ) : null}
+                {currentPhrase.gloss !== currentPhrase.english ? (
+                  <p className="mt-2 text-xs font-medium text-muted-foreground">
+                    {t("home.phraseSource", { text: currentPhrase.english })}
+                  </p>
+                ) : null}
                 <TtsButton text={currentPhrase.simplified} className="mt-4">
                   {t("common.listen")}
                 </TtsButton>

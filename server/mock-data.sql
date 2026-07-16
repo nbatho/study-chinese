@@ -306,9 +306,9 @@ INSERT INTO chat_scenarios (
   id, title, emoji, description, init_msg_simplified, init_msg_pinyin, init_msg_english, init_msg_vi
 )
 VALUES
-('personal-weak', 'Luyện điểm yếu', U&'\+01F3AF', 'Hội thoại dùng các từ và kỹ năng bạn hay sai.', '我们来练习你的难点吧。', 'Wǒmen lái liànxí nǐ de nándiǎn ba.', 'Let us practice your weak spots.', 'Chúng ta cùng luyện những điểm khó của bạn nhé.'),
-('personal-list', 'Luyện từ trong list', U&'\+01F4CB', 'AI Tutor ưu tiên từ vựng trong danh sách bạn lưu gần đây.', '请用你保存的词说一句话。', 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.', 'Please make a sentence with a word you saved.', 'Hãy dùng một từ bạn đã lưu để đặt một câu.'),
-('personal-lesson', 'Ôn bài vừa học', U&'\+01F9E0', 'Luyện hội thoại xoay quanh bài học gần nhất.', '我们复习你刚学的内容。', 'Wǒmen fùxí nǐ gāng xué de nèiróng.', 'Let us review what you just learned.', 'Chúng ta cùng ôn lại nội dung bạn vừa học.')
+('personal-weak', 'Practice Your Weak Spots', U&'\+01F3AF', 'A conversation using the words and skills you often get wrong.', '我们来练习你的难点吧。', 'Wǒmen lái liànxí nǐ de nándiǎn ba.', 'Let us practice your weak spots.', 'Chúng ta cùng luyện những điểm khó của bạn nhé.'),
+('personal-list', 'Practice Your Saved Words', U&'\+01F4CB', 'The AI Tutor favours vocabulary from the lists you saved recently.', '请用你保存的词说一句话。', 'Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.', 'Please make a sentence with a word you saved.', 'Hãy dùng một từ bạn đã lưu để đặt một câu.'),
+('personal-lesson', 'Review Your Last Lesson', U&'\+01F9E0', 'Practice a conversation built around your most recent lesson.', '我们复习你刚学的内容。', 'Wǒmen fùxí nǐ gāng xué de nèiróng.', 'Let us review what you just learned.', 'Chúng ta cùng ôn lại nội dung bạn vừa học.')
 ON CONFLICT (id)
 DO UPDATE SET title = EXCLUDED.title,
               emoji = EXCLUDED.emoji,

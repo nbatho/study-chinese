@@ -10,18 +10,23 @@ import {
 } from './achievement.service.js';
 import { translateChineseText } from './ai-provider.service.js';
 
+// `english`/`note` stay the English source text; `gloss`/`localizedNote` carry
+// the caller's language and fall back to that source when untranslated.
 const mapPhrase = (row) => ({
   simplified: row.simplified,
   pinyin: row.pinyin,
   english: row.english,
-  note: row.note
+  gloss: row.gloss || row.english,
+  note: row.localized_note || row.note
 });
 
 const mapGrammarLibrary = (row) => ({
   id: row.id,
   title: row.title,
+  titleVi: row.title_vi,
   pattern: row.pattern,
   summary: row.summary,
+  summaryVi: row.summary_vi,
   examples: row.examples || []
 });
 
@@ -595,7 +600,8 @@ export const unlockAchievement = async (userId, achievementId) =>
     return unlockEarnedAchievement(client, userId, achievementId);
   });
 
-export const getDailyContent = async () => {
+export const getDailyContent = async (locale) => {
+  const glossLocale = normalizeLocale(locale);
   const [phraseResult, grammarResult] = await Promise.all([
     query(
       `
@@ -606,11 +612,16 @@ export const getDailyContent = async () => {
           FROM daily_phrases
           WHERE is_active = true
         )
-        SELECT *
-        FROM active_phrases
-        WHERE rn = ((extract(doy FROM now())::int - 1) % total) + 1
+        SELECT ap.*,
+               dpg.gloss AS gloss,
+               dpg.note AS localized_note
+        FROM active_phrases ap
+        LEFT JOIN daily_phrase_glosses dpg
+          ON dpg.phrase_id = ap.id AND dpg.locale = $1
+        WHERE ap.rn = ((extract(doy FROM now())::int - 1) % ap.total) + 1
         LIMIT 1
-      `
+      `,
+      [glossLocale]
     ),
     query(
       `

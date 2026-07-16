@@ -131,6 +131,7 @@ export const searchVocabulary = async ({
             json_build_object(
               'id', wt.id,
               'nameEn', wt.name_en,
+              'nameVi', wt.name_vi,
               'nameZh', wt.name_zh,
               'emoji', wt.emoji
             )
@@ -173,6 +174,7 @@ export const listVocabularyTopics = async () => {
       SELECT
         wt.id,
         wt.name_en AS "nameEn",
+        wt.name_vi AS "nameVi",
         wt.name_zh AS "nameZh",
         wt.emoji,
         wt.display_order AS "displayOrder",
@@ -221,7 +223,7 @@ export const getVocabularyStats = async () => {
       ORDER BY cefr_level
     `),
     query(`
-      SELECT wt.id, wt.name_en AS "nameEn", COUNT(wtm.word_id)::int AS count
+      SELECT wt.id, wt.name_en AS "nameEn", wt.name_vi AS "nameVi", COUNT(wtm.word_id)::int AS count
       FROM word_topics wt
       LEFT JOIN word_topic_map wtm ON wtm.topic_id = wt.id
       WHERE wt.is_active = true

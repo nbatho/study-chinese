@@ -23,6 +23,7 @@ export interface Word {
 export interface VocabularyTopic {
     id: string;
     nameEn: string;
+    nameVi?: string | null;
     nameZh?: string | null;
     emoji?: string | null;
     displayOrder?: number;
@@ -90,5 +91,5 @@ export interface WordLookupResponse {
 export interface VocabularyStatsResponse {
     hsk: Array<{ level: number; count: number }>;
     cefr: Array<{ level: CefrLevel; count: number }>;
-    topics: Array<{ id: string; nameEn: string; count: number }>;
+    topics: Array<{ id: string; nameEn: string; nameVi?: string | null; count: number }>;
 }

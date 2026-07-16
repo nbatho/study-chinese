@@ -67,7 +67,7 @@ export const useCompleteLessonMutation = (lessonId: string) => {
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
@@ -87,7 +87,7 @@ export const useCompleteLessonByIdMutation = () => {
             queryClient.invalidateQueries({ queryKey: ['lessons'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlan });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.shop });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
