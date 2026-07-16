@@ -81,6 +81,33 @@ const mapLessonGrammarEntry = (row, locale = 'en') => ({
   }
 });
 
+export const mapStimulus = (stimulus, locale = 'en') => {
+  if (!stimulus || typeof stimulus !== 'object' || Object.keys(stimulus).length === 0) {
+    return stimulus || {};
+  }
+
+  const viText = stimulus.vi || stimulus.vietnamese || null;
+  const enText = stimulus.english || stimulus.en || '';
+
+  const result = {
+    ...stimulus,
+    english: chooseLocalizedText(enText, viText, locale),
+    en: enText,
+    vi: viText
+  };
+
+  if (Array.isArray(stimulus.lines)) {
+    result.lines = stimulus.lines.map((line) => ({
+      ...line,
+      english: chooseLocalizedText(line.english || line.en || '', line.vi || line.vietnamese, locale),
+      en: line.en || line.english || '',
+      vi: line.vi || line.vietnamese || null
+    }));
+  }
+
+  return result;
+};
+
 const mapExercise = (row, locale = 'en') => ({
   id: row.id,
   kind: row.kind,
@@ -93,7 +120,7 @@ const mapExercise = (row, locale = 'en') => ({
   promptHanzi: row.prompt_hanzi,
   promptPinyin: row.prompt_pinyin,
   promptEnglish: row.prompt_english,
-  stimulus: row.stimulus || {},
+  stimulus: mapStimulus(row.stimulus, locale),
   options: row.options || [],
   optionsZh: row.options || [],
   optionsEn: [],

@@ -135,7 +135,7 @@ export function LessonManager() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <section className="app-surface-padded text-left">
+      <section className="app-surface-padded text-left min-w-0">
         <PanelTitle icon={Plus} title={editingId ? t("admin.editLesson") : t("admin.addLesson")} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
@@ -166,14 +166,14 @@ export function LessonManager() {
         </div>
       </section>
 
-      <section className="app-surface-padded text-left">
+      <section className="app-surface-padded text-left min-w-0">
         <Toolbar q={q} setQ={setQ} includeInactive={includeInactive} setIncludeInactive={setIncludeInactive} />
         <div className="grid gap-2">
           {(lessonsQuery.data?.lessons ?? []).map((lesson) => (
-            <div key={lesson.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
-              <button type="button" onClick={() => edit(lesson)} className="min-w-0 text-left">
+            <div key={lesson.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+              <button type="button" onClick={() => edit(lesson)} className="flex-1 min-w-0 text-left">
                 <div className="truncate font-extrabold">{lesson.title}</div>
-                <div className="text-xs font-semibold text-muted-foreground">
+                <div className="truncate text-xs font-semibold text-muted-foreground">
                   {lesson.id} · HSK {lesson.hskLevel} · #{lesson.order} · {lesson.skill}
                 </div>
               </button>
@@ -213,7 +213,7 @@ export function WordManager() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <section className="app-surface-padded text-left">
+      <section className="app-surface-padded text-left min-w-0">
         <PanelTitle icon={Plus} title={editingId ? t("admin.editWord") : t("admin.addWord")} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
@@ -251,14 +251,14 @@ export function WordManager() {
         </div>
       </section>
 
-      <section className="app-surface-padded text-left">
+      <section className="app-surface-padded text-left min-w-0">
         <Toolbar q={q} setQ={setQ} includeInactive={includeInactive} setIncludeInactive={setIncludeInactive} />
         <div className="grid gap-2">
           {(wordsQuery.data?.words ?? []).map((word) => (
-            <div key={word.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
-              <button type="button" onClick={() => edit(word)} className="min-w-0 text-left">
+            <div key={word.id} className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+              <button type="button" onClick={() => edit(word)} className="flex-1 min-w-0 text-left">
                 <div className="truncate font-serif text-xl font-bold">{word.simplified}</div>
-                <div className="text-xs font-semibold text-muted-foreground">
+                <div className="truncate text-xs font-semibold text-muted-foreground">
                   {word.pinyin} · HSK {word.hskLevel} · {word.category} · {word.english}
                 </div>
               </button>
@@ -281,7 +281,7 @@ export function UserManager() {
   const updateMutation = useUpdateAdminUserMutation();
 
   return (
-    <section className="app-surface-padded text-left">
+    <section className="app-surface-padded text-left min-w-0">
       <div className="mb-4 flex items-center gap-2 rounded-xl border bg-background px-3 py-2">
         <Search size={16} className="text-muted-foreground" />
         <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder={t("admin.searchUsers")} />
@@ -325,7 +325,7 @@ export function AiLogViewer() {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      <section className="app-surface p-3 text-left">
+      <section className="app-surface p-3 text-left min-w-0">
         <PanelTitle icon={Bot} title={t("admin.recentAiSessions")} />
         <div className="grid gap-2">
           {sessions.map((session) => (
@@ -334,12 +334,12 @@ export function AiLogViewer() {
               type="button"
               onClick={() => setSelectedId(session.id)}
               className={cn(
-                "rounded-xl border p-3 text-left transition",
+                "w-full min-w-0 rounded-xl border p-3 text-left transition",
                 selected?.id === session.id ? "border-primary bg-primary/5" : "bg-background hover:bg-secondary",
               )}
             >
               <div className="truncate text-sm font-extrabold">{session.userEmail}</div>
-              <div className="mt-1 text-xs font-semibold text-muted-foreground">
+              <div className="mt-1 truncate text-xs font-semibold text-muted-foreground">
                 {session.scenarioTitle || t("admin.scenarioPersonal")} ·{" "}
                 {t("admin.messageCount", { count: session.messageCount })}
               </div>
@@ -348,29 +348,29 @@ export function AiLogViewer() {
         </div>
       </section>
 
-      <section className="app-surface-padded text-left">
+      <section className="app-surface-padded text-left min-w-0">
         {selected ? (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
-              <div>
-                <h2 className="font-extrabold">{selected.userName || selected.userEmail}</h2>
-                <p className="text-xs font-semibold text-muted-foreground">
+              <div className="min-w-0">
+                <h2 className="font-extrabold break-all">{selected.userName || selected.userEmail}</h2>
+                <p className="text-xs font-semibold text-muted-foreground break-words">
                   {t("admin.modelTokens", {
                     model: selected.lastModelName || "mock",
                     tokens: selected.totalInputTokens + selected.totalOutputTokens,
                   })}
                 </p>
               </div>
-              <Badge className="rounded-lg">{new Date(selected.updatedAt).toLocaleString()}</Badge>
+              <Badge className="rounded-lg shrink-0">{new Date(selected.updatedAt).toLocaleString()}</Badge>
             </div>
             <div className="grid gap-3">
               {selected.messages.map((message) => (
-                <div key={message.id} className={cn("rounded-xl border p-3", message.role === "user" ? "bg-background" : "bg-secondary")}>
+                <div key={message.id} className={cn("rounded-xl border p-3 min-w-0", message.role === "user" ? "bg-background" : "bg-secondary")}>
                   <div className="mb-1 text-xs font-extrabold text-muted-foreground">{message.role}</div>
-                  <p className="whitespace-pre-wrap text-sm font-semibold">{message.rawText || message.simplified}</p>
-                  {message.english && <p className="mt-1 text-sm text-muted-foreground">{message.english}</p>}
+                  <p className="whitespace-pre-wrap break-words text-sm font-semibold">{message.rawText || message.simplified}</p>
+                  {message.english && <p className="mt-1 break-words text-sm text-muted-foreground">{message.english}</p>}
                   {message.correction && (
-                    <div className="mt-2 rounded-md bg-card px-3 py-2 text-xs">
+                    <div className="mt-2 rounded-md bg-card px-3 py-2 text-xs break-words">
                       <strong>{t("admin.correction")}</strong> {message.correction.improved} · {message.correction.explanation}
                     </div>
                   )}
@@ -406,7 +406,7 @@ export function ReportManager() {
   };
 
   return (
-    <section className="app-surface-padded text-left">
+    <section className="app-surface-padded text-left min-w-0">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <SelectInput
           label={t("admin.fieldStatus")}
@@ -433,17 +433,17 @@ function ReportCard({ report, onUpdate }: { report: AdminReport; onUpdate: (repo
   const statusLabelKey = reportStatusLabelKeys[report.status];
 
   return (
-    <div className="rounded-xl border bg-background p-4">
+    <div className="rounded-xl border bg-background p-4 min-w-0">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <div className="font-extrabold">{report.lessonTitle || report.lessonId || t("admin.hiddenLesson")}</div>
-          <div className="text-xs font-semibold text-muted-foreground">
+        <div className="min-w-0">
+          <div className="font-extrabold break-words">{report.lessonTitle || report.lessonId || t("admin.hiddenLesson")}</div>
+          <div className="text-xs font-semibold text-muted-foreground break-all">
             {report.userEmail || t("admin.anonymous")} · {report.category} · {new Date(report.createdAt).toLocaleString()}
           </div>
         </div>
-        <Badge className="rounded-lg">{statusLabelKey ? t(statusLabelKey) : report.status}</Badge>
+        <Badge className="rounded-lg shrink-0">{statusLabelKey ? t(statusLabelKey) : report.status}</Badge>
       </div>
-      <p className="whitespace-pre-wrap text-sm">{report.message}</p>
+      <p className="whitespace-pre-wrap break-words text-sm">{report.message}</p>
       <textarea
         value={note}
         onChange={(event) => setNote(event.target.value)}
@@ -491,8 +491,8 @@ function Toolbar({
 
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
-        <Search size={16} className="text-muted-foreground" />
+      <div className="flex flex-1 min-w-0 items-center gap-2 rounded-xl border bg-background px-3 py-2">
+        <Search size={16} className="text-muted-foreground shrink-0" />
         <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder={t("admin.search")} />
       </div>
       <ToggleRow label={t("admin.showInactive")} value={includeInactive} onChange={setIncludeInactive} compact />
@@ -502,13 +502,13 @@ function Toolbar({
 
 function TextInput({ label, value, onChange, disabled = false }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean }) {
   return (
-    <label className="grid gap-1.5">
+    <label className="min-w-0 grid gap-1.5">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <input
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+        className="w-full h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
       />
     </label>
   );
@@ -516,13 +516,13 @@ function TextInput({ label, value, onChange, disabled = false }: { label: string
 
 function NumberInput({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
-    <label className="grid gap-1.5">
+    <label className="min-w-0 grid gap-1.5">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <input
         type="number"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="w-full h-10 rounded-xl border bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );
@@ -530,12 +530,12 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
 
 function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
-    <label className="grid gap-1.5">
+    <label className="min-w-0 grid gap-1.5">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-24 rounded-xl border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="w-full min-h-24 rounded-xl border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
     </label>
   );
@@ -556,9 +556,9 @@ function SelectInput({
   optionLabel?: (option: string) => string;
 }) {
   return (
-    <label className="grid min-w-40 gap-1.5">
+    <label className="min-w-0 grid gap-1.5">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm font-semibold outline-none">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="w-full h-10 rounded-xl border bg-background px-3 text-sm font-semibold outline-none">
         {options.map((option) => (
           <option key={option} value={option}>
             {optionLabel ? optionLabel(option) : option}

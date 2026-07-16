@@ -70,7 +70,7 @@ export default function Admin() {
           <h1 className="text-2xl font-extrabold">{t("admin.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("admin.subtitle")}</p>
         </div>
-        <div className="text-sm font-semibold text-muted-foreground">{user.email}</div>
+        <div className="text-sm font-semibold text-muted-foreground truncate max-w-xs">{user.email}</div>
       </header>
 
       <div className="app-surface mb-5 flex gap-1 overflow-x-auto p-1">
