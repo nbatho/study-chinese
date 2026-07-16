@@ -114,6 +114,29 @@ export const getDueCards = async (userId, limit = 20, locale) => {
   };
 };
 
+export const getAllCards = async (userId, locale) => {
+  const result = await query(
+    `
+      SELECT sc.*, w.simplified, w.pinyin, w.english, wg.gloss AS gloss,
+             (sc.due_date <= now()) AS is_due
+      FROM srs_cards sc
+      JOIN words w ON w.id = sc.word_id
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $2
+      WHERE sc.user_id = $1
+        AND w.is_active = true
+      ORDER BY sc.due_date ASC
+    `,
+    [userId, normalizeLocale(locale)]
+  );
+
+  return {
+    cards: result.rows.map((row) => ({
+      ...mapDueCard(row),
+      isDue: Boolean(row.is_due)
+    }))
+  };
+};
+
 export const enrollWord = async (userId, input) => {
   const word = await ensureVocabularyWord(input);
 

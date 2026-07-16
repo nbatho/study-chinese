@@ -46,7 +46,7 @@ export default function BottomNav() {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t bg-card/95 backdrop-blur-xl md:hidden"
+        className="w-full shrink-0 border-t bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label={t("nav.sidebar")}
       >

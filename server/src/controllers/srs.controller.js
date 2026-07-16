@@ -1,9 +1,14 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
-import { enrollWord, getDueCards, reviewCard } from '../services/srs.service.js';
+import { enrollWord, getAllCards, getDueCards, reviewCard } from '../services/srs.service.js';
 
 export const listDueCards = asyncHandler(async (req, res) => {
   const data = await getDueCards(req.user.id, req.query.limit, req.query.locale);
+  success(res, data);
+});
+
+export const listAllCards = asyncHandler(async (req, res) => {
+  const data = await getAllCards(req.user.id, req.query.locale);
   success(res, data);
 });
 

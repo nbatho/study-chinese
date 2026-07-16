@@ -99,6 +99,10 @@ export default function AppLayout() {
           onToggleCollapsed={() => setIsSidebarCollapsed((value) => !value)}
         />
 
+        {/* BottomNav sits in normal flow below the scroll area: a fixed bar tied to
+            the visual viewport drifts on iOS while Safari's chrome expands or
+            collapses, leaving a phantom band above the tabs. */}
+        <div className="flex min-w-0 flex-1 flex-col">
         <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
           <Navbar />
           {showVerifyBanner && (
@@ -120,7 +124,7 @@ export default function AppLayout() {
           <div className="flex w-full min-w-0 flex-1 justify-center overflow-x-hidden">
             <div
               className={cn(
-                "box-border w-full min-w-0 px-3 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-6 md:pb-6 lg:px-8",
+                "box-border w-full min-w-0 px-3 py-4 pb-6 sm:px-5 sm:py-6 lg:px-8",
                 isHomePath ? "max-w-[1500px]" : "max-w-7xl",
               )}
             >
@@ -132,6 +136,7 @@ export default function AppLayout() {
         </main>
 
         <BottomNav />
+        </div>
 
         <Toaster richColors position="top-right" />
       </div>

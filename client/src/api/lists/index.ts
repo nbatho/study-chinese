@@ -5,7 +5,8 @@ import type { AddWordToListPayload, CreateListPayload, CreateListResponse, ListD
 export const listsApi = {
     list: () => apiRequest<ListsResponse>(beApi.get('lists')),
 
-    detail: (listId: string) => apiRequest<ListDetailResponse>(beApi.get(`lists/${listId}`)),
+    detail: (listId: string, locale?: string) =>
+        apiRequest<ListDetailResponse>(beApi.get(`lists/${listId}`, { params: { locale } })),
 
     create: (payload: CreateListPayload) => apiRequest<CreateListResponse>(beApi.post('lists', payload)),
 

@@ -22,12 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  useAddWordToListMutation,
-  useCreateListMutation,
-  useEnrollWordMutation,
-  useListsQuery,
-} from "../../api";
+import { useEnrollWordMutation } from "../../api";
 import {
   useClearOcrHistoryMutation,
   useDeleteOcrHistoryMutation,
@@ -38,6 +33,7 @@ import {
 } from "../../api/ocr/queries";
 import type { OcrBox, OcrHistoryEvent, OcrScanPayload, OcrSegment, TranslateTargetLang } from "../../api/ocr";
 import { Button } from "../../components/ui/button";
+import ListPickerModal, { type ListPickerItem } from "../Dictionary/components/ListPickerModal";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
@@ -81,8 +77,6 @@ export default function Translate() {
   const updateOcrHistoryMutation = useUpdateOcrHistoryMutation();
   const deleteOcrHistoryMutation = useDeleteOcrHistoryMutation();
   const clearOcrHistoryMutation = useClearOcrHistoryMutation();
-  const listsQuery = useListsQuery();
-  const createListMutation = useCreateListMutation();
   const enrollMutation = useEnrollWordMutation();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -99,16 +93,12 @@ export default function Translate() {
   const [selectedBox, setSelectedBox] = useState<OcrBox | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
-  const [selectedOcrListId, setSelectedOcrListId] = useState("");
-  const [newOcrListName, setNewOcrListName] = useState("OCR Saved");
+  const [pickerItems, setPickerItems] = useState<ListPickerItem[] | null>(null);
   const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null);
   const [historyDraft, setHistoryDraft] = useState({ title: "", note: "" });
 
   const loading = scanMutation.isPending || publicTranslateMutation.isPending;
-  const lists = listsQuery.data?.lists ?? [];
   const historyEvents = ocrHistoryQuery.data?.events ?? [];
-  const activeOcrListId = selectedOcrListId || lists[0]?.id || "";
-  const addWordMutation = useAddWordToListMutation(activeOcrListId);
   const selectedSegments = useMemo(
     () => segments.filter((segment) => selectedSegmentIds.includes(segment.id)),
     [segments, selectedSegmentIds],
@@ -165,14 +155,17 @@ export default function Translate() {
 
     setTargetLang(lang);
 
-    // Re-translate the current text right away so the result follows the
-    // newly picked language. Image scans keep their result until re-scanned.
-    const text = mode === "text" ? getCombinedText(segments) || detectedText || sourceText.trim() : "";
-
-    if (!text) return;
+    // Re-translate the current content right away so the result follows the
+    // newly picked language. Image scans re-run on the stored capture; when
+    // only the detected text is left (e.g. live camera), translate that.
+    const text = getCombinedText(segments) || detectedText || (mode === "text" ? sourceText.trim() : "");
 
     try {
-      await runScan({ text, targetLang: lang });
+      if (mode === "camera" && imagePreview) {
+        await runScan({ image: imagePreview, targetLang: lang });
+      } else if (text) {
+        await runScan({ text, targetLang: lang });
+      }
     } catch {
       toast.error(t("translate.toastTranslateError"));
     }
@@ -301,23 +294,18 @@ export default function Translate() {
     toast.success(t("translate.toastCopied"));
   };
 
-  const createOcrList = async () => {
-    const response = await createListMutation.mutateAsync({
-      name: newOcrListName.trim() || "OCR Saved",
-      emoji: "OCR",
-    });
-    setSelectedOcrListId(response.list.id);
-    toast.success(t("translate.toastListCreated"));
-  };
-
-  const saveSegmentToList = async (segment: OcrSegment) => {
-    if (!activeOcrListId) {
-      toast.info(t("translate.toastSelectList"));
-      return;
-    }
-
-    await addWordMutation.mutateAsync(toLearningPayload(segment));
-    toast.success(t("translate.toastSaved", { word: segment.text }));
+  // The list picker saves OCR words into the user's own lists; words that are
+  // not in the dictionary yet are created server-side as personal OCR entries.
+  const openListPicker = () => {
+    if (activeSegments.length === 0) return;
+    setPickerItems(
+      activeSegments.map((segment) => ({
+        id: segment.wordId || undefined,
+        simplified: segment.text,
+        pinyin: segment.pinyin,
+        english: segment.english,
+      })),
+    );
   };
 
   const saveSegmentToSrs = async (segment: OcrSegment) => {
@@ -327,17 +315,6 @@ export default function Translate() {
         ? t("translate.toastSrsAdded", { word: segment.text })
         : t("translate.toastSrsExists", { word: segment.text }),
     );
-  };
-
-  const saveActiveSegmentsToList = async () => {
-    if (!activeOcrListId) {
-      toast.info(t("translate.toastSelectList"));
-      return;
-    }
-
-    for (const segment of activeSegments) {
-      await saveSegmentToList(segment);
-    }
   };
 
   const saveActiveSegmentsToSrs = async () => {
@@ -708,56 +685,25 @@ export default function Translate() {
                 )}
               </div>
               {isAuthenticated && (
-              <div className="mb-3 grid gap-2 rounded-xl border bg-background p-3">
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <select
-                    value={activeOcrListId}
-                    onChange={(event) => setSelectedOcrListId(event.target.value)}
-                    className="min-w-0 rounded-xl border bg-card px-3 py-2 text-sm font-semibold outline-none"
-                  >
-                    <option value="">{t("translate.selectList")}</option>
-                    {lists.map((list) => (
-                      <option key={list.id} value={list.id}>
-                        {list.name} ({list.wordIds.length})
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={createOcrList}
-                    disabled={createListMutation.isPending}
-                  >
-                    <ListPlus size={16} />
-                    {t("translate.createList")}
-                  </Button>
-                </div>
-                <input
-                  value={newOcrListName}
-                  onChange={(event) => setNewOcrListName(event.target.value)}
-                  placeholder={t("translate.ocrListPlaceholder")}
-                  className="rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void saveActiveSegmentsToList()}
-                    disabled={!activeOcrListId || addWordMutation.isPending}
-                  >
-                    <ListPlus size={16} />
-                    {t("translate.saveToList")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => void saveActiveSegmentsToSrs()}
-                    disabled={enrollMutation.isPending}
-                  >
-                    <BookmarkPlus size={16} />
-                    {t("translate.addSrs")}
-                  </Button>
-                </div>
+              <div className="mb-3 grid grid-cols-2 gap-2 rounded-xl border bg-background p-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openListPicker}
+                  disabled={activeSegments.length === 0}
+                >
+                  <ListPlus size={16} />
+                  {t("translate.saveToList")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => void saveActiveSegmentsToSrs()}
+                  disabled={enrollMutation.isPending}
+                >
+                  <BookmarkPlus size={16} />
+                  {t("translate.addSrs")}
+                </Button>
               </div>
               )}
 
@@ -971,6 +917,8 @@ export default function Translate() {
           )}
         </section>
       </div>
+
+      <ListPickerModal items={pickerItems} onClose={() => setPickerItems(null)} />
     </div>
   );
 }

@@ -24,8 +24,13 @@ import { cn } from "../../../utils/cn";
 import HanziStrokePractice from "../../../components/HanziStrokePractice";
 import LoadingCard from "../../../components/LoadingCard";
 import TtsButton from "../../../components/TtsButton";
+import { playCorrectSound, playIncorrectSound } from "../../../utils/sfx";
 import { speakChinese } from "../../../utils/tts";
 type ListPracticeMode = "typing" | "listening" | "tone";
+
+/** Audio cue played the moment an answer is checked, in every practice tool. */
+const playAnswerSound = (correct: boolean) =>
+  void (correct ? playCorrectSound() : playIncorrectSound());
 
 const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm sm:p-7";
 const innerCardClass = "rounded-lg border bg-card shadow-sm";
@@ -155,6 +160,7 @@ export function WeakPracticeTool() {
     if (!answer.trim() || checked !== null) return;
     setLockedMistake(displayedMistake);
     setChecked(isCorrect);
+    playAnswerSound(isCorrect);
     await practiceMistake.mutateAsync({ mistakeId: displayedMistake.id, correct: isCorrect });
     await addActivity.mutateAsync({
       xp: isCorrect ? 8 : 0,
@@ -334,6 +340,7 @@ export function ListPracticeTool() {
       normalizedInput === normalizeAnswer(word.english) ||
       normalizedInput === normalizeAnswer(word.simplified);
     setChecked(isCorrect);
+    playAnswerSound(isCorrect);
     await addActivity.mutateAsync({
       xp: isCorrect ? 8 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
@@ -359,6 +366,7 @@ export function ListPracticeTool() {
     setSelectedWordId(wordId);
     const isCorrect = wordId === word.id;
     setChecked(isCorrect);
+    playAnswerSound(isCorrect);
     await addActivity.mutateAsync({
       xp: isCorrect ? 8 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
@@ -384,6 +392,7 @@ export function ListPracticeTool() {
     const correctTone = word.tones[0] || 1;
     const isCorrect = tone === correctTone;
     setChecked(isCorrect);
+    playAnswerSound(isCorrect);
     await addActivity.mutateAsync({
       xp: isCorrect ? 6 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
@@ -589,6 +598,7 @@ export function ToneDrillTool() {
   const check = async (tone: number) => {
     setSelectedTone(tone);
     setChecked(true);
+    playAnswerSound(tone === correctTone);
     await addActivity.mutateAsync({
       xp: tone === correctTone ? 5 : 0,
       exercisesCorrect: tone === correctTone ? 1 : 0,
@@ -673,6 +683,7 @@ export function MinimalPairsTool() {
     const isCorrect = (selection === "A" && playedA) || (selection === "B" && !playedA);
     if (isCorrect) setCorrectCount((prev) => prev + 1);
     setIsAnswerChecked(true);
+    playAnswerSound(isCorrect);
     await addActivity.mutateAsync({
       xp: isCorrect ? 5 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
@@ -758,6 +769,7 @@ export function PinyinTypingTool() {
     const isMatch = cleanInput === cleanPinyin || cleanInput === cleanStandard;
     setCorrect(isMatch);
     setChecked(true);
+    playAnswerSound(isMatch);
     await addActivity.mutateAsync({
       xp: isMatch ? 10 : 0,
       exercisesCorrect: isMatch ? 1 : 0,
@@ -835,6 +847,7 @@ export function ListeningTool() {
     setSelected(wordId);
     setChecked(true);
     const isCorrect = wordId === word.id;
+    playAnswerSound(isCorrect);
     await addActivity.mutateAsync({
       xp: isCorrect ? 8 : 0,
       exercisesCorrect: isCorrect ? 1 : 0,
@@ -1115,6 +1128,7 @@ export function ShadowingTool() {
       audioMimeType: audioBlob.type,
     });
     setScore(result.score);
+    playAnswerSound(result.score.overall >= 80);
     await addActivity.mutateAsync({
       xp: 15,
       minutes: 1,
@@ -1387,6 +1401,7 @@ export function HanziDrawingTool() {
     mistakeCountRef.current = finalMistakes;
     setMistakeCount(finalMistakes);
     setCompleted(true);
+    playAnswerSound(score >= 80);
     await addActivity.mutateAsync({
       xp: score >= 80 ? 10 : 5,
       exercisesCorrect: score >= 80 ? 1 : 0,

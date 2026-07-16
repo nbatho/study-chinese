@@ -14,7 +14,6 @@ import { useLessonsQuery } from "../api/lessons/queries";
 import { useUserProfileQuery } from "../api/users/queries";
 import { useSelectedHskLevel } from "../hooks/useSelectedHskLevel";
 import { useI18n } from "../i18n";
-import { getLevelProgress } from "../pages/Learn/curriculum";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
@@ -62,17 +61,21 @@ export default function Navbar() {
 
   const profile = profileQuery.data?.profile;
   const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
-  // Progress for the HSK level the Learn roadmap is showing, not every lesson in
-  // the database — the two headline numbers have to agree.
-  const { selectedHsk, selectedCurriculum } = useSelectedHskLevel(
+  // "Curriculum progress" counts every lesson on the roadmap, exactly like the
+  // Profile page's headline card — the two numbers must agree. Per-level
+  // progress lives on the Learn page, labeled with its HSK level.
+  const { selectedHsk } = useSelectedHskLevel(
     profile?.cefrLevel ?? "A1",
     profile?.placementTestCompletedAt ?? null,
   );
-  const {
-    completedCount: completedLessons,
-    lessonCount: totalLessons,
-    percent: progressPercent,
-  } = useMemo(() => getLevelProgress(selectedCurriculum, lessons), [selectedCurriculum, lessons]);
+  const { completedLessons, totalLessons, progressPercent } = useMemo(() => {
+    const completed = lessons.filter((lesson) => lesson.completedAt).length;
+    return {
+      completedLessons: completed,
+      totalLessons: lessons.length,
+      progressPercent: lessons.length ? Math.round((completed / lessons.length) * 100) : 0,
+    };
+  }, [lessons]);
   const displayName = profile?.name || authUser?.name || t("common.learner");
   const displayEmail = authUser?.email ?? "";
   const avatar = profile?.avatar || authUser?.avatar;

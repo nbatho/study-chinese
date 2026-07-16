@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, KeyRound, Lock, Mail } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, KeyRound, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useForgotPasswordMutation, useResetPasswordMutation } from "../../api/auth/queries";
 import { useI18n } from "../../i18n";
@@ -18,6 +18,7 @@ export default function ForgotPassword() {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
 
   const submitEmail = async (event: React.FormEvent) => {
@@ -141,13 +142,21 @@ export default function ForgotPassword() {
               <span className="relative">
                 <Lock className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder={t("auth.newPasswordPlaceholder")}
                   autoComplete="new-password"
-                  className="h-12 border-2 bg-background pl-11 text-base"
+                  className="h-12 border-2 bg-background px-12 pl-11 text-base"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </span>
               <span className="text-xs font-medium text-muted-foreground">{t("security.policyHint")}</span>
             </label>
@@ -156,13 +165,21 @@ export default function ForgotPassword() {
               <span className="relative">
                 <Lock className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
                   placeholder={t("auth.newPasswordPlaceholder")}
                   autoComplete="new-password"
-                  className="h-12 border-2 bg-background pl-11 text-base"
+                  className="h-12 border-2 bg-background px-12 pl-11 text-base"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </span>
             </label>
             {formError && (

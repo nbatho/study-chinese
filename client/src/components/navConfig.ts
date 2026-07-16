@@ -5,8 +5,10 @@ import {
   Dumbbell,
   FileText,
   GraduationCap,
+  Heart,
   Home,
   Languages,
+  ListChecks,
   RefreshCw,
   Shapes,
   Shield,
@@ -40,6 +42,8 @@ export const resolveActiveTab = (path: string): string => {
   if (path.startsWith("/practice")) return "practice";
   if (path.startsWith("/review")) return "review";
   if (path.startsWith("/dictionary")) return "dictionary";
+  if (path.startsWith("/favorites")) return "favorites";
+  if (path.startsWith("/my-lists")) return "my-lists";
   if (path.startsWith("/translate") || path.startsWith("/camera-translator")) return "translate";
   if (path.startsWith("/ai-tutor")) return "ai-tutor";
   if (path.startsWith("/shop")) return "shop";
@@ -61,6 +65,8 @@ export const useNavTabs = (): NavTab[] => {
     { id: "radicals", label: t("nav.radicals"), icon: Shapes },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
+    { id: "favorites", label: t("nav.favorites"), icon: Heart, requiresAuth: true },
+    { id: "my-lists", label: t("nav.myLists"), icon: ListChecks, requiresAuth: true },
     { id: "translate", label: t("nav.translate"), icon: Languages },
     { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
     {

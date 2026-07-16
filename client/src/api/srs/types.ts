@@ -34,6 +34,15 @@ export interface DueCardsResponse {
     cards: SrsDueCard[];
 }
 
+/** Every enrolled word, due or not — powers the "review list" view. */
+export interface SrsEnrolledCard extends SrsDueCard {
+    isDue: boolean;
+}
+
+export interface AllCardsResponse {
+    cards: SrsEnrolledCard[];
+}
+
 export interface ReviewCardPayload {
     wordId: string;
     quality: ReviewQuality;

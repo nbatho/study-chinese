@@ -32,9 +32,13 @@ export const queryKeys = {
         // Prefix of every `due` key — use it to invalidate them across limits and locales.
         dueAll: ['srs', 'due'] as const,
         due: (limit: number | undefined, locale: string) => ['srs', 'due', limit ?? 20, locale] as const,
+        // Prefix of every `cards` key — use it to invalidate them across locales.
+        cardsAll: ['srs', 'cards'] as const,
+        cards: (locale: string) => ['srs', 'cards', locale] as const,
     },
     favorites: {
         all: ['favorites'] as const,
+        list: (locale: string) => ['favorites', locale] as const,
     },
     lists: {
         all: ['lists'] as const,

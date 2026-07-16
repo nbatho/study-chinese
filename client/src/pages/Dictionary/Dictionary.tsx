@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -6,14 +6,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  ListChecks,
   LogIn,
-  Plus,
   Search,
 } from "lucide-react";
 import {
-  useAddWordToListMutation,
-  useCreateListMutation,
   useEnrollWordMutation,
+  useFavoriteWordsQuery,
   useListsQuery,
   useToggleFavoriteMutation,
   useVocabularyRadicalsQuery,
@@ -25,16 +24,15 @@ import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
-import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoadingCard from "../../components/LoadingCard";
 import WordCard from "./components/WordCard";
+import ListPickerModal from "./components/ListPickerModal";
 
 const hskLevels = [1, 2, 3, 4, 5, 6, 7];
 const cefrLevels: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const pageSize = 24;
-const listEmojis = ["📘", "⭐", "🧠", "✍️"];
 export default function Dictionary() {
   const { t, language } = useI18n();
   const navigate = useNavigate();
@@ -54,10 +52,7 @@ export default function Dictionary() {
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
   const [sort, setSort] = useState<VocabularySort>("hsk");
   const [page, setPage] = useState(1);
-  const [selectedListId, setSelectedListId] = useState<string>("");
-  const [newListName, setNewListName] = useState("");
-  const [newListEmoji, setNewListEmoji] = useState(listEmojis[0]);
-  const [favoriteWordIds, setFavoriteWordIds] = useState<string[]>([]);
+  const [pickerWord, setPickerWord] = useState<Word | null>(null);
 
   const vocabularySearchParams = {
     q: query.trim() || undefined,
@@ -75,19 +70,20 @@ export default function Dictionary() {
   const topicsQuery = useVocabularyTopicsQuery();
   const radicalsQuery = useVocabularyRadicalsQuery();
   const listsQuery = useListsQuery();
+  const favoritesQuery = useFavoriteWordsQuery(isAuthenticated);
   const favoriteMutation = useToggleFavoriteMutation();
   const enrollMutation = useEnrollWordMutation();
-  const createListMutation = useCreateListMutation();
-  const addWordMutation = useAddWordToListMutation(selectedListId);
 
   const words = useMemo(() => vocabularyQuery.data?.vocab ?? [], [vocabularyQuery.data?.vocab]);
   const pagination = vocabularyQuery.data?.pagination;
   const topics = topicsQuery.data?.topics ?? [];
   const radicals = radicalsQuery.data?.radicals ?? [];
-  const lists = listsQuery.data?.lists ?? [];
-  const selectedList = lists.find((list) => list.id === selectedListId);
-  const selectedListWordIds = useMemo(() => new Set(selectedList?.wordIds ?? []), [selectedList]);
-  const favoriteIds = useMemo(() => new Set(favoriteWordIds), [favoriteWordIds]);
+  const lists = useMemo(() => listsQuery.data?.lists ?? [], [listsQuery.data?.lists]);
+  const wordIdsInAnyList = useMemo(() => new Set(lists.flatMap((list) => list.wordIds)), [lists]);
+  const favoriteIds = useMemo(
+    () => new Set((favoritesQuery.data?.words ?? []).map((word) => word.id)),
+    [favoritesQuery.data?.words],
+  );
   const categories = useMemo(() => {
     const values = new Set(words.map((word) => word.category).filter(Boolean));
     return Array.from(values).sort((a, b) => a.localeCompare(b));
@@ -117,27 +113,6 @@ export default function Dictionary() {
     setUrlSearchParams(nextParams, { replace: true });
   };
 
-  const handleCreateList = async (event: FormEvent) => {
-    event.preventDefault();
-    const name = newListName.trim();
-    if (!name) return;
-
-    const response = await createListMutation.mutateAsync({ name, emoji: newListEmoji });
-    setSelectedListId(response.list.id);
-    setNewListName("");
-    toast.success(t("dictionary.listCreated"));
-  };
-
-  const handleAddToList = async (word: Word) => {
-    if (!selectedListId) {
-      toast.info(t("dictionary.chooseList"));
-      return;
-    }
-
-    await addWordMutation.mutateAsync(word.id);
-    toast.success(t("dictionary.addedToList", { word: word.simplified }));
-  };
-
   const handleEnroll = async (word: Word) => {
     const response = await enrollMutation.mutateAsync({ wordId: word.id });
     toast.success(response.enrolled ? t("dictionary.enrolled") : t("dictionary.alreadyEnrolled"));
@@ -145,11 +120,6 @@ export default function Dictionary() {
 
   const handleFavorite = async (word: Word) => {
     const response = await favoriteMutation.mutateAsync({ wordId: word.id });
-    setFavoriteWordIds((current) =>
-      response.isFavorite
-        ? Array.from(new Set([...current, word.id]))
-        : current.filter((wordId) => wordId !== word.id),
-    );
     toast.success(response.isFavorite ? t("dictionary.favoriteSaved") : t("dictionary.favoriteRemoved"));
   };
 
@@ -304,70 +274,20 @@ export default function Dictionary() {
       </section>
 
       {isAuthenticated && (
-      <section className="app-surface-padded mb-5">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-left">
-            <h2 className="text-base font-extrabold">{t("dictionary.myLists")}</h2>
-            <p className="text-xs text-muted-foreground">{t("dictionary.myListsHint")}</p>
-          </div>
-          <span className="rounded-md bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground">
-            {lists.length} {t("dictionary.lists")}
-          </span>
-        </div>
-
-        <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-          {lists.length === 0 ? (
-            <span className="rounded-xl border border-dashed px-3 py-2 text-sm font-semibold text-muted-foreground">
-              {t("dictionary.noLists")}
-            </span>
-          ) : (
-            lists.map((list) => (
-              <button
-                key={list.id}
-                type="button"
-                onClick={() => setSelectedListId(list.id)}
-                className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition",
-                  selectedListId === list.id ? "border-primary bg-primary text-primary-foreground" : "bg-background",
-                )}
-              >
-                <span>{list.emoji}</span>
-                <span>{list.name}</span>
-                <span className={selectedListId === list.id ? "text-primary-foreground/75" : "text-muted-foreground"}>
-                  {list.wordIds.length}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
-
-        <form onSubmit={handleCreateList} className="grid gap-2 sm:grid-cols-[92px_1fr_auto]">
-          <DropdownSelect
-            label={t("dictionary.listEmoji")}
-            value={newListEmoji}
-            onChange={setNewListEmoji}
-            options={listEmojis.map((emoji) => ({ value: emoji, label: emoji }))}
-            align="left"
-            className="min-w-0"
-            buttonClassName="w-full justify-between text-base"
-            menuClassName="w-full min-w-24"
-          />
-          <input
-            value={newListName}
-            onChange={(event) => setNewListName(event.target.value)}
-            placeholder={t("dictionary.newListPlaceholder")}
-            className="app-control text-sm"
-          />
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+          <p className="min-w-0 text-left text-sm font-semibold text-muted-foreground">
+            {t("dictionary.myListsHint")}
+          </p>
           <button
-            type="submit"
-            disabled={!newListName.trim() || createListMutation.isPending}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+            type="button"
+            onClick={() => navigate("/my-lists")}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary active:translate-y-px"
           >
-            <Plus size={16} />
-            {t("dictionary.createList")}
+            <ListChecks size={16} className="text-primary" />
+            {t("dictionary.myLists")}
+            <span className="text-muted-foreground">{lists.length}</span>
           </button>
-        </form>
-      </section>
+        </div>
       )}
 
       <section className="mb-3 flex items-center justify-between gap-3">
@@ -394,19 +314,13 @@ export default function Dictionary() {
               key={word.id}
               word={word}
               favorite={favoriteIds.has(word.id)}
-              inSelectedList={selectedListWordIds.has(word.id)}
-              hasSelectedList={!!selectedListId}
+              inList={wordIdsInAnyList.has(word.id)}
               onSpeak={() => speakChinese(word.simplified)}
               onFavorite={() => void handleFavorite(word)}
               onEnroll={() => void handleEnroll(word)}
-              onAddToList={() => void handleAddToList(word)}
+              onAddToList={() => setPickerWord(word)}
               showActions={isAuthenticated}
-              busy={
-                favoriteMutation.isPending ||
-                enrollMutation.isPending ||
-                addWordMutation.isPending ||
-                createListMutation.isPending
-              }
+              busy={favoriteMutation.isPending || enrollMutation.isPending}
             />
           ))}
         </div>
@@ -443,6 +357,8 @@ export default function Dictionary() {
       <footer className="mt-6 text-xs font-semibold text-muted-foreground">
         Vocabulary data: HSK Official Standards / CC-CEDICT / MIT Licensed
       </footer>
+
+      <ListPickerModal items={pickerWord ? [pickerWord] : null} onClose={() => setPickerWord(null)} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { query, withTransaction } from '../config/db.config.js';
 import { notFound } from '../utils/http-error.js';
-import { ensureVocabularyWord, getWordOrThrow } from './vocab.service.js';
+import { ensureVocabularyWord, getWordOrThrow, mapWord } from './vocab.service.js';
+import { normalizeLocale } from '../utils/locale.js';
 
 const mapCustomList = (row) => ({
   id: row.id,
@@ -16,6 +17,7 @@ const mapListWord = (row) => ({
   pinyin: row.pinyin,
   tones: row.tones || [],
   english: row.english,
+  gloss: row.gloss || row.english,
   partOfSpeech: row.part_of_speech,
   hskLevel: Number(row.hsk_level),
   category: row.category
@@ -93,6 +95,28 @@ export const toggleFavorite = async (userId, wordId) =>
     };
   });
 
+export const getFavoriteWords = async (userId, locale) => {
+  const result = await query(
+    `
+      SELECT w.*, wg.gloss AS gloss, ufw.created_at AS favorited_at
+      FROM user_favorite_words ufw
+      JOIN words w ON w.id = ufw.word_id
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $2
+      WHERE ufw.user_id = $1
+        AND w.is_active = true
+      ORDER BY ufw.created_at DESC
+    `,
+    [userId, normalizeLocale(locale)]
+  );
+
+  return {
+    words: result.rows.map((row) => ({
+      ...mapWord(row),
+      favoritedAt: row.favorited_at
+    }))
+  };
+};
+
 export const getCustomLists = async (userId) => {
   const result = await query(
     `
@@ -115,18 +139,19 @@ export const getCustomLists = async (userId) => {
   };
 };
 
-export const getCustomListDetails = async (userId, listId) => {
+export const getCustomListDetails = async (userId, listId, locale) => {
   const list = await getListWordIds({ query }, listId, userId);
   const wordsResult = await query(
     `
-      SELECT w.*
+      SELECT w.*, wg.gloss AS gloss
       FROM custom_list_words clw
       JOIN custom_lists cl ON cl.id = clw.list_id
       JOIN words w ON w.id = clw.word_id
+      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $3
       WHERE cl.id = $1 AND cl.user_id = $2
       ORDER BY clw.order_num, w.simplified
     `,
-    [listId, userId]
+    [listId, userId, normalizeLocale(locale)]
   );
 
   return mapCustomListDetails(list, wordsResult.rows);

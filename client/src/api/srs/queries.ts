@@ -16,6 +16,16 @@ export const useDueSrsCardsQuery = (limit = 20, enabled = true) => {
     });
 };
 
+export const useSrsCardsQuery = (enabled = true) => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.srs.cards(locale),
+        queryFn: () => unwrapApiData(srsApi.cards({ locale })),
+        enabled,
+    });
+};
+
 export const useReviewSrsMutation = () => {
     const queryClient = useQueryClient();
 
@@ -23,6 +33,7 @@ export const useReviewSrsMutation = () => {
         mutationFn: (payload: ReviewCardPayload) => unwrapApiData(srsApi.review(payload)),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.cardsAll });
             queryClient.invalidateQueries({ queryKey: ['users'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
@@ -38,6 +49,7 @@ export const useEnrollWordMutation = () => {
         mutationFn: (payload: EnrollWordPayload) => unwrapApiData(srsApi.enroll(payload)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.cardsAll });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
         },
     });

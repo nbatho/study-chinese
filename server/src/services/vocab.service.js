@@ -55,7 +55,9 @@ export const searchVocabulary = async ({
   locale
 } = {}) => {
   const values = [];
-  const conditions = ['w.is_active = true'];
+  // User-saved OCR words (ocr_*) belong to personal lists only, never to the
+  // public dictionary browse/search results.
+  const conditions = ['w.is_active = true', "w.id NOT LIKE 'ocr\\_%'"];
 
   if (q) {
     values.push(toLikePattern(q));

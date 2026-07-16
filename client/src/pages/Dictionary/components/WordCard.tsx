@@ -7,11 +7,12 @@ import type { TranslationKey } from "../../../i18n";
 interface WordCardProps {
   word: Word;
   favorite: boolean;
-  inSelectedList: boolean;
-  hasSelectedList: boolean;
+  /** Whether the word is already saved in at least one custom list. */
+  inList?: boolean;
   onSpeak: () => void;
   onFavorite: () => void;
   onEnroll: () => void;
+  /** Opens the list-picker popup. */
   onAddToList: () => void;
   busy: boolean;
   showActions?: boolean;
@@ -20,8 +21,7 @@ interface WordCardProps {
 export default function WordCard({
   word,
   favorite,
-  inSelectedList,
-  hasSelectedList,
+  inList = false,
   onSpeak,
   onFavorite,
   onEnroll,
@@ -114,11 +114,11 @@ export default function WordCard({
         <button
           type="button"
           onClick={onAddToList}
-          disabled={busy || !hasSelectedList || inSelectedList}
+          disabled={busy}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
         >
-          {inSelectedList ? <Check size={16} /> : <ListPlus size={16} />}
-          {inSelectedList ? t("dictionary.inList") : t("dictionary.addToList")}
+          {inList ? <Check size={16} /> : <ListPlus size={16} />}
+          {inList ? t("dictionary.inList") : t("dictionary.addToList")}
         </button>
       </div>
       )}

@@ -6,6 +6,7 @@ import {
   deleteCustomList,
   getCustomListDetails,
   getCustomLists,
+  getFavoriteWords,
   removeWordFromList,
   toggleFavorite
 } from '../services/list.service.js';
@@ -15,13 +16,18 @@ export const toggleFavoriteWord = asyncHandler(async (req, res) => {
   success(res, data);
 });
 
+export const listFavoriteWords = asyncHandler(async (req, res) => {
+  const data = await getFavoriteWords(req.user.id, req.query.locale);
+  success(res, data);
+});
+
 export const listCustomLists = asyncHandler(async (req, res) => {
   const data = await getCustomLists(req.user.id);
   success(res, data);
 });
 
 export const showCustomList = asyncHandler(async (req, res) => {
-  const data = await getCustomListDetails(req.user.id, req.params.id);
+  const data = await getCustomListDetails(req.user.id, req.params.id, req.query.locale);
   success(res, data);
 });
 

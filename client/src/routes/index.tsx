@@ -15,6 +15,8 @@ const Radicals = lazy(() => import("../pages/Radicals"));
 const Practice = lazy(() => import("../pages/Practice"));
 const Review = lazy(() => import("../pages/Review"));
 const Dictionary = lazy(() => import("../pages/Dictionary"));
+const Favorites = lazy(() => import("../pages/Favorites"));
+const MyLists = lazy(() => import("../pages/MyLists"));
 const Translate = lazy(() => import("../pages/Translate"));
 const Profile = lazy(() => import("../pages/Profile"));
 const Settings = lazy(() => import("../pages/Profile/Settings"));
@@ -85,6 +87,14 @@ export const routes: RouteConfig[] = [
       {
         path: "dictionary",
         element: <Dictionary />
+      },
+      {
+        path: "favorites",
+        element: <Favorites />
+      },
+      {
+        path: "my-lists",
+        element: <MyLists />
       },
       {
         path: "translate",
