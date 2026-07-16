@@ -11,11 +11,11 @@ import { cn } from "../../utils/cn";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 import { CEFR_RANK, getCurriculumLessons, getLevelProgress, HSK_CURRICULUM } from "./curriculum";
-import { FOUNDATION_STAGES, isFoundationComplete, loadFoundationProgress } from "../Foundation/foundationCourse";
+import { FOUNDATION_STAGES, isFoundationComplete, loadFoundationProgress, localized } from "../Foundation/foundationCourse";
 
 
 export default function Learn() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
@@ -153,12 +153,34 @@ export default function Learn() {
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
 
   const nextLesson = useMemo(() => {
-    const sorted = [...lessons].sort((a, b) => {
-      if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
-      return a.order - b.order;
-    });
+    if (!foundationComplete) {
+      const localDone = loadFoundationProgress();
+      const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
+      const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
+        (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
+      );
+      const stageIndex = firstUnfinishedIndex === -1 ? 0 : firstUnfinishedIndex;
+      const stage = FOUNDATION_STAGES[stageIndex];
+      return {
+        id: stage.lessonId,
+        hskLevel: 0,
+        order: stageIndex + 1,
+        title: localized(stage.title, language),
+        subtitle: localized(stage.subtitle, language),
+        estimatedMinutes: stage.minutes,
+        xpReward: stage.xp,
+        completedAt: null,
+      };
+    }
+
+    const sorted = [...lessons]
+      .filter((l) => l.hskLevel > 0)
+      .sort((a, b) => {
+        if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
+        return a.order - b.order;
+      });
     return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0] ?? null;
-  }, [lessons]);
+  }, [lessons, foundationComplete, language]);
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");

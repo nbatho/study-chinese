@@ -41,6 +41,12 @@ import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { formatLessonTitle } from "../../utils/lessonTitle";
 import DashboardAvatar from "./component/DashboardAvatar";
+import {
+  FOUNDATION_STAGES,
+  isFoundationComplete,
+  loadFoundationProgress,
+  localized,
+} from "../Foundation/foundationCourse";
 const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
 const clampPercent = (current: number, goal: number) => {
@@ -52,7 +58,7 @@ const asString = (value: unknown) => (typeof value === "string" && value ? value
 const asNumber = (value: unknown) => (typeof value === "number" ? value : null);
 
 export default function Home() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const { setSelectedLessonId } = useOutletContext<{
     setSelectedLessonId: (lessonId: string | null) => void;
@@ -93,13 +99,43 @@ export default function Home() {
   };
   const totalXp = stats.reduce((sum, item) => sum + item.xp, 0);
   const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const nextLesson = useMemo(() => {
-    const sorted = [...lessons].sort((a, b) => {
-      if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
-      return a.order - b.order;
-    });
-    return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0];
+  const foundationComplete = useMemo(() => {
+    const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
+    const dbFoundationDone = FOUNDATION_STAGES.every((stage) =>
+      dbLessons.some((l) => l.id === stage.lessonId),
+    );
+    return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
   }, [lessons]);
+
+  const nextLesson = useMemo(() => {
+    if (!foundationComplete) {
+      const localDone = loadFoundationProgress();
+      const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
+      const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
+        (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
+      );
+      const stageIndex = firstUnfinishedIndex === -1 ? 0 : firstUnfinishedIndex;
+      const stage = FOUNDATION_STAGES[stageIndex];
+      return {
+        id: stage.lessonId,
+        hskLevel: 0,
+        order: stageIndex + 1,
+        title: localized(stage.title, language),
+        subtitle: localized(stage.subtitle, language),
+        estimatedMinutes: stage.minutes,
+        xpReward: stage.xp,
+        completedAt: null,
+      };
+    }
+
+    const sorted = [...lessons]
+      .filter((l) => l.hskLevel > 0)
+      .sort((a, b) => {
+        if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
+        return a.order - b.order;
+      });
+    return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0];
+  }, [lessons, foundationComplete, language]);
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
   const weakSpots = (mistakesQuery.data?.mistakes ?? [])
