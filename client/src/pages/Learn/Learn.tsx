@@ -153,7 +153,11 @@ export default function Learn() {
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
 
   const nextLesson = useMemo(() => {
-    return lessons.find((lesson) => !lesson.completedAt) ?? lessons[0] ?? null;
+    const sorted = [...lessons].sort((a, b) => {
+      if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
+      return a.order - b.order;
+    });
+    return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0] ?? null;
   }, [lessons]);
 
   useEffect(() => {

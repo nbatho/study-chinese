@@ -93,7 +93,13 @@ export default function Home() {
   };
   const totalXp = stats.reduce((sum, item) => sum + item.xp, 0);
   const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const nextLesson = lessons.find((lesson) => !lesson.completedAt) ?? lessons[0];
+  const nextLesson = useMemo(() => {
+    const sorted = [...lessons].sort((a, b) => {
+      if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
+      return a.order - b.order;
+    });
+    return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0];
+  }, [lessons]);
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
   const weakSpots = (mistakesQuery.data?.mistakes ?? [])
@@ -180,12 +186,22 @@ export default function Home() {
       return;
     }
 
+    if (nextLesson.hskLevel === 0) {
+      navigate("/foundation");
+      return;
+    }
+
     setSelectedLessonId(nextLesson.id);
     navigate("/learn");
   };
 
   const handlePlanStep = (stepHref: string, lessonId?: unknown) => {
     if (typeof lessonId === "string") {
+      const lesson = lessons.find((l) => l.id === lessonId);
+      if (lesson?.hskLevel === 0) {
+        navigate("/foundation");
+        return;
+      }
       setSelectedLessonId(lessonId);
       navigate("/learn");
       return;
