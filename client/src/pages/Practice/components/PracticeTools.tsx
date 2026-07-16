@@ -234,9 +234,9 @@ export function WeakPracticeTool() {
                   {t("practice.weak.pinyinLabel")}: {displayedMistake.pinyin}
                 </div>
               )}
-              {displayedMistake.english && (
+              {displayedMistake.gloss && (
                 <div>
-                  {t("practice.weak.meaningLabel")}: {displayedMistake.english}
+                  {t("practice.weak.meaningLabel")}: {displayedMistake.gloss}
                 </div>
               )}
               {displayedMistake.correctAnswer && (
@@ -432,7 +432,7 @@ export function ListPracticeTool() {
 
       <div className={cn(innerCardClass, "my-6 p-7")}>
         <h1 className="font-serif text-6xl font-extrabold text-primary">{word.simplified}</h1>
-        <p className="mt-2 text-[0.95rem] font-semibold text-muted-foreground">{word.english}</p>
+        <p className="mt-2 text-[0.95rem] font-semibold text-muted-foreground">{word.gloss}</p>
         {mode === "listening" && (
           <button className={cn(primaryButtonClass, "mt-4 size-16 rounded-full p-0")} onClick={() => speakChinese(word.simplified)}>
             <Volume2 size={28} />
@@ -480,7 +480,7 @@ export function ListPracticeTool() {
                 className={cn("rounded-xl border-2 p-4 text-left font-bold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card")}
               >
                 <span className="font-serif text-2xl">{option.simplified}</span>
-                <span className="ml-3 text-sm text-muted-foreground">{shortenEnglish(option.english)}</span>
+                <span className="ml-3 text-sm text-muted-foreground">{shortenEnglish(option.gloss)}</span>
               </button>
             );
           })}
@@ -791,7 +791,7 @@ export function PinyinTypingTool() {
       <div className={cn(innerCardClass, "mb-6 p-8 sm:p-9")}>
         <h1 className="mb-2 font-serif text-6xl font-extrabold text-primary">{word.simplified}</h1>
         <p className="text-[0.95rem] text-muted-foreground">
-          {t("practice.typing.meaning")} <strong>{word.english}</strong>
+          {t("practice.typing.meaning")} <strong>{word.gloss}</strong>
         </p>
       </div>
       <form onSubmit={handleCheck} className="flex flex-col gap-4">
@@ -873,7 +873,7 @@ export function ListeningTool() {
           const isWrong = checked && selected === option.id && option.id !== word.id;
           return (
             <button key={option.id} onClick={() => choose(option.id)} disabled={checked} className={cn("flex items-center justify-between rounded-xl border-2 p-4 font-bold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card text-foreground")}>
-              {shortenEnglish(option.english)}
+              {shortenEnglish(option.gloss)}
               {isCorrect && <CheckCircle2 size={18} />}
               {isWrong && <XCircle size={18} />}
             </button>

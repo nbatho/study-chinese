@@ -19,9 +19,12 @@ try {
   await runSqlFile('schema.sql');
 
   if (process.env.SKIP_MOCK_DATA === 'true') {
-    console.log('Skipped server/mock-data.sql because SKIP_MOCK_DATA=true.');
+    console.log('Skipped data import because SKIP_MOCK_DATA=true.');
   } else {
-    await runSqlFile('mock-data.sql');
+    // Run the new data importer that loads localized data from the data/ directory
+    const { execSync } = await import('node:child_process');
+    console.log('Importing full localized data from data/ directory...');
+    execSync('node scripts/import_data.cjs', { cwd: serverRoot, stdio: 'inherit' });
   }
 
   console.log('Database initialized.');
