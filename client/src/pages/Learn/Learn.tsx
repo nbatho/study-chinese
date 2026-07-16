@@ -145,9 +145,9 @@ export default function Learn() {
     return lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
   }, [lessons, selectedHSK]);
 
-  const lessonsByOrder = useMemo(() => {
-    return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
-  }, [levelLessons]);
+  // const lessonsByOrder = useMemo(() => {
+  //   return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
+  // }, [levelLessons]);
 
   const {
     completedCount: selectedCompletedCount,
