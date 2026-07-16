@@ -15,6 +15,7 @@ export interface CustomListWord {
     partOfSpeech: string;
     hskLevel: number;
     category: string;
+    gloss: string;
 }
 
 export interface CustomListDetail extends CustomList {

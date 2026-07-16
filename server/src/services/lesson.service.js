@@ -316,13 +316,14 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
   const [wordsResult, grammarResult, exercisesResult, modulesResult, dialoguesResult, passagesResult] = await Promise.all([
     query(
       `
-        SELECT w.*
+        SELECT w.*, wg.gloss AS gloss
         FROM lesson_words lw
         JOIN words w ON w.id = lw.word_id
+        LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $2
         WHERE lw.lesson_id = $1 AND w.is_active = true
         ORDER BY lw.order_num, w.simplified
       `,
-      [lessonId]
+      [lessonId, locale]
     ),
     query(
       `
