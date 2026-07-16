@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Trash2, Volume2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -53,6 +54,7 @@ export default function ListDetailModal({ listId, onClose }: ListDetailModalProp
 
   return (
     <>
+    {createPortal(
     <div
       className="fixed inset-0 z-1200 flex items-end justify-center bg-black/35 px-0 sm:items-center sm:px-4"
       role="dialog"
@@ -143,7 +145,9 @@ export default function ListDetailModal({ listId, onClose }: ListDetailModalProp
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
+    )}
 
     <ConfirmDialog
       open={confirmDelete}

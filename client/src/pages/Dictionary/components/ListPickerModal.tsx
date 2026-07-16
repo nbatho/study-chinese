@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ListPlus, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -85,7 +86,7 @@ export default function ListPickerModal({ items, onClose }: ListPickerModalProps
     await addItemsToList(response.list.id);
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-1200 flex items-end justify-center bg-black/35 px-0 sm:items-center sm:px-4"
       role="dialog"
@@ -188,6 +189,7 @@ export default function ListPickerModal({ items, onClose }: ListPickerModalProps
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

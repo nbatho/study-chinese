@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Bell, Eye, EyeOff, Globe2, KeyRound, MailWarning, ToggleLeft, ToggleRight, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
@@ -560,7 +561,7 @@ export default function Settings() {
         </div>
       </section>
 
-      {deleteModalOpen && (
+      {deleteModalOpen && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -630,7 +631,8 @@ export default function Settings() {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

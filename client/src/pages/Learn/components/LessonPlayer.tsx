@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, Award, CheckCircle2, Flag, Gem, ToggleLeft, ToggleRight, Volume2, XCircle } from "lucide-react";
 import { useLessonDetailQuery, useRecordMistakeMutation } from "../../../api";
 import { useCompleteLessonMutation, usePublicLessonDetailQuery, useReportLessonIssueMutation } from "../../../api/lessons/queries";
@@ -539,7 +540,7 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
         onCancel={() => setIsExitConfirmOpen(false)}
       />
 
-      {isReportOpen && (
+      {isReportOpen && createPortal(
         <div className="fixed inset-0 z-1200 flex items-center justify-center bg-black/35 px-4">
           <div className="w-full max-w-md rounded-lg border bg-card p-4 text-left shadow-xl">
             <div className="mb-3 flex items-center justify-between gap-3">
@@ -577,7 +578,8 @@ export default function LessonPlayer({ lessonId, onClose, demo = false }: { less
               {reportIssueMutation.isPending ? t("learn.player.sending") : t("learn.player.sendReport")}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       </div>
     </div>
