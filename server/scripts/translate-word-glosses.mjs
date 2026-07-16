@@ -11,17 +11,21 @@
 // tables, so a gap in either one shows up as mixed-language glosses.
 //
 // Usage:
-//   node server/scripts/translate-word-glosses.mjs [--locale=vi] [--dry-run] [--force] [--limit=N] [--batch=N]
+//   node server/scripts/translate-word-glosses.mjs [--locale=vi] [--dry-run] [--force] [--limit=N] [--batch=N] [--pos=X]
 //
 //   --locale=X  Target language; must be listed in GLOSS_LOCALES (default vi).
 //   --dry-run   Print translations without writing to the database.
 //   --force     Re-translate words that already have a gloss for this locale.
 //   --limit=N   Only process the first N eligible rows.
 //   --batch=N   Words per AI request (default 25).
+//   --pos=X     Only words with this part_of_speech, e.g. --pos=phrase for the
+//               ones the Shadowing tool draws on. Narrows a full backfill of the
+//               ~11k vocabulary to the slice a screen actually reads.
 
-import { resolveLocale, runGlossBackfill } from './lib/gloss-translation.mjs';
+import { argValue, resolveLocale, runGlossBackfill } from './lib/gloss-translation.mjs';
 
 const locale = resolveLocale();
+const partOfSpeech = argValue('pos', '');
 
 await runGlossBackfill({
   scriptName: 'translate-word-glosses',
@@ -34,11 +38,12 @@ await runGlossBackfill({
         LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $1
         WHERE w.is_active = true
           AND w.english IS NOT NULL AND w.english <> ''
+          ${partOfSpeech ? 'AND w.part_of_speech = $2' : ''}
           ${force ? '' : 'AND wg.gloss IS NULL'}
         ORDER BY w.hsk_level, w.frequency NULLS LAST, w.id
         ${limit ? `LIMIT ${limit}` : ''}
       `,
-      [locale]
+      partOfSpeech ? [locale, partOfSpeech] : [locale]
     );
     return rows;
   },

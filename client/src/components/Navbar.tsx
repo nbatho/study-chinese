@@ -139,6 +139,8 @@ export default function Navbar() {
             options={[
               { code: "EN", label: t("profile.languageEnglish"), value: "en" },
               { code: "VI", label: t("profile.languageVietnamese"), value: "vi" },
+              { code: "简", label: t("profile.languageChineseSimplified"), value: "zh-Hans" },
+              { code: "繁", label: t("profile.languageChineseTraditional"), value: "zh-Hant" },
             ]}
             buttonClassName="min-w-36"
           />

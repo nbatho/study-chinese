@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { isLanguage } from "../../i18n/languages";
+import type { Language } from "../../i18n/languages";
 
 export type AppAppearance = "light" | "dark" | "system";
-export type AppLanguage = "en" | "vi";
+export type AppLanguage = Language;
 
 /**
  * The HSK level picked on the Learn screen, or null to follow the level
@@ -26,10 +28,6 @@ interface AppState {
 }
 
 const APP_STATE_KEY = "study_chinese_app_state";
-const SUPPORTED_LANGUAGES: AppLanguage[] = ["en", "vi"];
-
-const isAppLanguage = (value: unknown): value is AppLanguage =>
-  typeof value === "string" && SUPPORTED_LANGUAGES.includes(value as AppLanguage);
 
 const loadPersistedAppState = (): Partial<AppState> => {
   try {
@@ -63,7 +61,7 @@ const initialState: AppState = {
   initialized: true,
   appAppearance: persistedState.appAppearance ?? "light",
   hasCompletedOnboarding: persistedState.hasCompletedOnboarding ?? false,
-  language: isAppLanguage(persistedState.language) ? persistedState.language : "en",
+  language: isLanguage(persistedState.language) ? persistedState.language : "en",
   hskSelection: null,
 };
 

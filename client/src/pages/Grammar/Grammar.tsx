@@ -7,7 +7,7 @@ import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LoadingCard from "../../components/LoadingCard";
 import { useI18n } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import { cn } from "../../utils/cn";
 
 type GrammarLessonGroup = {
@@ -18,7 +18,7 @@ type GrammarLessonGroup = {
 export default function Grammar() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const grammarQuery = useLessonGrammarIndexQuery(isAuthenticated);
   const [search, setSearch] = useState("");
   const [selectedHsk, setSelectedHsk] = useState<number | "all">("all");
@@ -63,6 +63,10 @@ export default function Grammar() {
     return Array.from(grouped.values());
   }, [grammar, search, selectedHsk]);
 
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
+
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -79,15 +83,15 @@ export default function Grammar() {
         <div className="text-left">
           <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
             <FileText size={17} />
-            Ngữ pháp theo bài học
+            {t("grammar.badge")}
           </div>
-          <h1 className="text-2xl font-extrabold sm:text-3xl">Thư viện ngữ pháp trong lộ trình</h1>
+          <h1 className="text-2xl font-extrabold sm:text-3xl">{t("grammar.title")}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Mỗi cấu trúc nằm trong bài học gốc để bạn học mẫu câu cùng từ vựng, hội thoại và bài tập liên quan.
+            {t("grammar.subtitle")}
           </p>
         </div>
         <span className="rounded-xl border bg-background px-3 py-2 text-sm font-extrabold text-primary">
-          {grammar.length} cấu trúc
+          {t("grammar.count", { count: grammar.length })}
         </span>
       </header>
 
@@ -99,17 +103,17 @@ export default function Grammar() {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Tìm mẫu câu, giải thích, ví dụ hoặc bài học..."
+              placeholder={t("grammar.searchPlaceholder")}
               className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
             />
           </label>
           <DropdownSelect
-            label="HSK filter"
+            label={t("grammar.hskFilter")}
             icon={<Filter size={16} />}
             value={String(selectedHsk)}
             onChange={(value) => setSelectedHsk(value === "all" ? "all" : Number(value))}
             options={[
-              { value: "all", label: "Tất cả HSK" },
+              { value: "all", label: t("grammar.allHsk") },
               ...hskLevels.map((level) => ({ value: String(level), label: `HSK ${level}` })),
             ]}
             align="left"
@@ -121,12 +125,12 @@ export default function Grammar() {
       </section>
 
       {grammarQuery.isLoading ? (
-        <LoadingCard label="Đang tải ngữ pháp theo bài học..." />
+        <LoadingCard label={t("grammar.loading")} />
       ) : groups.length === 0 ? (
         <section className="app-surface px-5 py-10 text-center">
           <Search className="mx-auto mb-3 text-muted-foreground" size={36} />
-          <h3 className="font-extrabold">Không tìm thấy cấu trúc phù hợp</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Thử đổi từ khóa hoặc chọn lại cấp HSK.</p>
+          <h3 className="font-extrabold">{t("grammar.emptyTitle")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("grammar.emptyBody")}</p>
         </section>
       ) : (
         <div className="grid gap-4">
@@ -138,12 +142,12 @@ export default function Grammar() {
                     <div className="mb-1 flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase text-muted-foreground">
                       <span>HSK {group.lesson.hskLevel}</span>
                       <span>{group.lesson.cefrLevel}</span>
-                      <span>Bài {group.lesson.order}</span>
+                      <span>{t("grammar.lessonNumber", { order: group.lesson.order })}</span>
                       <span>{group.lesson.skill}</span>
                       {group.lesson.completedAt && (
                         <span className="inline-flex items-center gap-1 text-jade">
                           <CheckCircle2 size={13} />
-                          Đã học
+                          {t("grammar.completed")}
                         </span>
                       )}
                     </div>
@@ -156,7 +160,7 @@ export default function Grammar() {
                     className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px"
                   >
                     <BookOpen size={17} />
-                    Học trong bài
+                    {t("grammar.studyInLesson")}
                   </button>
                 </div>
               </div>

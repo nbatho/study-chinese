@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, PenLine, Play, RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
+import { useI18n } from "../i18n";
 import { cn } from "../utils/cn";
 import type { HanziWriterInstance, HanziWriterQuizOptions } from "hanzi-writer";
 
@@ -66,6 +67,7 @@ export function HanziStrokePractice({
   onMistake,
   onComplete,
 }: HanziStrokePracticeProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const writerRef = useRef<HanziWriterInstance | null>(null);
   const onMistakeRef = useRef(onMistake);
@@ -73,7 +75,7 @@ export function HanziStrokePractice({
   const [activeMode, setActiveMode] = useState<PracticeMode>(mode);
   const [outlineVisible, setOutlineVisible] = useState(showOutline);
   const [revision, setRevision] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   const isDark = useIsDarkTheme();
   const resolvedSize = Math.min(360, Math.max(180, size));
 
@@ -100,7 +102,7 @@ export function HanziStrokePractice({
         return;
       }
 
-      setError(null);
+      setError(false);
       container.replaceChildren();
 
       if (!selectedCharacter) {
@@ -155,7 +157,10 @@ export function HanziStrokePractice({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Unable to load Hanzi Writer.");
+          // The underlying message is English-only library text, so show a
+          // translated one and keep the original for debugging.
+          console.error("Hanzi Writer failed to load:", err);
+          setError(true);
         }
       }
     };
@@ -200,16 +205,16 @@ export function HanziStrokePractice({
       <div className="flex w-full items-center justify-between gap-2">
         <div className="min-w-0 text-2xl font-semibold leading-none">{character.trim()[0] || "?"}</div>
         <div className="flex shrink-0 items-center gap-1">
-          <Button type="button" size="icon" variant="ghost" title="Play stroke animation" aria-label="Play stroke animation" onClick={replay}>
+          <Button type="button" size="icon" variant="ghost" title={t("hanziStroke.play")} aria-label={t("hanziStroke.play")} onClick={replay}>
             <Play />
           </Button>
-          <Button type="button" size="icon" variant="ghost" title="Start writing quiz" aria-label="Start writing quiz" onClick={startQuiz}>
+          <Button type="button" size="icon" variant="ghost" title={t("hanziStroke.quiz")} aria-label={t("hanziStroke.quiz")} onClick={startQuiz}>
             <PenLine />
           </Button>
-          <Button type="button" size="icon" variant="ghost" title="Reset practice" aria-label="Reset practice" onClick={reset}>
+          <Button type="button" size="icon" variant="ghost" title={t("hanziStroke.reset")} aria-label={t("hanziStroke.reset")} onClick={reset}>
             <RotateCcw />
           </Button>
-          <Button type="button" size="icon" variant="ghost" title="Toggle outline" aria-label="Toggle outline" onClick={toggleOutline}>
+          <Button type="button" size="icon" variant="ghost" title={t("hanziStroke.outline")} aria-label={t("hanziStroke.outline")} onClick={toggleOutline}>
             {outlineVisible ? <Eye /> : <EyeOff />}
           </Button>
         </div>
@@ -223,7 +228,7 @@ export function HanziStrokePractice({
 
       {error ? (
         <div className="w-full rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
+          {t("hanziStroke.loadError")}
         </div>
       ) : null}
     </div>

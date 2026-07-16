@@ -533,7 +533,7 @@ export default function Translate() {
                 )}
 
                 {imagePreview && !cameraActive && (
-                  <img src={imagePreview} alt="OCR preview" className="size-full object-cover" />
+                  <img src={imagePreview} alt={t("translate.ocrPreviewAlt")} className="size-full object-cover" />
                 )}
 
                 {!cameraActive && !imagePreview && (

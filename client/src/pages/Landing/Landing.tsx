@@ -5,6 +5,7 @@ import {
   BookOpen,
   Camera,
   CheckCircle2,
+  Globe2,
   Languages,
   Mic2,
   Play,
@@ -14,94 +15,93 @@ import {
   Users,
   WandSparkles,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { DropdownSelect } from "../../components/ui/dropdown-select";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { FadeIn } from "../../components/ui/FadeIn";
+import { useDocumentLanguage, useI18n } from "../../i18n";
+import { landingCopy } from "../../i18n/landing";
+import type {
+  LandingFeatureId,
+  LandingFlowId,
+  LandingFooterGroupId,
+  LandingLinkId,
+} from "../../i18n/landing";
+import { LANGUAGES, LANGUAGE_META } from "../../i18n/languages";
 
-const featureCards = [
+// Layout and destinations only; the matching copy lives in `i18n/landing`.
+const featureCards: Array<{ id: LandingFeatureId; icon: LucideIcon; href: string; className: string }> = [
+  { id: "path", icon: BookOpen, href: "/learn", className: "lg:col-span-2" },
+  { id: "practice", icon: Mic2, href: "/practice", className: "lg:row-span-2" },
+  { id: "dictionary", icon: BookMarked, href: "/dictionary", className: "" },
+  { id: "translate", icon: Camera, href: "/translate", className: "" },
+  { id: "tutor", icon: Sparkles, href: "/ai-tutor", className: "lg:col-span-2" },
+  { id: "community", icon: Users, href: "/community", className: "" },
+];
+
+const studyFlow: Array<{ id: LandingFlowId; icon: LucideIcon }> = [
+  { id: "goal", icon: WandSparkles },
+  { id: "lessons", icon: BookOpen },
+  { id: "review", icon: RefreshCw },
+];
+
+const previewRows: Array<{ hanzi: string; pinyin: string }> = [
+  { hanzi: "你好", pinyin: "nǐ hǎo" },
+  { hanzi: "我想点菜", pinyin: "wǒ xiǎng diǎn cài" },
+  { hanzi: "今天很忙", pinyin: "jīn tiān hěn máng" },
+];
+
+const productStats: Array<{ id: "statSession" | "statNewWords" | "statReviews"; value: string }> = [
+  { id: "statSession", value: "18m" },
+  { id: "statNewWords", value: "12" },
+  { id: "statReviews", value: "24" },
+];
+
+const footerGroups: Array<{ id: LandingFooterGroupId; links: Array<{ id: LandingLinkId; href: string }> }> = [
   {
-    title: "Lộ trình HSK rõ ràng",
-    description: "Theo dõi bài học, cấp độ và tiến độ trong một mạch học dễ quay lại.",
-    icon: BookOpen,
-    href: "/learn",
-    className: "lg:col-span-2",
+    id: "learn",
+    links: [
+      { id: "learn", href: "/learn" },
+      { id: "foundation", href: "/foundation" },
+      { id: "grammar", href: "/grammar" },
+      { id: "radicals", href: "/radicals" },
+    ],
   },
   {
-    title: "Luyện nói và phản xạ",
-    description: "Nghe, nói, sắp xếp câu và ghi nhớ mặt chữ bằng bài tập ngắn.",
-    icon: Mic2,
-    href: "/practice",
-    className: "lg:row-span-2",
+    id: "practice",
+    links: [
+      { id: "practice", href: "/practice" },
+      { id: "review", href: "/review" },
+      { id: "tutor", href: "/ai-tutor" },
+    ],
   },
   {
-    title: "Từ điển trong ngữ cảnh",
-    description: "Tra pinyin, nghĩa, ví dụ và lưu từ cần ôn tiếp.",
-    icon: BookMarked,
-    href: "/dictionary",
-    className: "",
-  },
-  {
-    title: "Dịch văn bản và hình ảnh",
-    description: "Nhập câu hoặc chụp chữ Hán để nhận giải thích nhanh.",
-    icon: Camera,
-    href: "/translate",
-    className: "",
-  },
-  {
-    title: "Gia sư AI",
-    description: "Hỏi ngữ pháp, sửa câu và luyện hội thoại theo tình huống.",
-    icon: Sparkles,
-    href: "/ai-tutor",
-    className: "lg:col-span-2",
-  },
-  {
-    title: "Cộng đồng học tập",
-    description: "Chia sẻ câu hỏi, mẹo học và ghi chú hữu ích với người cùng học.",
-    icon: Users,
-    href: "/community",
-    className: "",
+    id: "tools",
+    links: [
+      { id: "dictionary", href: "/dictionary" },
+      { id: "translate", href: "/translate" },
+      { id: "community", href: "/community" },
+      { id: "guide", href: "/guide" },
+    ],
   },
 ];
 
-const studyFlow = [
-  {
-    label: "Đặt mục tiêu",
-    title: "Chọn cấp độ phù hợp",
-    description: "Bắt đầu từ nền tảng hiện tại để bài học vừa sức.",
-    icon: WandSparkles,
-  },
-  {
-    label: "Học theo bài",
-    title: "Đi qua nội dung ngắn",
-    description: "Từ vựng, mẫu câu, pinyin và ví dụ được gom thành từng phiên học.",
-    icon: BookOpen,
-  },
-  {
-    label: "Ôn có nhịp",
-    title: "Biến kiến thức thành phản xạ",
-    description: "Luyện nghe, nói, viết, dịch và ôn lại bằng bài tập tương tác.",
-    icon: RefreshCw,
-  },
-];
-
-const previewRows = [
-  { hanzi: "你好", pinyin: "nǐ hǎo", meaning: "Xin chào" },
-  { hanzi: "我想点菜", pinyin: "wǒ xiǎng diǎn cài", meaning: "Tôi muốn gọi món" },
-  { hanzi: "今天很忙", pinyin: "jīn tiān hěn máng", meaning: "Hôm nay rất bận" },
-];
-
-const productStats = [
-  { label: "Phiên học", value: "18m" },
-  { label: "Từ mới", value: "12" },
-  { label: "Ôn lại", value: "24" },
-];
+const languageOptions = LANGUAGES.map((value) => ({
+  value,
+  code: LANGUAGE_META[value].code,
+  label: LANGUAGE_META[value].nativeLabel,
+}));
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { language, setLanguage } = useI18n();
+  useDocumentLanguage();
+  const copy = landingCopy[language];
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const primaryTarget = "/home";
-  const primaryCta = isAuthenticated ? "Vào học ngay" : "Bắt đầu học miễn phí";
+  const primaryCta = isAuthenticated ? copy.hero.ctaAuthed : copy.hero.ctaGuest;
 
   return (
     <div className="min-h-[100dvh] overflow-hidden bg-background selection:bg-primary/20">
@@ -118,26 +118,36 @@ export default function Landing() {
             </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-extrabold">Study Chinese</span>
-              <span className="block truncate text-xs font-semibold text-muted-foreground">HSK Learning</span>
+              <span className="block truncate text-xs font-semibold text-muted-foreground">{copy.nav.tagline}</span>
             </span>
           </button>
 
           <div className="hidden items-center gap-7 text-sm font-bold text-muted-foreground md:flex">
             <button type="button" onClick={() => navigate("/learn")} className="transition hover:text-foreground">
-              Lộ trình
+              {copy.nav.roadmap}
             </button>
             <button type="button" onClick={() => navigate("/practice")} className="transition hover:text-foreground">
-              Luyện tập
+              {copy.nav.practice}
             </button>
             <button type="button" onClick={() => navigate("/translate")} className="transition hover:text-foreground">
-              Dịch nhanh
+              {copy.nav.translate}
             </button>
           </div>
 
-          <Button className="h-11 rounded-full px-5" onClick={() => navigate(primaryTarget)}>
-            {primaryCta}
-            <ArrowRight className="size-4" />
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <DropdownSelect
+              value={language}
+              label={copy.nav.languageLabel}
+              icon={<Globe2 size={16} />}
+              onChange={setLanguage}
+              options={languageOptions}
+              buttonClassName="hidden h-11 rounded-full sm:inline-flex"
+            />
+            <Button className="h-11 rounded-full px-5" onClick={() => navigate(primaryTarget)}>
+              {primaryCta}
+              <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </nav>
       </header>
 
@@ -148,13 +158,13 @@ export default function Landing() {
           <FadeIn direction="up" delay={80} className="relative z-10 max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
               <Sparkles size={16} />
-              <span>Nền tảng học tiếng Trung toàn diện</span>
+              <span>{copy.hero.badge}</span>
             </div>
             <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.04] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Học tiếng Trung có nhịp, có lộ trình
+              {copy.hero.title}
             </h1>
             <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground sm:text-lg">
-              Bài học HSK, luyện phản xạ, từ điển và AI tutor cùng nằm trong một không gian học rõ ràng.
+              {copy.hero.subtitle}
             </p>
             <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <Button
@@ -172,7 +182,7 @@ export default function Landing() {
                 onClick={() => navigate("/guide")}
               >
                 <Play className="size-5" />
-                Xem hướng dẫn
+                {copy.hero.secondary}
               </Button>
             </div>
           </FadeIn>
@@ -188,8 +198,8 @@ export default function Landing() {
                         <Languages size={22} />
                       </span>
                       <div>
-                        <p className="text-sm font-extrabold text-foreground">Phiên học hôm nay</p>
-                        <p className="text-xs font-semibold text-muted-foreground">HSK 2 - Giao tiếp thường ngày</p>
+                        <p className="text-sm font-extrabold text-foreground">{copy.preview.sessionTitle}</p>
+                        <p className="text-xs font-semibold text-muted-foreground">{copy.preview.sessionSubtitle}</p>
                       </div>
                     </div>
                     <CheckCircle2 className="size-6 text-primary" />
@@ -199,8 +209,8 @@ export default function Landing() {
                 <div className="grid gap-4 p-5 sm:p-6">
                   <div className="grid grid-cols-3 gap-3">
                     {productStats.map((stat) => (
-                      <div key={stat.label} className="rounded-2xl border bg-background p-3">
-                        <span className="block text-xs font-bold text-muted-foreground">{stat.label}</span>
+                      <div key={stat.id} className="rounded-2xl border bg-background p-3">
+                        <span className="block text-xs font-bold text-muted-foreground">{copy.preview[stat.id]}</span>
                         <strong className="mt-1 block text-2xl text-foreground">{stat.value}</strong>
                       </div>
                     ))}
@@ -208,11 +218,13 @@ export default function Landing() {
 
                   <div className="rounded-[1.5rem] border bg-background p-4">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <h2 className="text-sm font-extrabold text-foreground">Từ cần nhớ</h2>
-                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Đang học</span>
+                      <h2 className="text-sm font-extrabold text-foreground">{copy.preview.wordsTitle}</h2>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                        {copy.preview.wordsBadge}
+                      </span>
                     </div>
                     <div className="grid gap-3">
-                      {previewRows.map((row) => (
+                      {previewRows.map((row, index) => (
                         <div key={row.hanzi} className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-3 rounded-2xl bg-card p-3 shadow-sm">
                           <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 font-serif text-2xl font-bold text-primary">
                             {row.hanzi.slice(0, 1)}
@@ -220,7 +232,7 @@ export default function Landing() {
                           <span className="min-w-0">
                             <span className="block truncate font-serif text-2xl font-bold text-foreground">{row.hanzi}</span>
                             <span className="block truncate text-sm font-medium text-muted-foreground">
-                              {row.pinyin} / {row.meaning}
+                              {row.pinyin} / {copy.preview.meanings[index]}
                             </span>
                           </span>
                         </div>
@@ -231,10 +243,10 @@ export default function Landing() {
                   <div className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-lg shadow-primary/20">
                     <div className="mb-2 flex items-center gap-2">
                       <Sparkles size={20} />
-                      <span className="font-extrabold">Gia sư AI sẵn sàng hỗ trợ</span>
+                      <span className="font-extrabold">{copy.preview.aiTitle}</span>
                     </div>
                     <p className="text-sm font-medium leading-relaxed text-primary-foreground/90">
-                      Hỏi cách dùng từ, nhờ sửa câu hoặc tạo tình huống luyện nói ngay trong bài học.
+                      {copy.preview.aiBody}
                     </p>
                   </div>
                 </div>
@@ -247,19 +259,20 @@ export default function Landing() {
           <div className="mx-auto max-w-7xl">
             <FadeIn className="mb-12 max-w-3xl">
               <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                Một bộ công cụ đủ gọn để học mỗi ngày
+                {copy.features.title}
               </h2>
               <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground">
-                Các tính năng chính được nối với nhau theo hành trình học, không tách thành những màn rời rạc.
+                {copy.features.subtitle}
               </p>
             </FadeIn>
 
             <div className="grid auto-rows-fr gap-5 md:grid-cols-2 lg:grid-cols-3">
               {featureCards.map((feature, index) => {
                 const Icon = feature.icon;
+                const item = copy.features.items[feature.id];
 
                 return (
-                  <FadeIn key={feature.title} delay={index * 60}>
+                  <FadeIn key={feature.id} delay={index * 60}>
                     <button
                       type="button"
                       onClick={() => navigate(feature.href)}
@@ -272,13 +285,13 @@ export default function Landing() {
                         <Icon size={24} />
                       </span>
                       <span>
-                        <span className="block text-xl font-extrabold text-foreground">{feature.title}</span>
+                        <span className="block text-xl font-extrabold text-foreground">{item.title}</span>
                         <span className="mt-3 block text-sm font-medium leading-relaxed text-muted-foreground">
-                          {feature.description}
+                          {item.description}
                         </span>
                       </span>
                       <span className="mt-8 inline-flex items-center gap-2 text-sm font-extrabold text-primary">
-                        Mở công cụ
+                        {copy.features.open}
                         <ArrowRight size={16} className="transition group-hover:translate-x-1" />
                       </span>
                     </button>
@@ -294,10 +307,10 @@ export default function Landing() {
             <FadeIn>
               <div className="sticky top-28">
                 <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                  Học theo một nhịp dễ duy trì
+                  {copy.flow.title}
                 </h2>
                 <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-muted-foreground">
-                  Mỗi phiên học được chia nhỏ để bạn biết nên bắt đầu ở đâu, cần ôn gì và khi nào nên luyện phản xạ.
+                  {copy.flow.subtitle}
                 </p>
               </div>
             </FadeIn>
@@ -305,17 +318,20 @@ export default function Landing() {
             <div className="grid gap-4">
               {studyFlow.map((step, index) => {
                 const Icon = step.icon;
+                const item = copy.flow.steps[step.id];
 
                 return (
-                  <FadeIn key={step.title} delay={index * 90} direction="right">
+                  <FadeIn key={step.id} delay={index * 90} direction="right">
                     <div className="grid gap-4 rounded-[1.5rem] border bg-card p-5 shadow-sm transition hover:border-primary/30 sm:grid-cols-[64px_minmax(0,1fr)]">
                       <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                         <Icon size={25} />
                       </div>
                       <div>
-                        <span className="text-sm font-extrabold text-primary">{step.label}</span>
-                        <h3 className="mt-1 text-xl font-extrabold text-foreground">{step.title}</h3>
-                        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">{step.description}</p>
+                        <span className="text-sm font-extrabold text-primary">{item.label}</span>
+                        <h3 className="mt-1 text-xl font-extrabold text-foreground">{item.title}</h3>
+                        <p className="mt-2 text-sm font-medium leading-relaxed text-muted-foreground">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
                   </FadeIn>
@@ -333,10 +349,10 @@ export default function Landing() {
                   <Rocket size={28} />
                 </div>
                 <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                  Sẵn sàng học một phiên ngắn hôm nay?
+                  {copy.cta.title}
                 </h2>
                 <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-muted-foreground">
-                  Bắt đầu với lộ trình đang chờ sẵn, hoặc thử dịch nhanh một đoạn tiếng Trung bạn gặp trong ngày.
+                  {copy.cta.subtitle}
                 </p>
               </div>
 
@@ -356,13 +372,69 @@ export default function Landing() {
                   onClick={() => navigate("/translate")}
                 >
                   <Camera className="size-5" />
-                  Thử dịch văn bản
+                  {copy.cta.translate}
                 </Button>
               </div>
             </div>
           </FadeIn>
         </section>
       </main>
+
+      <footer className="border-t bg-secondary/40 px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
+            <div className="max-w-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary font-serif text-2xl font-extrabold text-primary-foreground shadow-sm">
+                  学
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-extrabold text-foreground">Study Chinese</span>
+                  <span className="block truncate text-xs font-semibold text-muted-foreground">{copy.nav.tagline}</span>
+                </span>
+              </div>
+              <p className="mt-4 text-sm font-medium leading-relaxed text-muted-foreground">{copy.footer.tagline}</p>
+              <DropdownSelect
+                value={language}
+                label={copy.nav.languageLabel}
+                icon={<Globe2 size={16} />}
+                onChange={setLanguage}
+                options={languageOptions}
+                align="left"
+                className="mt-6"
+                buttonClassName="min-w-40"
+              />
+            </div>
+
+            <nav className="grid gap-8 sm:grid-cols-3" aria-label={copy.footer.navLabel}>
+              {footerGroups.map((group) => (
+                <div key={group.id}>
+                  <h2 className="text-sm font-extrabold text-foreground">{copy.footer.groups[group.id]}</h2>
+                  <ul className="mt-4 grid gap-2.5">
+                    {group.links.map((link) => (
+                      <li key={link.id}>
+                        <button
+                          type="button"
+                          onClick={() => navigate(link.href)}
+                          className="text-sm font-semibold text-muted-foreground transition hover:text-primary"
+                        >
+                          {copy.footer.links[link.id]}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-12 border-t pt-6">
+            <p className="text-xs font-semibold text-muted-foreground">
+              {copy.footer.copyright.replace("{year}", String(new Date().getFullYear()))}
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

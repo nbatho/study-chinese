@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 
 export type GuideVisualType =
@@ -73,10 +74,12 @@ function VisualFrame({ children }: { children: ReactNode }) {
 }
 
 function HomeVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="grid gap-3 sm:grid-cols-4">
-        {["XP hôm nay", "Gems", "Streak", "Cần ôn"].map((label, index) => (
+        {[t("guideVisual.xpToday"), t("common.gems"), t("guideVisual.streak"), t("guideVisual.toReview")].map((label, index) => (
           <div key={label} className="rounded-lg bg-card p-4">
             <div className="text-xs font-bold text-muted-foreground">{label}</div>
             <div className="mt-3 text-2xl font-extrabold text-primary">{[120, 36, 7, 14][index]}</div>
@@ -89,8 +92,8 @@ function HomeVisual() {
       <div className="mt-4 rounded-lg bg-card p-5">
         <div className="mb-2 flex items-center justify-between">
           <div>
-            <div className="text-sm font-extrabold">Kế hoạch hôm nay</div>
-            <div className="text-xs font-semibold text-muted-foreground">Học bài, ôn SRS, luyện nói, quét OCR</div>
+            <div className="text-sm font-extrabold">{t("guideVisual.todayPlan")}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{t("guideVisual.todayPlanDesc")}</div>
           </div>
           <Sparkles className="text-gold" size={22} />
         </div>
@@ -103,11 +106,13 @@ function HomeVisual() {
 }
 
 function GuideTourVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="grid gap-4 xl:grid-cols-[170px_1fr]">
         <div className="rounded-lg bg-card p-3">
-          {["Trang chủ", "Học", "Luyện tập", "Dịch", "AI Tutor", "Shop"].map((label, index) => (
+          {[t("nav.home"), t("nav.learn"), t("nav.practice"), t("nav.translate"), t("nav.aiTutor"), t("nav.shop")].map((label, index) => (
             <div
               key={label}
               className={cn(
@@ -122,7 +127,7 @@ function GuideTourVisual() {
         <div className="rounded-lg bg-card p-5">
           <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
             <Compass size={16} />
-            Tour ứng dụng
+            {t("guideVisual.appTour")}
           </div>
           <div className="h-4 w-56 rounded bg-primary/25" />
           <div className="mt-4 space-y-3">
@@ -142,6 +147,8 @@ function GuideTourVisual() {
 }
 
 function LearnVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mb-4 flex gap-2">
@@ -152,7 +159,7 @@ function LearnVisual() {
         ))}
       </div>
       <div className="space-y-3">
-        {["Từ mới", "Hội thoại nghe", "Đọc hiểu", "Bài tập"].map((label, index) => (
+        {[t("guideVisual.newWords"), t("guideVisual.listeningDialogue"), t("guideVisual.reading"), t("guideVisual.exercises")].map((label, index) => (
           <div key={label} className="flex items-center gap-3 rounded-lg bg-card p-4">
             <CheckCircle2 className={index < 2 ? "text-jade" : "text-muted-foreground"} size={20} />
             <div className="min-w-0 flex-1">
@@ -167,11 +174,12 @@ function LearnVisual() {
 }
 
 function PracticeVisual() {
+  const { t } = useI18n();
   const tools: { label: string; icon: LucideIcon }[] = [
-    { label: "Tone Drill", icon: Volume2 },
-    { label: "Minimal Pairs", icon: Dumbbell },
-    { label: "Shadowing", icon: Languages },
-    { label: "Hanzi", icon: PencilLine },
+    { label: t("practice.tones"), icon: Volume2 },
+    { label: t("practice.pairs"), icon: Dumbbell },
+    { label: t("practice.shadow"), icon: Languages },
+    { label: t("practice.hanzi"), icon: PencilLine },
   ];
 
   return (
@@ -190,14 +198,16 @@ function PracticeVisual() {
 }
 
 function ReviewVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mx-auto flex min-h-57.5 max-w-sm flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/5">
         <div className="font-serif text-7xl font-extrabold">水</div>
-        <div className="mt-3 text-sm font-bold text-primary">Chạm để xem đáp án</div>
+        <div className="mt-3 text-sm font-bold text-primary">{t("guideVisual.tapToReveal")}</div>
       </div>
       <div className="mt-4 grid grid-cols-4 gap-2">
-        {["Again", "Hard", "Good", "Easy"].map((label) => (
+        {[t("review.again"), t("review.hard"), t("review.good"), t("review.easy")].map((label) => (
           <div key={label} className="rounded-lg border bg-card py-3 text-center text-xs font-bold">
             {label}
           </div>
@@ -208,6 +218,8 @@ function ReviewVisual() {
 }
 
 function DictionaryVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mb-4 flex items-center gap-2 rounded-lg bg-card px-4 py-3">
@@ -220,7 +232,7 @@ function DictionaryVisual() {
         <div className="mt-3 h-2 w-40 rounded bg-border" />
         <div className="mt-5 flex flex-wrap gap-2">
           <div className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">HSK 1</div>
-          <div className="rounded-lg bg-jade/10 px-3 py-1.5 text-xs font-bold text-jade">Yêu thích</div>
+          <div className="rounded-lg bg-jade/10 px-3 py-1.5 text-xs font-bold text-jade">{t("guideVisual.favorite")}</div>
           <Volume2 size={22} className="text-primary" />
         </div>
       </div>
@@ -229,19 +241,21 @@ function DictionaryVisual() {
 }
 
 function TranslateVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
         <div className="rounded-lg bg-card p-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-extrabold">
             <Languages size={18} className="text-primary" />
-            Văn bản / OCR
+            {t("guideVisual.textOcr")}
           </div>
           <div className="flex min-h-42.5 items-center justify-center rounded-lg border bg-[#1e1e24] text-white/70">
             <Camera size={38} />
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            {["Camera", "Quét", "Tải ảnh"].map((label, index) => (
+            {[t("guideVisual.camera"), t("guideVisual.scan"), t("guideVisual.upload")].map((label, index) => (
               <div key={label} className={cn("rounded-lg py-2 text-center text-xs font-bold", index === 1 ? "bg-primary text-primary-foreground" : "bg-secondary")}>
                 {label}
               </div>
@@ -251,7 +265,7 @@ function TranslateVisual() {
         <div className="rounded-lg bg-card p-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-extrabold">
             <ScanLine size={18} className="text-jade" />
-            Kết quả
+            {t("guideVisual.result")}
           </div>
           {["你好", "我想喝茶", "谢谢"].map((text, index) => (
             <div key={text} className={cn("mb-2 rounded-lg border px-3 py-2", index === 1 ? "border-primary bg-primary/5" : "bg-background")}>
@@ -266,6 +280,8 @@ function TranslateVisual() {
 }
 
 function AiTutorVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mx-auto max-w-md rounded-lg bg-card p-4">
@@ -274,7 +290,7 @@ function AiTutorVisual() {
             <Bot size={19} className="text-tone-3" />
             AI Tutor
           </div>
-          <div className="rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">6/10 free</div>
+          <div className="rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">{t("guideVisual.freeQuota")}</div>
         </div>
         <div className="space-y-3">
           <div className="max-w-[82%] rounded-lg border bg-background p-3">
@@ -285,7 +301,7 @@ function AiTutorVisual() {
             <div className="font-serif text-xl font-extrabold">我想点菜。</div>
           </div>
           <div className="rounded-lg border border-tone-3/30 bg-tone-3/10 p-3 text-xs font-semibold text-tone-3">
-            Gợi ý sửa câu và phản hồi theo ngữ cảnh
+            {t("guideVisual.aiHint")}
           </div>
         </div>
       </div>
@@ -294,6 +310,8 @@ function AiTutorVisual() {
 }
 
 function AchievementsVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -302,14 +320,16 @@ function AchievementsVisual() {
             <div className="mx-auto flex size-14 items-center justify-center rounded-lg bg-gold/20 text-gold">
               <Icon size={28} />
             </div>
-            <div className="mt-4 text-sm font-extrabold">{["Streak 7 ngày", "HSK Starter", "Review Hero"][index]}</div>
+            <div className="mt-4 text-sm font-extrabold">
+              {[t("guideVisual.streak7"), t("guideVisual.hskStarter"), t("guideVisual.reviewHero")][index]}
+            </div>
             <div className="mx-auto mt-3 h-2 w-20 rounded bg-border" />
           </div>
         ))}
       </div>
       <div className="mt-4 rounded-lg bg-card p-4">
         <div className="mb-2 flex justify-between text-sm font-bold">
-          <span>Mục tiêu tiếp theo</span>
+          <span>{t("guideVisual.nextGoal")}</span>
           <span className="text-primary">70%</span>
         </div>
         <div className="h-3 rounded bg-secondary">
@@ -321,13 +341,15 @@ function AchievementsVisual() {
 }
 
 function ShopVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mb-4 grid grid-cols-3 gap-2 text-center">
         {[
-          { label: "Gems", value: "360", icon: Gem },
-          { label: "Freeze", value: "2", icon: Shield },
-          { label: "Premium", value: "Free", icon: Crown },
+          { label: t("common.gems"), value: "360", icon: Gem },
+          { label: t("common.freeze"), value: "2", icon: Shield },
+          { label: t("common.premium"), value: t("common.free"), icon: Crown },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-lg bg-card p-3">
             <Icon className="mx-auto mb-2 text-primary" size={20} />
@@ -337,7 +359,12 @@ function ShopVisual() {
         ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        {["Streak Freeze", "Premium 30 ngày", "Avatar Panda", "AI Tutor Scholar"].map((label, index) => (
+        {[
+          t("shop.item.streak_freeze_1.name"),
+          t("shop.item.premium_30_days.name"),
+          t("shop.item.avatar_panda.name"),
+          t("shop.item.ai_skin_scholar.name"),
+        ].map((label, index) => (
           <div key={label} className="rounded-lg border bg-card p-4">
             <ShoppingBag className="mb-3 text-primary" size={22} />
             <div className="text-sm font-extrabold">{label}</div>
@@ -353,24 +380,26 @@ function ShopVisual() {
 }
 
 function CommunityVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg bg-card p-1">
-        {["Bảng xếp hạng", "Bạn bè"].map((label, index) => (
+        {[t("guideVisual.leaderboard"), t("guideVisual.friends")].map((label, index) => (
           <div key={label} className={cn("rounded-md py-2 text-center text-xs font-extrabold", index === 0 ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
             {label}
           </div>
         ))}
       </div>
       <div className="rounded-lg bg-card">
-        {["Lan", "Minh", "You", "Hoa"].map((name, index) => (
+        {["Lan", "Minh", t("community.you"), "Hoa"].map((name, index) => (
           <div key={name} className="grid grid-cols-[44px_1fr_auto] items-center gap-3 border-b px-3 py-3 last:border-b-0">
             <div className="flex size-9 items-center justify-center rounded-lg bg-secondary text-sm font-extrabold">{index + 1}</div>
             <div>
               <div className="text-sm font-extrabold">{name}</div>
               <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 <Users size={12} />
-                {index + 3} ngày streak
+                {t("guideVisual.streakDays", { count: index + 3 })}
               </div>
             </div>
             <strong className="text-primary">{[1280, 940, 710, 660][index]} XP</strong>
@@ -379,13 +408,15 @@ function CommunityVisual() {
       </div>
       <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-bold text-primary">
         <UserPlus size={16} />
-        Gửi lời mời kết bạn
+        {t("guideVisual.sendFriendRequest")}
       </div>
     </VisualFrame>
   );
 }
 
 function ProfileVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="flex items-center gap-4 rounded-lg bg-card p-5">
@@ -398,7 +429,7 @@ function ProfileVisual() {
         </div>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {["Mục tiêu ngày", "Ngôn ngữ", "Giao diện", "Gems & Premium"].map((label) => (
+        {[t("guideVisual.dailyGoal"), t("guideVisual.language"), t("guideVisual.theme"), t("guideVisual.gemsPremium")].map((label) => (
           <div key={label} className="rounded-lg bg-card p-4">
             <div className="text-sm font-extrabold">{label}</div>
             <div className="mt-3 h-2 w-24 rounded bg-border" />
@@ -410,17 +441,19 @@ function ProfileVisual() {
 }
 
 function AdminVisual() {
+  const { t } = useI18n();
+
   return (
     <VisualFrame>
       <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-bold text-primary">
         <Shield size={17} />
-        Admin CMS
+        {t("admin.badge")}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Lessons", icon: MessageSquareText },
-          { label: "Words", icon: CheckCircle2 },
-          { label: "Users", icon: Users },
+          { label: t("admin.tabLessons"), icon: MessageSquareText },
+          { label: t("admin.tabWords"), icon: CheckCircle2 },
+          { label: t("admin.tabUsers"), icon: Users },
         ].map(({ label, icon: Icon }) => (
           <div key={label} className="rounded-lg bg-card p-4">
             <Icon className="mb-3 text-primary" size={22} />
@@ -432,7 +465,7 @@ function AdminVisual() {
       <div className="mt-4 rounded-lg bg-card p-4">
         <div className="mb-3 flex items-center gap-2 text-sm font-extrabold">
           <BookOpen size={17} className="text-tone-3" />
-          AI logs và báo cáo lỗi
+          {t("guideVisual.aiLogsReports")}
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((item) => (

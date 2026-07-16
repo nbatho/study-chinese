@@ -8,12 +8,13 @@ import LoginPromptCard from "../../components/LoginPromptCard";
 import { Button } from "../../components/ui/button";
 import { CircularProgress } from "../../components/ui/circular-progress";
 import { Progress } from "../../components/ui/progress";
-import { useI18n } from "../../i18n";
+import { startLevelKeys, useI18n } from "../../i18n";
+import LoadingCard from "../../components/LoadingCard";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import type { TranslationKey } from "../../i18n/translations";
 import AchievementCard from "../Achievements/components/AchievementCard";
 import { categoryLabelKeys } from "../Achievements/components/achievementConfig";
 import SummaryStat from "../Achievements/components/SummaryStat";
-import { useAppSelector } from "../../store/hooks";
 
 type StatusFilter = "all" | "unlocked" | "locked";
 type CategoryFilter = Achievement["category"] | "all";
@@ -36,7 +37,7 @@ export default function Profile() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const statsQuery = useUserStatsQuery(7, isAuthenticated);
   const lessonsQuery = useLessonsQuery(isAuthenticated);
@@ -163,6 +164,10 @@ export default function Profile() {
     return statusMatches && categoryMatches;
   });
 
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
+
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -196,7 +201,7 @@ export default function Profile() {
               <Crown size={13} className="text-gold" /> {premium?.isActive ? t("profile.premiumActive") : t("profile.premiumFree")}
             </span>
             <span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">
-              {t("common.level")}: {(profile?.startLevel || "beginner").toUpperCase()}
+              {t("common.level")}: {t(startLevelKeys[profile?.startLevel || "beginner"]).toUpperCase()}
             </span>
           </div>
         </div>

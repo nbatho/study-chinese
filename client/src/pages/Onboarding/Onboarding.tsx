@@ -198,8 +198,10 @@ export default function Onboarding() {
                       <ClipboardCheck size={22} />
                     </span>
                     <span>
-                      <span className="block font-bold">Take a 5-minute placement test</span>
-                      <span className="block text-[0.8rem] text-muted-foreground">Recommended if you already know some Chinese.</span>
+                      <span className="block font-bold">{t("onboarding.placementCta")}</span>
+                      <span className="block text-[0.8rem] text-muted-foreground">
+                        {t("onboarding.placementDesc")}
+                      </span>
                     </span>
                   </button>
                   <button
@@ -210,7 +212,7 @@ export default function Onboarding() {
                     }}
                     className="rounded-xl border bg-secondary px-4 py-3 text-left text-sm font-bold transition hover:bg-secondary/80 active:translate-y-px"
                   >
-                    I am new to Chinese, skip the test
+                    {t("onboarding.placementSkip")}
                   </button>
                 </div>
                 <div className="mb-8 grid gap-3">

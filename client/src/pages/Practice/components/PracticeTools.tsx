@@ -19,6 +19,7 @@ import type { CharDiffEntry } from "../../../api/practice";
 import { CheckCircle2, ChevronLeft, ChevronRight, Sparkles, Target, Volume2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "../../../i18n";
+import type { TranslationKey } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 import HanziStrokePractice from "../../../components/HanziStrokePractice";
 import LoadingCard from "../../../components/LoadingCard";
@@ -30,17 +31,18 @@ const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm
 const innerCardClass = "rounded-lg border bg-card shadow-sm";
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent disabled:opacity-60";
-const silentRecordingMessage = "No speech was detected. Please speak clearly and try again.";
 const minVoicedFrames = 8;
 const minVoicedFrameRatio = 0.04;
 const minVoicePeak = 0.1;
 const minVoiceRms = 0.018;
-const TONE_LABELS: Record<number, { mark: string; name: string }> = {
-  1: { mark: "ˉ", name: "Âm bình (阴平)" },
-  2: { mark: "ˊ", name: "Dương bình (阳平)" },
-  3: { mark: "ˇ", name: "Thượng thanh (上声)" },
-  4: { mark: "ˋ", name: "Khứ thanh (去声)" },
-};
+
+/** The diacritic for each tone. Language-independent, unlike the tone's name. */
+const TONE_MARKS: Record<number, string> = { 1: "ˉ", 2: "ˊ", 3: "ˇ", 4: "ˋ" };
+
+type Translate = ReturnType<typeof useI18n>["t"];
+
+const toneName = (t: Translate, tone: number) =>
+  tone >= 1 && tone <= 4 ? t(`tone.${tone}.name` as TranslationKey) : t("tone.numbered", { tone });
 
 const containsChinese = (value: string) => /[\u4e00-\u9fff]/.test(value);
 const containsPinyinTone = (value: string) =>
@@ -107,6 +109,7 @@ function usePracticeWords() {
 }
 
 export function WeakPracticeTool() {
+  const { t } = useI18n();
   const mistakesQuery = useUserMistakesQuery(50);
   const practiceMistake = usePracticeMistakeMutation();
   const addActivity = useAddActivityMutation();
@@ -118,16 +121,14 @@ export function WeakPracticeTool() {
   const activeMistake = mistakes[idx % Math.max(mistakes.length, 1)];
   const displayedMistake = lockedMistake ?? activeMistake;
 
-  if (mistakesQuery.isLoading) return <LoadingCard label="Loading weak spots..." />;
+  if (mistakesQuery.isLoading) return <LoadingCard label={t("practice.weak.loading")} />;
 
   if (!displayedMistake) {
     return (
       <div className={panelClass}>
         <Target className="mx-auto mb-4 text-jade" size={56} />
-        <h3 className="text-[1.3rem] font-extrabold">No weak spots yet</h3>
-        <p className="mt-2 text-[0.9rem] text-muted-foreground">
-          Missed answers from review and practice will appear here automatically.
-        </p>
+        <h3 className="text-[1.3rem] font-extrabold">{t("practice.weak.emptyTitle")}</h3>
+        <p className="mt-2 text-[0.9rem] text-muted-foreground">{t("practice.weak.emptyBody")}</p>
       </div>
     );
   }
@@ -188,9 +189,12 @@ export function WeakPracticeTool() {
     <div className={panelClass}>
       <div className="mb-5 flex items-center justify-between gap-3 text-left">
         <div>
-          <h3 className="text-[1.3rem] font-extrabold">Weak Practice</h3>
+          <h3 className="text-[1.3rem] font-extrabold">{t("practice.weak")}</h3>
           <p className="text-[0.85rem] text-muted-foreground">
-            {mistakes.length} active weak spots - {displayedMistake.skill}
+            {t("practice.weak.count", {
+              count: mistakes.length,
+              skill: displayedMistake.skill,
+            })}
           </p>
         </div>
         <span className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
@@ -207,7 +211,7 @@ export function WeakPracticeTool() {
         )}
         {displayedMistake.simplified && (
           <TtsButton text={displayedMistake.simplified} className={cn(secondaryButtonClass, "mt-4 px-4 py-2")}>
-            Listen
+            {t("practice.listen")}
           </TtsButton>
         )}
       </div>
@@ -217,28 +221,40 @@ export function WeakPracticeTool() {
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
           disabled={checked !== null}
-          placeholder="Type pinyin, meaning, or the corrected answer..."
+          placeholder={t("practice.weak.placeholder")}
           className="rounded-xl border-2 bg-background p-4 text-center text-base font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
         />
 
         {checked !== null && (
           <div className={cn("rounded-xl border p-4 text-left text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-            {checked ? "Correct. This weak spot is cooling down." : "Not yet. Review the target answer below."}
+            {checked ? t("practice.weak.correct") : t("practice.weak.incorrect")}
             <div className="mt-2 text-foreground">
-              {displayedMistake.pinyin && <div>Pinyin: {displayedMistake.pinyin}</div>}
-              {displayedMistake.english && <div>Meaning: {displayedMistake.english}</div>}
-              {displayedMistake.correctAnswer && <div>Correct: {displayedMistake.correctAnswer}</div>}
+              {displayedMistake.pinyin && (
+                <div>
+                  {t("practice.weak.pinyinLabel")}: {displayedMistake.pinyin}
+                </div>
+              )}
+              {displayedMistake.english && (
+                <div>
+                  {t("practice.weak.meaningLabel")}: {displayedMistake.english}
+                </div>
+              )}
+              {displayedMistake.correctAnswer && (
+                <div>
+                  {t("practice.weak.correctLabel")}: {displayedMistake.correctAnswer}
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {checked === null ? (
           <button className={primaryButtonClass} type="submit" disabled={!answer.trim() || practiceMistake.isPending || addActivity.isPending}>
-            Check Weak Spot
+            {t("practice.weak.submit")}
           </button>
         ) : (
           <button className={primaryButtonClass} type="button" onClick={next}>
-            Next Weak Spot
+            {t("practice.weak.nextItem")}
           </button>
         )}
       </form>
@@ -246,6 +262,7 @@ export function WeakPracticeTool() {
   );
 }
 export function ListPracticeTool() {
+  const { t } = useI18n();
   const listsQuery = useListsQuery();
   const lists = listsQuery.data?.lists ?? [];
   const [selectedListId, setSelectedListId] = useState("");
@@ -270,30 +287,26 @@ export function ListPracticeTool() {
       .sort((a, b) => a.simplified.localeCompare(b.simplified));
   }, [word, words]);
 
-  if (listsQuery.isLoading) return <LoadingCard label="Loading your lists..." />;
+  if (listsQuery.isLoading) return <LoadingCard label={t("practice.list.loadingLists")} />;
 
   if (lists.length === 0) {
     return (
       <div className={panelClass}>
         <Target className="mx-auto mb-4 text-tone-2" size={56} />
-        <h3 className="text-[1.3rem] font-extrabold">No saved lists yet</h3>
-        <p className="mt-2 text-[0.9rem] text-muted-foreground">
-          Save words from Dictionary or OCR, then come back to practice that list.
-        </p>
+        <h3 className="text-[1.3rem] font-extrabold">{t("practice.list.noListsTitle")}</h3>
+        <p className="mt-2 text-[0.9rem] text-muted-foreground">{t("practice.list.noListsBody")}</p>
       </div>
     );
   }
 
-  if (listDetailQuery.isLoading) return <LoadingCard label="Loading list words..." />;
+  if (listDetailQuery.isLoading) return <LoadingCard label={t("practice.list.loadingWords")} />;
 
   if (!word) {
     return (
       <div className={panelClass}>
         <Target className="mx-auto mb-4 text-tone-2" size={56} />
-        <h3 className="text-[1.3rem] font-extrabold">This list is empty</h3>
-        <p className="mt-2 text-[0.9rem] text-muted-foreground">
-          Add a few words before practicing this list.
-        </p>
+        <h3 className="text-[1.3rem] font-extrabold">{t("practice.list.emptyTitle")}</h3>
+        <p className="mt-2 text-[0.9rem] text-muted-foreground">{t("practice.list.emptyBody")}</p>
         <ListPracticeControls
           lists={lists}
           selectedListId={activeListId}
@@ -355,7 +368,7 @@ export function ListPracticeTool() {
       mistake: !isCorrect ? {
         wordId: word.id,
         skill: "list-listening",
-        prompt: "Choose the word you heard",
+        prompt: t("practice.list.chooseHeard"),
         userAnswer: options.find((option) => option.id === wordId)?.simplified,
         correctAnswer: word.simplified,
         simplified: word.simplified,
@@ -381,8 +394,8 @@ export function ListPracticeTool() {
         wordId: word.id,
         skill: "list-tone",
         prompt: word.simplified,
-        userAnswer: TONE_LABELS[tone]?.mark ?? `Tone ${tone}`,
-        correctAnswer: TONE_LABELS[correctTone]?.mark ?? `Tone ${correctTone}`,
+        userAnswer: TONE_MARKS[tone] ?? t("tone.numbered", { tone }),
+        correctAnswer: TONE_MARKS[correctTone] ?? t("tone.numbered", { tone: correctTone }),
         simplified: word.simplified,
         pinyin: word.pinyin,
         english: word.english,
@@ -395,12 +408,12 @@ export function ListPracticeTool() {
     for (const item of words) {
       await enrollWord.mutateAsync({ wordId: item.id });
     }
-    toast.success("Added this list to SRS.");
+    toast.success(t("practice.list.addedToSrs"));
   };
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-4 text-[1.3rem] font-extrabold">Practice List</h3>
+      <h3 className="mb-4 text-[1.3rem] font-extrabold">{t("practice.list")}</h3>
       <ListPracticeControls
         lists={lists}
         selectedListId={activeListId}
@@ -414,7 +427,7 @@ export function ListPracticeTool() {
         onClick={() => void enrollListToSrs()}
         disabled={words.length === 0 || enrollWord.isPending}
       >
-        Add List to SRS
+        {t("practice.list.addToSrs")}
       </button>
 
       <div className={cn(innerCardClass, "my-6 p-7")}>
@@ -433,18 +446,24 @@ export function ListPracticeTool() {
             value={answer}
             onChange={(event) => setAnswer(event.target.value)}
             disabled={checked !== null}
-            placeholder="Type pinyin, meaning, or hanzi..."
+            placeholder={t("practice.list.placeholder")}
             className="rounded-xl border-2 bg-background p-4 text-center text-base font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
           />
           {checked !== null && (
             <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-              {checked ? "Correct." : `Not yet. ${word.simplified} - ${word.pinyin} - ${word.english}`}
+              {checked
+                ? t("practice.correct")
+                : t("practice.list.incorrect", {
+                    simplified: word.simplified,
+                    pinyin: word.pinyin,
+                    english: word.english,
+                  })}
             </div>
           )}
           {checked === null ? (
-            <button className={primaryButtonClass} type="submit" disabled={!answer.trim() || addActivity.isPending}>Check</button>
+            <button className={primaryButtonClass} type="submit" disabled={!answer.trim() || addActivity.isPending}>{t("practice.check")}</button>
           ) : (
-            <button className={primaryButtonClass} type="button" onClick={next}>Next</button>
+            <button className={primaryButtonClass} type="button" onClick={next}>{t("practice.next")}</button>
           )}
         </form>
       ) : mode === "listening" ? (
@@ -465,7 +484,7 @@ export function ListPracticeTool() {
               </button>
             );
           })}
-          {checked !== null && <button className={primaryButtonClass} onClick={next}>Next</button>}
+          {checked !== null && <button className={primaryButtonClass} onClick={next}>{t("practice.next")}</button>}
         </div>
       ) : (
         <div className="grid gap-3">
@@ -481,8 +500,8 @@ export function ListPracticeTool() {
                   disabled={checked !== null}
                   className={cn("flex min-h-24 flex-col items-center justify-center rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : "border-border bg-card")}
                 >
-                  <span className="text-3xl leading-none">{TONE_LABELS[tone]?.mark}</span>
-                  <span className="mt-1 text-xs opacity-70">{TONE_LABELS[tone]?.name}</span>
+                  <span className="text-3xl leading-none">{TONE_MARKS[tone]}</span>
+                  <span className="mt-1 text-xs opacity-70">{toneName(t, tone)}</span>
                 </button>
               );
             })}
@@ -490,9 +509,15 @@ export function ListPracticeTool() {
           {checked !== null && (
             <div className="grid gap-3">
               <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", checked ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-                {checked ? "Correct." : `Correct tone: ${TONE_LABELS[word.tones[0] || 1]?.mark} ${TONE_LABELS[word.tones[0] || 1]?.name}. ${word.pinyin}`}
+                {checked
+                  ? t("practice.correct")
+                  : t("practice.list.correctTone", {
+                      mark: TONE_MARKS[word.tones[0] || 1],
+                      name: toneName(t, word.tones[0] || 1),
+                      pinyin: word.pinyin,
+                    })}
               </div>
-              <button className={primaryButtonClass} onClick={next}>Next</button>
+              <button className={primaryButtonClass} onClick={next}>{t("practice.next")}</button>
             </div>
           )}
         </div>
@@ -514,6 +539,13 @@ function ListPracticeControls({
   onListChange: (value: string) => void;
   onModeChange: (value: ListPracticeMode) => void;
 }) {
+  const { t } = useI18n();
+  const modeLabelKeys: Record<ListPracticeMode, TranslationKey> = {
+    typing: "practice.list.modeTyping",
+    listening: "practice.list.modeListening",
+    tone: "practice.list.modeTone",
+  };
+
   return (
     <div className="grid gap-3 text-left sm:grid-cols-[1fr_auto]">
       <select
@@ -533,9 +565,9 @@ function ListPracticeControls({
             key={item}
             type="button"
             onClick={() => onModeChange(item)}
-            className={cn("rounded-md px-3 py-2 text-xs font-bold capitalize", mode === item ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+            className={cn("rounded-md px-3 py-2 text-xs font-bold", mode === item ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
           >
-            {item}
+            {t(modeLabelKeys[item])}
           </button>
         ))}
       </div>
@@ -544,6 +576,7 @@ function ListPracticeControls({
 }
 
 export function ToneDrillTool() {
+  const { t } = useI18n();
   const { words, isLoading } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const toneWords = useMemo(() => words.filter((word) => word.tones.length > 0).slice(0, 12), [words]);
@@ -566,8 +599,8 @@ export function ToneDrillTool() {
         wordId: word.id,
         skill: "tones",
         prompt: word.simplified,
-        userAnswer: TONE_LABELS[tone]?.mark ?? `Tone ${tone}`,
-        correctAnswer: TONE_LABELS[correctTone]?.mark ?? `Tone ${correctTone}`,
+        userAnswer: TONE_MARKS[tone] ?? t("tone.numbered", { tone }),
+        correctAnswer: TONE_MARKS[correctTone] ?? t("tone.numbered", { tone: correctTone }),
         simplified: word.simplified,
         pinyin: word.pinyin,
         english: word.english,
@@ -576,16 +609,16 @@ export function ToneDrillTool() {
     });
   };
 
-  if (isLoading || !word) return <LoadingCard label="Loading practice words..." />;
+  if (isLoading || !word) return <LoadingCard label={t("practice.loadingWords")} />;
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-2 text-[1.3rem] font-extrabold">Tone Drill</h3>
-      <p className="mb-5 text-[0.85rem] text-muted-foreground">Listen to the word and choose its first tone.</p>
+      <h3 className="mb-2 text-[1.3rem] font-extrabold">{t("practice.tones")}</h3>
+      <p className="mb-5 text-[0.85rem] text-muted-foreground">{t("practice.tone.subtitle")}</p>
       <div className={cn(innerCardClass, "mb-6 p-8")}>
         <h1 className="font-serif text-6xl text-primary">{word.simplified}</h1>
         <TtsButton text={word.simplified} className={cn(secondaryButtonClass, "mt-3 px-4 py-2")}>
-          Listen
+          {t("practice.listen")}
         </TtsButton>
       </div>
       <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -594,8 +627,8 @@ export function ToneDrillTool() {
           const isWrong = checked && selectedTone === tone && tone !== correctTone;
           return (
             <button key={tone} onClick={() => check(tone)} disabled={checked} className={cn("flex min-h-24 flex-col items-center justify-center rounded-xl border-2 p-4 font-extrabold", isCorrect ? "border-jade bg-jade/10 text-jade" : isWrong ? "border-tone-4 bg-tone-4/10 text-tone-4" : "border-border bg-card text-foreground")}>
-              <span className="text-3xl leading-none">{TONE_LABELS[tone]?.mark}</span>
-              <span className="mt-1 text-xs opacity-70">{TONE_LABELS[tone]?.name}</span>
+              <span className="text-3xl leading-none">{TONE_MARKS[tone]}</span>
+              <span className="mt-1 text-xs opacity-70">{toneName(t, tone)}</span>
             </button>
           );
         })}
@@ -603,9 +636,15 @@ export function ToneDrillTool() {
       {checked && (
         <div className="anim-pop">
           <p className={cn("mb-3.5 font-bold", selectedTone === correctTone ? "text-jade" : "text-tone-4")}>
-            {selectedTone === correctTone ? "Correct!" : `Correct tone is ${TONE_LABELS[correctTone]?.mark} ${TONE_LABELS[correctTone]?.name}.`} {word.pinyin}
+            {selectedTone === correctTone
+              ? t("practice.tone.correct")
+              : t("practice.tone.incorrect", {
+                  mark: TONE_MARKS[correctTone],
+                  name: toneName(t, correctTone),
+                })}{" "}
+            {word.pinyin}
           </p>
-          <button className={primaryButtonClass} onClick={() => { setIdx((value) => value + 1); setSelectedTone(null); setChecked(false); }}>Next Word</button>
+          <button className={primaryButtonClass} onClick={() => { setIdx((value) => value + 1); setSelectedTone(null); setChecked(false); }}>{t("practice.nextWord")}</button>
         </div>
       )}
     </div>
@@ -613,6 +652,7 @@ export function ToneDrillTool() {
 }
 
 export function MinimalPairsTool() {
+  const { t } = useI18n();
   const pairsQuery = useMinimalPairsQuery();
   const addActivity = useAddActivityMutation();
   const pairs = pairsQuery.data?.pairs ?? [];
@@ -623,7 +663,7 @@ export function MinimalPairsTool() {
   const activePair = pairs[pairIdx % Math.max(pairs.length, 1)];
   const playedA = (pairIdx + (activePair?.id.length ?? 0)) % 2 === 0;
 
-  if (pairsQuery.isLoading || !activePair) return <LoadingCard label="Loading minimal pairs from server..." />;
+  if (pairsQuery.isLoading || !activePair) return <LoadingCard label={t("practice.pairs.loading")} />;
 
   const speakActiveWord = () => speakChinese(playedA ? activePair.charA : activePair.charB);
 
@@ -660,14 +700,18 @@ export function MinimalPairsTool() {
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-1 text-[1.3rem] font-extrabold">Minimal Pairs Drill</h3>
-      <span className="text-[0.8rem] font-semibold text-muted-foreground">Correct: {correctCount}</span>
-      <p className="mb-6 mt-3 text-[0.85rem] text-muted-foreground">Listen to the spoken word and select which syllable you heard.</p>
+      <h3 className="mb-1 text-[1.3rem] font-extrabold">{t("practice.pairs.title")}</h3>
+      <span className="text-[0.8rem] font-semibold text-muted-foreground">
+        {t("practice.pairs.correctCount", { count: correctCount })}
+      </span>
+      <p className="mb-6 mt-3 text-[0.85rem] text-muted-foreground">{t("practice.pairs.subtitle")}</p>
       <div className={cn(innerCardClass, "mb-7 inline-flex w-full flex-col items-center gap-4 p-8")}>
         <button className={cn(primaryButtonClass, "size-20 rounded-full p-0")} onClick={speakActiveWord}>
           <Volume2 size={32} />
         </button>
-        <span className="text-[0.85rem] font-bold uppercase text-muted-foreground">Drill: {activePair.label}</span>
+        <span className="text-[0.85rem] font-bold uppercase text-muted-foreground">
+          {t("practice.pairs.drill", { label: activePair.label })}
+        </span>
       </div>
       <div className="mb-7 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
         {[
@@ -684,12 +728,13 @@ export function MinimalPairsTool() {
           );
         })}
       </div>
-      {isAnswerChecked && <button className={cn(primaryButtonClass, "w-full")} onClick={goToNextPair}>Next Pair</button>}
+      {isAnswerChecked && <button className={cn(primaryButtonClass, "w-full")} onClick={goToNextPair}>{t("practice.pairs.next")}</button>}
     </div>
   );
 }
 
 export function PinyinTypingTool() {
+  const { t } = useI18n();
   const { words, isLoading, lessonTitle } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   // Prefer single-syllable words for the drill, but lesson vocab is small and
@@ -733,29 +778,35 @@ export function PinyinTypingTool() {
     });
   };
 
-  if (isLoading || !word) return <LoadingCard label="Loading practice words..." />;
+  if (isLoading || !word) return <LoadingCard label={t("practice.loadingWords")} />;
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-1 text-[1.3rem] font-extrabold">Pinyin Keyboard Typing</h3>
+      <h3 className="mb-1 text-[1.3rem] font-extrabold">{t("practice.typing.title")}</h3>
       <p className="mb-4 text-[0.85rem] text-muted-foreground">
-        {lessonTitle ? `Vocabulary from your current lesson: ${lessonTitle}` : "Vocabulary from HSK 1"}
+        {lessonTitle
+          ? t("practice.typing.fromLesson", { lesson: lessonTitle })
+          : t("practice.typing.fromHsk1")}
       </p>
       <div className={cn(innerCardClass, "mb-6 p-8 sm:p-9")}>
         <h1 className="mb-2 font-serif text-6xl font-extrabold text-primary">{word.simplified}</h1>
-        <p className="text-[0.95rem] text-muted-foreground">Meaning: <strong>{word.english}</strong></p>
+        <p className="text-[0.95rem] text-muted-foreground">
+          {t("practice.typing.meaning")} <strong>{word.english}</strong>
+        </p>
       </div>
       <form onSubmit={handleCheck} className="flex flex-col gap-4">
-        <input type="text" placeholder="Type the pinyin..." value={typed} onChange={(e) => setTyped(e.target.value)} disabled={checked} className="rounded-xl border-2 bg-background p-4 text-center text-[1.1rem] font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
+        <input type="text" placeholder={t("practice.typing.placeholder")} value={typed} onChange={(e) => setTyped(e.target.value)} disabled={checked} className="rounded-xl border-2 bg-background p-4 text-center text-[1.1rem] font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60" />
         {checked && (
           <div className={cn("anim-pop rounded-xl border p-4 text-[0.95rem] font-bold", correct ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-            {correct ? "Correct! +10 XP" : `Incorrect. The correct pinyin is: ${word.pinyin}`}
+            {correct
+              ? t("practice.typing.correct")
+              : t("practice.typing.incorrect", { pinyin: word.pinyin })}
           </div>
         )}
         {!checked ? (
-          <button className={primaryButtonClass} type="submit" disabled={!typed.trim()}>Check Typing</button>
+          <button className={primaryButtonClass} type="submit" disabled={!typed.trim()}>{t("practice.typing.submit")}</button>
         ) : (
-          <button className={primaryButtonClass} type="button" onClick={() => { setIdx((value) => value + 1); setTyped(""); setChecked(false); }}>Next Character</button>
+          <button className={primaryButtonClass} type="button" onClick={() => { setIdx((value) => value + 1); setTyped(""); setChecked(false); }}>{t("practice.nextCharacter")}</button>
         )}
       </form>
     </div>
@@ -763,6 +814,7 @@ export function PinyinTypingTool() {
 }
 
 export function ListeningTool() {
+  const { t } = useI18n();
   const { words, isLoading, lessonTitle } = usePracticeWords();
   const addActivity = useAddActivityMutation();
   const [idx, setIdx] = useState(0);
@@ -792,7 +844,7 @@ export function ListeningTool() {
       mistake: !isCorrect ? {
         wordId: word.id,
         skill: "listening",
-        prompt: "Choose the meaning you heard",
+        prompt: t("practice.listening.chooseHeard"),
         userAnswer: options.find((option) => option.id === wordId)?.english,
         correctAnswer: word.english,
         simplified: word.simplified,
@@ -803,14 +855,14 @@ export function ListeningTool() {
     });
   };
 
-  if (isLoading || !word) return <LoadingCard label="Loading listening words..." />;
+  if (isLoading || !word) return <LoadingCard label={t("practice.listening.loading")} />;
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-2 text-[1.3rem] font-extrabold">Listening Check</h3>
+      <h3 className="mb-2 text-[1.3rem] font-extrabold">{t("practice.listening")}</h3>
       <p className="mb-5 text-[0.85rem] text-muted-foreground">
-        Listen and choose the correct meaning.
-        {lessonTitle ? ` Vocabulary from your current lesson: ${lessonTitle}.` : ""}
+        {t("practice.listening.subtitle")}
+        {lessonTitle ? t("practice.listening.fromLesson", { lesson: lessonTitle }) : ""}
       </p>
       <button className={cn(primaryButtonClass, "mb-6 size-20 rounded-full p-0")} onClick={() => speakChinese(word.simplified)}>
         <Volume2 size={32} />
@@ -828,12 +880,14 @@ export function ListeningTool() {
           );
         })}
       </div>
-      {checked && <button className={primaryButtonClass} onClick={() => { setIdx((value) => value + 1); setSelected(null); setChecked(false); }}>Next Word</button>}
+      {checked && <button className={primaryButtonClass} onClick={() => { setIdx((value) => value + 1); setSelected(null); setChecked(false); }}>{t("practice.nextWord")}</button>}
     </div>
   );
 }
 
 function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
+  const { t } = useI18n();
+
   if (!charDiff || charDiff.length === 0) return null;
 
   return (
@@ -856,12 +910,12 @@ function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
             )}
             title={
               entry.status === "correct"
-                ? "Correct"
+                ? t("practice.shadow.diffCorrect")
                 : entry.status === "wrong"
-                  ? `Expected "${entry.char}", got "${entry.got}"`
+                  ? t("practice.shadow.diffWrong", { expected: entry.char, got: entry.got ?? "" })
                   : entry.status === "missing"
-                    ? `Missing: "${entry.char}"`
-                    : `Extra: "${entry.got}"`
+                    ? t("practice.shadow.diffMissing", { expected: entry.char })
+                    : t("practice.shadow.diffExtra", { got: entry.got ?? "" })
             }
           >
             {entry.status === "wrong" ? (
@@ -882,13 +936,16 @@ function CharDiffDisplay({ charDiff }: { charDiff: CharDiffEntry[] }) {
 }
 
 export function ShadowingTool() {
+  const { t } = useI18n();
   const promptsQuery = useShadowingPromptsQuery();
   const scoreMutation = useScoreShadowingMutation();
   const addActivity = useAddActivityMutation();
   const prompts = promptsQuery.data?.prompts ?? [];
   const [idx, setIdx] = useState(0);
   const [recording, setRecording] = useState(false);
-  const [recordingError, setRecordingError] = useState<string | null>(null);
+  // Held as a key rather than resolved text so a language switch mid-error
+  // re-renders the message in the new language.
+  const [recordingError, setRecordingError] = useState<TranslationKey | null>(null);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [score, setScore] = useState<Awaited<ReturnType<typeof scoreMutation.mutateAsync>>["score"] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -1048,7 +1105,7 @@ export function ShadowingTool() {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
   }, [clearAutoStop, clearRecordedAudio, releaseMicrophone]);
 
-  if (promptsQuery.isLoading || !prompt) return <LoadingCard label="Loading shadowing prompts from server..." />;
+  if (promptsQuery.isLoading || !prompt) return <LoadingCard label={t("practice.shadow.loading")} />;
 
   const scoreRecordedAudio = async (audioBlob: Blob) => {
     const audio = await blobToDataUrl(audioBlob);
@@ -1093,7 +1150,7 @@ export function ShadowingTool() {
 
   const startRecord = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setRecordingError("Your browser does not support microphone recording.");
+      setRecordingError("practice.shadow.noSupport");
       return;
     }
 
@@ -1123,7 +1180,7 @@ export function ShadowingTool() {
 
       recorder.onerror = () => {
         setRecording(false);
-        setRecordingError("Recording failed. Please try again.");
+        setRecordingError("practice.shadow.failed");
         clearAutoStop();
         releaseMicrophone();
       };
@@ -1137,18 +1194,18 @@ export function ShadowingTool() {
         releaseMicrophone();
 
         if (!audioBlob.size) {
-          setRecordingError("No audio was captured. Please try again.");
+          setRecordingError("practice.shadow.noAudio");
           return;
         }
 
         if (!capturedSpeech) {
-          setRecordingError(silentRecordingMessage);
+          setRecordingError("practice.shadow.silent");
           return;
         }
 
         showRecordedAudio(audioBlob);
         void scoreRecordedAudio(audioBlob).catch(() => {
-          setRecordingError("Could not score this recording. Please try again.");
+          setRecordingError("practice.shadow.scoreError");
         });
       };
 
@@ -1158,7 +1215,7 @@ export function ShadowingTool() {
     } catch {
       setRecording(false);
       releaseMicrophone();
-      setRecordingError("Microphone permission is required for shadowing practice.");
+      setRecordingError("practice.shadow.permission");
     }
   };
 
@@ -1177,44 +1234,44 @@ export function ShadowingTool() {
 
   const overallLabel =
     score && score.overall >= 90
-      ? "Excellent"
+      ? t("practice.shadow.excellent")
       : score && score.overall >= 75
-        ? "Great"
+        ? t("practice.shadow.great")
         : score && score.overall >= 50
-          ? "Good effort"
-          : "Keep practicing";
+          ? t("practice.shadow.goodEffort")
+          : t("practice.shadow.keepPracticing");
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-4 text-[1.3rem] font-extrabold">Shadowing & Pronunciation</h3>
+      <h3 className="mb-4 text-[1.3rem] font-extrabold">{t("practice.shadow.title")}</h3>
       <div className={cn(innerCardClass, "mb-6 p-7 text-center")}>
         <h1 className="font-serif text-5xl font-extrabold text-primary">{prompt.hanzi}</h1>
         <p className="my-1 text-base font-medium text-muted-foreground">{prompt.pinyin}</p>
-        <p className="text-[0.9rem] font-semibold">"{prompt.english}"</p>
+        <p className="text-[0.9rem] font-semibold">"{prompt.gloss}"</p>
         <TtsButton text={prompt.hanzi} className={cn(secondaryButtonClass, "mt-4 px-4 py-2 text-[0.8rem]")}>
-          Listen Sample
+          {t("practice.shadow.listenSample")}
         </TtsButton>
       </div>
       {recording && (
         <div className="mb-5">
           <canvas ref={canvasRef} width={280} height={60} className="h-15 w-full" />
-          <span className="text-xs font-bold text-primary">RECORDING VOICE...</span>
+          <span className="text-xs font-bold text-primary">{t("practice.shadow.recording")}</span>
         </div>
       )}
       {scoreMutation.isPending && (
         <div className="mb-5 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
           <span className="inline-block size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          Analyzing pronunciation...
+          {t("practice.shadow.analyzing")}
         </div>
       )}
       {recordingError && (
         <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm font-semibold text-primary">
-          {recordingError}
+          {t(recordingError)}
         </div>
       )}
       {recordedAudioUrl && (
         <div className="mb-5 rounded-lg border bg-card p-4 text-left shadow-sm">
-          <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Your recording</p>
+          <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">{t("practice.shadow.yourRecording")}</p>
           <audio controls src={recordedAudioUrl} className="w-full" />
         </div>
       )}
@@ -1222,34 +1279,34 @@ export function ShadowingTool() {
         <div className="anim-pop mb-6 text-left">
           <div className="rounded-lg border border-dashed border-jade bg-jade/5 p-5 shadow-sm">
             <h4 className="mb-3 flex gap-2 text-[1.1rem] font-extrabold text-jade">
-              <Sparkles size={20} /> Pronunciation: {overallLabel}
+              <Sparkles size={20} /> {t("practice.shadow.result", { label: overallLabel })}
             </h4>
 
             {score.transcribedText !== undefined && (
               <div className="mb-4 rounded-lg border bg-card p-4">
-                <p className="mb-1.5 text-xs font-bold uppercase text-muted-foreground">You said:</p>
+                <p className="mb-1.5 text-xs font-bold uppercase text-muted-foreground">{t("practice.shadow.youSaid")}</p>
                 <p className="font-serif text-2xl font-bold text-foreground">
-                  {score.transcribedText || <span className="italic text-muted-foreground">No speech detected</span>}
+                  {score.transcribedText || <span className="italic text-muted-foreground">{t("practice.shadow.noSpeech")}</span>}
                 </p>
               </div>
             )}
 
             {score.details?.charDiff && score.details.charDiff.length > 0 && (
               <div className="mb-4">
-                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Character breakdown:</p>
+                <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">{t("practice.shadow.charBreakdown")}</p>
                 <CharDiffDisplay charDiff={score.details.charDiff} />
                 <div className="mt-2 flex flex-wrap gap-3 text-[0.7rem] font-semibold text-muted-foreground">
-                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-jade/40" /> Correct</span>
-                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-primary/40" /> Wrong</span>
-                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-gold/40" /> Missing</span>
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-jade/40" /> {t("practice.shadow.legendCorrect")}</span>
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-primary/40" /> {t("practice.shadow.legendWrong")}</span>
+                  <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-gold/40" /> {t("practice.shadow.legendMissing")}</span>
                 </div>
               </div>
             )}
 
             {[
-              { label: "Accuracy", val: score.accuracy, cls: "bg-tone-1" },
-              { label: "Tones", val: score.tones, cls: "bg-tone-3" },
-              { label: "Fluency", val: score.fluency, cls: "bg-tone-2" },
+              { label: t("practice.shadow.accuracy"), val: score.accuracy, cls: "bg-tone-1" },
+              { label: t("practice.shadow.tones"), val: score.tones, cls: "bg-tone-3" },
+              { label: t("practice.shadow.fluency"), val: score.fluency, cls: "bg-tone-2" },
             ].map((bar) => (
               <div key={bar.label} className="mb-2.5">
                 <div className="mb-0.5 flex justify-between text-xs font-bold">
@@ -1268,20 +1325,20 @@ export function ShadowingTool() {
       <div className="flex gap-3">
         {!recording ? (
           <button className={cn(primaryButtonClass, "recording-pulse flex-1")} onClick={() => void startRecord()} disabled={scoreMutation.isPending}>
-            {score ? "Record Again" : "Start Speak"}
+            {score ? t("practice.shadow.recordAgain") : t("practice.shadow.start")}
           </button>
         ) : (
           <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-jade px-6 py-3 text-sm font-semibold text-white transition hover:bg-jade/90" onClick={stopRecord}>
-            Stop
+            {t("practice.shadow.stop")}
           </button>
         )}
         {score && (
           <>
             <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={tryAgain}>
-              Try Again
+              {t("practice.shadow.tryAgain")}
             </button>
             <button className={cn(secondaryButtonClass, "flex-[0.4]")} onClick={nextPrompt}>
-              Next
+              {t("practice.next")}
             </button>
           </>
         )}
@@ -1346,21 +1403,21 @@ export function HanziDrawingTool() {
     selectCharacter(currentIndex + 1);
   };
 
-  if (strokesQuery.isLoading || !current) return <LoadingCard label="Loading stroke data from server..." />;
+  if (strokesQuery.isLoading || !current) return <LoadingCard label={t("practice.hanzi.loading")} />;
 
   return (
     <div className={panelClass}>
-      <h3 className="mb-1 text-[1.3rem] font-extrabold">Hanzi Stroke Writing</h3>
+      <h3 className="mb-1 text-[1.3rem] font-extrabold">{t("practice.hanzi.title")}</h3>
       <span className="text-[0.8rem] font-semibold text-muted-foreground">
-        Character: <strong className="text-primary">{current.character}</strong> - Quiz mode
+        {t("practice.hanzi.quizMode", { character: current.character })}
       </span>
       <div className="mt-5 grid grid-cols-[auto_1fr_auto] items-center gap-2 text-left">
         <button
           type="button"
           className={cn(secondaryButtonClass, "size-10 p-0")}
           onClick={() => selectCharacter(currentIndex - 1)}
-          title="Previous character"
-          aria-label="Previous character"
+          title={t("practice.hanzi.previous")}
+          aria-label={t("practice.hanzi.previous")}
         >
           <ChevronLeft size={18} />
         </button>
@@ -1368,7 +1425,7 @@ export function HanziDrawingTool() {
           value={currentIndex}
           onChange={(event) => selectCharacter(Number(event.target.value))}
           className="h-10 w-full rounded-lg border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          aria-label="Choose character to practice"
+          aria-label={t("practice.hanzi.choose")}
         >
           {characters.map((item, index) => (
             <option key={item.id} value={index}>
@@ -1380,8 +1437,8 @@ export function HanziDrawingTool() {
           type="button"
           className={cn(secondaryButtonClass, "size-10 p-0")}
           onClick={() => selectCharacter(currentIndex + 1)}
-          title="Next character"
-          aria-label="Next character"
+          title={t("practice.hanzi.next")}
+          aria-label={t("practice.hanzi.next")}
         >
           <ChevronRight size={18} />
         </button>
@@ -1402,13 +1459,16 @@ export function HanziDrawingTool() {
       {completed ? (
         <div className="grid gap-3">
           <div className={cn("rounded-xl border p-4 text-[0.9rem] font-semibold", mistakeCount <= 2 ? "border-jade bg-jade/10 text-jade" : "border-primary bg-tone-4/10 text-primary")}>
-            Mistakes: {mistakeCount}. Score: {Math.max(0, 100 - mistakeCount * 10)}.
+            {t("practice.hanzi.result", {
+              mistakes: mistakeCount,
+              score: Math.max(0, 100 - mistakeCount * 10),
+            })}
           </div>
-          <button className={primaryButtonClass} onClick={handleNext}>Next Character</button>
+          <button className={primaryButtonClass} onClick={handleNext}>{t("practice.nextCharacter")}</button>
         </div>
       ) : (
         <p className="text-[0.85rem] font-semibold text-muted-foreground">
-          Keep writing until every stroke is accepted.
+          {t("practice.hanzi.keepWriting")}
         </p>
       )}
     </div>

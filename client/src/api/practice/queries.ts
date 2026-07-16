@@ -3,6 +3,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { practiceApi } from './index';
 import type { PronunciationCheckPayload, ShadowingScorePayload } from './types';
+import { useAppSelector } from '../../store/hooks';
 
 export const usePracticeCatalogQuery = () =>
     useQuery({
@@ -16,11 +17,14 @@ export const useMinimalPairsQuery = () =>
         queryFn: () => unwrapApiData(practiceApi.minimalPairs()),
     });
 
-export const useShadowingPromptsQuery = () =>
-    useQuery({
-        queryKey: queryKeys.practice.shadowingPrompts,
-        queryFn: () => unwrapApiData(practiceApi.shadowingPrompts()),
+export const useShadowingPromptsQuery = () => {
+    const locale = useAppSelector((state) => state.app.language);
+
+    return useQuery({
+        queryKey: queryKeys.practice.shadowingPrompts(locale),
+        queryFn: () => unwrapApiData(practiceApi.shadowingPrompts({ locale })),
     });
+};
 
 export const useScoreShadowingMutation = () =>
     useMutation({

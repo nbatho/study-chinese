@@ -8,7 +8,7 @@ import type { PlacementQuestion, PlacementResult, PlacementSection } from "../..
 import type { CefrLevel, SkillLevel } from "../../api/users";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
-import { useI18n } from "../../i18n";
+import { startLevelKeys, useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { Badge } from "../../components/ui/badge";
@@ -43,15 +43,6 @@ const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
   B2: "upper_intermediate",
   C1: "advanced",
   C2: "mastery",
-};
-
-const startLevelKeys: Record<SkillLevel, TranslationKey> = {
-  beginner: "placement.levelBeginner",
-  elementary: "placement.levelElementary",
-  intermediate: "placement.levelIntermediate",
-  upper_intermediate: "placement.levelUpperIntermediate",
-  advanced: "placement.levelAdvanced",
-  mastery: "placement.levelMastery",
 };
 
 const cefrDescKeys: Record<CefrLevel, TranslationKey> = {

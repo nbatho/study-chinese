@@ -3,6 +3,7 @@ import { query } from '../config/db.config.js';
 import { contentPath } from '../config/content-paths.js';
 import { env } from '../config/env.config.js';
 import { badRequest } from '../utils/http-error.js';
+import { normalizeLocale } from '../utils/locale.js';
 import { transcribeAudio } from './stt-provider.service.js';
 
 const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
@@ -248,10 +249,10 @@ export const getHanziStrokes = async () => {
   return { characters: result.rows.map(mapHanziStroke) };
 };
 
-export const getPracticeCatalog = async () => {
+export const getPracticeCatalog = async (locale) => {
   const [{ pairs }, { prompts }, { characters }] = await Promise.all([
     getMinimalPairs(),
-    getShadowingPrompts(),
+    getShadowingPrompts(locale),
     getHanziStrokes()
   ]);
 
@@ -262,39 +263,51 @@ export const getPracticeCatalog = async () => {
   };
 };
 
-export const getShadowingPrompts = async () => {
+export const getShadowingPrompts = async (locale) => {
+  const glossLocale = normalizeLocale(locale);
   const [phrasesResult, wordsResult] = await Promise.all([
     query(
       `
         SELECT
-          'dp-' || id AS id,
-          simplified AS hanzi,
-          pinyin,
-          english
-        FROM daily_phrases
-        WHERE is_active = true
+          'dp-' || dp.id AS id,
+          dp.simplified AS hanzi,
+          dp.pinyin,
+          dp.english,
+          dpg.gloss AS gloss
+        FROM daily_phrases dp
+        LEFT JOIN daily_phrase_glosses dpg ON dpg.phrase_id = dp.id AND dpg.locale = $1
+        WHERE dp.is_active = true
         ORDER BY random()
         LIMIT 10
-      `
+      `,
+      [glossLocale]
     ),
     query(
       `
         SELECT
-          id,
-          simplified AS hanzi,
-          pinyin,
-          english
-        FROM words
-        WHERE is_active = true
-          AND part_of_speech = 'phrase'
-          AND length(simplified) >= 2
+          w.id,
+          w.simplified AS hanzi,
+          w.pinyin,
+          w.english,
+          wg.gloss AS gloss
+        FROM words w
+        LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $1
+        WHERE w.is_active = true
+          AND w.part_of_speech = 'phrase'
+          AND length(w.simplified) >= 2
         ORDER BY random()
         LIMIT 10
-      `
+      `,
+      [glossLocale]
     )
   ]);
 
-  const prompts = [...phrasesResult.rows, ...wordsResult.rows];
+  // `gloss` is the definition in the caller's language; an untranslated prompt
+  // falls back to its English source text.
+  const prompts = [...phrasesResult.rows, ...wordsResult.rows].map((row) => ({
+    ...row,
+    gloss: row.gloss || row.english
+  }));
 
   for (let index = prompts.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));

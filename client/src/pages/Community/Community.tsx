@@ -15,8 +15,8 @@ import LoadingCard from "../../components/LoadingCard";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { useAppSelector } from "../../store/hooks";
 import { useI18n } from "../../i18n";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import SegmentButton from "./component/SegmentButton";
 import FriendRow from "./component/FriendRow";
 import LeaderboardRow from "./component/LeaderboardRow";
@@ -25,7 +25,7 @@ type CommunityTab = "leaderboard" | "friends";
 
 export default function Community() {
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const [tab, setTab] = useState<CommunityTab>("leaderboard");
   const [scope, setScope] = useState<LeaderboardScope>("global");
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>("weekly");
@@ -70,6 +70,10 @@ export default function Community() {
     await removeFriendshipMutation.mutateAsync(friendshipId);
     toast.success(t("community.friendsUpdated"));
   };
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (

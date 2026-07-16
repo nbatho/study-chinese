@@ -4,6 +4,7 @@ import { Badge } from "../../../components/ui/badge";
 import { useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 import { categoryLabelKeys, categoryStyles } from "./achievementConfig";
+import getAchievementText from "./getAchievementText";
 
 const formatUnlockedDate = (value: string | null) => {
   if (!value) return null;
@@ -19,6 +20,7 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
   const { t } = useI18n();
   const isUnlocked = Boolean(achievement.unlockedAt);
   const unlockedDate = formatUnlockedDate(achievement.unlockedAt);
+  const { title, description } = getAchievementText(achievement, t);
 
   return (
     <article
@@ -49,10 +51,8 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
         )}
       </div>
 
-      <h2 className="line-clamp-2 text-base font-extrabold">{achievement.title}</h2>
-      <p className="mt-1 line-clamp-3 min-h-15 text-sm text-muted-foreground">
-        {achievement.description}
-      </p>
+      <h2 className="line-clamp-2 text-base font-extrabold">{title}</h2>
+      <p className="mt-1 line-clamp-3 min-h-15 text-sm text-muted-foreground">{description}</p>
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <Badge variant="outline" className={categoryStyles[achievement.category]}>

@@ -193,7 +193,7 @@ export default function Dictionary() {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <DropdownSelect
-            label="HSK filter"
+            label={t("dictionary.hskFilter")}
             icon={<Filter size={16} />}
             value={String(selectedHsk)}
             onChange={(value) => {
@@ -211,7 +211,7 @@ export default function Dictionary() {
           />
 
           <DropdownSelect
-            label="Category filter"
+            label={t("dictionary.categoryFilter")}
             icon={<Filter size={16} />}
             value={selectedCategory}
             onChange={(value) => {
@@ -233,7 +233,7 @@ export default function Dictionary() {
           />
 
           <DropdownSelect
-            label="CEFR filter"
+            label={t("dictionary.cefrFilter")}
             icon={<Filter size={16} />}
             value={selectedCefr}
             onChange={(value) => {
@@ -251,7 +251,7 @@ export default function Dictionary() {
           />
 
           <DropdownSelect
-            label="Radical filter"
+            label={t("dictionary.radicalFilter")}
             icon={<Filter size={16} />}
             value={selectedRadical}
             onChange={updateRadicalFilter}
@@ -266,7 +266,7 @@ export default function Dictionary() {
           />
 
           <DropdownSelect
-            label="Topic filter"
+            label={t("dictionary.topicFilter")}
             icon={<Filter size={16} />}
             value={selectedTopic}
             onChange={(value) => {
@@ -287,7 +287,7 @@ export default function Dictionary() {
           />
 
           <DropdownSelect
-            label="Sort dictionary"
+            label={t("dictionary.sortAria")}
             icon={<Filter size={16} />}
             value={sort}
             onChange={(value) => {
@@ -343,7 +343,7 @@ export default function Dictionary() {
 
         <form onSubmit={handleCreateList} className="grid gap-2 sm:grid-cols-[92px_1fr_auto]">
           <DropdownSelect
-            label="List emoji"
+            label={t("dictionary.listEmoji")}
             value={newListEmoji}
             onChange={setNewListEmoji}
             options={listEmojis.map((emoji) => ({ value: emoji, label: emoji }))}

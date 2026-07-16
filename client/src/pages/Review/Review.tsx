@@ -3,7 +3,7 @@ import { useDueSrsCardsQuery, useReviewSrsMutation } from "../../api/srs/queries
 import type { ReviewQuality, SrsDueCard } from "../../api/srs";
 import { Layers, RefreshCw } from "lucide-react";
 import { useI18n } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LoadingCard from "../../components/LoadingCard";
@@ -11,7 +11,7 @@ import TtsButton from "../../components/TtsButton";
 
 export default function Review() {
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const dueCardsQuery = useDueSrsCardsQuery(100);
   const reviewMutation = useReviewSrsMutation();
   const [sessionQueue, setSessionQueue] = useState<SrsDueCard[]>([]);
@@ -54,6 +54,10 @@ export default function Review() {
     setFlipped(false);
     setSessionQueue(fetchedCards);
   };
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (

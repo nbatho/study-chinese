@@ -46,7 +46,7 @@ export default function Navigation({ collapsed, onToggleCollapsed }: NavigationP
           {!collapsed && (
             <span className="min-w-0 pt-0.5">
               <span className="block truncate text-[0.95rem] font-extrabold leading-5">Study Chinese</span>
-              <span className="block truncate text-xs font-semibold leading-4 text-muted-foreground">HSK Learning</span>
+              <span className="block truncate text-xs font-semibold leading-4 text-muted-foreground">{t("nav.brandTagline")}</span>
             </span>
           )}
         </button>

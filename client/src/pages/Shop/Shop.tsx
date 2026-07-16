@@ -6,8 +6,8 @@ import { Button } from "../../components/ui/button";
 import { usePurchaseShopItemMutation, useShopQuery } from "../../api/users/queries";
 import type { ShopItem, ShopItemCategory } from "../../api/users";
 import { useI18n } from "../../i18n";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import type { TranslationKey } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import  formatPremiumDate  from "./component/FormatPremiumDate";
 import getItemText from "./component/GetItemText";
@@ -21,7 +21,7 @@ const categoryConfig: Record<ShopItemCategory, { labelKey: TranslationKey; icon:
 
 export default function Shop() {
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const shopQuery = useShopQuery(isAuthenticated);
   const purchaseMutation = usePurchaseShopItemMutation();
   const shop = shopQuery.data;
@@ -40,6 +40,10 @@ export default function Shop() {
       toast.error(t("shop.purchaseError"));
     }
   };
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (

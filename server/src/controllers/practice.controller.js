@@ -10,7 +10,7 @@ import {
 } from '../services/practice.service.js';
 
 export const showPracticeCatalog = asyncHandler(async (req, res) => {
-  const data = await getPracticeCatalog();
+  const data = await getPracticeCatalog(req.query.locale);
   success(res, data);
 });
 
@@ -20,7 +20,7 @@ export const listMinimalPairs = asyncHandler(async (req, res) => {
 });
 
 export const listShadowingPrompts = asyncHandler(async (req, res) => {
-  const data = await getShadowingPrompts();
+  const data = await getShadowingPrompts(req.query.locale);
   success(res, data);
 });
 

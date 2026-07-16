@@ -20,6 +20,8 @@ import type { AdminLesson, AdminLessonPayload, AdminReport, AdminWord, AdminWord
 import LoadingCard from "../../../components/LoadingCard";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { useI18n } from "../../../i18n";
+import type { TranslationKey } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 
 const emptyLesson: AdminLessonPayload = {
@@ -50,17 +52,38 @@ const emptyWord: AdminWordPayload = {
 };
 
 export function OverviewPanel() {
+  const { t } = useI18n();
   const summaryQuery = useAdminSummaryQuery();
   const summary = summaryQuery.data?.summary;
 
-  if (summaryQuery.isLoading || !summary) return <LoadingCard label="Đang tải dashboard..." />;
+  if (summaryQuery.isLoading || !summary) return <LoadingCard label={t("admin.loadingDashboard")} />;
 
   const stats = [
-    { label: "Users", value: summary.users.total, note: `${summary.users.admins} admin` },
-    { label: "Lessons", value: summary.lessons.active, note: `${summary.lessons.total} tổng` },
-    { label: "Words", value: summary.words.active, note: `${summary.words.total} tổng` },
-    { label: "Reports", value: summary.reports.pending, note: `${summary.reports.total} tổng` },
-    { label: "AI Sessions", value: summary.chats.sessions, note: `${summary.chats.recent} phiên 7 ngày` },
+    {
+      label: t("admin.statUsers"),
+      value: summary.users.total,
+      note: t("admin.statAdmins", { count: summary.users.admins }),
+    },
+    {
+      label: t("admin.statLessons"),
+      value: summary.lessons.active,
+      note: t("admin.statTotal", { count: summary.lessons.total }),
+    },
+    {
+      label: t("admin.statWords"),
+      value: summary.words.active,
+      note: t("admin.statTotal", { count: summary.words.total }),
+    },
+    {
+      label: t("admin.statReports"),
+      value: summary.reports.pending,
+      note: t("admin.statTotal", { count: summary.reports.total }),
+    },
+    {
+      label: t("admin.statAiSessions"),
+      value: summary.chats.sessions,
+      note: t("admin.statRecentSessions", { count: summary.chats.recent }),
+    },
   ];
 
   return (
@@ -77,6 +100,7 @@ export function OverviewPanel() {
 }
 
 export function LessonManager() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [includeInactive, setIncludeInactive] = useState(true);
   const [draft, setDraft] = useState<AdminLessonPayload>(emptyLesson);
@@ -87,7 +111,7 @@ export function LessonManager() {
 
   const save = async () => {
     await saveMutation.mutateAsync({ id: editingId, payload: draft });
-    toast.success("Đã lưu bài học");
+    toast.success(t("admin.savedLesson"));
     setDraft(emptyLesson);
     setEditingId(undefined);
   };
@@ -112,30 +136,30 @@ export function LessonManager() {
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
       <section className="app-surface-padded text-left">
-        <PanelTitle icon={Plus} title={editingId ? "Sửa bài học" : "Thêm bài học"} />
+        <PanelTitle icon={Plus} title={editingId ? t("admin.editLesson") : t("admin.addLesson")} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
-          <TextInput label="Title" value={draft.title} onChange={(value) => setDraft({ ...draft, title: value })} />
-          <TextInput label="Subtitle" value={draft.subtitle} onChange={(value) => setDraft({ ...draft, subtitle: value })} />
+          <TextInput label={t("admin.fieldTitle")} value={draft.title} onChange={(value) => setDraft({ ...draft, title: value })} />
+          <TextInput label={t("admin.fieldSubtitle")} value={draft.subtitle} onChange={(value) => setDraft({ ...draft, subtitle: value })} />
           <div className="grid grid-cols-2 gap-3">
             <NumberInput label="HSK" value={draft.hskLevel} onChange={(value) => setDraft({ ...draft, hskLevel: value })} />
-            <NumberInput label="Order" value={draft.order} onChange={(value) => setDraft({ ...draft, order: value })} />
+            <NumberInput label={t("admin.fieldOrder")} value={draft.order} onChange={(value) => setDraft({ ...draft, order: value })} />
           </div>
-          <TextInput label="Skill" value={draft.skill} onChange={(value) => setDraft({ ...draft, skill: value })} />
+          <TextInput label={t("admin.fieldSkill")} value={draft.skill} onChange={(value) => setDraft({ ...draft, skill: value })} />
           <div className="grid grid-cols-2 gap-3">
-            <NumberInput label="Minutes" value={draft.estimatedMinutes} onChange={(value) => setDraft({ ...draft, estimatedMinutes: value })} />
+            <NumberInput label={t("admin.fieldMinutes")} value={draft.estimatedMinutes} onChange={(value) => setDraft({ ...draft, estimatedMinutes: value })} />
             <NumberInput label="XP" value={draft.xpReward} onChange={(value) => setDraft({ ...draft, xpReward: value })} />
           </div>
-          <TextArea label="Intro" value={draft.intro} onChange={(value) => setDraft({ ...draft, intro: value })} />
-          <ToggleRow label="Active" value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
+          <TextArea label={t("admin.fieldIntro")} value={draft.intro} onChange={(value) => setDraft({ ...draft, intro: value })} />
+          <ToggleRow label={t("admin.fieldActive")} value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
           <div className="flex gap-2">
             <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-xl font-bold">
               <Save size={16} />
-              Lưu
+              {t("admin.save")}
             </Button>
             {editingId && (
               <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyLesson); }} className="h-10 rounded-xl font-bold">
-                Hủy
+                {t("admin.cancel")}
               </Button>
             )}
           </div>
@@ -155,7 +179,7 @@ export function LessonManager() {
               </button>
               <div className="flex items-center gap-2">
                 <StatusPill active={lesson.isActive} />
-                <IconButton title="Ẩn bài học" onClick={() => deleteMutation.mutate(lesson.id)} icon={Trash2} />
+                <IconButton title={t("admin.hideLesson")} onClick={() => deleteMutation.mutate(lesson.id)} icon={Trash2} />
               </div>
             </div>
           ))}
@@ -166,6 +190,7 @@ export function LessonManager() {
 }
 
 export function WordManager() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [includeInactive, setIncludeInactive] = useState(true);
   const [draft, setDraft] = useState<AdminWordPayload>(emptyWord);
@@ -176,7 +201,7 @@ export function WordManager() {
 
   const save = async () => {
     await saveMutation.mutateAsync({ id: editingId, payload: draft });
-    toast.success("Đã lưu từ vựng");
+    toast.success(t("admin.savedWord"));
     setDraft(emptyWord);
     setEditingId(undefined);
   };
@@ -189,37 +214,37 @@ export function WordManager() {
   return (
     <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
       <section className="app-surface-padded text-left">
-        <PanelTitle icon={Plus} title={editingId ? "Sửa từ vựng" : "Thêm từ vựng"} />
+        <PanelTitle icon={Plus} title={editingId ? t("admin.editWord") : t("admin.addWord")} />
         <div className="grid gap-3">
           <TextInput label="ID" value={draft.id} disabled={!!editingId} onChange={(value) => setDraft({ ...draft, id: value })} />
-          <TextInput label="Simplified" value={draft.simplified} onChange={(value) => setDraft({ ...draft, simplified: value, traditional: draft.traditional || value })} />
-          <TextInput label="Traditional" value={draft.traditional} onChange={(value) => setDraft({ ...draft, traditional: value })} />
-          <TextInput label="Pinyin" value={draft.pinyin} onChange={(value) => setDraft({ ...draft, pinyin: value })} />
-          <TextArea label="English" value={draft.english} onChange={(value) => setDraft({ ...draft, english: value })} />
+          <TextInput label={t("admin.fieldSimplified")} value={draft.simplified} onChange={(value) => setDraft({ ...draft, simplified: value, traditional: draft.traditional || value })} />
+          <TextInput label={t("admin.fieldTraditional")} value={draft.traditional} onChange={(value) => setDraft({ ...draft, traditional: value })} />
+          <TextInput label={t("admin.fieldPinyin")} value={draft.pinyin} onChange={(value) => setDraft({ ...draft, pinyin: value })} />
+          <TextArea label={t("admin.fieldEnglish")} value={draft.english} onChange={(value) => setDraft({ ...draft, english: value })} />
           <div className="grid grid-cols-2 gap-3">
             <NumberInput label="HSK" value={draft.hskLevel} onChange={(value) => setDraft({ ...draft, hskLevel: value })} />
-            <TextInput label="Category" value={draft.category} onChange={(value) => setDraft({ ...draft, category: value })} />
+            <TextInput label={t("admin.fieldCategory")} value={draft.category} onChange={(value) => setDraft({ ...draft, category: value })} />
           </div>
           <SelectInput
-            label="Part of speech"
+            label={t("admin.fieldPartOfSpeech")}
             value={draft.partOfSpeech}
             options={["noun", "verb", "adjective", "adverb", "pronoun", "numeral", "measure", "phrase"]}
             onChange={(value) => setDraft({ ...draft, partOfSpeech: value })}
           />
           <TextInput
-            label="Tones"
+            label={t("admin.fieldTones")}
             value={draft.tones.join(",")}
             onChange={(value) => setDraft({ ...draft, tones: value.split(",").map((item) => Number(item.trim())).filter(Number.isFinite) })}
           />
-          <ToggleRow label="Active" value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
+          <ToggleRow label={t("admin.fieldActive")} value={draft.isActive} onChange={(value) => setDraft({ ...draft, isActive: value })} />
           <div className="flex gap-2">
             <Button type="button" onClick={save} disabled={saveMutation.isPending} className="h-10 flex-1 rounded-xl font-bold">
               <Save size={16} />
-              Lưu
+              {t("admin.save")}
             </Button>
             {editingId && (
               <Button type="button" variant="secondary" onClick={() => { setEditingId(undefined); setDraft(emptyWord); }} className="h-10 rounded-xl font-bold">
-                Hủy
+                {t("admin.cancel")}
               </Button>
             )}
           </div>
@@ -239,7 +264,7 @@ export function WordManager() {
               </button>
               <div className="flex items-center gap-2">
                 <StatusPill active={word.isActive} />
-                <IconButton title="Ẩn từ" onClick={() => deleteMutation.mutate(word.id)} icon={Trash2} />
+                <IconButton title={t("admin.hideWord")} onClick={() => deleteMutation.mutate(word.id)} icon={Trash2} />
               </div>
             </div>
           ))}
@@ -250,6 +275,7 @@ export function WordManager() {
 }
 
 export function UserManager() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const usersQuery = useAdminUsersQuery({ q, limit: 150 });
   const updateMutation = useUpdateAdminUserMutation();
@@ -258,7 +284,7 @@ export function UserManager() {
     <section className="app-surface-padded text-left">
       <div className="mb-4 flex items-center gap-2 rounded-xl border bg-background px-3 py-2">
         <Search size={16} className="text-muted-foreground" />
-        <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder="Tìm email hoặc tên..." />
+        <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder={t("admin.searchUsers")} />
       </div>
       <div className="grid gap-2">
         {(usersQuery.data?.users ?? []).map((user) => (
@@ -272,16 +298,16 @@ export function UserManager() {
               onChange={(event) => updateMutation.mutate({ userId: user.id, payload: { role: event.target.value as "student" | "admin" } })}
               className="h-10 rounded-xl border bg-card px-3 text-sm font-semibold"
             >
-              <option value="student">student</option>
-              <option value="admin">admin</option>
+              <option value="student">{t("admin.roleStudent")}</option>
+              <option value="admin">{t("admin.roleAdmin")}</option>
             </select>
             <select
               value={user.isActive ? "active" : "inactive"}
               onChange={(event) => updateMutation.mutate({ userId: user.id, payload: { isActive: event.target.value === "active" } })}
               className="h-10 rounded-xl border bg-card px-3 text-sm font-semibold"
             >
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
+              <option value="active">{t("admin.statusActive")}</option>
+              <option value="inactive">{t("admin.statusInactive")}</option>
             </select>
           </div>
         ))}
@@ -291,6 +317,7 @@ export function UserManager() {
 }
 
 export function AiLogViewer() {
+  const { t } = useI18n();
   const logsQuery = useAdminAiLogsQuery({ limit: 40 });
   const sessions = useMemo(() => logsQuery.data?.sessions ?? [], [logsQuery.data?.sessions]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -299,7 +326,7 @@ export function AiLogViewer() {
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
       <section className="app-surface p-3 text-left">
-        <PanelTitle icon={Bot} title="Phiên AI gần đây" />
+        <PanelTitle icon={Bot} title={t("admin.recentAiSessions")} />
         <div className="grid gap-2">
           {sessions.map((session) => (
             <button
@@ -313,7 +340,8 @@ export function AiLogViewer() {
             >
               <div className="truncate text-sm font-extrabold">{session.userEmail}</div>
               <div className="mt-1 text-xs font-semibold text-muted-foreground">
-                {session.scenarioTitle || "Personal"} · {session.messageCount} tin
+                {session.scenarioTitle || t("admin.scenarioPersonal")} ·{" "}
+                {t("admin.messageCount", { count: session.messageCount })}
               </div>
             </button>
           ))}
@@ -327,7 +355,10 @@ export function AiLogViewer() {
               <div>
                 <h2 className="font-extrabold">{selected.userName || selected.userEmail}</h2>
                 <p className="text-xs font-semibold text-muted-foreground">
-                  Model: {selected.lastModelName || "mock"} · Tokens: {selected.totalInputTokens + selected.totalOutputTokens}
+                  {t("admin.modelTokens", {
+                    model: selected.lastModelName || "mock",
+                    tokens: selected.totalInputTokens + selected.totalOutputTokens,
+                  })}
                 </p>
               </div>
               <Badge className="rounded-lg">{new Date(selected.updatedAt).toLocaleString()}</Badge>
@@ -340,7 +371,7 @@ export function AiLogViewer() {
                   {message.english && <p className="mt-1 text-sm text-muted-foreground">{message.english}</p>}
                   {message.correction && (
                     <div className="mt-2 rounded-md bg-card px-3 py-2 text-xs">
-                      <strong>Correction:</strong> {message.correction.improved} · {message.correction.explanation}
+                      <strong>{t("admin.correction")}</strong> {message.correction.improved} · {message.correction.explanation}
                     </div>
                   )}
                 </div>
@@ -348,27 +379,44 @@ export function AiLogViewer() {
             </div>
           </>
         ) : (
-          <div className="text-sm font-semibold text-muted-foreground">Chưa có log AI.</div>
+          <div className="text-sm font-semibold text-muted-foreground">{t("admin.noAiLogs")}</div>
         )}
       </section>
     </div>
   );
 }
 
+/** Report status values are stored in English; only their labels are localised. */
+const reportStatusLabelKeys: Record<string, TranslationKey> = {
+  open: "admin.statusOpen",
+  reviewing: "admin.statusReviewing",
+  resolved: "admin.statusResolved",
+  dismissed: "admin.statusDismissed",
+};
+
 export function ReportManager() {
+  const { t } = useI18n();
   const [status, setStatus] = useState("");
   const reportsQuery = useAdminReportsQuery({ status: status || undefined, limit: 100 });
   const updateMutation = useUpdateAdminReportMutation();
 
   const update = async (report: AdminReport, nextStatus: AdminReport["status"], adminNote?: string) => {
     await updateMutation.mutateAsync({ reportId: report.id, payload: { status: nextStatus, adminNote: adminNote ?? report.adminNote ?? "" } });
-    toast.success("Đã cập nhật report");
+    toast.success(t("admin.savedReport"));
   };
 
   return (
     <section className="app-surface-padded text-left">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <SelectInput label="Status" value={status} options={["", "open", "reviewing", "resolved", "dismissed"]} onChange={setStatus} />
+        <SelectInput
+          label={t("admin.fieldStatus")}
+          value={status}
+          options={["", "open", "reviewing", "resolved", "dismissed"]}
+          optionLabel={(option) =>
+            option ? t(reportStatusLabelKeys[option]) : t("admin.optionAll")
+          }
+          onChange={setStatus}
+        />
       </div>
       <div className="grid gap-3">
         {(reportsQuery.data?.reports ?? []).map((report) => (
@@ -380,35 +428,37 @@ export function ReportManager() {
 }
 
 function ReportCard({ report, onUpdate }: { report: AdminReport; onUpdate: (report: AdminReport, status: AdminReport["status"], note?: string) => void }) {
+  const { t } = useI18n();
   const [note, setNote] = useState(report.adminNote || "");
+  const statusLabelKey = reportStatusLabelKeys[report.status];
 
   return (
     <div className="rounded-xl border bg-background p-4">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <div className="font-extrabold">{report.lessonTitle || report.lessonId || "Bài học đã bị ẩn"}</div>
+          <div className="font-extrabold">{report.lessonTitle || report.lessonId || t("admin.hiddenLesson")}</div>
           <div className="text-xs font-semibold text-muted-foreground">
-            {report.userEmail || "anonymous"} · {report.category} · {new Date(report.createdAt).toLocaleString()}
+            {report.userEmail || t("admin.anonymous")} · {report.category} · {new Date(report.createdAt).toLocaleString()}
           </div>
         </div>
-        <Badge className="rounded-lg">{report.status}</Badge>
+        <Badge className="rounded-lg">{statusLabelKey ? t(statusLabelKey) : report.status}</Badge>
       </div>
       <p className="whitespace-pre-wrap text-sm">{report.message}</p>
       <textarea
         value={note}
         onChange={(event) => setNote(event.target.value)}
         className="mt-3 min-h-20 w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-        placeholder="Ghi chú xử lý..."
+        placeholder={t("admin.notePlaceholder")}
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" variant="secondary" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "reviewing", note)}>
-          Đang xử lý
+          {t("admin.statusReviewing")}
         </Button>
         <Button type="button" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "resolved", note)}>
-          Resolved
+          {t("admin.statusResolved")}
         </Button>
         <Button type="button" variant="ghost" className="h-9 rounded-xl font-bold" onClick={() => onUpdate(report, "dismissed", note)}>
-          Dismiss
+          {t("admin.statusDismiss")}
         </Button>
       </div>
     </div>
@@ -437,13 +487,15 @@ function Toolbar({
   includeInactive: boolean;
   setIncludeInactive: (value: boolean) => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 items-center gap-2 rounded-xl border bg-background px-3 py-2">
         <Search size={16} className="text-muted-foreground" />
-        <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder="Tìm kiếm..." />
+        <input value={q} onChange={(event) => setQ(event.target.value)} className="w-full bg-transparent text-sm outline-none" placeholder={t("admin.search")} />
       </div>
-      <ToggleRow label="Hiện inactive" value={includeInactive} onChange={setIncludeInactive} compact />
+      <ToggleRow label={t("admin.showInactive")} value={includeInactive} onChange={setIncludeInactive} compact />
     </div>
   );
 }
@@ -489,14 +541,27 @@ function TextArea({ label, value, onChange }: { label: string; value: string; on
   );
 }
 
-function SelectInput({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+function SelectInput({
+  label,
+  value,
+  options,
+  onChange,
+  optionLabel,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  /** Defaults to showing the raw value, for selects whose options are data. */
+  optionLabel?: (option: string) => string;
+}) {
   return (
     <label className="grid min-w-40 gap-1.5">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm font-semibold outline-none">
         {options.map((option) => (
           <option key={option} value={option}>
-            {option || "all"}
+            {optionLabel ? optionLabel(option) : option}
           </option>
         ))}
       </select>
@@ -520,9 +585,11 @@ function ToggleRow({ label, value, onChange, compact = false }: { label: string;
 }
 
 function StatusPill({ active }: { active: boolean }) {
+  const { t } = useI18n();
+
   return (
     <span className={cn("rounded-lg px-2 py-1 text-xs font-extrabold", active ? "bg-jade/10 text-jade" : "bg-muted text-muted-foreground")}>
-      {active ? "active" : "inactive"}
+      {active ? t("admin.statusActive") : t("admin.statusInactive")}
     </span>
   );
 }

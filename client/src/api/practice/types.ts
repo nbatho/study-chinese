@@ -13,7 +13,10 @@ export interface ShadowingPrompt {
     id: string;
     hanzi: string;
     pinyin: string;
+    /** English definition — the source text every gloss is translated from. */
     english: string;
+    /** Definition in the requested locale; falls back to `english` when untranslated. */
+    gloss: string;
 }
 
 export interface HanziStrokeCharacter {

@@ -16,8 +16,8 @@ export const practiceApi = {
 
     minimalPairs: () => apiRequest<MinimalPairsResponse>(beApi.get('practice/minimal-pairs')),
 
-    shadowingPrompts: () =>
-        apiRequest<ShadowingPromptsResponse>(beApi.get('practice/shadowing-prompts')),
+    shadowingPrompts: (params?: { locale?: string }) =>
+        apiRequest<ShadowingPromptsResponse>(beApi.get('practice/shadowing-prompts', { params })),
 
     scoreShadowing: (payload: ShadowingScorePayload) =>
         apiRequest<ShadowingScoreResponse>(beApi.post('practice/shadowing/score', payload)),

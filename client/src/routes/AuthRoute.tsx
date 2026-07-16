@@ -57,12 +57,16 @@ export const PrivateRoute = ({ children, redirectTo = "/" }: RouteGuardProps) =>
   return children;
 };
 
+/**
+ * For routes that render the same tree whichever way auto-login resolves.
+ *
+ * Auto-login still starts here, but rendering never waits on it: unlike the
+ * guards below there is no redirect to get wrong, so blocking would only trade
+ * static UI for a blank screen while the server wakes up. Children read
+ * `auth.status` and fill themselves in once the session resolves.
+ */
 export const OptionalAuthRoute = ({ children }: RouteGuardProps) => {
-  const status = useAutoLogin();
-
-  if (status === "idle" || status === "loading") {
-    return <RouteLoading />;
-  }
+  useAutoLogin();
 
   return children;
 };

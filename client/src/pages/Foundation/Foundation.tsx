@@ -11,6 +11,7 @@ import {
   FOUNDATION_STAGES,
   FOUNDATION_TOTAL_MINUTES,
   loadFoundationProgress,
+  localized,
   saveFoundationProgress,
   type FoundationStage,
   type ToneContour,
@@ -72,7 +73,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
                   <ToneContourIcon contour={tone.contour} />
                 </span>
                 <div className="min-w-0">
-                  <div className="font-extrabold leading-tight">{tone.name[language]}</div>
+                  <div className="font-extrabold leading-tight">{localized(tone.name, language)}</div>
                   <div className="mt-1 flex items-center gap-2">
                     <HanziText className="font-serif text-2xl font-extrabold text-primary">{tone.hanzi}</HanziText>
                     <span className="text-sm font-bold text-muted-foreground">{tone.pinyin}</span>
@@ -81,7 +82,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
               </div>
               <ListenButton text={tone.hanzi} />
             </div>
-            <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground">{tone.description[language]}</p>
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground">{localized(tone.description, language)}</p>
           </article>
         ))}
       </div>
@@ -98,7 +99,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
                 <HanziText className="font-serif text-2xl font-extrabold text-primary">{sound.hanzi}</HanziText>
                 <span className="text-sm font-bold text-muted-foreground">{sound.pinyin}</span>
               </div>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{sound.hint[language]}</p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">{localized(sound.hint, language)}</p>
             </div>
             <ListenButton text={sound.hanzi} />
           </article>
@@ -115,6 +116,7 @@ function StageBody({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
 }
 
 function StageQuiz({ stage, onDone }: { stage: FoundationStage; onDone: (accuracy: number) => void }) {
+  const { t } = useI18n();
   const questions = stage.questions ?? [];
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -154,14 +156,16 @@ function StageQuiz({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
     return (
       <div className="rounded-xl border bg-background p-6 text-center">
         <PartyPopper className="mx-auto mb-3 text-jade" size={40} />
-        <p className="text-lg font-extrabold">Đúng {correctCount}/{questions.length} câu</p>
-        <p className="mt-1 text-sm font-semibold text-muted-foreground">Phần này đã hoàn thành. Bấm “Tiếp theo” để đi tiếp.</p>
+        <p className="text-lg font-extrabold">
+          {t("foundation.quizScore", { correct: correctCount, total: questions.length })}
+        </p>
+        <p className="mt-1 text-sm font-semibold text-muted-foreground">{t("foundation.quizDone")}</p>
         <button
           type="button"
           onClick={restart}
           className="mt-4 inline-flex items-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
         >
-          <RotateCcw size={16} /> Làm lại
+          <RotateCcw size={16} /> {t("foundation.quizRestart")}
         </button>
       </div>
     );
@@ -170,13 +174,13 @@ function StageQuiz({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
   return (
     <div className="rounded-xl border bg-background p-4">
       <div className="mb-3 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
-        <span>Câu {index + 1}/{questions.length}</span>
-        <span>Đúng {correctCount}</span>
+        <span>{t("foundation.quizProgress", { index: index + 1, total: questions.length })}</span>
+        <span>{t("foundation.quizCorrect", { count: correctCount })}</span>
       </div>
       <div className="mb-4 flex flex-col items-center gap-3 rounded-xl bg-primary/5 py-6">
         <span className="font-serif text-5xl font-extrabold text-primary">{question.hanzi}</span>
         <ListenButton text={question.hanzi} className="size-12" />
-        <span className="text-xs font-semibold text-muted-foreground">Bấm loa để nghe rồi chọn pinyin đúng</span>
+        <span className="text-xs font-semibold text-muted-foreground">{t("foundation.quizHint")}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {question.options.map((option) => {
@@ -207,7 +211,7 @@ function StageQuiz({ stage, onDone }: { stage: FoundationStage; onDone: (accurac
           onClick={next}
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
         >
-          {index + 1 >= questions.length ? "Xem kết quả" : "Câu tiếp theo"}
+          {index + 1 >= questions.length ? t("foundation.quizResults") : t("foundation.quizNext")}
           <ArrowRight size={17} />
         </button>
       )}
@@ -349,7 +353,7 @@ export default function Foundation() {
                         {done ? <CheckCircle2 size={16} /> : locked ? <Lock size={13} /> : itemIndex + 1}
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-bold">{item.title[language]}</span>
+                        <span className="block truncate text-sm font-bold">{localized(item.title, language)}</span>
                         <span className="block text-xs font-semibold text-muted-foreground">~{item.minutes} {t("common.minutes")}</span>
                       </span>
                     </button>
@@ -365,8 +369,8 @@ export default function Foundation() {
                 <div className="text-xs font-extrabold text-primary">
                   {t("foundation.stepOf", { current: activeIndex + 1, total: totalStages })}
                 </div>
-                <h2 className="mt-1 text-2xl font-extrabold">{stage.title[language]}</h2>
-                <p className="mt-1 max-w-2xl text-sm font-semibold leading-relaxed text-muted-foreground">{stage.subtitle[language]}</p>
+                <h2 className="mt-1 text-2xl font-extrabold">{localized(stage.title, language)}</h2>
+                <p className="mt-1 max-w-2xl text-sm font-semibold leading-relaxed text-muted-foreground">{localized(stage.subtitle, language)}</p>
               </div>
               {isStageDone && (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-jade/10 px-2 py-1 text-xs font-extrabold text-jade">

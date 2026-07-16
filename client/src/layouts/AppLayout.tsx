@@ -12,7 +12,7 @@ import { useUserProfileQuery } from "../api/users/queries";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice";
 import { cn } from "../utils/cn";
-import { useI18n } from "../i18n";
+import { useDocumentLanguage, useI18n } from "../i18n";
 import { useStudyReminder } from "../hooks/useStudyReminder";
 import { todayKey } from "../utils/studyReminder";
 
@@ -27,8 +27,7 @@ export default function AppLayout() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
-  const hasCompletedOnboarding = useAppSelector((state) => state.app.hasCompletedOnboarding);
-  const language = useAppSelector((state) => state.app.language);
+  useDocumentLanguage();
   const serverProfile = profileQuery.data?.profile;
   const isHomePath = location.pathname === "/home";
   const { t } = useI18n();
@@ -75,22 +74,20 @@ export default function AppLayout() {
     return () => mediaQuery.removeEventListener("change", applyAppearance);
   }, [appAppearance]);
 
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+  // Only the server's answer decides this. The store's `hasCompletedOnboarding`
+  // defaults to false and is filled in by the effect above once the profile
+  // lands, and `isLoading` stays false while the query is still disabled on
+  // unresolved auth — so gating on either bounces signed-in users to
+  // /onboarding, which sends them straight on to /home.
+  const needsOnboarding = serverProfile?.hasCompletedOnboarding === false;
 
   useEffect(() => {
-    if (
-      isAuthenticated &&
-      !profileQuery.isLoading &&
-      !hasCompletedOnboarding &&
-      location.pathname !== "/onboarding"
-    ) {
+    if (needsOnboarding && location.pathname !== "/onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [hasCompletedOnboarding, isAuthenticated, location.pathname, navigate, profileQuery.isLoading]);
+  }, [location.pathname, navigate, needsOnboarding]);
 
-  if (isAuthenticated && !hasCompletedOnboarding) {
+  if (needsOnboarding) {
     return null;
   }
 

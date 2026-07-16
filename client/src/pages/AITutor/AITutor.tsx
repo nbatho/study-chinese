@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useSendChatMessageMutation,
   useStartChatSessionMutation,
@@ -9,12 +9,13 @@ import { ArrowLeft, AlertTriangle, Crown, Send, ShoppingBag, Sparkles } from "lu
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useI18n } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
+import LoadingCard from "../../components/LoadingCard";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import { cn } from "../../utils/cn";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import TtsButton from "../../components/TtsButton";
-import { chatScenarios } from "./chatScenarios";
+import { chatScenarioSources } from "./chatScenarios";
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
 
@@ -24,18 +25,30 @@ interface AITutorProps {
 
 export default function AITutor({ onClose }: AITutorProps) {
   const { t, language } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const navigate = useNavigate();
   const isOverlay = Boolean(onClose);
   const handleClose = onClose || (() => navigate("/home"));
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const startSessionMutation = useStartChatSessionMutation();
-  const [selectedScenario, setSelectedScenario] = useState<ChatScenario | null>(null);
+  // Only the id is state: the labels are derived from the dictionary on every
+  // render, so an open conversation retitles itself when the language changes.
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [aiUsage, setAiUsage] = useState<AiUsage | null>(null);
   const [userInput, setUserInput] = useState("");
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
+  const chatScenarios = useMemo<ChatScenario[]>(
+    () =>
+      chatScenarioSources.map(({ titleKey, descriptionKey, ...scenario }) => ({
+        ...scenario,
+        title: t(titleKey),
+        description: t(descriptionKey),
+      })),
+    [t],
+  );
+  const selectedScenario = chatScenarios.find((item) => item.id === selectedScenarioId) ?? null;
   const sendMessageMutation = useSendChatMessageMutation(sessionId ?? "");
   const isThinking = startSessionMutation.isPending || sendMessageMutation.isPending;
   const profileAiUsage = profileQuery.data
@@ -61,7 +74,7 @@ export default function AITutor({ onClose }: AITutorProps) {
   const selectScenario = async (scenario: ChatScenario) => {
     try {
       const response = await startSessionMutation.mutateAsync({ scenarioId: scenario.id });
-      setSelectedScenario(scenario);
+      setSelectedScenarioId(scenario.id);
       setSessionId(response.session.id);
       setMessages(response.session.messages);
       setAiUsage(response.aiUsage);
@@ -105,7 +118,7 @@ export default function AITutor({ onClose }: AITutorProps) {
   };
 
   const leaveScenario = () => {
-    setSelectedScenario(null);
+    setSelectedScenarioId(null);
     setSessionId(null);
     setMessages([]);
     setAiUsage(null);
@@ -124,6 +137,10 @@ export default function AITutor({ onClose }: AITutorProps) {
     }
     leaveScenario();
   };
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -160,7 +177,9 @@ export default function AITutor({ onClose }: AITutorProps) {
         <div className="min-w-0 flex-1">
           <h2 className="flex items-center gap-1.5 truncate text-2xl font-extrabold">
             <Sparkles size={18} className="shrink-0 text-tone-3" />
-            {selectedScenario ? `AI Tutor: ${selectedScenario.title}` : t("ai.title")}
+            {selectedScenario
+              ? t("ai.tutorWithScenario", { scenario: selectedScenario.title })
+              : t("ai.title")}
           </h2>
           <p className="truncate text-xs text-muted-foreground">
             {selectedScenario ? selectedScenario.description : t("ai.subtitle")}

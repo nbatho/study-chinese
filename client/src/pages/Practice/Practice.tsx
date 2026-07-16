@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Activity, ArrowLeft, Dumbbell, Ear, Keyboard, Mic, PencilLine, Target, Volume2 } from "lucide-react";
 import { useI18n } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
+import LoadingCard from "../../components/LoadingCard";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { cn } from "../../utils/cn";
@@ -22,7 +23,7 @@ import type { Tool } from "./components/practiceToolTypes";
 export default function Practice() {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const [searchParams] = useSearchParams();
   const initialTool = searchParams.get("tool");
   const from = searchParams.get("from");
@@ -36,6 +37,10 @@ export default function Practice() {
       setActiveTool("menu");
     }
   };
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -78,8 +83,8 @@ export default function Practice() {
           </div>
           {[
             { id: "tones", title: t("practice.tones"), desc: t("practice.tonesDesc"), icon: Activity, cls: "bg-tone-1" },
-            { id: "weak", title: "Weak Practice", desc: "Review words and skills you missed before.", icon: Target, cls: "bg-primary" },
-            { id: "list", title: "Practice List", desc: "Practice vocabulary from your saved word lists.", icon: Target, cls: "bg-tone-2" },
+            { id: "weak", title: t("practice.weak"), desc: t("practice.weakDesc"), icon: Target, cls: "bg-primary" },
+            { id: "list", title: t("practice.list"), desc: t("practice.listDesc"), icon: Target, cls: "bg-tone-2" },
             { id: "pairs", title: t("practice.pairs"), desc: t("practice.pairsDesc"), icon: Ear, cls: "bg-tone-4" },
             { id: "typing", title: t("practice.typing"), desc: t("practice.typingDesc"), icon: Keyboard, cls: "bg-jade" },
             { id: "listening", title: t("practice.listening"), desc: t("practice.listeningDesc"), icon: Volume2, cls: "bg-primary" },

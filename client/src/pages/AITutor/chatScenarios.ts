@@ -1,11 +1,22 @@
 import type { ChatScenario } from "../../api/aiTutor";
+import type { TranslationKey } from "../../i18n";
 
-export const chatScenarios: ChatScenario[] = [
+/**
+ * A scenario as authored: the Chinese opener is language-independent, while the
+ * title and description are keys resolved against the app language. `useChatScenarios`
+ * turns these into `ChatScenario`s for rendering.
+ */
+type ChatScenarioSource = Omit<ChatScenario, "title" | "description"> & {
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
+};
+
+export const chatScenarioSources: ChatScenarioSource[] = [
   {
     id: "cafe",
-    title: "At the Coffee Shop",
+    titleKey: "ai.scenario.cafe.title",
     emoji: "☕",
-    description: "Practice ordering coffee, tea, and juice in Chinese.",
+    descriptionKey: "ai.scenario.cafe.description",
     initialMessage: {
       simplified: "欢迎光临！请问您要喝点什么？我们有咖啡、茶和果汁。",
       pinyin: "Huānyíng guānglín! Qǐngwèn nín yào hē diǎn shénme? Wǒmen yǒu kāfēi, chá hé guǒzhī.",
@@ -15,9 +26,9 @@ export const chatScenarios: ChatScenario[] = [
   },
   {
     id: "directions",
-    title: "Asking Directions",
+    titleKey: "ai.scenario.directions.title",
     emoji: "🧭",
-    description: "Practice finding your way around town to the station or airport.",
+    descriptionKey: "ai.scenario.directions.description",
     initialMessage: {
       simplified: "你好！请问地铁站怎么走？",
       pinyin: "Nǐ hǎo! Qǐngwèn dìtiězhàn zěnme zǒu?",
@@ -27,9 +38,9 @@ export const chatScenarios: ChatScenario[] = [
   },
   {
     id: "general",
-    title: "Free Talk",
+    titleKey: "ai.scenario.general.title",
     emoji: "💬",
-    description: "Practice conversational Chinese on any topic with Xiao Hong.",
+    descriptionKey: "ai.scenario.general.description",
     initialMessage: {
       simplified: "你好！很高兴认识你。我们今天聊点什么？",
       pinyin: "Nǐ hǎo! Hěn gāoxìng rènshí nǐ. Wǒmen jīntiān liáo diǎn shénme?",
@@ -39,9 +50,9 @@ export const chatScenarios: ChatScenario[] = [
   },
   {
     id: "personal-lesson",
-    title: "Ôn bài vừa học",
+    titleKey: "ai.scenario.personal-lesson.title",
     emoji: "🧠",
-    description: "Luyện hội thoại xoay quanh bài học gần nhất.",
+    descriptionKey: "ai.scenario.personal-lesson.description",
     initialMessage: {
       simplified: "我们复习你刚学的内容。",
       pinyin: "Wǒmen fùxí nǐ gāng xué de nèiróng.",
@@ -51,9 +62,9 @@ export const chatScenarios: ChatScenario[] = [
   },
   {
     id: "personal-list",
-    title: "Luyện từ trong list",
+    titleKey: "ai.scenario.personal-list.title",
     emoji: "📋",
-    description: "AI Tutor ưu tiên từ vựng trong danh sách bạn lưu gần đây.",
+    descriptionKey: "ai.scenario.personal-list.description",
     initialMessage: {
       simplified: "请用你保存的词说一句话。",
       pinyin: "Qǐng yòng nǐ bǎocún de cí shuō yí jù huà.",
@@ -63,9 +74,9 @@ export const chatScenarios: ChatScenario[] = [
   },
   {
     id: "personal-weak",
-    title: "Luyện điểm yếu",
+    titleKey: "ai.scenario.personal-weak.title",
     emoji: "🎯",
-    description: "Hội thoại dùng các từ và kỹ năng bạn hay sai.",
+    descriptionKey: "ai.scenario.personal-weak.description",
     initialMessage: {
       simplified: "我们来练习你的难点吧。",
       pinyin: "Wǒmen lái liànxí nǐ de nándiǎn ba.",

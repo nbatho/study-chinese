@@ -49,7 +49,7 @@ export const queryKeys = {
     practice: {
         catalog: ['practice'] as const,
         minimalPairs: ['practice', 'minimal-pairs'] as const,
-        shadowingPrompts: ['practice', 'shadowing-prompts'] as const,
+        shadowingPrompts: (locale: string) => ['practice', 'shadowing-prompts', locale] as const,
         hanziStrokes: ['practice', 'hanzi-strokes'] as const,
     },
     community: {

@@ -6,7 +6,7 @@ import LoadingCard from "../../components/LoadingCard";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { Button } from "../../components/ui/button";
 import { useI18n } from "../../i18n";
-import { useAppSelector } from "../../store/hooks";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import type { TranslationKey } from "../../i18n/translations";
 import AchievementCard from "./components/AchievementCard";
 import { categoryLabelKeys } from "./components/achievementConfig";
@@ -31,7 +31,7 @@ const categoryFilters: Array<{ id: CategoryFilter; labelKey: TranslationKey }> =
 
 export default function Achievements() {
   const { t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const achievementsQuery = useAchievementsQuery();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -60,6 +60,10 @@ export default function Achievements() {
       }),
     [achievements, categoryFilter, statusFilter],
   );
+
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
 
   if (!isAuthenticated) {
     return (

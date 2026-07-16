@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Bell, KeyRound, MailWarning, ToggleLeft, ToggleRight, Trash2, User } from "lucide-react";
+import { AlertTriangle, Bell, Globe2, KeyRound, MailWarning, ToggleLeft, ToggleRight, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import {
   useChangePasswordMutation,
@@ -11,7 +11,10 @@ import {
 } from "../../api/auth/queries";
 import { useUpdateProfileMutation, useUserProfileQuery } from "../../api/users/queries";
 import LoginPromptCard from "../../components/LoginPromptCard";
+import { DropdownSelect } from "../../components/ui/dropdown-select";
 import { useI18n } from "../../i18n";
+import LoadingCard from "../../components/LoadingCard";
+import { useAuthGate } from "../../hooks/useAuthGate";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance } from "../../store/modules/appSlice";
 import type { AppAppearance } from "../../store/modules/appSlice";
@@ -47,7 +50,7 @@ export default function Settings() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useI18n();
-  const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  const { isResolving, isAuthenticated } = useAuthGate();
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const updateProfileMutation = useUpdateProfileMutation();
@@ -206,6 +209,10 @@ export default function Settings() {
     toast.success(t("profile.saved"));
   };
 
+  if (isResolving) {
+    return <LoadingCard label={t("common.loading")} />;
+  }
+
   if (!isAuthenticated) {
     return (
       <LoginPromptCard
@@ -274,24 +281,22 @@ export default function Settings() {
           </div>
           <div>
             <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("profile.language")}</label>
-            <div role="group" aria-label={t("profile.language")} className="flex gap-1 rounded-xl border bg-background p-1">
-              <button
-                type="button"
-                aria-pressed={language === "en"}
-                onClick={() => setLanguage("en")}
-                className={cn("flex-1 rounded-lg px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "en" && "bg-primary text-white")}
-              >
-                {t("profile.languageEnglish")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={language === "vi"}
-                onClick={() => setLanguage("vi")}
-                className={cn("flex-1 rounded-lg px-2.5 py-2 text-sm font-extrabold text-muted-foreground transition", language === "vi" && "bg-primary text-white")}
-              >
-                {t("profile.languageVietnamese")}
-              </button>
-            </div>
+            <DropdownSelect
+              value={language}
+              label={t("profile.language")}
+              icon={<Globe2 size={16} />}
+              onChange={setLanguage}
+              align="left"
+              options={[
+                { code: "EN", label: t("profile.languageEnglish"), value: "en" },
+                { code: "VI", label: t("profile.languageVietnamese"), value: "vi" },
+                { code: "简", label: t("profile.languageChineseSimplified"), value: "zh-Hans" },
+                { code: "繁", label: t("profile.languageChineseTraditional"), value: "zh-Hant" },
+              ]}
+              className="w-full"
+              buttonClassName="w-full"
+              menuClassName="w-full"
+            />
           </div>
           <div className="flex items-center justify-between gap-4 pt-2">
             <div>

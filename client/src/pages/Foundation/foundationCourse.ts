@@ -1,10 +1,15 @@
 // Pre-HSK1 foundation course: pinyin sound system + tones, taught in a fixed order
 // for absolute beginners. Content is authored in English and Vietnamese; the UI
-// picks the variant matching the app language.
+// picks the variant matching the app language, falling back to English for the
+// languages this content has not been authored in yet.
 
 import type { Language } from "../../i18n";
 
-export type LocalizedText = Record<Language, string>;
+export type LocalizedText = Record<"en" | "vi", string>;
+
+/** Reads authored content in `language`, falling back to English. */
+export const localized = (text: LocalizedText, language: Language): string =>
+  (text as Partial<Record<Language, string>>)[language] ?? text.en;
 
 export type ToneContour = "level" | "rising" | "dipping" | "falling" | "neutral";
 
