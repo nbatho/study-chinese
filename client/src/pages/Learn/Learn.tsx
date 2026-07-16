@@ -100,32 +100,47 @@ export default function Learn() {
     return CEFR_RANK[selectedCurriculum.cefrLevel] > CEFR_RANK[userCefrLevel];
   };
 
-  const hskStats = HSK_CURRICULUM.map((curriculumLevel) => {
-    const level = curriculumLevel.hskLevel;
-    const hskLessons = lessons.filter((lesson) => lesson.hskLevel === level);
-    const curriculumLessons = getCurriculumLessons(curriculumLevel);
-    const { completedCount, lessonCount, percent } = getLevelProgress(curriculumLevel, lessons);
-    const skills = Array.from(new Set(curriculumLessons.map((lesson) => lesson.skill))).slice(0, 4);
-    const cefrLevel = curriculumLevel.cefrLevel;
-    const isLocked = isHskLevelLocked(level);
-    const lockReason = getLockReason(level);
+  const hskStats = [
+    {
+      level: 0,
+      cefrLevel: "A1" as const,
+      isLocked: false,
+      lockReason: null,
+      completedCount: lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length,
+      lessonCount: FOUNDATION_STAGES.length,
+      percent: Math.round((lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length / FOUNDATION_STAGES.length) * 100) || 0,
+      skills: ["pronunciation", "pinyin"],
+      topicCount: 1,
+      focus: t("learn.foundationTitle"),
+      xpReward: FOUNDATION_STAGES.reduce((total, stage) => total + stage.xp, 0),
+    },
+    ...HSK_CURRICULUM.map((curriculumLevel) => {
+      const level = curriculumLevel.hskLevel;
+      const hskLessons = lessons.filter((lesson) => lesson.hskLevel === level);
+      const curriculumLessons = getCurriculumLessons(curriculumLevel);
+      const { completedCount, lessonCount, percent } = getLevelProgress(curriculumLevel, lessons);
+      const skills = Array.from(new Set(curriculumLessons.map((lesson) => lesson.skill))).slice(0, 4);
+      const cefrLevel = curriculumLevel.cefrLevel;
+      const isLocked = isHskLevelLocked(level);
+      const lockReason = getLockReason(level);
 
-    return {
-      level,
-      cefrLevel,
-      isLocked,
-      lockReason,
-      completedCount,
-      lessonCount,
-      percent,
-      skills,
-      topicCount: curriculumLevel.topics.length,
-      focus: curriculumLevel.focus,
-      xpReward: hskLessons.length
-        ? hskLessons.reduce((total, lesson) => total + lesson.xpReward, 0)
-        : curriculumLessons.reduce((total, lesson) => total + lesson.xpReward, 0),
-    };
-  });
+      return {
+        level,
+        cefrLevel,
+        isLocked,
+        lockReason,
+        completedCount,
+        lessonCount,
+        percent,
+        skills,
+        topicCount: curriculumLevel.topics.length,
+        focus: curriculumLevel.focus,
+        xpReward: hskLessons.length
+          ? hskLessons.reduce((total, lesson) => total + lesson.xpReward, 0)
+          : curriculumLessons.reduce((total, lesson) => total + lesson.xpReward, 0),
+      };
+    })
+  ];
   const levelLessons = useMemo(() => {
     return lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
   }, [lessons, selectedHSK]);
@@ -142,15 +157,8 @@ export default function Learn() {
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
 
   const nextLesson = useMemo(() => {
-    const curriculumLessons = getCurriculumLessons(selectedCurriculum);
-    for (const currLesson of curriculumLessons) {
-      const serverLesson = lessonsByOrder.get(currLesson.order);
-      if (serverLesson && !serverLesson.completedAt && !isLessonLockedByCefr(serverLesson)) {
-        return serverLesson;
-      }
-    }
-    return null;
-  }, [selectedCurriculum, lessonsByOrder, userCefrLevel, foundationComplete, levelProgressMap]);
+    return lessons.find((lesson) => !lesson.completedAt) ?? lessons[0] ?? null;
+  }, [lessons]);
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");
@@ -247,10 +255,21 @@ export default function Learn() {
                   <button
                     type="button"
                     disabled={!nextLesson}
-                    onClick={() => nextLesson && setSelectedLessonId(nextLesson.id)}
+                    onClick={() => {
+                      if (!nextLesson) return;
+                      if (nextLesson.hskLevel === 0) {
+                        navigate("/foundation");
+                      } else {
+                        setSelectedLessonId(nextLesson.id);
+                      }
+                    }}
                     className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
                   >
-                    {nextLesson ? t("learn.continueLesson", { order: nextLesson.order }) : t("learn.noLessonOpen")}
+                    {nextLesson
+                      ? nextLesson.hskLevel === 0
+                        ? t("learn.startFoundation")
+                        : t("learn.continueLesson", { order: nextLesson.order })
+                      : t("learn.noLessonOpen")}
                     <ArrowRight size={17} />
                   </button>
                   <button
@@ -313,7 +332,13 @@ export default function Learn() {
                 <button
                   key={levelStats.level}
                   type="button"
-                  onClick={() => selectHskLevel(levelStats.level)}
+                  onClick={() => {
+                    if (levelStats.level === 0) {
+                      navigate("/foundation");
+                    } else {
+                      selectHskLevel(levelStats.level);
+                    }
+                  }}
                   className={cn(
                     "group min-h-31 rounded-2xl border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-md active:translate-y-px",
                     selectedHSK === levelStats.level && "border-primary bg-primary/5 ring-2 ring-primary/10",
