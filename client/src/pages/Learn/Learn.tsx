@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
-import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, LogIn, PenLine, Trophy } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Lock, LogIn, PenLine, Trophy, Volume2 } from "lucide-react";
 import { useLessonsQuery, useUserProfileQuery } from "../../api";
 import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
@@ -41,11 +41,6 @@ export default function Learn() {
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const placementAt = profile?.placementTestCompletedAt ?? null;
   const needsPlacementTest = !profile?.placementTestCompletedAt;
-  const { selectedHsk: selectedHSK, selectedCurriculum, selectHskLevel: selectHskLevelState } = useSelectedHskLevel(
-    userCefrLevel,
-    placementAt,
-  );
-
   // Foundation completion check: DB (signed-in) or localStorage (guest/offline).
   const foundationComplete = useMemo(() => {
     const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
@@ -54,6 +49,12 @@ export default function Learn() {
     );
     return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
   }, [lessons]);
+
+  const { selectedHsk: selectedHSK, selectedCurriculum, selectHskLevel: selectHskLevelState } = useSelectedHskLevel(
+    userCefrLevel,
+    placementAt,
+    foundationComplete
+  );
 
   // Per-level progress lookup for prerequisite checks.
   const levelProgressMap = useMemo(() => {
@@ -149,11 +150,6 @@ export default function Learn() {
   //   return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
   // }, [levelLessons]);
 
-  const {
-    completedCount: selectedCompletedCount,
-    lessonCount: selectedLessonCount,
-    percent: selectedProgressPercent,
-  } = useMemo(() => getLevelProgress(selectedCurriculum, lessons), [selectedCurriculum, lessons]);
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
 
   const nextLesson = useMemo(() => {
@@ -242,7 +238,7 @@ export default function Learn() {
                     {t("learn.hskRoadmap", { level: selectedHSK })}
                   </span>
                   <span className="rounded-xl bg-secondary px-3 py-1.5 text-sm font-bold text-muted-foreground">
-                    CEFR {selectedCurriculum.cefrLevel}
+                    CEFR {selectedLevelStats.cefrLevel}
                   </span>
                 </div>
                 <h1 className="max-w-3xl text-3xl font-extrabold leading-tight sm:text-4xl">
@@ -287,28 +283,28 @@ export default function Learn() {
                   <div>
                     <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
                       <span>{t("learn.currentLevelProgress")}</span>
-                      <span>{selectedProgressPercent}%</span>
+                      <span>{selectedLevelStats.percent}%</span>
                     </div>
                     <div className="h-3 overflow-hidden rounded-full bg-background">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${selectedProgressPercent}%` }} />
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${selectedLevelStats.percent}%` }} />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-xl border bg-card p-3">
                       <span className="text-xs font-bold text-muted-foreground">{t("learn.learned")}</span>
-                      <strong className="mt-1 block text-xl">{selectedCompletedCount}/{selectedLessonCount}</strong>
+                      <strong className="mt-1 block text-xl">{selectedLevelStats.completedCount}/{selectedLevelStats.lessonCount}</strong>
                     </div>
                     <div className="rounded-xl border bg-card p-3">
                       <span className="text-xs font-bold text-muted-foreground">{t("learn.topicsLabel")}</span>
-                      <strong className="mt-1 block text-xl">{selectedCurriculum.topics.length}</strong>
+                      <strong className="mt-1 block text-xl">{selectedLevelStats.topicCount}</strong>
                     </div>
                     <div className="rounded-xl border bg-card p-3">
                       <span className="text-xs font-bold text-muted-foreground">XP</span>
-                      <strong className="mt-1 block text-xl text-gold">{selectedLevelStats?.xpReward ?? 0}</strong>
+                      <strong className="mt-1 block text-xl text-gold">{selectedLevelStats.xpReward}</strong>
                     </div>
                   </div>
                   <p className="text-sm font-semibold leading-relaxed text-muted-foreground">
-                    {selectedCurriculum.focus}
+                    {selectedLevelStats.focus}
                   </p>
                 </div>
               </div>
@@ -324,7 +320,7 @@ export default function Learn() {
                 </p>
               </div>
               <div className="text-sm font-bold text-muted-foreground">
-                {t("learn.progress", { level: selectedHSK, percent: selectedProgressPercent })}
+                {t("learn.progress", { level: Math.max(1, selectedHSK), percent: selectedLevelStats.percent })}
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -395,17 +391,37 @@ export default function Learn() {
 
 
 
-          <div ref={lessonPathRef} className="scroll-mt-24">
-            <LessonPath
-              curriculum={selectedCurriculum}
-              lessons={levelLessons}
-              onSelectLesson={setSelectedLessonId}
-              isLessonLocked={isLessonLockedByCefr}
-              isCurriculumLocked={isCurriculumLessonLocked}
-              guestMode={!isAuthenticated}
-              guestUnlockedOrders={guestUnlockedOrders}
-              onLockedClick={() => navigate("/auth")}
-            />
+          <div ref={lessonPathRef} className="scroll-m-24 pb-8">
+            {selectedHSK === 0 ? (
+              <section className="rounded-2xl border bg-card p-8 text-center shadow-sm">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Volume2 size={32} />
+                </div>
+                <h2 className="mt-4 text-2xl font-extrabold">{t("foundation.title")}</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-relaxed text-muted-foreground">
+                  {t("foundation.subtitle")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate("/foundation")}
+                  className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
+                >
+                  {t("learn.startFoundation")}
+                  <ArrowRight size={17} />
+                </button>
+              </section>
+            ) : (
+              <LessonPath
+                curriculum={selectedCurriculum}
+                lessons={levelLessons}
+                onSelectLesson={setSelectedLessonId}
+                isLessonLocked={isLessonLockedByCefr}
+                isCurriculumLocked={isCurriculumLessonLocked}
+                guestMode={!isAuthenticated}
+                guestUnlockedOrders={guestUnlockedOrders}
+                onLockedClick={isAuthenticated ? undefined : () => navigate("/auth")}
+              />
+            )}
           </div>
         </div>
       )}

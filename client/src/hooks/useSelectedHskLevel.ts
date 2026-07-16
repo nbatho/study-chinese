@@ -16,11 +16,14 @@ import type { CefrLevel } from "../api/users";
  *                    is dropped once this changes, since a new placement means a
  *                    new recommendation.
  */
-export const useSelectedHskLevel = (cefrLevel: CefrLevel, placementAt: string | null) => {
+export const useSelectedHskLevel = (cefrLevel: CefrLevel, placementAt: string | null, foundationComplete = true) => {
   const dispatch = useAppDispatch();
   const selection = useAppSelector((state) => state.app.hskSelection);
 
-  const recommendedHsk = useMemo(() => getRecommendedHsk(cefrLevel), [cefrLevel]);
+  const recommendedHsk = useMemo(() => {
+    if (!foundationComplete) return 0;
+    return getRecommendedHsk(cefrLevel);
+  }, [cefrLevel, foundationComplete]);
   const selectedHsk = selection?.placementAt === placementAt ? selection.level : recommendedHsk;
 
   const selectHskLevel = useCallback(

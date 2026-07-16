@@ -58,11 +58,11 @@ export const useNavTabs = (): NavTab[] => {
     { id: "home", label: t("nav.home"), icon: Home },
     { id: "foundation", label: t("nav.foundation"), icon: GraduationCap },
     { id: "learn", label: t("learn.curriculum"), shortLabel: t("nav.learn"), icon: BookOpen },
-    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
     { id: "radicals", label: t("nav.radicals"), icon: Shapes },
     { id: "practice", label: t("nav.practice"), icon: Dumbbell },
     { id: "dictionary", label: t("nav.dictionary"), icon: BookMarked },
     { id: "translate", label: t("nav.translate"), icon: Languages },
+    { id: "grammar", label: t("nav.grammar"), icon: FileText, requiresAuth: true },
     {
       id: "review",
       label: t("nav.review"),
