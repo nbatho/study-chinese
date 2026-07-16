@@ -47,6 +47,7 @@ import {
   loadFoundationProgress,
   localized,
 } from "../Foundation/foundationCourse";
+import { getCurriculumLessons, HSK_CURRICULUM } from "../Learn/curriculum";
 const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
 const clampPercent = (current: number, goal: number) => {
@@ -114,18 +115,20 @@ export default function Home() {
       const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
         (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
       );
-      const stageIndex = firstUnfinishedIndex === -1 ? 0 : firstUnfinishedIndex;
-      const stage = FOUNDATION_STAGES[stageIndex];
-      return {
-        id: stage.lessonId,
-        hskLevel: 0,
-        order: stageIndex + 1,
-        title: localized(stage.title, language),
-        subtitle: localized(stage.subtitle, language),
-        estimatedMinutes: stage.minutes,
-        xpReward: stage.xp,
-        completedAt: null,
-      };
+      if (firstUnfinishedIndex !== -1) {
+        const stageIndex = firstUnfinishedIndex;
+        const stage = FOUNDATION_STAGES[stageIndex];
+        return {
+          id: stage.lessonId,
+          hskLevel: 0,
+          order: stageIndex + 1,
+          title: localized(stage.title, language),
+          subtitle: localized(stage.subtitle, language),
+          estimatedMinutes: stage.minutes,
+          xpReward: stage.xp,
+          completedAt: null,
+        };
+      }
     }
 
     const sorted = [...lessons]
@@ -134,7 +137,54 @@ export default function Home() {
         if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
         return a.order - b.order;
       });
-    return sorted.find((lesson) => !lesson.completedAt) ?? sorted[0];
+
+    const nextDbLesson = sorted.find((lesson) => !lesson.completedAt);
+    if (nextDbLesson) return nextDbLesson;
+
+    const highest = [...sorted]
+      .filter((l) => l.completedAt)
+      .sort((a, b) => {
+        if (b.hskLevel !== a.hskLevel) return b.hskLevel - a.hskLevel;
+        return b.order - a.order;
+      })[0];
+
+    let targetLevel = 1;
+    let targetOrder = 1;
+
+    if (highest) {
+      const currLevel = HSK_CURRICULUM.find(c => c.hskLevel === highest.hskLevel);
+      if (currLevel) {
+        const currLessons = getCurriculumLessons(currLevel);
+        const lastOrder = currLessons[currLessons.length - 1]?.order ?? 1;
+        if (highest.order >= lastOrder) {
+          targetLevel = highest.hskLevel + 1;
+          targetOrder = 1;
+        } else {
+          targetLevel = highest.hskLevel;
+          const nextCL = currLessons.find(l => l.order > highest.order);
+          targetOrder = nextCL ? nextCL.order : highest.order + 1;
+        }
+      }
+    }
+
+    const targetCurriculumLevel = HSK_CURRICULUM.find(c => c.hskLevel === targetLevel);
+    if (targetCurriculumLevel) {
+      const targetCL = getCurriculumLessons(targetCurriculumLevel).find(l => l.order === targetOrder);
+      if (targetCL) {
+        return {
+          id: "curriculum-next",
+          hskLevel: targetLevel,
+          order: targetOrder,
+          title: targetCL.title,
+          subtitle: targetCL.objective,
+          estimatedMinutes: targetCL.estimatedMinutes,
+          xpReward: targetCL.xpReward,
+          completedAt: null,
+        };
+      }
+    }
+
+    return sorted[0] ?? null;
   }, [lessons, foundationComplete, language]);
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
@@ -217,13 +267,13 @@ export default function Home() {
   ];
 
   const handleLessonStart = () => {
-    if (!nextLesson) {
+    if (!nextLesson || nextLesson.id === "curriculum-next") {
       navigate("/learn");
       return;
     }
 
     if (nextLesson.hskLevel === 0) {
-      navigate("/foundation");
+      navigate(`/foundation?stage=${nextLesson.order - 1}`);
       return;
     }
 

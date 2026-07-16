@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Lock, PartyPopper, RotateCcw, Volume2 } from "lucide-react";
 import { useCompleteLessonByIdMutation, useLessonsQuery } from "../../api";
 import { useI18n } from "../../i18n";
@@ -226,21 +226,17 @@ export default function Foundation() {
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const completeMutation = useCompleteLessonByIdMutation();
 
+  const [searchParams] = useSearchParams();
+
   // Guest progress lives in localStorage; signed-in progress lives in the DB
   // (lessons table, hsk_level 0) so it counts toward XP/streak and syncs per account.
   const [localCompleted, setLocalCompleted] = useState<Set<string>>(() => loadFoundationProgress());
-  const [activeIndex, setActiveIndex] = useState(() => {
-    const done = loadFoundationProgress();
-    const firstUnfinished = FOUNDATION_STAGES.findIndex((stage) => !done.has(stage.id));
-    return firstUnfinished === -1 ? 0 : firstUnfinished;
-  });
 
   const dbCompletedLessonIds = useMemo(
     () => new Set((lessonsQuery.data?.lessons ?? []).filter((lesson) => lesson.completedAt).map((lesson) => lesson.id)),
     [lessonsQuery.data?.lessons],
   );
 
-  // A stage counts as done if the DB says so (signed-in) or localStorage says so (guest / offline).
   const completedStageIds = useMemo(() => {
     const ids = new Set<string>();
     for (const stage of FOUNDATION_STAGES) {
@@ -248,6 +244,22 @@ export default function Foundation() {
     }
     return ids;
   }, [localCompleted, dbCompletedLessonIds]);
+
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const stageParam = searchParams.get("stage");
+    if (stageParam !== null) {
+      const idx = parseInt(stageParam, 10);
+      if (!isNaN(idx) && idx >= 0 && idx < FOUNDATION_STAGES.length) {
+        return idx;
+      }
+    }
+    const firstUnfinished = FOUNDATION_STAGES.findIndex((stage) => !completedStageIds.has(stage.id));
+    return firstUnfinished === -1 ? 0 : firstUnfinished;
+  });
+
+
+
+
 
   const stage = FOUNDATION_STAGES[activeIndex];
   const totalStages = FOUNDATION_STAGES.length;
