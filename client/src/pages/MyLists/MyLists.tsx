@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   BookmarkPlus,
+  BookOpen,
   Filter,
   Heart,
   ListChecks,
@@ -19,8 +20,10 @@ import {
   useListDetailQuery,
   useListsQuery,
   useRemoveWordFromListMutation,
+  useToggleFavoriteMutation,
 } from "../../api";
 import type { CustomListWord } from "../../api/lists";
+import type { Word } from "../../api/vocabulary";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import LoadingCard from "../../components/LoadingCard";
 import LoginPromptCard from "../../components/LoginPromptCard";
@@ -28,6 +31,8 @@ import { DropdownSelect } from "../../components/ui/dropdown-select";
 import { useAuthGate } from "../../hooks/useAuthGate";
 import { tOrRaw, useI18n } from "../../i18n";
 import { speakChinese } from "../../utils/tts";
+import WordCard from "../Dictionary/components/WordCard";
+import ListPickerModal from "../Dictionary/components/ListPickerModal";
 
 const hskLevels = [1, 2, 3, 4, 5, 6, 7];
 const listEmojis = ["📘", "⭐", "🧠", "✍️"];
@@ -44,8 +49,11 @@ export default function MyLists() {
   const createListMutation = useCreateListMutation();
   const deleteListMutation = useDeleteListMutation();
   const enrollMutation = useEnrollWordMutation();
+  const favoriteMutation = useToggleFavoriteMutation();
 
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [pickerWord, setPickerWord] = useState<Word | null>(null);
   const [newListName, setNewListName] = useState("");
   const [newListEmoji, setNewListEmoji] = useState(listEmojis[0]);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -60,6 +68,12 @@ export default function MyLists() {
   // Fall back to the first list so the page opens with content right away.
   const activeListId = selectedListId ?? lists[0]?.id ?? "";
   const activeList = lists.find((list) => list.id === activeListId);
+
+  const favoriteWords = favoritesQuery.data?.words ?? [];
+  const wordIdsInAnyList = useMemo(
+    () => new Set(lists.flatMap((list) => list.wordIds)),
+    [lists],
+  );
 
   const detailQuery = useListDetailQuery(activeListId, Boolean(activeListId));
   const removeWordMutation = useRemoveWordFromListMutation(activeListId);
@@ -99,11 +113,24 @@ export default function MyLists() {
   const localizeLabel = (prefix: string, raw: string) => tOrRaw(t, prefix, raw);
 
   const selectList = (listId: string) => {
+    setShowFavorites(false);
     setSelectedListId(listId);
     setQuery("");
     setSelectedHsk("all");
     setSelectedCategory("all");
     setSelectedPos("all");
+  };
+
+  const handleUnfavorite = async (word: Word) => {
+    const response = await favoriteMutation.mutateAsync({ wordId: word.id });
+    toast.success(
+      response.isFavorite ? t("dictionary.favoriteSaved") : t("dictionary.favoriteRemoved"),
+    );
+  };
+
+  const handleEnrollWord = async (word: Word) => {
+    const response = await enrollMutation.mutateAsync({ wordId: word.id });
+    toast.success(response.enrolled ? t("dictionary.enrolled") : t("dictionary.alreadyEnrolled"));
   };
 
   const handleCreateList = async (event: FormEvent) => {
@@ -173,12 +200,16 @@ export default function MyLists() {
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           <button
             type="button"
-            onClick={() => navigate("/favorites")}
-            className="flex shrink-0 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary"
+            onClick={() => setShowFavorites(true)}
+            className={
+              showFavorites
+                ? "flex shrink-0 items-center gap-2 rounded-xl border border-primary bg-primary/5 px-3 py-2 text-sm font-bold text-primary transition"
+                : "flex shrink-0 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary"
+            }
           >
             <Heart size={15} className="fill-primary text-primary" />
             <span>{t("dictionary.favoritesChip")}</span>
-            <span className="text-muted-foreground">{favoritesQuery.data?.words.length ?? 0}</span>
+            <span className="text-muted-foreground">{favoriteWords.length}</span>
           </button>
           {lists.length === 0 ? (
             <span className="rounded-xl border border-dashed px-3 py-2 text-sm font-semibold text-muted-foreground">
@@ -192,7 +223,7 @@ export default function MyLists() {
                 onClick={() => selectList(list.id)}
                 title={t("dictionary.viewList")}
                 className={
-                  list.id === activeListId
+                  !showFavorites && list.id === activeListId
                     ? "flex shrink-0 items-center gap-2 rounded-xl border border-primary bg-primary/5 px-3 py-2 text-sm font-bold text-primary transition"
                     : "flex shrink-0 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary"
                 }
@@ -233,7 +264,53 @@ export default function MyLists() {
         </form>
       </section>
 
-      {lists.length === 0 ? (
+      {showFavorites ? (
+        <>
+          <section className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="flex min-w-0 items-center gap-2 text-left text-base font-extrabold">
+              <Heart size={18} className="shrink-0 fill-primary text-primary" />
+              <span className="truncate">{t("dictionary.favoritesTitle")}</span>
+              <span className="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-xs font-bold text-muted-foreground">
+                {t("dictionary.results", { count: favoriteWords.length })}
+              </span>
+            </h2>
+          </section>
+
+          {favoritesQuery.isLoading ? (
+            <LoadingCard label={t("common.loading")} />
+          ) : favoriteWords.length === 0 ? (
+            <div className="app-surface px-5 py-10 text-center">
+              <Heart className="mx-auto mb-3 text-muted-foreground" size={36} />
+              <h3 className="font-extrabold">{t("dictionary.favoritesEmptyTitle")}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{t("dictionary.favoritesEmptyBody")}</p>
+              <button
+                type="button"
+                onClick={() => navigate("/dictionary")}
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 active:translate-y-px"
+              >
+                <BookOpen size={16} />
+                {t("dictionary.openDictionary")}
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {favoriteWords.map((word) => (
+                <WordCard
+                  key={word.id}
+                  word={word}
+                  favorite
+                  inList={wordIdsInAnyList.has(word.id)}
+                  onSpeak={() => speakChinese(word.simplified)}
+                  onFavorite={() => void handleUnfavorite(word)}
+                  onEnroll={() => void handleEnrollWord(word)}
+                  onAddToList={() => setPickerWord(word)}
+                  busy={favoriteMutation.isPending || enrollMutation.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      ) : lists.length === 0 ? (
         <div className="app-surface px-5 py-10 text-center">
           <ListChecks className="mx-auto mb-3 text-muted-foreground" size={36} />
           <h3 className="font-extrabold">{t("myLists.emptyTitle")}</h3>
@@ -419,6 +496,8 @@ export default function MyLists() {
         onConfirm={() => void handleDeleteList()}
         onCancel={() => setConfirmDelete(false)}
       />
+
+      <ListPickerModal items={pickerWord ? [pickerWord] : null} onClose={() => setPickerWord(null)} />
     </div>
   );
 }

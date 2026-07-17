@@ -24,3 +24,31 @@ export const LANGUAGE_META: Record<Language, { code: string; nativeLabel: string
 
 export const isLanguage = (value: unknown): value is Language =>
   typeof value === "string" && (LANGUAGES as readonly string[]).includes(value);
+
+/**
+ * Best-effort mapping from the device's preferred locales to one of our
+ * supported languages, used as the default before the learner has made an
+ * explicit choice. Once they switch, the picked language is persisted and takes
+ * precedence over this (see `appSlice`).
+ *
+ * Traditional-Chinese regions (Taiwan, Hong Kong, Macau) map to `zh-Hant`;
+ * everything else Chinese maps to `zh-Hans`. Anything we don't recognise falls
+ * back to English.
+ */
+export const detectDeviceLanguage = (): Language => {
+  const candidates =
+    typeof navigator !== "undefined"
+      ? [...(navigator.languages ?? []), navigator.language].filter(Boolean)
+      : [];
+
+  for (const raw of candidates) {
+    const tag = raw.toLowerCase();
+    if (tag.startsWith("vi")) return "vi";
+    if (tag.startsWith("zh")) {
+      return /(^zh-hant|-tw|-hk|-mo|hant)/.test(tag) ? "zh-Hant" : "zh-Hans";
+    }
+    if (tag.startsWith("en")) return "en";
+  }
+
+  return "en";
+};

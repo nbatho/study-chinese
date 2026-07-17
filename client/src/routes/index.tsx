@@ -15,7 +15,6 @@ const Radicals = lazy(() => import("../pages/Radicals"));
 const Practice = lazy(() => import("../pages/Practice"));
 const Review = lazy(() => import("../pages/Review"));
 const Dictionary = lazy(() => import("../pages/Dictionary"));
-const Favorites = lazy(() => import("../pages/Favorites"));
 const MyLists = lazy(() => import("../pages/MyLists"));
 const Translate = lazy(() => import("../pages/Translate"));
 const Profile = lazy(() => import("../pages/Profile"));
@@ -89,8 +88,9 @@ export const routes: RouteConfig[] = [
         element: <Dictionary />
       },
       {
+        // Favorites merged into My Lists; keep the path working for old links.
         path: "favorites",
-        element: <Favorites />
+        element: <Navigate to="/my-lists" replace />
       },
       {
         path: "my-lists",

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { isLanguage } from "../../i18n/languages";
+import { detectDeviceLanguage, isLanguage } from "../../i18n/languages";
 import type { Language } from "../../i18n/languages";
 
 export type AppAppearance = "light" | "dark" | "system";
@@ -61,7 +61,7 @@ const initialState: AppState = {
   initialized: true,
   appAppearance: persistedState.appAppearance ?? "light",
   hasCompletedOnboarding: persistedState.hasCompletedOnboarding ?? false,
-  language: isLanguage(persistedState.language) ? persistedState.language : "en",
+  language: isLanguage(persistedState.language) ? persistedState.language : detectDeviceLanguage(),
   hskSelection: null,
 };
 
