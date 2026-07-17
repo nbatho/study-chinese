@@ -12,7 +12,7 @@ import { cn } from "../../utils/cn";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 import { CEFR_RANK, getCurriculumLessons, getLevelProgress, HSK_CURRICULUM } from "./curriculum";
-import { FOUNDATION_STAGES } from "../Foundation/foundationCourse";
+import { FOUNDATION_STAGES, useLocalFoundationProgress } from "../Foundation/foundationCourse";
 
 
 export default function Learn() {
@@ -95,15 +95,22 @@ export default function Learn() {
     return CEFR_RANK[selectedCurriculum.cefrLevel] > CEFR_RANK[userCefrLevel];
   };
 
+  const localFoundationProgress = useLocalFoundationProgress();
+  const foundationCompletedCount = useMemo(() => {
+    if (isAuthenticated) return lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length;
+    const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map(l => l.id));
+    return FOUNDATION_STAGES.filter(stage => localFoundationProgress.has(stage.id) || dbDone.has(stage.lessonId)).length;
+  }, [isAuthenticated, lessons, localFoundationProgress]);
+
   const hskStats = [
     {
       level: 0,
       cefrLevel: "A1" as const,
       isLocked: false,
       lockReason: null,
-      completedCount: lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length,
+      completedCount: foundationCompletedCount,
       lessonCount: FOUNDATION_STAGES.length,
-      percent: Math.round((lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length / FOUNDATION_STAGES.length) * 100) || 0,
+      percent: Math.round((foundationCompletedCount / FOUNDATION_STAGES.length) * 100) || 0,
       skills: ["pronunciation", "pinyin"],
       topicCount: 1,
       focus: t("learn.foundationTitle"),

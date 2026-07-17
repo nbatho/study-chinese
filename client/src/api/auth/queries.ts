@@ -4,6 +4,7 @@ import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { useAppDispatch } from '../../store/hooks';
 import { clearCredentials, setCredentials } from '../../store/modules/authSlice';
+import { clearFoundationProgress } from '../../pages/Foundation/foundationCourse';
 import { authApi } from './index';
 import type {
     ChangePasswordPayload,
@@ -98,6 +99,7 @@ export const useLogoutMutation = () => {
         onSuccess: () => {
             dispatch(clearCredentials());
             queryClient.clear();
+            clearFoundationProgress();
         },
     });
 };
@@ -153,6 +155,7 @@ export const useDeleteAccountMutation = () => {
         onSuccess: () => {
             dispatch(clearCredentials());
             queryClient.clear();
+            clearFoundationProgress();
         },
     });
 };

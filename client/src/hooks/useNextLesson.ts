@@ -4,7 +4,7 @@ import type { Language } from "../i18n";
 import {
   FOUNDATION_STAGES,
   isFoundationComplete,
-  loadFoundationProgress,
+  useLocalFoundationProgress,
   localized,
 } from "../pages/Foundation/foundationCourse";
 import { getCurriculumLessons, HSK_CURRICULUM } from "../pages/Learn/curriculum";
@@ -31,6 +31,8 @@ export type NextLesson = Pick<
  * (and avoids stale localStorage disagreeing with a reset/other-device account).
  */
 export function useNextLesson(lessons: LessonSummary[], language: Language, allowLocalFallback = true) {
+  const localProgress = useLocalFoundationProgress();
+
   // Foundation completion check: DB (signed-in) or localStorage (guest/offline).
   const foundationComplete = useMemo(() => {
     const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
@@ -38,12 +40,12 @@ export function useNextLesson(lessons: LessonSummary[], language: Language, allo
       dbLessons.some((l) => l.id === stage.lessonId),
     );
     if (dbFoundationDone) return true;
-    return allowLocalFallback ? isFoundationComplete(loadFoundationProgress()) : false;
-  }, [lessons, allowLocalFallback]);
+    return allowLocalFallback ? isFoundationComplete(localProgress) : false;
+  }, [lessons, allowLocalFallback, localProgress]);
 
   const nextLesson = useMemo<NextLesson | null>(() => {
     if (!foundationComplete) {
-      const localDone = allowLocalFallback ? loadFoundationProgress() : new Set<string>();
+      const localDone = allowLocalFallback ? localProgress : new Set<string>();
       const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
       const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
         (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
@@ -117,7 +119,7 @@ export function useNextLesson(lessons: LessonSummary[], language: Language, allo
     }
 
     return sorted[0] ?? null;
-  }, [lessons, foundationComplete, language]);
+  }, [lessons, foundationComplete, language, allowLocalFallback, localProgress]);
 
   return { foundationComplete, nextLesson };
 }

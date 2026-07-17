@@ -15,13 +15,15 @@ import { cn } from "../utils/cn";
 import { useDocumentLanguage, useI18n } from "../i18n";
 import { useStudyReminder } from "../hooks/useStudyReminder";
 import { todayKey } from "../utils/studyReminder";
+import ScrollToTopButton from "../components/ScrollToTopButton";
+
 
 export default function AppLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const mainRef = useRef<HTMLElement>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
@@ -88,34 +90,6 @@ export default function AppLayout() {
     }
   }, [location.pathname, navigate, needsOnboarding]);
 
-  useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-
-    const resetScroll = () => {
-      main.scrollTop = 0;
-    };
-
-    // Reset immediately
-    resetScroll();
-
-    // Defer reset to handle React Router layout updates and asynchronous content rendering
-    const rafId = requestAnimationFrame(() => {
-      resetScroll();
-    });
-
-    const t1 = setTimeout(resetScroll, 50);
-    const t2 = setTimeout(resetScroll, 150);
-    const t3 = setTimeout(resetScroll, 300);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  }, [location.pathname]);
-
   if (needsOnboarding) {
     return null;
   }
@@ -132,7 +106,7 @@ export default function AppLayout() {
             the visual viewport drifts on iOS while Safari's chrome expands or
             collapses, leaving a phantom band above the tabs. */}
         <div className="flex min-w-0 flex-1 flex-col">
-        <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
           <Navbar />
           {showVerifyBanner && (
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center">
@@ -150,7 +124,7 @@ export default function AppLayout() {
               </button>
             </div>
           )}
-          <div className="flex w-full min-w-0 flex-1 justify-center overflow-x-hidden">
+          <div key={location.pathname} ref={scrollContainerRef} className="flex w-full min-w-0 flex-1 justify-center overflow-x-hidden overflow-y-auto">
             <div
               className={cn(
                 "box-border w-full min-w-0 px-3 py-4 pb-6 sm:px-5 sm:py-6 lg:px-8",
@@ -161,12 +135,13 @@ export default function AppLayout() {
                 {/* Keying by pathname unmounts and remounts the page on every
                     tab change, so each tab always starts from a fresh render
                     (local state reset, entry animation replayed). */}
-                <Outlet key={location.pathname} context={{ selectedLessonId, setSelectedLessonId }} />
+                <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
               </ErrorBoundary>
             </div>
           </div>
         </main>
-
+        
+        <ScrollToTopButton scrollContainerRef={scrollContainerRef} />
         <BottomNav />
         </div>
 

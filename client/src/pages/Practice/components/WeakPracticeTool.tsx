@@ -121,27 +121,26 @@ export default function WeakPracticeTool() {
                 </span>
             </div>
 
-            <div className={cn(innerCardClass, "mb-6 p-7")}>
-                <h1 className="font-serif text-6xl font-extrabold text-primary">
+            <div className="mb-6 rounded-lg border bg-card px-5 py-7.5 text-center shadow-sm">
+                <h4 className="mb-3 text-base uppercase text-muted-foreground">{displayedMistake.skill}</h4>
+                <h2 className="mb-2 font-serif text-5xl font-extrabold text-primary">
                     {displayedMistake.simplified || displayedMistake.prompt || "?"}
-                </h1>
+                </h2>
                 {displayedMistake.prompt && displayedMistake.prompt !== displayedMistake.simplified && (
-                    <p className="mt-3 text-[0.9rem] font-semibold text-muted-foreground">{displayedMistake.prompt}</p>
+                    <h3 className="font-serif text-[1.35rem] font-bold leading-relaxed">{displayedMistake.prompt}</h3>
                 )}
                 {displayedMistake.simplified && (
-                    <TtsButton text={displayedMistake.simplified} className={cn(secondaryButtonClass, "mt-4 px-4 py-2")}>
-                        {t("practice.listen")}
-                    </TtsButton>
+                    <TtsButton text={displayedMistake.simplified} iconSize={28} className="!p-0 mb-2 mt-4 inline-flex size-14 items-center justify-center rounded-full border bg-secondary text-secondary-foreground transition hover:bg-accent" />
                 )}
             </div>
 
             <form onSubmit={submit} className="grid gap-4">
-                <input
+                <textarea
                     value={answer}
                     onChange={(event) => setAnswer(event.target.value)}
                     disabled={checked !== null}
                     placeholder={t("practice.weak.placeholder")}
-                    className="rounded-xl border-2 bg-background p-4 text-center text-base font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                    className="min-h-28 rounded-xl border bg-card px-4 py-3 text-base font-semibold outline-none transition focus:border-primary disabled:cursor-default disabled:opacity-80"
                 />
 
                 {checked !== null && (

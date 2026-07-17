@@ -3,6 +3,7 @@
 // picks the variant matching the app language, falling back to English for the
 // languages this content has not been authored in yet.
 
+import { useEffect, useState } from "react";
 import type { Language } from "../../i18n";
 
 export type LocalizedText = Record<"en" | "vi", string>;
@@ -385,26 +386,52 @@ export const FOUNDATION_TOTAL_MINUTES = FOUNDATION_STAGES.reduce((total, stage) 
 
 const PROGRESS_KEY = "study_chinese_foundation_progress_v1";
 
-/** Set of completed stage ids, persisted in localStorage (no backend needed). */
-export function loadFoundationProgress(): Set<string> {
+// Wipe any old persisted progress to ensure the "reset to empty" behavior
+if (typeof window !== "undefined") {
   try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    if (!raw) return new Set();
-    const parsed = JSON.parse(raw);
-    return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
+    localStorage.removeItem(PROGRESS_KEY);
   } catch {
-    return new Set();
+    // Ignore
   }
 }
 
+// Progress for unauthenticated users is stored in memory only, per request:
+// "khi chưa đăng nhập thì tất cả mọi thứ phải được reset về rỗng tránh việc lưu lại"
+let memoryProgress = new Set<string>();
+
+/** Set of completed stage ids (in memory). */
+export function loadFoundationProgress(): Set<string> {
+  return new Set(memoryProgress);
+}
+
 export function saveFoundationProgress(completed: Set<string>): void {
-  try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify([...completed]));
-  } catch {
-    // Progress persistence is best-effort only.
-  }
+  memoryProgress = new Set(completed);
+  window.dispatchEvent(new Event("foundationProgressChanged"));
+}
+
+export function clearFoundationProgress(): void {
+  memoryProgress.clear();
+  window.dispatchEvent(new Event("foundationProgressChanged"));
 }
 
 export function isFoundationComplete(completed: Set<string>): boolean {
   return FOUNDATION_STAGES.every((stage) => completed.has(stage.id));
+}
+
+export function useLocalFoundationProgress(): Set<string> {
+  const [completed, setCompleted] = useState<Set<string>>(() => loadFoundationProgress());
+
+  useEffect(() => {
+    const listener = () => {
+      setCompleted(loadFoundationProgress());
+    };
+    window.addEventListener("foundationProgressChanged", listener);
+    window.addEventListener("storage", listener);
+    return () => {
+      window.removeEventListener("foundationProgressChanged", listener);
+      window.removeEventListener("storage", listener);
+    };
+  }, []);
+
+  return completed;
 }

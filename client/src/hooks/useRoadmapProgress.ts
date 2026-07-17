@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useLessonsQuery } from "../api/lessons/queries";
 import { useUserProfileQuery } from "../api/users/queries";
 import { useI18n } from "../i18n";
-import { FOUNDATION_STAGES } from "../pages/Foundation/foundationCourse";
+import { FOUNDATION_STAGES, useLocalFoundationProgress } from "../pages/Foundation/foundationCourse";
 import { getLevelProgress } from "../pages/Learn/curriculum";
 import { useAppSelector } from "../store/hooks";
 import { useNextLesson } from "./useNextLesson";
@@ -24,6 +24,7 @@ export const useRoadmapProgress = () => {
 
   const profile = profileQuery.data?.profile;
   const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
+  const localFoundationProgress = useLocalFoundationProgress();
   const { foundationComplete } = useNextLesson(lessons, language, !isAuthenticated);
   const { selectedHsk, selectedCurriculum } = useSelectedHskLevel(
     profile?.cefrLevel ?? "A1",
@@ -33,8 +34,14 @@ export const useRoadmapProgress = () => {
 
   const { completedLessons, totalLessons, progressPercent } = useMemo(() => {
     if (selectedHsk === 0) {
-      const completed = lessons.filter((lesson) => lesson.hskLevel === 0 && lesson.completedAt).length;
       const total = FOUNDATION_STAGES.length;
+      let completed = 0;
+      if (isAuthenticated) {
+        completed = lessons.filter((lesson) => lesson.hskLevel === 0 && lesson.completedAt).length;
+      } else {
+        const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map(l => l.id));
+        completed = FOUNDATION_STAGES.filter(stage => localFoundationProgress.has(stage.id) || dbDone.has(stage.lessonId)).length;
+      }
       return {
         completedLessons: completed,
         totalLessons: total,
@@ -43,7 +50,7 @@ export const useRoadmapProgress = () => {
     }
     const { completedCount, lessonCount, percent } = getLevelProgress(selectedCurriculum, lessons);
     return { completedLessons: completedCount, totalLessons: lessonCount, progressPercent: percent };
-  }, [lessons, selectedHsk, selectedCurriculum]);
+  }, [lessons, selectedHsk, selectedCurriculum, isAuthenticated, localFoundationProgress]);
 
   return {
     selectedHsk,
