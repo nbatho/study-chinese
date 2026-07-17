@@ -24,20 +24,26 @@ export type NextLesson = Pick<
  * The app's "what do I study next" rule, shared by Home and Learn:
  * an unfinished Foundation stage first, then the first uncompleted DB lesson,
  * then the curriculum entry after the highest completed lesson.
+ *
+ * `allowLocalFallback` should be true only for guests: their progress lives in
+ * localStorage because they have no account. For signed-in users the DB is the
+ * single source of truth, so passing false keeps every surface in sync with it
+ * (and avoids stale localStorage disagreeing with a reset/other-device account).
  */
-export function useNextLesson(lessons: LessonSummary[], language: Language) {
+export function useNextLesson(lessons: LessonSummary[], language: Language, allowLocalFallback = true) {
   // Foundation completion check: DB (signed-in) or localStorage (guest/offline).
   const foundationComplete = useMemo(() => {
     const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
     const dbFoundationDone = FOUNDATION_STAGES.every((stage) =>
       dbLessons.some((l) => l.id === stage.lessonId),
     );
-    return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
-  }, [lessons]);
+    if (dbFoundationDone) return true;
+    return allowLocalFallback ? isFoundationComplete(loadFoundationProgress()) : false;
+  }, [lessons, allowLocalFallback]);
 
   const nextLesson = useMemo<NextLesson | null>(() => {
     if (!foundationComplete) {
-      const localDone = loadFoundationProgress();
+      const localDone = allowLocalFallback ? loadFoundationProgress() : new Set<string>();
       const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
       const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
         (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)

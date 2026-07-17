@@ -36,10 +36,15 @@ export default function Foundation() {
   const completedStageIds = useMemo(() => {
     const ids = new Set<string>();
     for (const stage of FOUNDATION_STAGES) {
-      if (localCompleted.has(stage.id) || dbCompletedLessonIds.has(stage.lessonId)) ids.add(stage.id);
+      // Signed-in users: DB is the single source of truth so progress stays in
+      // sync after resets and across devices. Guests fall back to localStorage.
+      const done = isAuthenticated
+        ? dbCompletedLessonIds.has(stage.lessonId)
+        : localCompleted.has(stage.id) || dbCompletedLessonIds.has(stage.lessonId);
+      if (done) ids.add(stage.id);
     }
     return ids;
-  }, [localCompleted, dbCompletedLessonIds]);
+  }, [isAuthenticated, localCompleted, dbCompletedLessonIds]);
 
   const [activeIndex, setActiveIndex] = useState(() => {
     const stageParam = searchParams.get("stage");

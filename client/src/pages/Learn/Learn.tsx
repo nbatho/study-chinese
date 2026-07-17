@@ -42,7 +42,7 @@ export default function Learn() {
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const placementAt = profile?.placementTestCompletedAt ?? null;
   const needsPlacementTest = !profile?.placementTestCompletedAt;
-  const { foundationComplete, nextLesson } = useNextLesson(lessons, language);
+  const { foundationComplete, nextLesson } = useNextLesson(lessons, language, !isAuthenticated);
 
   const { selectedHsk: selectedHSK, selectedCurriculum, selectHskLevel: selectHskLevelState } = useSelectedHskLevel(
     userCefrLevel,

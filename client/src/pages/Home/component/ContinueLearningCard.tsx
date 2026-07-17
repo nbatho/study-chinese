@@ -17,7 +17,7 @@ export default function ContinueLearningCard() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const lessons = lessonsQuery.data?.lessons ?? [];
-  const { nextLesson } = useNextLesson(lessons, language);
+  const { nextLesson } = useNextLesson(lessons, language, !isAuthenticated);
 
   const handleLessonStart = () => {
     if (!nextLesson || nextLesson.id === CURRICULUM_NEXT_ID) {

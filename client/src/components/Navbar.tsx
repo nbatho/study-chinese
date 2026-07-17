@@ -13,6 +13,7 @@ import { useLogoutMutation } from "../api/auth/queries";
 import { useLessonsQuery } from "../api/lessons/queries";
 import { useUserProfileQuery } from "../api/users/queries";
 import { useSelectedHskLevel } from "../hooks/useSelectedHskLevel";
+import { useNextLesson } from "../hooks/useNextLesson";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
@@ -61,12 +62,14 @@ export default function Navbar() {
 
   const profile = profileQuery.data?.profile;
   const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
+  const { foundationComplete } = useNextLesson(lessons, language, isAuthenticated ? false : true);
   // "Curriculum progress" counts every lesson on the roadmap, exactly like the
   // Profile page's headline card — the two numbers must agree. Per-level
   // progress lives on the Learn page, labeled with its HSK level.
   const { selectedHsk } = useSelectedHskLevel(
     profile?.cefrLevel ?? "A1",
     profile?.placementTestCompletedAt ?? null,
+    foundationComplete,
   );
   const { completedLessons, totalLessons, progressPercent } = useMemo(() => {
     const completed = lessons.filter((lesson) => lesson.completedAt).length;
