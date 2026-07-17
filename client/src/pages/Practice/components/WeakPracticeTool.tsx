@@ -13,9 +13,7 @@ import TtsButton from "../../../components/TtsButton";
 import { playAnswerSound, recordAnswer } from "./practiceActivity";
 
 const panelClass = "anim-pop rounded-lg border bg-card p-5 text-center shadow-sm sm:p-7";
-const innerCardClass = "rounded-lg border bg-card shadow-sm";
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground";
-const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-lg border bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground transition hover:bg-accent disabled:opacity-60";
 
 const containsChinese = (value: string) => /[\u4e00-\u9fff]/.test(value);
 const containsPinyinTone = (value: string) =>

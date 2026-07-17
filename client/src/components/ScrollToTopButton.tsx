@@ -4,7 +4,7 @@ import { cn } from "../utils/cn";
 import { Button } from "./ui/button";
 
 interface ScrollToTopButtonProps {
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function ScrollToTopButton({ scrollContainerRef }: ScrollToTopButtonProps) {
