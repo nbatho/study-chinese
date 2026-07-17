@@ -6,29 +6,42 @@ import {
   useDueSrsCardsQuery,
   useReviewSrsMutation,
   useSrsCardsQuery,
+  useUnenrollWordMutation,
 } from "../../api/srs/queries";
 import type { ReviewQuality, SrsDueCard } from "../../api/srs";
-import { BookMarked, Layers, ListChecks, RefreshCw } from "lucide-react";
-import { formatDate, useI18n } from "../../i18n";
+import { BookMarked, ListChecks, RefreshCw, X } from "lucide-react";
+import { useI18n } from "../../i18n";
 import { useAuthGate } from "../../hooks/useAuthGate";
 import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import LoadingCard from "../../components/LoadingCard";
 import TtsButton from "../../components/TtsButton";
+import { toast } from "sonner";
 
 export default function Review() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { isResolving, isAuthenticated } = useAuthGate();
   const queryClient = useQueryClient();
   const dueCardsQuery = useDueSrsCardsQuery(100, isAuthenticated);
   const allCardsQuery = useSrsCardsQuery(isAuthenticated);
   const reviewMutation = useReviewSrsMutation();
+  const unenrollMutation = useUnenrollWordMutation();
   const [sessionQueue, setSessionQueue] = useState<SrsDueCard[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const fetchedCards = useMemo(() => dueCardsQuery.data?.cards ?? [], [dueCardsQuery.data?.cards]);
-  const allCards = allCardsQuery.data?.cards ?? [];
+  const [deletedWordIds, setDeletedWordIds] = useState<Set<string>>(() => new Set());
+
+  const fetchedCards = useMemo(() => {
+    const cards = dueCardsQuery.data?.cards ?? [];
+    return cards.filter((card) => !deletedWordIds.has(card.wordId));
+  }, [dueCardsQuery.data?.cards, deletedWordIds]);
+
+  const allCards = useMemo(() => {
+    const cards = allCardsQuery.data?.cards ?? [];
+    return cards.filter((card) => !deletedWordIds.has(card.wordId));
+  }, [allCardsQuery.data?.cards, deletedWordIds]);
+
   const hasPendingReviewsRef = useRef(false);
 
   // Seed the session as soon as due cards arrive; words enrolled elsewhere
@@ -65,7 +78,7 @@ export default function Review() {
     await reviewMutation.mutateAsync({
       wordId: activeCard.wordId,
       quality,
-      mistake: quality === "again" || quality === "hard" ? {
+      mistake: quality === "again" ? {
         wordId: activeCard.wordId,
         skill: "srs",
         prompt: activeCard.simplified,
@@ -80,6 +93,21 @@ export default function Review() {
     hasPendingReviewsRef.current = true;
     setFlipped(false);
     setActiveIdx((idx) => idx + 1);
+  };
+
+  const handleUnenroll = async (wordId: string) => {
+    try {
+      await unenrollMutation.mutateAsync(wordId);
+      setDeletedWordIds((prev) => {
+        const next = new Set(prev);
+        next.add(wordId);
+        return next;
+      });
+      setSessionQueue((prev) => prev.filter((card) => card.wordId !== wordId));
+      toast.success(t("review.removed"));
+    } catch {
+      /* mutation error handled by react-query */
+    }
   };
 
   const loadNextBatch = () => {
@@ -102,13 +130,12 @@ export default function Review() {
     );
   }
 
+  const progressPercent = sessionTotal > 0 ? Math.round((activeIdx / sessionTotal) * 100) : 0;
+
   return (
     <div className="app-page">
-      <div className="app-page-header mb-5 flex items-center justify-between gap-3">
+      <div className="app-page-header mb-5">
         <h2 className="text-left text-2xl font-extrabold">{t("review.title")}</h2>
-        <span className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-1.5 text-[0.8rem] font-bold text-gold">
-          <Layers size={14} /> {t("review.due", { count: Math.max(0, sessionTotal - activeIdx) })}
-        </span>
       </div>
 
       {dueCardsQuery.isLoading && (
@@ -117,8 +144,12 @@ export default function Review() {
 
       {activeCard ? (
         <div>
-          <div className="mb-4 text-left text-[0.85rem] font-semibold text-muted-foreground">
-            {t("review.progress", { current: activeIdx + 1, total: sessionTotal })}
+          {/* Progress bar */}
+          <div className="mb-5 overflow-hidden rounded-full bg-secondary" style={{ height: 6 }}>
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
 
           <div
@@ -152,26 +183,28 @@ export default function Review() {
                 </div>
                 <div className="text-xl font-bold text-primary">{activeCard.pinyin}</div>
                 <p className="mt-5 text-lg font-semibold sm:text-xl">{activeCard.gloss}</p>
-                <div className="mt-4.5 text-[0.8rem] text-muted-foreground">
-                  {t("review.mastery", { value: activeCard.dueCardDetails.masteryLevel })}
-                </div>
               </div>
             )}
           </div>
 
           {flipped ? (
-            <div className="anim-slide grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-              {[
-                { id: "again", label: t("review.again"), hint: "< 1m", cls: "border-tone-4 text-tone-4" },
-                { id: "hard", label: t("review.hard"), hint: "< 6m", cls: "border-tone-3 text-tone-3" },
-                { id: "good", label: t("review.good"), hint: "10m", cls: "border-tone-1 text-tone-1" },
-                { id: "easy", label: t("review.easy"), hint: "4d", cls: "border-tone-2 text-tone-2" },
-              ].map((btn) => (
-                <button key={btn.id} onClick={() => handleQualitySelect(btn.id as ReviewQuality)} disabled={reviewMutation.isPending} className={cn("flex flex-col items-center rounded-xl border-[1.5px] bg-card/80 px-1.5 py-3 transition hover:-translate-y-0.5 disabled:opacity-60", btn.cls)}>
-                  <span className="text-[0.95rem] font-bold">{btn.label}</span>
-                  <span className="mt-0.5 text-[0.7rem] text-muted-foreground">{btn.hint}</span>
-                </button>
-              ))}
+            <div className="anim-slide grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleQualitySelect("again")}
+                disabled={reviewMutation.isPending}
+                className="flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-tone-4 bg-card/80 px-4 py-3.5 text-tone-4 transition hover:-translate-y-0.5 disabled:opacity-60"
+              >
+                <X size={18} strokeWidth={2.5} />
+                <span className="text-[0.95rem] font-bold">{t("review.forgot")}</span>
+              </button>
+              <button
+                onClick={() => handleQualitySelect("good")}
+                disabled={reviewMutation.isPending}
+                className="flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-jade bg-card/80 px-4 py-3.5 text-jade transition hover:-translate-y-0.5 disabled:opacity-60"
+              >
+                <span className="text-lg">✓</span>
+                <span className="text-[0.95rem] font-bold">{t("review.gotIt")}</span>
+              </button>
             </div>
           ) : (
             <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px" onClick={() => setFlipped(true)}>
@@ -226,9 +259,9 @@ export default function Review() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-2">
+          <div className="flex flex-col gap-2">
             {allCards.map((card) => (
-              <div key={card.wordId} className="flex items-center gap-3 rounded-xl border bg-background px-3 py-2.5">
+              <div key={card.wordId} className="flex min-w-0 items-center gap-3 rounded-xl border bg-background px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <span className="font-serif text-xl font-extrabold">{card.simplified}</span>
@@ -236,25 +269,22 @@ export default function Review() {
                   </div>
                   <p className="mt-0.5 truncate text-sm font-medium text-muted-foreground">{card.gloss}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span
-                    className={cn(
-                      "rounded-md px-2 py-0.5 text-[0.68rem] font-bold",
-                      card.isDue ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground",
-                    )}
-                  >
-                    {card.isDue ? t("review.dueNow") : t("review.dueAt", { date: formatDate(card.dueCardDetails.dueDate, language, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
-                  </span>
-                  <span className="text-[0.68rem] font-semibold text-muted-foreground">
-                    {t("review.mastery", { value: card.dueCardDetails.masteryLevel })}
-                  </span>
-                </div>
                 <TtsButton
                   text={card.simplified}
                   aria-label={t("common.listen")}
                   className="shrink-0"
                   iconSize={16}
                 />
+                <button
+                  type="button"
+                  onClick={() => void handleUnenroll(card.wordId)}
+                  disabled={unenrollMutation.isPending}
+                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                  aria-label={t("review.removeWord")}
+                  title={t("review.removeWord")}
+                >
+                  <X size={16} />
+                </button>
               </div>
             ))}
           </div>

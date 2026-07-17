@@ -7,6 +7,7 @@ import type {
     EnrollWordResponse,
     ReviewCardPayload,
     ReviewCardResponse,
+    UnenrollWordResponse,
 } from './types';
 
 export const srsApi = {
@@ -17,6 +18,8 @@ export const srsApi = {
     review: (payload: ReviewCardPayload) => apiRequest<ReviewCardResponse>(beApi.post('srs/review', payload)),
 
     enroll: (payload: EnrollWordPayload) => apiRequest<EnrollWordResponse>(beApi.post('srs/enroll', payload)),
+
+    unenroll: (wordId: string) => apiRequest<UnenrollWordResponse>(beApi.delete(`srs/cards/${wordId}`)),
 };
 
 export * from './types';

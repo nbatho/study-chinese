@@ -246,6 +246,20 @@ export const reviewCard = async (userId, payload) => {
   });
 };
 
+export const unenrollWord = async (userId, wordId) => {
+  const result = await query(
+    `
+      DELETE FROM srs_cards
+      WHERE user_id = $1 AND word_id = $2
+    `,
+    [userId, wordId]
+  );
+
+  return {
+    removed: result.rowCount > 0
+  };
+};
+
 export const __private__ = {
   calculateReview,
   masteryFromInterval

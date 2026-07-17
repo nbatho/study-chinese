@@ -59,3 +59,16 @@ export const useEnrollWordMutation = () => {
         },
     });
 };
+
+export const useUnenrollWordMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (wordId: string) => unwrapApiData(srsApi.unenroll(wordId)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
+            queryClient.invalidateQueries({ queryKey: queryKeys.srs.cardsAll });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
+        },
+    });
+};

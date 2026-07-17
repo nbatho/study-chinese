@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { enrollSrsWord, listAllCards, listDueCards, submitReview } from '../controllers/srs.controller.js';
+import { deleteSrsCard, enrollSrsWord, listAllCards, listDueCards, submitReview } from '../controllers/srs.controller.js';
 import { requireAuth } from '../middlewares/auth.middleware.js';
 import { requireFields } from '../middlewares/validate.middleware.js';
 
@@ -11,5 +11,6 @@ router.get('/due', listDueCards);
 router.get('/cards', listAllCards);
 router.post('/review', requireFields(['wordId', 'quality']), submitReview);
 router.post('/enroll', enrollSrsWord);
+router.delete('/cards/:wordId', deleteSrsCard);
 
 export default router;

@@ -1,6 +1,6 @@
 import { asyncHandler } from '../utils/async-handler.js';
 import { success } from '../utils/response.js';
-import { enrollWord, getAllCards, getDueCards, reviewCard } from '../services/srs.service.js';
+import { enrollWord, getAllCards, getDueCards, reviewCard, unenrollWord } from '../services/srs.service.js';
 
 export const listDueCards = asyncHandler(async (req, res) => {
   const data = await getDueCards(req.user.id, req.query.limit, req.query.locale);
@@ -19,5 +19,10 @@ export const submitReview = asyncHandler(async (req, res) => {
 
 export const enrollSrsWord = asyncHandler(async (req, res) => {
   const data = await enrollWord(req.user.id, req.body);
+  success(res, data);
+});
+
+export const deleteSrsCard = asyncHandler(async (req, res) => {
+  const data = await unenrollWord(req.user.id, req.params.wordId);
   success(res, data);
 });

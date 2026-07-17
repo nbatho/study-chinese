@@ -80,3 +80,7 @@ export interface EnrollWordResponse {
     enrolled: boolean;
     word?: unknown;
 }
+
+export interface UnenrollWordResponse {
+    removed: boolean;
+}
