@@ -119,14 +119,6 @@ export default function HanziLookupPopover({ text, anchor, onClose }: HanziLooku
           </div>
         ) : (
           <div className="grid gap-2 text-sm">
-            {entry?.hanViet && (
-              <div className="rounded-lg bg-primary/8 px-3 py-2">
-                <span className="mr-2 text-[0.65rem] font-extrabold uppercase tracking-wide text-primary">
-                  {t("lookup.hanViet")}
-                </span>
-                <span className="font-bold capitalize text-foreground">{entry.hanViet}</span>
-              </div>
-            )}
             {entry?.gloss && (
               <div className="px-1">
                 <span className="mr-2 text-[0.65rem] font-extrabold uppercase tracking-wide text-muted-foreground">
@@ -138,7 +130,7 @@ export default function HanziLookupPopover({ text, anchor, onClose }: HanziLooku
             {typeof entry?.hskLevel === "number" && entry.hskLevel > 0 && (
               <div className="px-1 text-xs font-bold text-muted-foreground">HSK {entry.hskLevel}</div>
             )}
-            {notFound && !entry?.hanViet && (
+            {notFound && (
               <p className="px-1 py-1 text-sm text-muted-foreground">{t("lookup.notFound")}</p>
             )}
           </div>

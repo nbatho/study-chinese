@@ -69,11 +69,6 @@ export default function WordCard({
             </div>
           )}
           <div className="mt-1 text-base font-bold text-primary">{word.pinyin}</div>
-          {word.hanViet && (
-            <div className="mt-0.5 text-sm font-semibold capitalize text-muted-foreground">
-              {t("lookup.hanViet")}: {word.hanViet}
-            </div>
-          )}
           <p className="mt-2 text-[0.95rem] font-medium">{word.gloss}</p>
         </div>
         <button

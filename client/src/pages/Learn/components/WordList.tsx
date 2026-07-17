@@ -17,7 +17,7 @@ export default function WordList({ lesson, compact = false }: { lesson: LessonDe
             <span className="font-serif text-[1.1rem] font-bold">{word.simplified}</span>
             <span className="text-xs text-muted-foreground">
               ({word.pinyin}
-              {word.hanViet ? <span className="capitalize"> · {word.hanViet}</span> : null})
+              {word.gloss ? <span> · {word.gloss}</span> : null})
             </span>
             <Volume2 size={12} className="text-tone-1" />
           </button>

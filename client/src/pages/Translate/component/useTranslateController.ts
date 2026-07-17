@@ -260,9 +260,9 @@ export function useTranslateController() {
       });
 
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      // Don't assign srcObject here: the <video> is only rendered once
+      // cameraActive is true, so videoRef.current is still null at this point.
+      // A dedicated effect attaches the stream after the element mounts.
       setCameraActive(true);
     } catch (error) {
       console.error("Camera access error:", error);
@@ -417,6 +417,15 @@ export function useTranslateController() {
     void changeTargetLang(language === "en" ? "en" : "vi");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
+
+  // Attach the stream once the <video> element is actually mounted. Assigning
+  // srcObject inside startCamera is too early — the element only exists after
+  // cameraActive flips to true and React re-renders.
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraActive]);
 
   useEffect(() => () => stopCamera(), []);
 
