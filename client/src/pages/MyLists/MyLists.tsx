@@ -57,6 +57,7 @@ export default function MyLists() {
   const [newListName, setNewListName] = useState("");
   const [newListEmoji, setNewListEmoji] = useState(listEmojis[0]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletedListIds, setDeletedListIds] = useState<Set<string>>(() => new Set());
 
   const [query, setQuery] = useState("");
   const [selectedHsk, setSelectedHsk] = useState<number | "all">("all");
@@ -64,7 +65,10 @@ export default function MyLists() {
   const [selectedPos, setSelectedPos] = useState<string>("all");
   const [sort, setSort] = useState<ListSort>("hsk");
 
-  const lists = useMemo(() => listsQuery.data?.lists ?? [], [listsQuery.data?.lists]);
+  const lists = useMemo(() => {
+    const rawLists = listsQuery.data?.lists ?? [];
+    return rawLists.filter((list) => !deletedListIds.has(list.id));
+  }, [listsQuery.data?.lists, deletedListIds]);
   // Fall back to the first list so the page opens with content right away.
   const activeListId = selectedListId ?? lists[0]?.id ?? "";
   const activeList = lists.find((list) => list.id === activeListId);
@@ -147,8 +151,14 @@ export default function MyLists() {
   const handleDeleteList = async () => {
     setConfirmDelete(false);
     if (!activeListId) return;
-    await deleteListMutation.mutateAsync(activeListId);
+    const deletingId = activeListId;
+    setDeletedListIds((prev) => {
+      const next = new Set(prev);
+      next.add(deletingId);
+      return next;
+    });
     setSelectedListId(null);
+    await deleteListMutation.mutateAsync(deletingId);
     toast.success(t("dictionary.listDeleted"));
   };
 

@@ -30,6 +30,7 @@ import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoadingCard from "../../components/LoadingCard";
 import WordCard from "./components/WordCard";
 import ListPickerModal from "./components/ListPickerModal";
+import ListDetailModal from "./components/ListDetailModal";
 
 const hskLevels = [1, 2, 3, 4, 5, 6, 7];
 const cefrLevels: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -54,6 +55,7 @@ export default function Dictionary() {
   const [sort, setSort] = useState<VocabularySort>("hsk");
   const [page, setPage] = useState(1);
   const [pickerWord, setPickerWord] = useState<Word | null>(null);
+  const [selectedListDetailId, setSelectedListDetailId] = useState<string | null>(null);
 
   const debouncedQuery = useDebouncedValue(query);
 
@@ -128,6 +130,17 @@ export default function Dictionary() {
 
   return (
     <div className="app-page">
+      {radicalParam && (
+        <button
+          type="button"
+          onClick={() => navigate("/radicals")}
+          className="mb-4 inline-flex items-center gap-2 rounded-xl border bg-background px-3.5 py-2 text-xs font-bold transition hover:border-primary hover:text-primary active:translate-y-px"
+        >
+          <ChevronLeft size={14} />
+          {t("common.back")}
+        </button>
+      )}
+
       <header className="app-page-header mb-5">
         <div className="mb-2 flex items-center gap-2">
           <BookOpen size={24} className="text-primary" />
@@ -277,19 +290,38 @@ export default function Dictionary() {
       </section>
 
       {isAuthenticated && (
-        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
-          <p className="min-w-0 text-left text-sm font-semibold text-muted-foreground">
-            {t("dictionary.myListsHint")}
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate("/my-lists")}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary active:translate-y-px"
-          >
-            <ListChecks size={16} className="text-primary" />
-            {t("dictionary.myLists")}
-            <span className="text-muted-foreground">{lists.length}</span>
-          </button>
+        <div className="mb-5 grid gap-4 rounded-xl border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-left">
+              <p className="text-sm font-bold">{t("dictionary.myLists")}</p>
+              <p className="text-xs text-muted-foreground">{t("dictionary.myListsHint")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/my-lists")}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary active:translate-y-px"
+            >
+              <ListChecks size={16} className="text-primary" />
+              {t("nav.more")}
+            </button>
+          </div>
+
+          {lists.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {lists.map((list) => (
+                <button
+                  key={list.id}
+                  type="button"
+                  onClick={() => setSelectedListDetailId(list.id)}
+                  className="flex items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm font-bold transition hover:border-primary active:translate-y-px"
+                >
+                  <span>{list.emoji}</span>
+                  <span>{list.name}</span>
+                  <span className="text-xs text-muted-foreground">{list.wordIds.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -362,6 +394,7 @@ export default function Dictionary() {
       </footer>
 
       <ListPickerModal items={pickerWord ? [pickerWord] : null} onClose={() => setPickerWord(null)} />
+      <ListDetailModal listId={selectedListDetailId} onClose={() => setSelectedListDetailId(null)} />
     </div>
   );
 }

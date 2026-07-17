@@ -16,6 +16,7 @@ router.get('/topics', listTopics);
 router.get('/radicals', listRadicals);
 router.get('/stats', vocabularyStats);
 router.get('/search', listVocabulary);
+router.get('/lookup', lookupVocabulary);
 router.get('/', listVocabulary);
 
 export default router;

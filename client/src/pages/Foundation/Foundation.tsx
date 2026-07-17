@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Lock } from "lucide-react";
-import { useCompleteLessonByIdMutation, useLessonsQuery } from "../../api";
+import { useCompleteLessonByIdMutation, useLessonsQuery, useUserProfileQuery } from "../../api";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
+import { useSelectedHskLevel } from "../../hooks/useSelectedHskLevel";
 import { cn } from "../../utils/cn";
 import {
   FOUNDATION_STAGES,
@@ -21,6 +22,18 @@ export default function Foundation() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const lessonsQuery = useLessonsQuery(isAuthenticated);
   const completeMutation = useCompleteLessonByIdMutation();
+  const profileQuery = useUserProfileQuery(isAuthenticated);
+
+  const profile = profileQuery.data?.profile;
+  const { selectHskLevel } = useSelectedHskLevel(
+    profile?.cefrLevel ?? "A1",
+    profile?.placementTestCompletedAt ?? null,
+    false,
+  );
+
+  useEffect(() => {
+    selectHskLevel(0);
+  }, [selectHskLevel]);
 
   const [searchParams] = useSearchParams();
 

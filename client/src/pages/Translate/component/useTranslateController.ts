@@ -249,8 +249,14 @@ export function useTranslateController() {
       setSegments([]);
       setSelectedSegmentIds([]);
       setSelectedBox(null);
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        toast.error(t("translate.toastCameraError"));
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: { ideal: "environment" } },
       });
 
       streamRef.current = stream;
@@ -258,7 +264,8 @@ export function useTranslateController() {
         videoRef.current.srcObject = stream;
       }
       setCameraActive(true);
-    } catch {
+    } catch (error) {
+      console.error("Camera access error:", error);
       toast.error(t("translate.toastCameraError"));
     }
   };

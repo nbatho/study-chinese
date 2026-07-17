@@ -15,6 +15,8 @@ import { useUserProfileQuery } from "../api/users/queries";
 import { useSelectedHskLevel } from "../hooks/useSelectedHskLevel";
 import { useNextLesson } from "../hooks/useNextLesson";
 import { useI18n } from "../i18n";
+import { getLevelProgress } from "../pages/Learn/curriculum";
+import { FOUNDATION_STAGES } from "../pages/Foundation/foundationCourse";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
@@ -66,19 +68,28 @@ export default function Navbar() {
   // "Curriculum progress" counts every lesson on the roadmap, exactly like the
   // Profile page's headline card — the two numbers must agree. Per-level
   // progress lives on the Learn page, labeled with its HSK level.
-  const { selectedHsk } = useSelectedHskLevel(
+  const { selectedHsk, selectedCurriculum } = useSelectedHskLevel(
     profile?.cefrLevel ?? "A1",
     profile?.placementTestCompletedAt ?? null,
     foundationComplete,
   );
   const { completedLessons, totalLessons, progressPercent } = useMemo(() => {
-    const completed = lessons.filter((lesson) => lesson.completedAt).length;
+    if (selectedHsk === 0) {
+      const completed = lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length;
+      const total = FOUNDATION_STAGES.length;
+      return {
+        completedLessons: completed,
+        totalLessons: total,
+        progressPercent: total ? Math.round((completed / total) * 100) : 0,
+      };
+    }
+    const { completedCount, lessonCount, percent } = getLevelProgress(selectedCurriculum, lessons);
     return {
-      completedLessons: completed,
-      totalLessons: lessons.length,
-      progressPercent: lessons.length ? Math.round((completed / lessons.length) * 100) : 0,
+      completedLessons: completedCount,
+      totalLessons: lessonCount,
+      progressPercent: percent,
     };
-  }, [lessons]);
+  }, [lessons, selectedHsk, selectedCurriculum]);
   const displayName = profile?.name || authUser?.name || t("common.learner");
   const displayEmail = authUser?.email ?? "";
   const avatar = profile?.avatar || authUser?.avatar;

@@ -245,6 +245,7 @@ export default function Learn() {
                         return;
                       }
                       if (nextLesson.hskLevel === 0) {
+                        selectHskLevel(0);
                         navigate(`/foundation?stage=${nextLesson.order - 1}`);
                       } else {
                         setSelectedLessonId(nextLesson.id);
@@ -311,7 +312,7 @@ export default function Learn() {
                 </p>
               </div>
               <div className="text-sm font-bold text-muted-foreground">
-                {t("learn.progress", { level: Math.max(1, selectedHSK), percent: selectedLevelStats.percent })}
+                {t("learn.progress", { level: selectedHSK, percent: selectedLevelStats.percent })}
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -321,6 +322,7 @@ export default function Learn() {
                   type="button"
                   onClick={() => {
                     if (levelStats.level === 0) {
+                      selectHskLevel(0);
                       navigate("/foundation");
                     } else {
                       selectHskLevel(levelStats.level);
