@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   ChevronDown,
@@ -10,13 +10,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth/queries";
-import { useLessonsQuery } from "../api/lessons/queries";
 import { useUserProfileQuery } from "../api/users/queries";
-import { useSelectedHskLevel } from "../hooks/useSelectedHskLevel";
-import { useNextLesson } from "../hooks/useNextLesson";
+import { useRoadmapProgress } from "../hooks/useRoadmapProgress";
 import { useI18n } from "../i18n";
-import { getLevelProgress } from "../pages/Learn/curriculum";
-import { FOUNDATION_STAGES } from "../pages/Foundation/foundationCourse";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
 import { Badge } from "./ui/badge";
@@ -57,39 +53,12 @@ export default function Navbar() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const authUser = useAppSelector((state) => state.auth.user);
   const profileQuery = useUserProfileQuery(isAuthenticated);
-  const lessonsQuery = useLessonsQuery(isAuthenticated);
   const logoutMutation = useLogoutMutation();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const profile = profileQuery.data?.profile;
-  const lessons = useMemo(() => lessonsQuery.data?.lessons ?? [], [lessonsQuery.data?.lessons]);
-  const { foundationComplete } = useNextLesson(lessons, language, isAuthenticated ? false : true);
-  // "Curriculum progress" counts every lesson on the roadmap, exactly like the
-  // Profile page's headline card — the two numbers must agree. Per-level
-  // progress lives on the Learn page, labeled with its HSK level.
-  const { selectedHsk, selectedCurriculum } = useSelectedHskLevel(
-    profile?.cefrLevel ?? "A1",
-    profile?.placementTestCompletedAt ?? null,
-    foundationComplete,
-  );
-  const { completedLessons, totalLessons, progressPercent } = useMemo(() => {
-    if (selectedHsk === 0) {
-      const completed = lessons.filter((l) => l.hskLevel === 0 && l.completedAt).length;
-      const total = FOUNDATION_STAGES.length;
-      return {
-        completedLessons: completed,
-        totalLessons: total,
-        progressPercent: total ? Math.round((completed / total) * 100) : 0,
-      };
-    }
-    const { completedCount, lessonCount, percent } = getLevelProgress(selectedCurriculum, lessons);
-    return {
-      completedLessons: completedCount,
-      totalLessons: lessonCount,
-      progressPercent: percent,
-    };
-  }, [lessons, selectedHsk, selectedCurriculum]);
+  const { levelLabel, completedLessons, totalLessons, progressPercent } = useRoadmapProgress();
   const displayName = profile?.name || authUser?.name || t("common.learner");
   const displayEmail = authUser?.email ?? "";
   const avatar = profile?.avatar || authUser?.avatar;
@@ -136,7 +105,7 @@ export default function Navbar() {
                 </div>
                 <div className="mt-1 flex min-w-0 items-center gap-2">
                   <Badge className="rounded-md px-2.5 py-1 text-xs">
-                    HSK {selectedHsk}
+                    {levelLabel}
                   </Badge>
                   <span className="truncate text-xs font-semibold text-muted-foreground">
                     {t("navbar.lessonsComplete", { completed: completedLessons, total: totalLessons })}

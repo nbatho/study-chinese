@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MailWarning } from "lucide-react";
 import { Toaster, toast } from "sonner";
@@ -20,6 +20,7 @@ export default function AppLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
@@ -87,6 +88,34 @@ export default function AppLayout() {
     }
   }, [location.pathname, navigate, needsOnboarding]);
 
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+
+    const resetScroll = () => {
+      main.scrollTop = 0;
+    };
+
+    // Reset immediately
+    resetScroll();
+
+    // Defer reset to handle React Router layout updates and asynchronous content rendering
+    const rafId = requestAnimationFrame(() => {
+      resetScroll();
+    });
+
+    const t1 = setTimeout(resetScroll, 50);
+    const t2 = setTimeout(resetScroll, 150);
+    const t3 = setTimeout(resetScroll, 300);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [location.pathname]);
+
   if (needsOnboarding) {
     return null;
   }
@@ -103,7 +132,7 @@ export default function AppLayout() {
             the visual viewport drifts on iOS while Safari's chrome expands or
             collapses, leaving a phantom band above the tabs. */}
         <div className="flex min-w-0 flex-1 flex-col">
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        <main ref={mainRef} className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
           <Navbar />
           {showVerifyBanner && (
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center">
@@ -129,7 +158,10 @@ export default function AppLayout() {
               )}
             >
               <ErrorBoundary resetKey={location.pathname}>
-                <Outlet context={{ selectedLessonId, setSelectedLessonId }} />
+                {/* Keying by pathname unmounts and remounts the page on every
+                    tab change, so each tab always starts from a fresh render
+                    (local state reset, entry animation replayed). */}
+                <Outlet key={location.pathname} context={{ selectedLessonId, setSelectedLessonId }} />
               </ErrorBoundary>
             </div>
           </div>

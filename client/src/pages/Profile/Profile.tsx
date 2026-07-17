@@ -11,7 +11,10 @@ import { Progress } from "../../components/ui/progress";
 import { formatDate, startLevelKeys, useI18n } from "../../i18n";
 import LoadingCard from "../../components/LoadingCard";
 import { useAuthGate } from "../../hooks/useAuthGate";
+import { useRoadmapProgress } from "../../hooks/useRoadmapProgress";
 import type { TranslationKey } from "../../i18n/translations";
+import { FOUNDATION_STAGES } from "../Foundation/foundationCourse";
+import { getLevelProgress, HSK_CURRICULUM } from "../Learn/curriculum";
 import AchievementCard from "../Achievements/components/AchievementCard";
 import { categoryLabelKeys } from "../Achievements/components/achievementConfig";
 import SummaryStat from "../Achievements/components/SummaryStat";
@@ -132,22 +135,35 @@ export default function Profile() {
   const accuracy = today.exercisesTotal
     ? Math.round((today.exercisesCorrect / today.exercisesTotal) * 100)
     : 0;
-  const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const totalLessons = lessons.length;
-  const learningProgressPercent = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
-  const hskProgress = Array.from(new Set(lessons.map((lesson) => lesson.hskLevel)))
-    .sort((a, b) => a - b)
-    .map((level) => {
-      const levelLessons = lessons.filter((lesson) => lesson.hskLevel === level);
-      const levelCompleted = levelLessons.filter((lesson) => lesson.completedAt).length;
+  const {
+    completedLessons,
+    totalLessons,
+    progressPercent: learningProgressPercent,
+  } = useRoadmapProgress();
+  // Per-level breakdown, measured against each level's curriculum so the cards
+  // match the ones on the Learn screen.
+  const hskProgress = useMemo(() => {
+    const levels = HSK_CURRICULUM.filter((curriculum) =>
+      lessons.some((lesson) => lesson.hskLevel === curriculum.hskLevel),
+    ).map((curriculum) => {
+      const { completedCount, lessonCount, percent } = getLevelProgress(curriculum, lessons);
 
-      return {
-        level,
-        completed: levelCompleted,
-        total: levelLessons.length,
-        percent: levelLessons.length ? Math.round((levelCompleted / levelLessons.length) * 100) : 0,
-      };
+      return { label: `HSK ${curriculum.hskLevel}`, completed: completedCount, total: lessonCount, percent };
     });
+
+    const foundationCompleted = lessons.filter((lesson) => lesson.hskLevel === 0 && lesson.completedAt).length;
+    if (!lessons.some((lesson) => lesson.hskLevel === 0)) return levels;
+
+    return [
+      {
+        label: t("nav.foundation"),
+        completed: foundationCompleted,
+        total: FOUNDATION_STAGES.length,
+        percent: Math.round((foundationCompleted / FOUNDATION_STAGES.length) * 100),
+      },
+      ...levels,
+    ];
+  }, [lessons, t]);
   const unlockedCount = achievements.filter((achievement) => achievement.unlockedAt).length;
   const lockedCount = achievements.length - unlockedCount;
   const achievementProgressPercent = achievements.length
@@ -238,9 +254,9 @@ export default function Profile() {
         {hskProgress.length > 0 && (
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {hskProgress.map((item) => (
-              <div key={item.level} className="rounded-xl bg-secondary p-3">
+              <div key={item.label} className="rounded-xl bg-secondary p-3">
                 <div className="mb-2 flex items-center justify-between gap-3 text-sm font-extrabold">
-                  <span>HSK {item.level}</span>
+                  <span>{item.label}</span>
                   <span className="text-primary">{item.percent}%</span>
                 </div>
                 <Progress value={item.percent} />

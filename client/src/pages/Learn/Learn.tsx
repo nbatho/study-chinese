@@ -312,7 +312,10 @@ export default function Learn() {
                 </p>
               </div>
               <div className="text-sm font-bold text-muted-foreground">
-                {t("learn.progress", { level: selectedHSK, percent: selectedLevelStats.percent })}
+                {t("learn.progress", {
+                  level: selectedHSK === 0 ? t("nav.foundation") : `HSK ${selectedHSK}`,
+                  percent: selectedLevelStats.percent,
+                })}
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -336,7 +339,9 @@ export default function Learn() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-sm font-extrabold text-primary">HSK {levelStats.level}</div>
+                      <div className="text-sm font-extrabold text-primary">
+                        {levelStats.level === 0 ? t("nav.foundation") : `HSK ${levelStats.level}`}
+                      </div>
                       <h3 className="mt-1 line-clamp-1 text-lg font-extrabold">
                         {levelStats.level >= 1 && levelStats.level <= 6
                           ? t(`learn.hskFocus${levelStats.level}` as TranslationKey)

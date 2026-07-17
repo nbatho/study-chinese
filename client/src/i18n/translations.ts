@@ -26,6 +26,7 @@ export const translations = {
     "nav.radicals": "Radicals",
     "nav.admin": "Admin",
     "nav.more": "More",
+    "nav.backToTop": "Back to top",
     "nav.favorites": "Favorites",
     "nav.myLists": "My lists",
 
@@ -579,7 +580,7 @@ export const translations = {
     "lookup.hint": "Tap any character to look it up",
 
     "learn.grammar": "Grammar Library",
-    "learn.progress": "HSK {level} Progress: {percent}%",
+    "learn.progress": "{level} Progress: {percent}%",
     "learn.lesson": "Lesson",
     "learn.searchGrammar": "Search grammar guides...",
     "learn.pattern": "Pattern:",
@@ -1178,6 +1179,9 @@ export const translations = {
     "grammar.lessonNumber": "Lesson {order}",
     "grammar.completed": "Completed",
     "grammar.studyInLesson": "Study in lesson",
+    "grammar.backToLevels": "All levels",
+    "grammar.patternCount": "{count} patterns",
+    "grammar.showingLevel": "Showing HSK {level} — {count} patterns",
 
     "foundation.quizScore": "{correct}/{total} correct",
     "foundation.quizDone": "This part is complete. Press \"Next\" to continue.",
@@ -1315,6 +1319,7 @@ export const translations = {
     "nav.radicals": "Bộ thủ",
     "nav.admin": "Quản trị",
     "nav.more": "Thêm",
+    "nav.backToTop": "Về đầu trang",
     "nav.favorites": "Từ yêu thích",
     "nav.myLists": "Danh sách của tôi",
     "nav.community": "Cộng đồng",
@@ -1796,7 +1801,7 @@ export const translations = {
     "lookup.hint": "Chạm vào chữ bất kỳ để tra cứu",
 
     "learn.grammar": "Thư viện ngữ pháp",
-    "learn.progress": "Tiến độ HSK {level}: {percent}%",
+    "learn.progress": "Tiến độ {level}: {percent}%",
     "learn.lesson": "Bài",
     "learn.searchGrammar": "Tìm hướng dẫn ngữ pháp...",
     "learn.pattern": "Mẫu câu:",
@@ -2478,6 +2483,9 @@ export const translations = {
     "grammar.lessonNumber": "Bài {order}",
     "grammar.completed": "Đã học",
     "grammar.studyInLesson": "Học trong bài",
+    "grammar.backToLevels": "Tất cả cấp",
+    "grammar.patternCount": "{count} cấu trúc",
+    "grammar.showingLevel": "Hiển thị HSK {level} — {count} cấu trúc",
 
     "foundation.quizScore": "Đúng {correct}/{total} câu",
     "foundation.quizDone": "Phần này đã hoàn thành. Bấm “Tiếp theo” để đi tiếp.",

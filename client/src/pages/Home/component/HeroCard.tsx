@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { useLessonsQuery, useUserProfileQuery, useUserStatsQuery } from "../../../api";
+import { useUserProfileQuery, useUserStatsQuery } from "../../../api";
 import { Badge } from "../../../components/ui/badge";
+import { useRoadmapProgress } from "../../../hooks/useRoadmapProgress";
 import { formatNumber, useI18n } from "../../../i18n";
 import { todayKey } from "../../../utils/studyReminder";
 import { useAppSelector } from "../../../store/hooks";
-import { clampPercent } from "./homeHelpers";
 import DashboardAvatar from "./DashboardAvatar";
 
 export default function HeroCard() {
@@ -12,16 +12,13 @@ export default function HeroCard() {
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const statsQuery = useUserStatsQuery(7, isAuthenticated);
-  const lessonsQuery = useLessonsQuery(isAuthenticated);
+  const { levelLabel, completedLessons, totalLessons, progressPercent } = useRoadmapProgress();
 
   const profile = profileQuery.data?.profile;
   const stats = useMemo(() => statsQuery.data?.stats ?? [], [statsQuery.data?.stats]);
-  const lessons = lessonsQuery.data?.lessons ?? [];
   const todayDateKey = todayKey();
   const todayWordsReviewed = stats.find((item) => item.dateKey === todayDateKey)?.wordsReviewed ?? 0;
   const totalXp = stats.reduce((sum, item) => sum + item.xp, 0);
-  const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const lessonProgress = lessons.length ? clampPercent(completedLessons, lessons.length) : 0;
   const displayName = profile?.name || t("common.learner");
 
   return (
@@ -29,7 +26,7 @@ export default function HeroCard() {
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <Badge className="mb-4 bg-white/20 text-white shadow-none backdrop-blur hover:bg-white/25">
-            {profile?.cefrLevel ?? "A1"} · {lessonProgress}%
+            {levelLabel} · {progressPercent}%
           </Badge>
           <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
             {t("home.greeting", { name: displayName })}
@@ -44,7 +41,9 @@ export default function HeroCard() {
             </div>
             <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
               <span className="block text-xs font-bold text-white/75">{t("home.lessons")}</span>
-              <strong className="text-xl text-white">{completedLessons}</strong>
+              <strong className="text-xl text-white">
+                {completedLessons}/{totalLessons}
+              </strong>
             </div>
             <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
               <span className="block text-xs font-bold text-white/75">{t("home.reviews")}</span>
