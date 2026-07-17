@@ -1,9 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDueSrsCardsQuery, useReviewSrsMutation, useSrsCardsQuery } from "../../api/srs/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  invalidateSrsSessionQueries,
+  useDueSrsCardsQuery,
+  useReviewSrsMutation,
+  useSrsCardsQuery,
+} from "../../api/srs/queries";
 import type { ReviewQuality, SrsDueCard } from "../../api/srs";
 import { BookMarked, Layers, ListChecks, RefreshCw } from "lucide-react";
-import { useI18n } from "../../i18n";
+import { formatDate, useI18n } from "../../i18n";
 import { useAuthGate } from "../../hooks/useAuthGate";
 import { cn } from "../../utils/cn";
 import LoginPromptCard from "../../components/LoginPromptCard";
@@ -14,6 +20,7 @@ export default function Review() {
   const { t, language } = useI18n();
   const navigate = useNavigate();
   const { isResolving, isAuthenticated } = useAuthGate();
+  const queryClient = useQueryClient();
   const dueCardsQuery = useDueSrsCardsQuery(100, isAuthenticated);
   const allCardsQuery = useSrsCardsQuery(isAuthenticated);
   const reviewMutation = useReviewSrsMutation();
@@ -22,15 +29,7 @@ export default function Review() {
   const [flipped, setFlipped] = useState(false);
   const fetchedCards = useMemo(() => dueCardsQuery.data?.cards ?? [], [dueCardsQuery.data?.cards]);
   const allCards = allCardsQuery.data?.cards ?? [];
-  const dueDateFormatter = useMemo(() => {
-    const localeMap: Record<string, string> = { vi: "vi-VN", "zh-Hans": "zh-CN", "zh-Hant": "zh-TW" };
-    return new Intl.DateTimeFormat(localeMap[language] ?? "en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }, [language]);
+  const hasPendingReviewsRef = useRef(false);
 
   // Seed the session as soon as due cards arrive; words enrolled elsewhere
   // (dictionary, lessons) land here through the invalidated query refetch.
@@ -41,6 +40,25 @@ export default function Review() {
   const sessionTotal = sessionQueue.length;
   const activeCard = sessionQueue[activeIdx];
   const sessionFinished = sessionTotal > 0 && activeIdx >= sessionTotal;
+
+  // Grading a card only mutates server state; the deck, stats, today plan and
+  // achievements are refetched once here — when the session ends or the user
+  // leaves — instead of after every single answer.
+  useEffect(() => {
+    if (sessionFinished && hasPendingReviewsRef.current) {
+      hasPendingReviewsRef.current = false;
+      invalidateSrsSessionQueries(queryClient);
+    }
+  }, [sessionFinished, queryClient]);
+
+  useEffect(() => {
+    return () => {
+      if (hasPendingReviewsRef.current) {
+        hasPendingReviewsRef.current = false;
+        invalidateSrsSessionQueries(queryClient);
+      }
+    };
+  }, [queryClient]);
 
   const handleQualitySelect = async (quality: ReviewQuality) => {
     if (!activeCard) return;
@@ -59,6 +77,7 @@ export default function Review() {
         context: { tool: "review", quality },
       } : undefined,
     });
+    hasPendingReviewsRef.current = true;
     setFlipped(false);
     setActiveIdx((idx) => idx + 1);
   };
@@ -224,7 +243,7 @@ export default function Review() {
                       card.isDue ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground",
                     )}
                   >
-                    {card.isDue ? t("review.dueNow") : t("review.dueAt", { date: dueDateFormatter.format(new Date(card.dueCardDetails.dueDate)) })}
+                    {card.isDue ? t("review.dueNow") : t("review.dueAt", { date: formatDate(card.dueCardDetails.dueDate, language, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) })}
                   </span>
                   <span className="text-[0.68rem] font-semibold text-muted-foreground">
                     {t("review.mastery", { value: card.dueCardDetails.masteryLevel })}

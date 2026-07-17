@@ -1,17 +1,3 @@
-export interface GrammarLibraryEntry {
-    id: string;
-    title: string;
-    titleVi?: string | null;
-    pattern: string;
-    summary: string;
-    summaryVi?: string | null;
-    examples: Array<{
-        simplified: string;
-        pinyin: string;
-        english: string;
-    }>;
-}
-
 export interface DailyPhrase {
     simplified: string;
     pinyin: string;
@@ -25,5 +11,4 @@ export interface DailyPhrase {
 
 export interface DailyContentResponse {
     phrase: DailyPhrase | null;
-    grammarLibrary: GrammarLibraryEntry[];
 }

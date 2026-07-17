@@ -69,11 +69,6 @@ const getFriendshipOrThrow = async (client, friendshipId, userId) => {
 export const listFriends = async (userId) => {
   const result = await query(
     `
-      WITH user_totals AS (
-        SELECT user_id, COALESCE(SUM(xp), 0)::int AS total_xp
-        FROM daily_stats
-        GROUP BY user_id
-      )
       SELECT
         f.id,
         f.requester_id,
@@ -87,14 +82,18 @@ export const listFriends = async (userId) => {
         friend.start_level AS friend_start_level,
         friend.current_streak AS friend_current_streak,
         friend.best_streak AS friend_best_streak,
-        COALESCE(ut.total_xp, 0)::int AS friend_total_xp
+        -- Scoped per friend so this never aggregates the whole daily_stats table.
+        COALESCE((
+          SELECT SUM(ds.xp)::int
+          FROM daily_stats ds
+          WHERE ds.user_id = friend.id
+        ), 0) AS friend_total_xp
       FROM friendships f
       JOIN users friend
         ON friend.id = CASE
           WHEN f.requester_id = $1 THEN f.addressee_id
           ELSE f.requester_id
         END
-      LEFT JOIN user_totals ut ON ut.user_id = friend.id
       WHERE (f.requester_id = $1 OR f.addressee_id = $1)
         AND friend.is_active = true
       ORDER BY

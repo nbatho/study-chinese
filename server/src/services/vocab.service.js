@@ -111,7 +111,10 @@ export const searchVocabulary = async ({
   const whereSql = conditions.join(' AND ');
   const orderSql = Object.hasOwn(SORT_SQL, sort) ? SORT_SQL[sort] : SORT_SQL.hsk;
 
-  const countResult = await query(
+  // `locale` only ever selects a gloss, never filters, so it is appended after
+  // the WHERE values and never affects `countResult`.
+  const dataValues = [...values, normalizeLocale(locale), safeLimit, offset];
+  const countPromise = query(
     `
       SELECT COUNT(*)::int AS total
       FROM words w
@@ -119,11 +122,7 @@ export const searchVocabulary = async ({
     `,
     values
   );
-
-  // `locale` only ever selects a gloss, never filters, so it is appended after
-  // the WHERE values and never affects `countResult`.
-  const dataValues = [...values, normalizeLocale(locale), safeLimit, offset];
-  const result = await query(
+  const dataPromise = query(
     `
       SELECT
         w.*,
@@ -153,6 +152,7 @@ export const searchVocabulary = async ({
     `,
     dataValues
   );
+  const [countResult, result] = await Promise.all([countPromise, dataPromise]);
 
   const total = Number(countResult.rows[0]?.total || 0);
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));

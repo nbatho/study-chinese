@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Bell, Eye, EyeOff, Globe2, KeyRound, MailWarning, ToggleLeft, ToggleRight, Trash2, User } from "lucide-react";
@@ -20,7 +20,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setAppearance } from "../../store/modules/appSlice";
 import type { AppAppearance } from "../../store/modules/appSlice";
 import { cn } from "../../utils/cn";
-import { ApiError } from "../../utils/errorUtils";
+import { getErrorMessage as getMutationError } from "../../utils/errorUtils";
 import { isStrongPassword } from "../../utils/passwordPolicy";
 import TtsSpeedControl from "../../components/TtsSpeedControl";
 import {
@@ -34,8 +34,52 @@ import {
   type ReminderPrefs,
 } from "../../utils/studyReminder";
 
-const getMutationError = (error: unknown, fallback: string) =>
-  error instanceof ApiError || error instanceof Error ? error.message : fallback;
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+  shown,
+  onToggleShown,
+  toggleAriaLabel,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: string;
+  placeholder?: string;
+  shown: boolean;
+  onToggleShown: () => void;
+  toggleAriaLabel: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{label}</label>
+      <span className="relative block">
+        <input
+          type={shown ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          className="app-control w-full pr-11 text-foreground"
+        />
+        <button
+          type="button"
+          onClick={onToggleShown}
+          aria-label={toggleAriaLabel}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        >
+          {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </span>
+      {children}
+    </div>
+  );
+}
 
 const REMINDER_DAY_KEYS = [
   "reminder.day0",
@@ -423,68 +467,36 @@ export default function Settings() {
           </div>
         </div>
         <form onSubmit={submitChangePassword} className="grid gap-4">
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.currentPassword")}</label>
-            <span className="relative block">
-              <input
-                type={showPasswords ? "text" : "password"}
-                value={passwordForm.current}
-                onChange={(e) => setPasswordForm((form) => ({ ...form, current: e.target.value }))}
-                autoComplete="current-password"
-                className="app-control w-full pr-11 text-foreground"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords((value) => !value)}
-                aria-label={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </span>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.newPassword")}</label>
-            <span className="relative block">
-              <input
-                type={showPasswords ? "text" : "password"}
-                value={passwordForm.next}
-                onChange={(e) => setPasswordForm((form) => ({ ...form, next: e.target.value }))}
-                autoComplete="new-password"
-                placeholder={t("auth.newPasswordPlaceholder")}
-                className="app-control w-full pr-11 text-foreground"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords((value) => !value)}
-                aria-label={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </span>
+          <PasswordField
+            label={t("security.currentPassword")}
+            value={passwordForm.current}
+            onChange={(value) => setPasswordForm((form) => ({ ...form, current: value }))}
+            autoComplete="current-password"
+            shown={showPasswords}
+            onToggleShown={() => setShowPasswords((value) => !value)}
+            toggleAriaLabel={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
+          />
+          <PasswordField
+            label={t("security.newPassword")}
+            value={passwordForm.next}
+            onChange={(value) => setPasswordForm((form) => ({ ...form, next: value }))}
+            autoComplete="new-password"
+            placeholder={t("auth.newPasswordPlaceholder")}
+            shown={showPasswords}
+            onToggleShown={() => setShowPasswords((value) => !value)}
+            toggleAriaLabel={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
+          >
             <p className="mt-1.5 text-xs font-medium text-muted-foreground">{t("security.policyHint")}</p>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.confirmPassword")}</label>
-            <span className="relative block">
-              <input
-                type={showPasswords ? "text" : "password"}
-                value={passwordForm.confirm}
-                onChange={(e) => setPasswordForm((form) => ({ ...form, confirm: e.target.value }))}
-                autoComplete="new-password"
-                className="app-control w-full pr-11 text-foreground"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords((value) => !value)}
-                aria-label={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </span>
-          </div>
+          </PasswordField>
+          <PasswordField
+            label={t("security.confirmPassword")}
+            value={passwordForm.confirm}
+            onChange={(value) => setPasswordForm((form) => ({ ...form, confirm: value }))}
+            autoComplete="new-password"
+            shown={showPasswords}
+            onToggleShown={() => setShowPasswords((value) => !value)}
+            toggleAriaLabel={showPasswords ? t("auth.hidePassword") : t("auth.showPassword")}
+          />
           <div>
             <label className="mb-1.5 block text-[0.8rem] font-bold text-muted-foreground">{t("security.otpLabel")}</label>
             <div className="flex gap-2">

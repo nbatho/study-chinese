@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { vocabularyApi } from './index';
@@ -15,6 +15,8 @@ export const useVocabularyQuery = (params?: VocabularySearchParams, enabled = tr
         queryKey: queryKeys.vocabulary.search(searchParams),
         queryFn: () => unwrapApiData(vocabularyApi.search(searchParams)),
         enabled,
+        // Keep the previous page/results on screen while a new search loads.
+        placeholderData: keepPreviousData,
     });
 };
 

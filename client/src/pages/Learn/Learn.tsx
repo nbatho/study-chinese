@@ -6,12 +6,13 @@ import { useSampleLessonsQuery } from "../../api/lessons/queries";
 import { useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
 import { useSelectedHskLevel } from "../../hooks/useSelectedHskLevel";
+import { CURRICULUM_NEXT_ID, useNextLesson } from "../../hooks/useNextLesson";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import LessonPath from "./components/LessonPath";
 import LessonPlayer from "./components/LessonPlayer";
 import { CEFR_RANK, getCurriculumLessons, getLevelProgress, HSK_CURRICULUM } from "./curriculum";
-import { FOUNDATION_STAGES, isFoundationComplete, loadFoundationProgress, localized } from "../Foundation/foundationCourse";
+import { FOUNDATION_STAGES } from "../Foundation/foundationCourse";
 
 
 export default function Learn() {
@@ -41,14 +42,7 @@ export default function Learn() {
   const userCefrLevel = profile?.cefrLevel ?? "A1";
   const placementAt = profile?.placementTestCompletedAt ?? null;
   const needsPlacementTest = !profile?.placementTestCompletedAt;
-  // Foundation completion check: DB (signed-in) or localStorage (guest/offline).
-  const foundationComplete = useMemo(() => {
-    const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
-    const dbFoundationDone = FOUNDATION_STAGES.every((stage) =>
-      dbLessons.some((l) => l.id === stage.lessonId),
-    );
-    return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
-  }, [lessons]);
+  const { foundationComplete, nextLesson } = useNextLesson(lessons, language);
 
   const { selectedHsk: selectedHSK, selectedCurriculum, selectHskLevel: selectHskLevelState } = useSelectedHskLevel(
     userCefrLevel,
@@ -146,90 +140,7 @@ export default function Learn() {
     return lessons.filter((lesson) => lesson.hskLevel === selectedHSK).sort((a, b) => a.order - b.order);
   }, [lessons, selectedHSK]);
 
-  // const lessonsByOrder = useMemo(() => {
-  //   return new Map(levelLessons.map((lesson) => [lesson.order, lesson]));
-  // }, [levelLessons]);
-
   const selectedLevelStats = hskStats.find((levelStats) => levelStats.level === selectedHSK) ?? hskStats[0];
-
-  const nextLesson = useMemo(() => {
-    if (!foundationComplete) {
-      const localDone = loadFoundationProgress();
-      const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
-      const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
-        (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
-      );
-      if (firstUnfinishedIndex !== -1) {
-        const stageIndex = firstUnfinishedIndex;
-        const stage = FOUNDATION_STAGES[stageIndex];
-        return {
-          id: stage.lessonId,
-          hskLevel: 0,
-          order: stageIndex + 1,
-          title: localized(stage.title, language),
-          subtitle: localized(stage.subtitle, language),
-          estimatedMinutes: stage.minutes,
-          xpReward: stage.xp,
-          completedAt: null,
-        };
-      }
-    }
-
-    const sorted = [...lessons]
-      .filter((l) => l.hskLevel > 0)
-      .sort((a, b) => {
-        if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
-        return a.order - b.order;
-      });
-
-    const nextDbLesson = sorted.find((lesson) => !lesson.completedAt);
-    if (nextDbLesson) return nextDbLesson;
-
-    const highest = [...sorted]
-      .filter((l) => l.completedAt)
-      .sort((a, b) => {
-        if (b.hskLevel !== a.hskLevel) return b.hskLevel - a.hskLevel;
-        return b.order - a.order;
-      })[0];
-
-    let targetLevel = 1;
-    let targetOrder = 1;
-
-    if (highest) {
-      const currLevel = HSK_CURRICULUM.find(c => c.hskLevel === highest.hskLevel);
-      if (currLevel) {
-        const currLessons = getCurriculumLessons(currLevel);
-        const lastOrder = currLessons[currLessons.length - 1]?.order ?? 1;
-        if (highest.order >= lastOrder) {
-          targetLevel = highest.hskLevel + 1;
-          targetOrder = 1;
-        } else {
-          targetLevel = highest.hskLevel;
-          const nextCL = currLessons.find(l => l.order > highest.order);
-          targetOrder = nextCL ? nextCL.order : highest.order + 1;
-        }
-      }
-    }
-
-    const targetCurriculumLevel = HSK_CURRICULUM.find(c => c.hskLevel === targetLevel);
-    if (targetCurriculumLevel) {
-      const targetCL = getCurriculumLessons(targetCurriculumLevel).find(l => l.order === targetOrder);
-      if (targetCL) {
-        return {
-          id: "curriculum-next",
-          hskLevel: targetLevel,
-          order: targetOrder,
-          title: targetCL.title,
-          subtitle: targetCL.objective,
-          estimatedMinutes: targetCL.estimatedMinutes,
-          xpReward: targetCL.xpReward,
-          completedAt: null,
-        };
-      }
-    }
-
-    return sorted[0] ?? null;
-  }, [lessons, foundationComplete, language]);
 
   useEffect(() => {
     const lessonIdFromUrl = searchParams.get("lessonId");
@@ -328,7 +239,7 @@ export default function Learn() {
                     disabled={!nextLesson}
                     onClick={() => {
                       if (!nextLesson) return;
-                      if (nextLesson.id === "curriculum-next") {
+                      if (nextLesson.id === CURRICULUM_NEXT_ID) {
                         // The user needs to manually trigger it from the lesson path
                         // or it's just a fallback. We can just do nothing or scroll to it.
                         return;

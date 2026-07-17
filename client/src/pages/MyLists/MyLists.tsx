@@ -26,8 +26,7 @@ import LoadingCard from "../../components/LoadingCard";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { DropdownSelect } from "../../components/ui/dropdown-select";
 import { useAuthGate } from "../../hooks/useAuthGate";
-import { useI18n } from "../../i18n";
-import type { TranslationKey } from "../../i18n";
+import { tOrRaw, useI18n } from "../../i18n";
 import { speakChinese } from "../../utils/tts";
 
 const hskLevels = [1, 2, 3, 4, 5, 6, 7];
@@ -97,11 +96,7 @@ export default function MyLists() {
   }, [words, query, selectedHsk, selectedCategory, selectedPos, sort]);
 
   // Localize DB labels (stored as English keys) to the app language.
-  const localizeLabel = (prefix: string, raw: string) => {
-    const key = `${prefix}.${raw}` as TranslationKey;
-    const label = t(key);
-    return label === key ? raw : label;
-  };
+  const localizeLabel = (prefix: string, raw: string) => tOrRaw(t, prefix, raw);
 
   const selectList = (listId: string) => {
     setSelectedListId(listId);

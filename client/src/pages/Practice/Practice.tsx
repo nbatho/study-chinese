@@ -7,16 +7,15 @@ import { useAuthGate } from "../../hooks/useAuthGate";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import LoginPromptCard from "../../components/LoginPromptCard";
 import { cn } from "../../utils/cn";
-import {
-  HanziDrawingTool,
-  ListeningTool,
-  ListPracticeTool,
-  MinimalPairsTool,
-  PinyinTypingTool,
-  ShadowingTool,
-  ToneDrillTool,
-  WeakPracticeTool,
-} from "./components/PracticeTools";
+
+import HanziDrawingTool from "./components/HanziDrawingTool";
+import WeakPracticeTool from "./components/WeakPracticeTool";
+import ListeningTool from "./components/ListeningTool";
+import ListPracticeTool from "./components/ListPracticeTool";
+import MinimalPairsTool from "./components/MinimalPairsTool";
+import ToneDrillTool from "./components/ToneDrillTool";
+import PinyinTypingTool from "./components/PinyinTypingTool";
+import ShadowingTool from "./components/ShadowingTool";
 import { isPracticeTool } from "./components/practiceToolTypes";
 import type { Tool } from "./components/practiceToolTypes";
 

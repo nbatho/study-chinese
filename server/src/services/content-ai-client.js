@@ -1,19 +1,9 @@
+import { extractJsonText } from '../utils/ai-json.js';
+
+export { extractJsonText };
+
 const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b';
 const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
-
-export const extractJsonText = (text) => {
-  const trimmed = String(text || '').trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced ? fenced[1].trim() : trimmed;
-  const first = candidate.indexOf('{');
-  const last = candidate.lastIndexOf('}');
-
-  if (first === -1 || last === -1 || last <= first) {
-    return candidate;
-  }
-
-  return candidate.slice(first, last + 1);
-};
 
 const valueFrom = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 

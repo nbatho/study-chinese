@@ -4,7 +4,7 @@ import {
   type FriendshipItem,
 } from "../../../api/community";
 import { Button } from "../../../components/ui/button";
-import { useI18n } from "../../../i18n";
+import { formatNumber as formatNumberIntl, useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
 
 export default function FriendRow({
@@ -22,8 +22,7 @@ export default function FriendRow({
 }) {
   const { t, language } = useI18n();
 
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat(language === "vi" ? "vi-VN" : "en-US").format(value);
+  const formatNumber = (value: number) => formatNumberIntl(value, language);
 
   const formatLevel = (level?: string) => {
     const labelKeys: Record<string, TranslationKey> = {

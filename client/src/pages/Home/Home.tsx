@@ -35,20 +35,14 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
 import { Skeleton } from "../../components/ui/skeleton";
-import { useI18n } from "../../i18n";
+import { formatNumber, tOrRaw, useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
+import { todayKey } from "../../utils/studyReminder";
 import { useAppSelector } from "../../store/hooks";
 import { cn } from "../../utils/cn";
 import { formatLessonTitle } from "../../utils/lessonTitle";
+import { CURRICULUM_NEXT_ID, useNextLesson } from "../../hooks/useNextLesson";
 import DashboardAvatar from "./component/DashboardAvatar";
-import {
-  FOUNDATION_STAGES,
-  isFoundationComplete,
-  loadFoundationProgress,
-  localized,
-} from "../Foundation/foundationCourse";
-import { getCurriculumLessons, HSK_CURRICULUM } from "../Learn/curriculum";
-const formatNumber = (value: number) => new Intl.NumberFormat("vi-VN").format(value);
 
 const clampPercent = (current: number, goal: number) => {
   if (!goal) return 0;
@@ -88,9 +82,9 @@ export default function Home() {
   const lessons = lessonsQuery.data?.lessons ?? [];
   const unlockedAchievements = achievementsQuery.data?.achievements.filter((item) => item.unlockedAt) ?? [];
   const leaderboardEntries = leaderboardQuery.data?.entries.slice(0, 5) ?? [];
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const todayStat = stats.find((item) => item.dateKey === todayKey) ?? {
-    dateKey: todayKey,
+  const todayDateKey = todayKey();
+  const todayStat = stats.find((item) => item.dateKey === todayDateKey) ?? {
+    dateKey: todayDateKey,
     xp: 0,
     minutesStudied: 0,
     lessonsCompleted: 0,
@@ -100,92 +94,7 @@ export default function Home() {
   };
   const totalXp = stats.reduce((sum, item) => sum + item.xp, 0);
   const completedLessons = lessons.filter((lesson) => lesson.completedAt).length;
-  const foundationComplete = useMemo(() => {
-    const dbLessons = lessons.filter((l) => l.hskLevel === 0 && l.completedAt);
-    const dbFoundationDone = FOUNDATION_STAGES.every((stage) =>
-      dbLessons.some((l) => l.id === stage.lessonId),
-    );
-    return dbFoundationDone || isFoundationComplete(loadFoundationProgress());
-  }, [lessons]);
-
-  const nextLesson = useMemo(() => {
-    if (!foundationComplete) {
-      const localDone = loadFoundationProgress();
-      const dbDone = new Set(lessons.filter((l) => l.hskLevel === 0 && l.completedAt).map((l) => l.id));
-      const firstUnfinishedIndex = FOUNDATION_STAGES.findIndex(
-        (stage) => !localDone.has(stage.id) && !dbDone.has(stage.lessonId)
-      );
-      if (firstUnfinishedIndex !== -1) {
-        const stageIndex = firstUnfinishedIndex;
-        const stage = FOUNDATION_STAGES[stageIndex];
-        return {
-          id: stage.lessonId,
-          hskLevel: 0,
-          order: stageIndex + 1,
-          title: localized(stage.title, language),
-          subtitle: localized(stage.subtitle, language),
-          estimatedMinutes: stage.minutes,
-          xpReward: stage.xp,
-          completedAt: null,
-        };
-      }
-    }
-
-    const sorted = [...lessons]
-      .filter((l) => l.hskLevel > 0)
-      .sort((a, b) => {
-        if (a.hskLevel !== b.hskLevel) return a.hskLevel - b.hskLevel;
-        return a.order - b.order;
-      });
-
-    const nextDbLesson = sorted.find((lesson) => !lesson.completedAt);
-    if (nextDbLesson) return nextDbLesson;
-
-    const highest = [...sorted]
-      .filter((l) => l.completedAt)
-      .sort((a, b) => {
-        if (b.hskLevel !== a.hskLevel) return b.hskLevel - a.hskLevel;
-        return b.order - a.order;
-      })[0];
-
-    let targetLevel = 1;
-    let targetOrder = 1;
-
-    if (highest) {
-      const currLevel = HSK_CURRICULUM.find(c => c.hskLevel === highest.hskLevel);
-      if (currLevel) {
-        const currLessons = getCurriculumLessons(currLevel);
-        const lastOrder = currLessons[currLessons.length - 1]?.order ?? 1;
-        if (highest.order >= lastOrder) {
-          targetLevel = highest.hskLevel + 1;
-          targetOrder = 1;
-        } else {
-          targetLevel = highest.hskLevel;
-          const nextCL = currLessons.find(l => l.order > highest.order);
-          targetOrder = nextCL ? nextCL.order : highest.order + 1;
-        }
-      }
-    }
-
-    const targetCurriculumLevel = HSK_CURRICULUM.find(c => c.hskLevel === targetLevel);
-    if (targetCurriculumLevel) {
-      const targetCL = getCurriculumLessons(targetCurriculumLevel).find(l => l.order === targetOrder);
-      if (targetCL) {
-        return {
-          id: "curriculum-next",
-          hskLevel: targetLevel,
-          order: targetOrder,
-          title: targetCL.title,
-          subtitle: targetCL.objective,
-          estimatedMinutes: targetCL.estimatedMinutes,
-          xpReward: targetCL.xpReward,
-          completedAt: null,
-        };
-      }
-    }
-
-    return sorted[0] ?? null;
-  }, [lessons, foundationComplete, language]);
+  const { nextLesson } = useNextLesson(lessons, language);
   const currentPhrase = dailyContentQuery.data?.phrase;
   const todayPlan = todayPlanQuery.data?.plan;
   const weakSpots = (mistakesQuery.data?.mistakes ?? [])
@@ -197,10 +106,7 @@ export default function Home() {
   // back to the id itself rather than rendering an empty label.
   const skillLabel = (skill: unknown) => {
     const id = asString(skill);
-    if (!id) return "";
-    const key = `skill.${id}` as TranslationKey;
-    const label = t(key);
-    return label === key ? id : label;
+    return id ? tOrRaw(t, "skill", id) : "";
   };
 
   const planStepTitle = (step: TodayPlanStep) => t(`home.planStep.${step.id}.title` as TranslationKey);
@@ -237,7 +143,9 @@ export default function Home() {
         return "";
     }
   };
-  const xpTarget = todayPlan?.xpTarget ?? Math.max((profile?.dailyMinutes ?? 15) * 3, 50);
+  // Mirrors the server's formula in buildTodayPlanResponse (user.service.js)
+  // so the goal ring doesn't jump when the plan query resolves.
+  const xpTarget = todayPlan?.xpTarget ?? Math.max((profile?.dailyMinutes ?? 15) * 3, 45);
   const lessonTarget = 1;
   const reviewTarget = 10;
   const lessonProgress = lessons.length ? clampPercent(completedLessons, lessons.length) : 0;
@@ -267,7 +175,7 @@ export default function Home() {
   ];
 
   const handleLessonStart = () => {
-    if (!nextLesson || nextLesson.id === "curriculum-next") {
+    if (!nextLesson || nextLesson.id === CURRICULUM_NEXT_ID) {
       navigate("/learn");
       return;
     }
@@ -329,7 +237,7 @@ export default function Home() {
                 <div className="mt-5 grid max-w-lg grid-cols-3 gap-2">
                   <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
                     <span className="block text-xs font-bold text-white/75">XP</span>
-                    <strong className="text-xl text-white">{formatNumber(totalXp)}</strong>
+                    <strong className="text-xl text-white">{formatNumber(totalXp, language)}</strong>
                   </div>
                   <div className="rounded-xl bg-white/16 p-3 backdrop-blur">
                     <span className="block text-xs font-bold text-white/75">{t("home.lessons")}</span>
@@ -644,7 +552,7 @@ export default function Home() {
                         {entry.user.streak.current} {t("home.streak").toLowerCase()}
                       </span>
                     </span>
-                    <strong className="text-sm text-primary">{formatNumber(entry.totalXp)} XP</strong>
+                    <strong className="text-sm text-primary">{formatNumber(entry.totalXp, language)} XP</strong>
                   </li>
                 ))}
               </ol>

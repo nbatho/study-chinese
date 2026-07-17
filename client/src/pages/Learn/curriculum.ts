@@ -332,7 +332,7 @@ export const HSK_CURRICULUM: HskCurriculumLevel[] = [
   },
 ];
 
-export const getCurriculumLessonCount = (level: HskCurriculumLevel) =>
+const getCurriculumLessonCount = (level: HskCurriculumLevel) =>
   level.topics.reduce((count, topic) => count + topic.lessons.length, 0) + 1;
 
 export const getCurriculumLessons = (level: HskCurriculumLevel) => [
@@ -344,7 +344,7 @@ export const CEFR_RANK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4
 
 const CEFR_RECOMMENDED_HSK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
 
-export const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
+const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
 
 /** Highest published HSK level the learner's CEFR level has reached. */
 export const getRecommendedHsk = (cefrLevel: CefrLevel) => {

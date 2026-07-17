@@ -8,7 +8,7 @@ import LoginPromptCard from "../../components/LoginPromptCard";
 import { Button } from "../../components/ui/button";
 import { CircularProgress } from "../../components/ui/circular-progress";
 import { Progress } from "../../components/ui/progress";
-import { startLevelKeys, useI18n } from "../../i18n";
+import { formatDate, startLevelKeys, useI18n } from "../../i18n";
 import LoadingCard from "../../components/LoadingCard";
 import { useAuthGate } from "../../hooks/useAuthGate";
 import type { TranslationKey } from "../../i18n/translations";
@@ -36,7 +36,7 @@ const categoryFilters: Array<{ id: CategoryFilter; labelKey: TranslationKey }> =
 export default function Profile() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { isResolving, isAuthenticated } = useAuthGate();
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const statsQuery = useUserStatsQuery(7, isAuthenticated);
@@ -185,7 +185,7 @@ export default function Profile() {
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-xl font-extrabold sm:text-[1.35rem]">{profile?.name || t("common.learner")}</h2>
           <span className="text-[0.8rem] font-bold text-primary">
-            {t("profile.memberSince", { date: profile?.joinDate ? new Date(profile.joinDate).toLocaleDateString() : t("common.today") })}
+            {t("profile.memberSince", { date: profile?.joinDate ? formatDate(profile.joinDate, language) : t("common.today") })}
           </span>
           <div className="mt-2 flex flex-wrap gap-2.5">
             <span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-muted-foreground">

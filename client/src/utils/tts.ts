@@ -1,16 +1,10 @@
+import { API_BASE_URL } from "../api/callApi";
 import { getTtsSpeed } from "./ttsSettings";
 
 let currentAudio: HTMLAudioElement | null = null;
 
-const getAudioApiBaseUrl = () => {
-  const gatewayUrl = import.meta.env.VITE_API_GATEWAY_URL;
-
-  if (gatewayUrl) {
-    return `${gatewayUrl.replace(/\/$/, "")}/api/v1`;
-  }
-
-  return `${window.location.origin}/api/v1`;
-};
+// `new URL` needs an absolute base; API_BASE_URL is relative in same-origin setups.
+const getAudioApiBaseUrl = () => new URL(API_BASE_URL, window.location.origin).toString();
 
 const speakWithBrowser = (text: string, lang: string, speed: number) => {
   if (!("speechSynthesis" in window)) return;

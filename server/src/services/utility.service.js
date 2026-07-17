@@ -20,16 +20,6 @@ const mapPhrase = (row) => ({
   note: row.localized_note || row.note
 });
 
-const mapGrammarLibrary = (row) => ({
-  id: row.id,
-  title: row.title,
-  titleVi: row.title_vi,
-  pattern: row.pattern,
-  summary: row.summary,
-  summaryVi: row.summary_vi,
-  examples: row.examples || []
-});
-
 const supportedOcrProviders = new Set(['mock', 'paddle']);
 
 const getOcrProvider = () => String(env.OCR_PROVIDER || 'mock').toLowerCase();
@@ -602,40 +592,29 @@ export const unlockAchievement = async (userId, achievementId) =>
 
 export const getDailyContent = async (locale) => {
   const glossLocale = normalizeLocale(locale);
-  const [phraseResult, grammarResult] = await Promise.all([
-    query(
-      `
-        WITH active_phrases AS (
-          SELECT *,
-                 row_number() OVER (ORDER BY id) AS rn,
-                 count(*) OVER () AS total
-          FROM daily_phrases
-          WHERE is_active = true
-        )
-        SELECT ap.*,
-               dpg.gloss AS gloss,
-               dpg.note AS localized_note
-        FROM active_phrases ap
-        LEFT JOIN daily_phrase_glosses dpg
-          ON dpg.phrase_id = ap.id AND dpg.locale = $1
-        WHERE ap.rn = ((extract(doy FROM now())::int - 1) % ap.total) + 1
-        LIMIT 1
-      `,
-      [glossLocale]
-    ),
-    query(
-      `
-        SELECT *
-        FROM grammar_library
+  const phraseResult = await query(
+    `
+      WITH active_phrases AS (
+        SELECT *,
+               row_number() OVER (ORDER BY id) AS rn,
+               count(*) OVER () AS total
+        FROM daily_phrases
         WHERE is_active = true
-        ORDER BY title
-      `
-    )
-  ]);
+      )
+      SELECT ap.*,
+             dpg.gloss AS gloss,
+             dpg.note AS localized_note
+      FROM active_phrases ap
+      LEFT JOIN daily_phrase_glosses dpg
+        ON dpg.phrase_id = ap.id AND dpg.locale = $1
+      WHERE ap.rn = ((extract(doy FROM now())::int - 1) % ap.total) + 1
+      LIMIT 1
+    `,
+    [glossLocale]
+  );
 
   return {
-    phrase: phraseResult.rows[0] ? mapPhrase(phraseResult.rows[0]) : null,
-    grammarLibrary: grammarResult.rows.map(mapGrammarLibrary)
+    phrase: phraseResult.rows[0] ? mapPhrase(phraseResult.rows[0]) : null
   };
 };
 
@@ -650,26 +629,30 @@ const computeTranslationResult = async (payload) => {
   const { detectedText, regions, mode } = await getDetectedText(payload);
   const compactDetectedText = compactForLookup(detectedText);
 
-  const result = await query(
-    `
-      SELECT w.*, wg.gloss AS gloss
-      FROM words w
-      LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $3
-      WHERE w.is_active = true
-        AND (
-          position(w.simplified in $1) > 0
-          OR position(w.traditional in $1) > 0
-          OR position(w.simplified in $2) > 0
-          OR position(w.traditional in $2) > 0
-        )
-      -- Every candidate feeds segmentation, so a low limit silently drops the
-      -- shortest words and sends them to the dictionary fallback, which is
-      -- English-only for most entries. Matches the dictionary lookup's limit.
-      ORDER BY char_length(w.simplified) DESC, w.simplified
-      LIMIT 100
-    `,
-    [detectedText, compactDetectedText, normalizeLocale(targetLang)]
-  );
+  // Both lookups depend only on the detected text, so they can run together.
+  const [result, dictionaryEntries] = await Promise.all([
+    query(
+      `
+        SELECT w.*, wg.gloss AS gloss
+        FROM words w
+        LEFT JOIN word_glosses wg ON wg.word_id = w.id AND wg.locale = $3
+        WHERE w.is_active = true
+          AND (
+            position(w.simplified in $1) > 0
+            OR position(w.traditional in $1) > 0
+            OR position(w.simplified in $2) > 0
+            OR position(w.traditional in $2) > 0
+          )
+        -- Every candidate feeds segmentation, so a low limit silently drops the
+        -- shortest words and sends them to the dictionary fallback, which is
+        -- English-only for most entries. Matches the dictionary lookup's limit.
+        ORDER BY char_length(w.simplified) DESC, w.simplified
+        LIMIT 100
+      `,
+      [detectedText, compactDetectedText, normalizeLocale(targetLang)]
+    ),
+    getDictionaryEntriesForText(detectedText, targetLang)
+  ]);
 
   const wordRows = result.rows.map((word) => ({
     ...word,
@@ -690,7 +673,6 @@ const computeTranslationResult = async (payload) => {
   }));
 
   const rawRegionBoxes = getOcrRegionBoxes(regions, detectedText);
-  const dictionaryEntries = await getDictionaryEntriesForText(detectedText, targetLang);
   const textLookupEntries = [
     ...wordRows.map((word) => ({
       ...word,

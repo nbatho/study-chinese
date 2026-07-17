@@ -31,46 +31,44 @@ export const getAchievements = async (client, userId) => {
 };
 
 const getUserAchievementProgress = async (client, userId) => {
-  const userResult = await client.query(
-    `
-      SELECT current_streak, best_streak
-      FROM users
-      WHERE id = $1
-    `,
-    [userId]
-  );
-
-  const statsResult = await client.query(
+  // This runs inside write transactions on every graded exercise, so the four
+  // scalar lookups are folded into one statement (2 round trips instead of 5).
+  const scalarResult = await client.query(
     `
       SELECT
-        COALESCE(SUM(xp), 0) AS total_xp,
-        COALESCE(SUM(words_reviewed), 0) AS words_reviewed,
-        COALESCE(SUM(exercises_correct), 0) AS exercises_correct
-      FROM daily_stats
-      WHERE user_id = $1
-    `,
-    [userId]
-  );
-
-  const lessonResult = await client.query(
-    `
-      SELECT
-        COUNT(*) AS lessons_completed,
-        COALESCE(MAX(ulp.best_accuracy), 0) AS best_lesson_accuracy
-      FROM user_lesson_progress ulp
-      JOIN lessons l ON l.id = ulp.lesson_id
-      WHERE ulp.user_id = $1
-        AND ulp.completed_at IS NOT NULL
-        AND l.is_active = true
-    `,
-    [userId]
-  );
-
-  const vocabResult = await client.query(
-    `
-      SELECT COUNT(*) AS vocabulary_count
-      FROM srs_cards
-      WHERE user_id = $1
+        u.current_streak,
+        u.best_streak,
+        ds.total_xp,
+        ds.words_reviewed,
+        ds.exercises_correct,
+        lp.lessons_completed,
+        lp.best_lesson_accuracy,
+        vc.vocabulary_count
+      FROM users u
+      LEFT JOIN LATERAL (
+        SELECT
+          COALESCE(SUM(xp), 0) AS total_xp,
+          COALESCE(SUM(words_reviewed), 0) AS words_reviewed,
+          COALESCE(SUM(exercises_correct), 0) AS exercises_correct
+        FROM daily_stats
+        WHERE user_id = u.id
+      ) ds ON true
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*) AS lessons_completed,
+          COALESCE(MAX(ulp.best_accuracy), 0) AS best_lesson_accuracy
+        FROM user_lesson_progress ulp
+        JOIN lessons l ON l.id = ulp.lesson_id
+        WHERE ulp.user_id = u.id
+          AND ulp.completed_at IS NOT NULL
+          AND l.is_active = true
+      ) lp ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*) AS vocabulary_count
+        FROM srs_cards
+        WHERE user_id = u.id
+      ) vc ON true
+      WHERE u.id = $1
     `,
     [userId]
   );
@@ -92,20 +90,17 @@ const getUserAchievementProgress = async (client, userId) => {
     [userId]
   );
 
-  const user = userResult.rows[0] || {};
-  const stats = statsResult.rows[0] || {};
-  const lessons = lessonResult.rows[0] || {};
-  const vocab = vocabResult.rows[0] || {};
+  const scalars = scalarResult.rows[0] || {};
 
   return {
-    totalXp: numberFrom(stats, 'total_xp'),
-    lessonsCompleted: numberFrom(lessons, 'lessons_completed'),
-    bestLessonAccuracy: numberFrom(lessons, 'best_lesson_accuracy'),
-    wordsReviewed: numberFrom(stats, 'words_reviewed'),
-    vocabularyCount: numberFrom(vocab, 'vocabulary_count'),
-    exercisesCorrect: numberFrom(stats, 'exercises_correct'),
-    currentStreak: numberFrom(user, 'current_streak'),
-    bestStreak: numberFrom(user, 'best_streak'),
+    totalXp: numberFrom(scalars, 'total_xp'),
+    lessonsCompleted: numberFrom(scalars, 'lessons_completed'),
+    bestLessonAccuracy: numberFrom(scalars, 'best_lesson_accuracy'),
+    wordsReviewed: numberFrom(scalars, 'words_reviewed'),
+    vocabularyCount: numberFrom(scalars, 'vocabulary_count'),
+    exercisesCorrect: numberFrom(scalars, 'exercises_correct'),
+    currentStreak: numberFrom(scalars, 'current_streak'),
+    bestStreak: numberFrom(scalars, 'best_streak'),
     completedHskLevels: new Set(
       hskResult.rows
         .filter((row) => Number(row.active_count) > 0 && Number(row.completed_count) >= Number(row.active_count))

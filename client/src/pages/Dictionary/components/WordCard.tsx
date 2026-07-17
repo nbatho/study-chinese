@@ -1,8 +1,7 @@
 import { BookmarkPlus, Check, Heart, ListPlus, Volume2 } from "lucide-react";
 import type { Word } from "../../../api/vocabulary";
 import { HanziText } from "../../../components/HanziLookup";
-import { useI18n } from "../../../i18n";
-import type { TranslationKey } from "../../../i18n";
+import { tOrRaw, useI18n } from "../../../i18n";
 
 interface WordCardProps {
   word: Word;
@@ -33,11 +32,7 @@ export default function WordCard({
 
   // Localize DB labels (stored as English keys) to the app language,
   // falling back to the raw value for any unmapped category/part of speech.
-  const localizeLabel = (prefix: string, raw: string) => {
-    const key = `${prefix}.${raw}` as TranslationKey;
-    const label = t(key);
-    return label === key ? raw : label;
-  };
+  const localizeLabel = (prefix: string, raw: string) => tOrRaw(t, prefix, raw);
 
   return (
     <article className="app-card-button p-4">

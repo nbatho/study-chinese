@@ -24,6 +24,7 @@ import type { VocabularySort, Word } from "../../api/vocabulary";
 import { useI18n } from "../../i18n";
 import type { TranslationKey } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { speakChinese } from "../../utils/tts";
 import { DropdownSelect } from "../../components/ui/dropdown-select";
 import LoadingCard from "../../components/LoadingCard";
@@ -54,8 +55,10 @@ export default function Dictionary() {
   const [page, setPage] = useState(1);
   const [pickerWord, setPickerWord] = useState<Word | null>(null);
 
+  const debouncedQuery = useDebouncedValue(query);
+
   const vocabularySearchParams = {
-    q: query.trim() || undefined,
+    q: debouncedQuery.trim() || undefined,
     hsk: selectedHsk === "all" ? undefined : selectedHsk,
     category: selectedCategory === "all" ? undefined : selectedCategory,
     cefr: selectedCefr === "all" ? undefined : selectedCefr,

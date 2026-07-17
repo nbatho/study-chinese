@@ -1,5 +1,6 @@
 import { env } from '../config/env.config.js';
 import { LOCALE_NAMES, normalizeLocale } from '../utils/locale.js';
+import { extractJsonText } from '../utils/ai-json.js';
 
 const JSON_SCHEMA_HINT = {
   reply_simplified: 'Câu trả lời của giáo viên bằng chữ Hán giản thể.',
@@ -61,20 +62,6 @@ const clampText = (value, fallback = '') => {
   }
 
   return value.trim() || fallback;
-};
-
-const extractJsonText = (text) => {
-  const trimmed = text.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced ? fenced[1].trim() : trimmed;
-  const first = candidate.indexOf('{');
-  const last = candidate.lastIndexOf('}');
-
-  if (first === -1 || last === -1 || last <= first) {
-    return candidate;
-  }
-
-  return candidate.slice(first, last + 1);
 };
 
 const parseJsonResponse = (text) => JSON.parse(extractJsonText(text));

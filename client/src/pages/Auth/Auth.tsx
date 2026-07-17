@@ -11,7 +11,7 @@ import {
 } from "../../api/auth/queries";
 import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 import { useAppSelector } from "../../store/hooks";
-import { ApiError } from "../../utils/errorUtils";
+import { getErrorMessage as getErrorMessageWithFallback } from "../../utils/errorUtils";
 import { useI18n } from "../../i18n";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
@@ -21,17 +21,8 @@ import { isStrongPassword } from "../../utils/passwordPolicy";
 
 type AuthMode = "login" | "register";
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Something went wrong. Please try again.";
-};
+const getErrorMessage = (error: unknown) =>
+  getErrorMessageWithFallback(error, "Something went wrong. Please try again.");
 
 export default function Auth() {
   const navigate = useNavigate();

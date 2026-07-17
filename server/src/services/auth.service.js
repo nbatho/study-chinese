@@ -522,20 +522,7 @@ export const verifyEmail = async (token) => {
 };
 
 export const resendVerificationEmail = async (userId) => {
-  const result = await query(
-    `
-      SELECT id, email, email_verified
-      FROM users
-      WHERE id = $1 AND is_active = true
-    `,
-    [userId]
-  );
-
-  const user = result.rows[0];
-
-  if (!user) {
-    throw unauthorized('Tài khoản không còn tồn tại.');
-  }
+  const user = await findActiveUserById(userId, 'id, email, email_verified');
 
   if (user.email_verified) {
     return { alreadyVerified: true };
@@ -615,10 +602,10 @@ export const resetPassword = async (email, otp, newPassword) => {
   });
 };
 
-export const requestChangePasswordOtp = async (userId) => {
+const findActiveUserById = async (userId, columns = 'id, email') => {
   const result = await query(
     `
-      SELECT id, email
+      SELECT ${columns}
       FROM users
       WHERE id = $1 AND is_active = true
     `,
@@ -631,35 +618,31 @@ export const requestChangePasswordOtp = async (userId) => {
     throw unauthorized('Tài khoản không còn tồn tại.');
   }
 
-  const code = await issueOtpCode(user.id, OTP_PURPOSES.changePassword);
+  return user;
+};
+
+// Shared flow for the OTPs that guard sensitive account actions.
+const requestAccountOtp = async (userId, purpose, sendOtpEmail, logLabel) => {
+  const user = await findActiveUserById(userId);
+  const code = await issueOtpCode(user.id, purpose);
 
   try {
-    await sendChangePasswordOtpEmail(user.email, code);
+    await sendOtpEmail(user.email, code);
   } catch (error) {
-    console.error(`[email] Gửi mã OTP đổi mật khẩu tới ${user.email} thất bại:`, error.message);
+    console.error(`[email] Gửi mã OTP ${logLabel} tới ${user.email} thất bại:`, error.message);
     throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
   }
 
   return { sent: true };
 };
 
+export const requestChangePasswordOtp = (userId) =>
+  requestAccountOtp(userId, OTP_PURPOSES.changePassword, sendChangePasswordOtpEmail, 'đổi mật khẩu');
+
 export const changePassword = async (userId, currentPassword, newPassword, otp) => {
   assertStrongPassword(newPassword, 'newPassword');
 
-  const result = await query(
-    `
-      SELECT id, email, password_hash, name, avatar, role
-      FROM users
-      WHERE id = $1 AND is_active = true
-    `,
-    [userId]
-  );
-
-  const user = result.rows[0];
-
-  if (!user) {
-    throw unauthorized('Tài khoản không còn tồn tại.');
-  }
+  const user = await findActiveUserById(userId, 'id, email, password_hash, name, avatar, role');
 
   if (!(await verifyPassword(currentPassword || '', user.password_hash))) {
     throw unauthorized('Mật khẩu hiện tại không đúng.');
@@ -687,49 +670,11 @@ export const changePassword = async (userId, currentPassword, newPassword, otp) 
   });
 };
 
-export const requestDeleteAccountOtp = async (userId) => {
-  const result = await query(
-    `
-      SELECT id, email
-      FROM users
-      WHERE id = $1 AND is_active = true
-    `,
-    [userId]
-  );
-
-  const user = result.rows[0];
-
-  if (!user) {
-    throw unauthorized('Tài khoản không còn tồn tại.');
-  }
-
-  const code = await issueOtpCode(user.id, OTP_PURPOSES.deleteAccount);
-
-  try {
-    await sendDeleteAccountOtpEmail(user.email, code);
-  } catch (error) {
-    console.error(`[email] Gửi mã OTP xoá tài khoản tới ${user.email} thất bại:`, error.message);
-    throw badRequest('Không gửi được email chứa mã OTP. Vui lòng thử lại.');
-  }
-
-  return { sent: true };
-};
+export const requestDeleteAccountOtp = (userId) =>
+  requestAccountOtp(userId, OTP_PURPOSES.deleteAccount, sendDeleteAccountOtpEmail, 'xoá tài khoản');
 
 export const deleteUserAccount = async (userId, otp) => {
-  const result = await query(
-    `
-      SELECT id
-      FROM users
-      WHERE id = $1 AND is_active = true
-    `,
-    [userId]
-  );
-
-  const user = result.rows[0];
-
-  if (!user) {
-    throw unauthorized('Tài khoản không còn tồn tại.');
-  }
+  const user = await findActiveUserById(userId, 'id');
 
   await consumeOtpCode(user.id, OTP_PURPOSES.deleteAccount, otp);
 

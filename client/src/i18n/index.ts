@@ -3,5 +3,6 @@ export { translate, translateWith } from "./translate";
 export { startLevelKeys } from "./startLevel";
 export type { TranslationVars } from "./translate";
 export { LANGUAGES, LANGUAGE_META, isLanguage } from "./languages";
+export { formatDate, formatNumber, tOrRaw } from "./format";
 export type { Language } from "./languages";
 export type { TranslationKey } from "./translations";

@@ -214,8 +214,11 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
 // ─────────────────────────────────────────────────────────────
 // Export instance
 // ─────────────────────────────────────────────────────────────
-const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL;
+const GATEWAY_URL = (import.meta.env.VITE_API_GATEWAY_URL ?? '').replace(/\/$/, '');
 const BASE_URL = GATEWAY_URL ? `${GATEWAY_URL}/api/v1/` : '/api/v1/';
+
+/** Single source for the API base (no trailing slash) for non-axios consumers. */
+export const API_BASE_URL = BASE_URL.slice(0, -1);
 
 export const beApi = createAxiosInstance(BASE_URL);
 export default beApi;

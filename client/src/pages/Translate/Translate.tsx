@@ -36,6 +36,7 @@ import { Button } from "../../components/ui/button";
 import ListPickerModal, { type ListPickerItem } from "../Dictionary/components/ListPickerModal";
 import { useI18n } from "../../i18n";
 import { useAppSelector } from "../../store/hooks";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { cn } from "../../utils/cn";
 import { speakChinese } from "../../utils/tts";
 
@@ -64,14 +65,15 @@ export default function Translate() {
   const [historyKeyword, setHistoryKeyword] = useState("");
   const [historyDate, setHistoryDate] = useState("");
   const [historyFavoritesOnly, setHistoryFavoritesOnly] = useState(false);
+  const debouncedHistoryKeyword = useDebouncedValue(historyKeyword);
   const historyParams = useMemo(
     () => ({
       limit: 20,
-      keyword: historyKeyword.trim() || undefined,
+      keyword: debouncedHistoryKeyword.trim() || undefined,
       date: historyDate || undefined,
       favorite: historyFavoritesOnly || undefined,
     }),
-    [historyDate, historyFavoritesOnly, historyKeyword],
+    [historyDate, historyFavoritesOnly, debouncedHistoryKeyword],
   );
   const ocrHistoryQuery = useOcrHistoryQuery(historyParams);
   const updateOcrHistoryMutation = useUpdateOcrHistoryMutation();
@@ -318,9 +320,8 @@ export default function Translate() {
   };
 
   const saveActiveSegmentsToSrs = async () => {
-    for (const segment of activeSegments) {
-      await saveSegmentToSrs(segment);
-    }
+    // Enrollments are independent — run them in parallel instead of serially.
+    await Promise.all(activeSegments.map((segment) => saveSegmentToSrs(segment)));
   };
 
   const openHistoryEvent = (event: OcrHistoryEvent) => {
@@ -806,11 +807,7 @@ export default function Translate() {
                   <button
                     key={event.id}
                     type="button"
-                    onClick={() => {
-                      setMode("text");
-                      setSourceText(event.detectedText || "");
-                      void runScan({ text: event.detectedText || "" });
-                    }}
+                    onClick={() => openHistoryEvent(event)}
                     className="rounded-xl border bg-background p-3 text-left transition hover:border-primary/60"
                   >
                     <span className="line-clamp-1 font-serif text-xl font-extrabold">

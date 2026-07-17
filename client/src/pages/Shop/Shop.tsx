@@ -20,7 +20,7 @@ const categoryConfig: Record<ShopItemCategory, { labelKey: TranslationKey; icon:
 };
 
 export default function Shop() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { isResolving, isAuthenticated } = useAuthGate();
   const shopQuery = useShopQuery(isAuthenticated);
   const purchaseMutation = usePurchaseShopItemMutation();
@@ -94,7 +94,7 @@ export default function Shop() {
           <div className="rounded-xl border bg-background px-3 py-3">
             <Crown className="mx-auto mb-1 text-gold" size={20} />
             <strong className="block text-sm">{shop.premium.isActive ? t("common.active") : t("common.free")}</strong>
-            <span className="text-xs font-bold text-muted-foreground">{formatPremiumDate(shop.premium.expiresAt, t)}</span>
+            <span className="text-xs font-bold text-muted-foreground">{formatPremiumDate(shop.premium.expiresAt, t, language)}</span>
           </div>
         </div>
       </header>

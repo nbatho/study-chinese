@@ -1,25 +1,17 @@
 import { CheckCircle2, LockKeyhole, Sparkles } from "lucide-react";
 import type { Achievement } from "../../../api/achievements";
 import { Badge } from "../../../components/ui/badge";
-import { useI18n } from "../../../i18n";
+import { formatDate, useI18n } from "../../../i18n";
 import { cn } from "../../../utils/cn";
 import { categoryLabelKeys, categoryStyles } from "./achievementConfig";
 import getAchievementText from "./getAchievementText";
 
-const formatUnlockedDate = (value: string | null) => {
-  if (!value) return null;
-
-  return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-};
-
 export default function AchievementCard({ achievement }: { achievement: Achievement }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const isUnlocked = Boolean(achievement.unlockedAt);
-  const unlockedDate = formatUnlockedDate(achievement.unlockedAt);
+  const unlockedDate = achievement.unlockedAt
+    ? formatDate(achievement.unlockedAt, language, { month: "short", day: "numeric", year: "numeric" })
+    : null;
   const { title, description } = getAchievementText(achievement, t);
 
   return (

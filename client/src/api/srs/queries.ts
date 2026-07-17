@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../queryKeys';
 import { unwrapApiData } from '../shared';
 import { srsApi } from './index';
@@ -26,21 +26,26 @@ export const useSrsCardsQuery = (enabled = true) => {
     });
 };
 
-export const useReviewSrsMutation = () => {
-    const queryClient = useQueryClient();
+/**
+ * Refresh everything a review session touches (deck, due cards, user stats,
+ * today plan, achievements). Called once when a session ends — invalidating
+ * per graded card refetched all of these for every single answer.
+ */
+export const invalidateSrsSessionQueries = (queryClient: QueryClient) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
+    queryClient.invalidateQueries({ queryKey: queryKeys.srs.cardsAll });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
+    queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
+};
 
-    return useMutation({
+export const useReviewSrsMutation = () =>
+    useMutation({
         mutationFn: (payload: ReviewCardPayload) => unwrapApiData(srsApi.review(payload)),
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.srs.dueAll });
-            queryClient.invalidateQueries({ queryKey: queryKeys.srs.cardsAll });
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            queryClient.invalidateQueries({ queryKey: queryKeys.users.todayPlanAll });
-            queryClient.invalidateQueries({ queryKey: queryKeys.achievements.all });
             showAchievementToasts(data.unlockedAchievements);
         },
     });
-};
 
 export const useEnrollWordMutation = () => {
     const queryClient = useQueryClient();

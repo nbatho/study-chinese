@@ -55,18 +55,12 @@ const mapGrammarPoint = (row, locale = 'en') => ({
   examples: (row.examples || []).map((example) => mapExample(example, locale))
 });
 
+// A grammar point joined with its lesson; the grammar's own level columns are
+// aliased grammar_* because hsk_level/cefr_level belong to the lesson here.
 const mapLessonGrammarEntry = (row, locale = 'en') => ({
-  id: row.id,
-  pattern: row.pattern,
-  explanation: chooseLocalizedText(row.explanation, row.explanation_vi, locale),
-  explanationEn: row.explanation,
-  explanationVi: row.explanation_vi || null,
-  tips: locale === 'vi' && row.tips_vi?.length ? row.tips_vi : row.tips || [],
-  tipsEn: row.tips || [],
-  tipsVi: row.tips_vi || [],
+  ...mapGrammarPoint(row, locale),
   hskLevel: row.grammar_hsk_level === null || row.grammar_hsk_level === undefined ? null : Number(row.grammar_hsk_level),
   cefrLevel: row.grammar_cefr_level || null,
-  examples: (row.examples || []).map((example) => mapExample(example, locale)),
   lesson: {
     id: row.lesson_id,
     title: chooseLocalizedText(row.lesson_title, row.lesson_title_vi, locale),
@@ -374,22 +368,19 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
 
   const lesson = lessonResult.rows[0];
 
+  // The detail payload shares the summary's mapping but carries no progress
+  // fields — strip them so the response shape stays unchanged.
+  const {
+    grammarCount: _grammarCount,
+    completedAt: _completedAt,
+    bestAccuracy: _bestAccuracy,
+    attempts: _attempts,
+    ...summaryFields
+  } = mapLessonSummary(lesson, locale);
+
   return {
     lesson: {
-      id: lesson.id,
-      title: chooseLocalizedText(lesson.title, lesson.title_vi, locale),
-      subtitle: chooseLocalizedText(lesson.subtitle, lesson.subtitle_vi, locale),
-      titleEn: lesson.title,
-      titleVi: lesson.title_vi || null,
-      subtitleEn: lesson.subtitle,
-      subtitleVi: lesson.subtitle_vi || null,
-      hskLevel: Number(lesson.hsk_level),
-      cefrLevel: lesson.cefr_level || 'A1',
-      order: Number(lesson.order_num),
-      skill: lesson.primary_skill || lesson.skill,
-      primarySkill: lesson.primary_skill || lesson.skill,
-      secondarySkills: lesson.secondary_skills || [],
-      topic: lesson.topic || null,
+      ...summaryFields,
       learningObjectives: locale === 'vi' && lesson.learning_objectives_vi?.length
         ? lesson.learning_objectives_vi
         : lesson.learning_objectives || [],
@@ -397,12 +388,6 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
       learningObjectivesVi: lesson.learning_objectives_vi || [],
       warmUp: lesson.warm_up || null,
       reviewSummary: lesson.review_summary || null,
-      difficultyScore: lesson.difficulty_score === null || lesson.difficulty_score === undefined
-        ? null
-        : Number(lesson.difficulty_score),
-      tags: lesson.tags || [],
-      estimatedMinutes: Number(lesson.estimated_minutes),
-      xpReward: Number(lesson.xp_reward),
       intro: chooseLocalizedText(lesson.intro, lesson.intro_vi, locale),
       introEn: lesson.intro,
       introVi: lesson.intro_vi || null,
@@ -565,33 +550,19 @@ export const completeLesson = async (userId, lessonId, payload) => {
       [userId, lessonId, accuracy, lesson.content_version]
     );
 
-    const lessonWordsResult = await client.query(
+    const enrolledResult = await client.query(
       `
-        SELECT word_id
+        INSERT INTO srs_cards (user_id, word_id)
+        SELECT $1, word_id
         FROM lesson_words
-        WHERE lesson_id = $1
+        WHERE lesson_id = $2
         ORDER BY order_num
+        ON CONFLICT (user_id, word_id) DO NOTHING
+        RETURNING word_id
       `,
-      [lessonId]
+      [userId, lessonId]
     );
-
-    const newWordsEnrolled = [];
-
-    for (const row of lessonWordsResult.rows) {
-      const insertResult = await client.query(
-        `
-          INSERT INTO srs_cards (user_id, word_id)
-          VALUES ($1, $2)
-          ON CONFLICT (user_id, word_id) DO NOTHING
-          RETURNING word_id
-        `,
-        [userId, row.word_id]
-      );
-
-      if (insertResult.rowCount > 0) {
-        newWordsEnrolled.push(row.word_id);
-      }
-    }
+    const newWordsEnrolled = enrolledResult.rows.map((row) => row.word_id);
 
     const activity = await recordActivity(client, userId, {
       xp: Number(lesson.xp_reward),
