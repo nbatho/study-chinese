@@ -605,10 +605,6 @@ const getAcceptedAnswers = (exercise: LessonExercise) => {
   return Array.from(new Set(answers.map(normalizeAnswer).filter(Boolean)));
 };
 
-function hasChineseText(value?: string | null) {
-  return /[\u3400-\u9fff]/.test(value || "");
-}
-
 function buildLessonMistakePayload(
   lesson: LessonDetail,
   exercise: LessonExercise,
@@ -633,15 +629,16 @@ function buildLessonMistakePayload(
       : exercise.kind === "short_answer" || exercise.kind === "shortAnswer"
         ? shortAnswer
         : selectedOption;
-  const simplified =
-    exercise.promptHanzi ||
-    matchedWord?.simplified ||
-    (hasChineseText(exercise.correctText) ? exercise.correctText : undefined);
+  // Never store the correct answer as the displayed hanzi: weak practice would
+  // show the answer inside the question card.
+  const simplified = exercise.promptHanzi || matchedWord?.simplified || undefined;
 
   return {
     wordId: matchedWord?.id,
     skill: `lesson-${exercise.kind}`.slice(0, 50),
-    prompt: exercise.prompt,
+    // Always store the Chinese question, not the localized instruction, so
+    // weak practice can re-ask the actual exercise.
+    prompt: exercise.promptZh || exercise.prompt,
     userAnswer: userAnswer || "(blank)",
     correctAnswer: exercise.correctText || correctOption,
     simplified,
@@ -657,6 +654,7 @@ function buildLessonMistakePayload(
       selectedOptionIndex: selectedOptionIdx,
       correctOptionIndex: exercise.correctIndex,
       correctOption,
+      options: exercise.optionsZh?.length ? exercise.optionsZh : exercise.options ?? [],
     },
   };
 }

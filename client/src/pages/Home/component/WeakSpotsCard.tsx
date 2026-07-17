@@ -5,7 +5,11 @@ import { Button } from "../../../components/ui/button";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { useI18n } from "../../../i18n";
 import { useAppSelector } from "../../../store/hooks";
-import { skillLabel } from "./homeHelpers";
+import {
+  categoryOf,
+  isLessonSkill,
+  weakCategoryLabel,
+} from "../../Practice/components/weakCategories";
 
 export default function WeakSpotsCard() {
   const { t } = useI18n();
@@ -41,27 +45,43 @@ export default function WeakSpotsCard() {
       ) : weakSpots.length ? (
         <>
           <div className="grid gap-2.5">
-            {weakSpots.map((spot) => (
-              <div
-                key={spot.id}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border bg-background/80 px-3 py-2.5"
-              >
-                <span className="font-serif text-2xl font-extrabold text-primary">
-                  {spot.simplified || spot.prompt || "?"}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-extrabold">
-                    {spot.pinyin || skillLabel(t, spot.skill)}
+            {weakSpots.map((spot) => {
+              const category = weakCategoryLabel(t, categoryOf(spot.skill));
+              const lesson = isLessonSkill(spot.skill);
+              // Lesson rows keep the localized instruction in gloss/english, so
+              // the correct answer is the only meaningful line there.
+              const answer = lesson
+                ? spot.correctAnswer
+                : spot.gloss || spot.correctAnswer;
+              const hanzi = spot.simplified;
+              return (
+                <div
+                  key={spot.id}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border bg-background/80 px-3 py-2.5"
+                >
+                  {hanzi ? (
+                    <span className="font-serif text-2xl font-extrabold text-primary">{hanzi}</span>
+                  ) : (
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Target size={16} />
+                    </span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-extrabold">
+                      {hanzi ? spot.pinyin || category : spot.prompt || category}
+                    </span>
+                    <span className="block truncate text-xs font-medium text-muted-foreground">
+                      {answer
+                        ? t("home.weakSpotAnswer", { answer })
+                        : category}
+                    </span>
                   </span>
-                  <span className="block truncate text-xs font-medium text-muted-foreground">
-                    {spot.gloss || spot.correctAnswer || spot.prompt}
+                  <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
+                    x{spot.needsPracticeCount}
                   </span>
-                </span>
-                <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
-                  x{spot.needsPracticeCount}
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
           <Button
             type="button"
