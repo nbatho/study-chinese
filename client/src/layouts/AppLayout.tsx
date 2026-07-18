@@ -14,6 +14,7 @@ import { setAppearance, setOnboardingCompleted } from "../store/modules/appSlice
 import { cn } from "../utils/cn";
 import { useDocumentLanguage, useI18n } from "../i18n";
 import { useStudyReminder } from "../hooks/useStudyReminder";
+import { useAppHeight } from "../hooks/useAppHeight";
 import { todayKey } from "../utils/studyReminder";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 
@@ -28,6 +29,7 @@ export default function AppLayout() {
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
   const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
+  useAppHeight();
   const profileQuery = useUserProfileQuery(isAuthenticated);
   const appAppearance = useAppSelector((state) => state.app.appAppearance);
   useDocumentLanguage();
@@ -96,7 +98,10 @@ export default function AppLayout() {
 
   return (
     <HanziLookupProvider>
-      <div className="app-workspace-bg flex h-[100dvh] overflow-hidden">
+      <div
+        className="app-workspace-bg flex overflow-hidden"
+        style={{ height: "var(--app-height, 100dvh)" }}
+      >
         <Navigation
           collapsed={isSidebarCollapsed}
           onToggleCollapsed={() => setIsSidebarCollapsed((value) => !value)}
