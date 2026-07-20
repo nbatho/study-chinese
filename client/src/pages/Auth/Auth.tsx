@@ -65,6 +65,12 @@ export default function Auth() {
   };
 
   const finishAuth = (destination: string) => {
+    // Blur the focused field before navigating so the on-screen keyboard
+    // starts dismissing (and the browser's chrome starts re-expanding) while
+    // we're still on this min-height page, instead of mid-animation once
+    // AppLayout's fixed-height shell has already mounted and taken its first
+    // measurement. Applies to both iOS Safari and Android Chrome.
+    (document.activeElement as HTMLElement | null)?.blur();
     navigate(destination, { replace: true });
   };
 
