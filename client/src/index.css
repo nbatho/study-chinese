@@ -120,7 +120,17 @@ body.dark {
   }
 
   body {
-    @apply min-h-screen overflow-x-hidden bg-background text-foreground antialiased transition-colors;
+    @apply overflow-x-hidden bg-background text-foreground antialiased transition-colors;
+    /* Not `min-h-screen`: on iOS Safari `100vh` is the *large* viewport (the
+       height with the toolbar hidden), so with the toolbar showing the body
+       ends up taller than what's actually visible and the document becomes
+       scrollable by that difference. Focusing the login field makes iOS scroll
+       the document down to reveal the input, and that offset survives the
+       navigation into the app shell — which is exactly `--app-height` tall, so
+       it gets drawn shifted up with a band of body background under the bottom
+       nav until any re-render/scroll resets it. Matching the measured viewport
+       height means there is nothing to scroll in the first place. */
+    min-height: var(--app-height, 100dvh);
     font-family: var(--font-sans);
     line-height: 1.5;
   }

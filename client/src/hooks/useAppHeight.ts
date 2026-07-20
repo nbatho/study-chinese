@@ -16,6 +16,13 @@ export function useAppHeight() {
     const root = document.documentElement;
     const applyHeight = () => {
       root.style.setProperty("--app-height", `${window.innerHeight}px`);
+      // The shell never scrolls the document (it's a fixed-height, overflow
+      // hidden box; scrolling happens in the inner container), so a non-zero
+      // document scroll is always leftover from iOS scrolling a focused input
+      // into view before we got here — it renders the whole app shifted up.
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
     };
 
     // A single read on the triggering event can land mid-animation — e.g. the
