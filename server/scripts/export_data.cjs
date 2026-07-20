@@ -90,6 +90,34 @@ async function exportWords() {
   });
 }
 
+// daily_phrases keeps its Vietnamese in the daily_phrase_glosses side table
+// (gloss = translation of `english`, note = translation of `note`), not in _vi columns.
+async function exportDailyPhrases() {
+  console.log('Exporting daily_phrases...');
+  const res = await client.query(`
+    SELECT p.*, g.gloss AS vi_gloss, g.note AS vi_note
+    FROM daily_phrases p
+    LEFT JOIN daily_phrase_glosses g ON g.phrase_id = p.id AND g.locale = 'vi'
+  `);
+
+  const chunks = chunkArray(res.rows, 1000);
+  chunks.forEach((chunk, i) => {
+    const dir = path.join(DATA_DIR, 'daily_phrases', `chunk_${i + 1}`);
+    ensureDir(dir);
+
+    const enChunk = chunk.map(row => omit(row, ['vi_gloss', 'vi_note']));
+    writeJson(path.join(dir, 'en.json'), enChunk);
+
+    const viChunk = chunk.map(row => {
+      const newRow = omit(row, ['vi_gloss', 'vi_note']);
+      if (row.vi_gloss) newRow.english = row.vi_gloss;
+      if (row.vi_note) newRow.note = row.vi_note;
+      return newRow;
+    });
+    writeJson(path.join(dir, 'vi.json'), viChunk);
+  });
+}
+
 async function exportByLessonId(tableName, keysToOmit, viMappings) {
   console.log(`Exporting ${tableName}...`);
   const res = await client.query(`SELECT * FROM ${tableName}`);
@@ -201,17 +229,23 @@ async function main() {
   await exportChunked('grammar_library', 
     ['title_vi', 'summary_vi'], 
     { title: 'title_vi', summary: 'summary_vi' });
-  await exportChunked('daily_phrases', [], {}); 
+  await exportDailyPhrases(); 
 
   // Single file
   await exportSingle('content_releases', [], {});
-  await exportSingle('placement_questions', [], {});
-  await exportSingle('achievements', [], {});
-  await exportSingle('shop_items', [], {});
-  await exportSingle('chat_scenarios', 
-    ['init_msg_vi'], 
-    { init_msg_english: 'init_msg_vi' });
-  await exportSingle('practice_minimal_pairs', [], {});
+  await exportSingle('placement_questions',
+    ['prompt_vi', 'options_vi', 'correct_text_vi', 'explanation_vi'],
+    { prompt: 'prompt_vi', options: 'options_vi', correct_text: 'correct_text_vi', explanation: 'explanation_vi' });
+  await exportSingle('achievements',
+    ['title_vi', 'description_vi'],
+    { title: 'title_vi', description: 'description_vi' });
+  await exportSingle('shop_items',
+    ['name_vi', 'description_vi'],
+    { name: 'name_vi', description: 'description_vi' });
+  await exportSingle('chat_scenarios',
+    ['init_msg_vi', 'title_vi', 'description_vi'],
+    { init_msg_english: 'init_msg_vi', title: 'title_vi', description: 'description_vi' });
+  await exportSingle('practice_minimal_pairs', ['label_vi'], { label: 'label_vi' });
   await exportSingle('practice_hanzi_strokes', [], {});
 
   console.log('Finished exporting data.');

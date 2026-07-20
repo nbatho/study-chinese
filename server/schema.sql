@@ -451,6 +451,11 @@ CREATE TABLE IF NOT EXISTS placement_questions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE placement_questions ADD COLUMN IF NOT EXISTS prompt_vi TEXT;
+ALTER TABLE placement_questions ADD COLUMN IF NOT EXISTS options_vi JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE placement_questions ADD COLUMN IF NOT EXISTS correct_text_vi TEXT;
+ALTER TABLE placement_questions ADD COLUMN IF NOT EXISTS explanation_vi TEXT;
+
 CREATE TABLE IF NOT EXISTS user_lesson_progress (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   lesson_id VARCHAR(50) NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -523,6 +528,9 @@ CREATE TABLE IF NOT EXISTS achievements (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE achievements ADD COLUMN IF NOT EXISTS title_vi VARCHAR(100);
+ALTER TABLE achievements ADD COLUMN IF NOT EXISTS description_vi TEXT;
+
 CREATE TABLE IF NOT EXISTS user_achievements (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   achievement_id VARCHAR(50) NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
@@ -554,6 +562,9 @@ CREATE TABLE IF NOT EXISTS shop_items (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE shop_items ADD COLUMN IF NOT EXISTS name_vi VARCHAR(100);
+ALTER TABLE shop_items ADD COLUMN IF NOT EXISTS description_vi TEXT;
 
 CREATE TABLE IF NOT EXISTS user_shop_items (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -601,6 +612,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 );
 
 ALTER TABLE chat_scenarios ADD COLUMN IF NOT EXISTS init_msg_vi TEXT;
+ALTER TABLE chat_scenarios ADD COLUMN IF NOT EXISTS title_vi VARCHAR(100);
+ALTER TABLE chat_scenarios ADD COLUMN IF NOT EXISTS description_vi TEXT;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS vietnamese TEXT;
 
 CREATE TABLE IF NOT EXISTS daily_phrases (
@@ -663,6 +676,8 @@ CREATE TABLE IF NOT EXISTS practice_minimal_pairs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE practice_minimal_pairs ADD COLUMN IF NOT EXISTS label_vi VARCHAR(150);
 
 CREATE TABLE IF NOT EXISTS practice_hanzi_strokes (
   id VARCHAR(50) PRIMARY KEY,
