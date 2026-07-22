@@ -4,6 +4,7 @@ import { useAchievementsQuery } from "../../../api";
 import { Button } from "../../../components/ui/button";
 import { useI18n } from "../../../i18n";
 import { useAppSelector } from "../../../store/hooks";
+import getAchievementText from "../../Achievements/components/getAchievementText";
 
 export default function BadgesCard() {
   const { t } = useI18n();
@@ -26,9 +27,12 @@ export default function BadgesCard() {
             <div
               key={ach.id}
               className="flex min-w-24 flex-col items-center rounded-lg border border-gold/25 bg-gold/10 p-3 text-center"
+              title={getAchievementText(ach, t).title}
             >
               <span className="text-3xl">{ach.emoji}</span>
-              <span className="mt-2 w-[4.5rem] truncate text-xs font-extrabold">{ach.title}</span>
+              <span className="mt-2 w-[4.5rem] truncate text-xs font-extrabold">
+                {getAchievementText(ach, t).title}
+              </span>
             </div>
           ))
         ) : (

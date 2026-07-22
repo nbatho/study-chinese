@@ -146,6 +146,51 @@ async function importWords() {
   }
 }
 
+// Mirror of exportDailyPhrases: Vietnamese lives in daily_phrase_glosses, not _vi columns.
+async function importDailyPhrases() {
+  console.log('Importing daily_phrases...');
+  const tableDir = path.join(DATA_DIR, 'daily_phrases');
+  if (!fs.existsSync(tableDir)) return;
+
+  const phrases = [];
+  const glosses = [];
+
+  for (let chunk of fs.readdirSync(tableDir)) {
+    const dir = path.join(tableDir, chunk);
+    if (!fs.statSync(dir).isDirectory()) continue;
+
+    const enList = readJson(path.join(dir, 'en.json')) || [];
+    const viList = readJson(path.join(dir, 'vi.json')) || [];
+
+    const viMap = {};
+    for (let row of viList) viMap[row.id] = row;
+
+    for (let en of enList) {
+      phrases.push(prepareRow({ ...en }));
+
+      const vi = viMap[en.id];
+      if (vi && vi.english) {
+        glosses.push({
+          phrase_id: en.id,
+          locale: 'vi',
+          gloss: vi.english,
+          note: vi.note ?? null,
+          source: 'human',
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+  }
+
+  for (let i = 0; i < phrases.length; i += 1000) {
+    await upsert('daily_phrases', phrases.slice(i, i + 1000));
+  }
+
+  for (let i = 0; i < glosses.length; i += 1000) {
+    await upsert('daily_phrase_glosses', glosses.slice(i, i + 1000), ['phrase_id', 'locale']);
+  }
+}
+
 async function importByLessonId(tableName, viMappings, conflictKeys = ['id']) {
   console.log(`Importing ${tableName}...`);
   const tableDir = path.join(DATA_DIR, tableName);
@@ -276,14 +321,18 @@ async function main() {
   await importChunked('word_topics', { name_en: 'name_vi' });
   await importChunked('word_topic_map', {}, ['word_id', 'topic_id']);
   await importChunked('grammar_library', { title: 'title_vi', summary: 'summary_vi' });
-  await importChunked('daily_phrases', {}); 
+  await importDailyPhrases(); 
 
   await importSingle('content_releases', {});
-  await importSingle('placement_questions', {});
-  await importSingle('achievements', {});
-  await importSingle('shop_items', {});
-  await importSingle('chat_scenarios', { init_msg_english: 'init_msg_vi' });
-  await importSingle('practice_minimal_pairs', {});
+  await importSingle('placement_questions', {
+    prompt: 'prompt_vi', options: 'options_vi', correct_text: 'correct_text_vi', explanation: 'explanation_vi'
+  });
+  await importSingle('achievements', { title: 'title_vi', description: 'description_vi' });
+  await importSingle('shop_items', { name: 'name_vi', description: 'description_vi' });
+  await importSingle('chat_scenarios', {
+    init_msg_english: 'init_msg_vi', title: 'title_vi', description: 'description_vi'
+  });
+  await importSingle('practice_minimal_pairs', { label: 'label_vi' });
   await importSingle('practice_hanzi_strokes', {});
 
   console.log('Finished importing data.');
