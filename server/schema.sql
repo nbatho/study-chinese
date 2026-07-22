@@ -286,6 +286,9 @@ ALTER TABLE lessons ADD COLUMN IF NOT EXISTS title_vi VARCHAR(150);
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS subtitle_vi VARCHAR(150);
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS intro_vi TEXT;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS learning_objectives_vi JSONB DEFAULT '[]'::jsonb;
+-- Denormalized per-lesson content tallies (vocab/grammar/dialogue_lines/reading_passages/exercises)
+-- shown in the UI; kept in sync with the actual child rows by the content pipeline.
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content_counts JSONB DEFAULT '{}'::jsonb;
 
 CREATE TABLE IF NOT EXISTS word_topics (
   id VARCHAR(50) PRIMARY KEY,

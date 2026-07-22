@@ -16,6 +16,7 @@ const DATA_DIR = path.join(__dirname, '../../data');
 
 const JSONB_COLUMNS = new Set([
   'dialogue', 'learning_objectives', 'warm_up', 'review_summary', 'learning_objectives_vi',
+  'content_counts',
   'level_sources', 'all_forms', 'examples', 'stimulus', 'options', 'acceptable_variants', 'options_vi',
   'phases', 'lines', 'new_word_ids', 'grammar_point_ids', 'questions',
   'raw_output', 'validation_result', 'ai_review_result', 'trigger_context',
