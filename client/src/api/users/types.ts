@@ -1,6 +1,7 @@
 import type { Achievement } from '../achievements';
 
-export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+/** `pre-A1` is the HSK 0 pronunciation track; it is below the placement ladder. */
+export type CefrLevel = 'pre-A1' | 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type SkillLevel = 'beginner' | 'elementary' | 'intermediate' | 'upper_intermediate' | 'advanced' | 'mastery';
 export type LearningGoal = 'travel' | 'business' | 'hskExam' | 'culture' | 'family' | 'casual';
 export type AppAppearance = 'light' | 'dark' | 'system';

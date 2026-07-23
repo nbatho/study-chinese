@@ -131,7 +131,7 @@ export const FOUNDATION_STAGES: FoundationStage[] = [
   },
   {
     id: "tone-check",
-    lessonId: "hsk0-l02-tone-check",
+    lessonId: "hsk0-l03-tone-check",
     xp: 15,
     kind: "quiz",
     title: {
@@ -152,7 +152,7 @@ export const FOUNDATION_STAGES: FoundationStage[] = [
   },
   {
     id: "initials",
-    lessonId: "hsk0-l03-initials",
+    lessonId: "hsk0-l04-initials",
     xp: 15,
     kind: "sounds",
     title: {
@@ -234,7 +234,7 @@ export const FOUNDATION_STAGES: FoundationStage[] = [
   },
   {
     id: "finals",
-    lessonId: "hsk0-l04-finals",
+    lessonId: "hsk0-l07-finals",
     xp: 15,
     kind: "sounds",
     title: {
@@ -311,7 +311,7 @@ export const FOUNDATION_STAGES: FoundationStage[] = [
   },
   {
     id: "tone-pairs",
-    lessonId: "hsk0-l05-syllables",
+    lessonId: "hsk0-l10-syllables",
     xp: 15,
     kind: "sounds",
     title: {
@@ -361,7 +361,7 @@ export const FOUNDATION_STAGES: FoundationStage[] = [
   },
   {
     id: "final-check",
-    lessonId: "hsk0-l06-review",
+    lessonId: "hsk0-l13-review",
     xp: 20,
     kind: "quiz",
     title: {

@@ -290,6 +290,15 @@ ALTER TABLE lessons ADD COLUMN IF NOT EXISTS learning_objectives_vi JSONB DEFAUL
 -- shown in the UI; kept in sync with the actual child rows by the content pipeline.
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content_counts JSONB DEFAULT '{}'::jsonb;
 
+-- HSK0 (pronunciation foundation) sits below A1, so lessons carry 'pre-A1' — six
+-- characters, which the original VARCHAR(5) could not hold. Only `lessons` needs this:
+-- words/grammar_points/placement_questions never use the pre-A1 band.
+ALTER TABLE lessons ALTER COLUMN cefr_level TYPE VARCHAR(10);
+-- (see also the lesson_modules 'pronunciation' module_type widening further down)
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS lessons_cefr_level_check;
+ALTER TABLE lessons ADD CONSTRAINT lessons_cefr_level_check
+  CHECK (cefr_level IN ('pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'));
+
 CREATE TABLE IF NOT EXISTS word_topics (
   id VARCHAR(50) PRIMARY KEY,
   name_en VARCHAR(100) NOT NULL,
@@ -376,6 +385,11 @@ CREATE TABLE IF NOT EXISTS lesson_modules (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- HSK0 lessons teach pronunciation, which is not one of the four classic skills.
+ALTER TABLE lesson_modules DROP CONSTRAINT IF EXISTS lesson_modules_module_type_check;
+ALTER TABLE lesson_modules ADD CONSTRAINT lesson_modules_module_type_check
+  CHECK (module_type IN ('listening', 'speaking', 'reading', 'writing', 'pronunciation'));
+
 CREATE TABLE IF NOT EXISTS dialogues (
   id VARCHAR(80) PRIMARY KEY,
   lesson_id VARCHAR(50) REFERENCES lessons(id) ON DELETE SET NULL,
@@ -414,6 +428,8 @@ CREATE TABLE IF NOT EXISTS reading_passages (
 
 ALTER TABLE reading_passages ADD COLUMN IF NOT EXISTS title_vi VARCHAR(200);
 ALTER TABLE reading_passages ADD COLUMN IF NOT EXISTS content_vi TEXT;
+-- HSK4-6 lessons carry two independent passages, so their display order is explicit.
+ALTER TABLE reading_passages ADD COLUMN IF NOT EXISTS order_num INT NOT NULL DEFAULT 1;
 
 CREATE TABLE IF NOT EXISTS content_generation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

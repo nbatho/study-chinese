@@ -340,9 +340,10 @@ export const getCurriculumLessons = (level: HskCurriculumLevel) => [
   level.endTest,
 ];
 
-export const CEFR_RANK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+export const CEFR_RANK: Record<CefrLevel, number> = { "pre-A1": 0, A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
 
-const CEFR_RECOMMENDED_HSK: Record<CefrLevel, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+/** HSK 0 is the pronunciation track, so pre-A1 recommends HSK 0. */
+const CEFR_RECOMMENDED_HSK: Record<CefrLevel, number> = { "pre-A1": 0, A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
 
 const VISIBLE_HSK_LEVELS = HSK_CURRICULUM.map((level) => level.hskLevel);
 

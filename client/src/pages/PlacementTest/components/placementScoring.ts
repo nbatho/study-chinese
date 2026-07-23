@@ -3,6 +3,7 @@ import type { CefrLevel, SkillLevel } from "../../../api/users";
 import type { TranslationKey } from "../../../i18n";
 
 const CEFR_WEIGHTS: Record<CefrLevel, number> = {
+  "pre-A1": 0,
   A1: 1,
   A2: 2,
   B1: 3,
@@ -11,6 +12,8 @@ const CEFR_WEIGHTS: Record<CefrLevel, number> = {
   C2: 6,
 };
 
+/** The placement ladder proper. `pre-A1` is deliberately excluded: the HSK 0
+ *  pronunciation track is never a placement outcome. */
 export const CEFR_LEVELS: CefrLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 export const INITIAL_CEFR_CEILING: CefrLevel = "A2";
 const PASS_LEVEL_ACCURACY = 2 / 3;
@@ -24,6 +27,7 @@ export const sectionKeys: Record<PlacementSection, TranslationKey> = {
 };
 
 const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
+  "pre-A1": "beginner",
   A1: "beginner",
   A2: "elementary",
   B1: "intermediate",
@@ -33,6 +37,7 @@ const cefrToStartLevel: Record<CefrLevel, SkillLevel> = {
 };
 
 export const cefrDescKeys: Record<CefrLevel, TranslationKey> = {
+  "pre-A1": "cefr.descPreA1",
   A1: "cefr.descA1",
   A2: "cefr.descA2",
   B1: "cefr.descB1",

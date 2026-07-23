@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Medal, Trophy } from "lucide-react";
 import { type LeaderboardScope, useLeaderboardQuery } from "../../../api";
+import { Avatar } from "../../../components/ui/avatar";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { formatNumber, useI18n } from "../../../i18n";
 import { useAppSelector } from "../../../store/hooks";
@@ -70,9 +71,11 @@ export default function LeaderboardCard() {
               <span className="flex size-8 items-center justify-center rounded-md bg-secondary text-xs font-extrabold">
                 {entry.rank <= 3 ? <Medal size={16} className="text-gold" /> : entry.rank}
               </span>
-              <span className="flex size-9 items-center justify-center overflow-hidden rounded-md bg-card text-lg font-extrabold">
-                {entry.user.avatar || entry.user.name.slice(0, 1).toUpperCase()}
-              </span>
+              <Avatar
+                avatar={entry.user.avatar}
+                name={entry.user.name}
+                className="size-9 rounded-md bg-card"
+              />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-extrabold">{entry.user.name}</span>
                 <span className="block truncate text-xs font-semibold text-muted-foreground">

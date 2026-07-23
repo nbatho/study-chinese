@@ -15,37 +15,11 @@ import { useRoadmapProgress } from "../hooks/useRoadmapProgress";
 import { useI18n } from "../i18n";
 import { useAppSelector } from "../store/hooks";
 import { cn } from "../utils/cn";
+import { Avatar } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { CircularProgress } from "./ui/circular-progress";
 import { DropdownSelect } from "./ui/dropdown-select";
-
-function Avatar({
-  avatar,
-  name,
-  className,
-}: {
-  avatar?: string | null;
-  name: string;
-  className?: string;
-}) {
-  const isImage = Boolean(avatar && /^(https?:|data:image|blob:)/.test(avatar));
-
-  return (
-    <span
-      className={cn(
-        "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-lg font-extrabold shadow-sm",
-        className,
-      )}
-    >
-      {isImage ? (
-        <img src={avatar ?? ""} alt={name} className="size-full object-cover" />
-      ) : (
-        <span aria-hidden="true">{avatar || name.slice(0, 1).toUpperCase() || "学"}</span>
-      )}
-    </span>
-  );
-}
 
 export default function Navbar() {
   const navigate = useNavigate();

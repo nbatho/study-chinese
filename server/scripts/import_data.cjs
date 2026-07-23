@@ -307,9 +307,14 @@ async function importSingle(tableName, viMappings) {
 async function main() {
   await client.connect();
 
+  // content_releases first: lessons.release_id has an FK into it. Order only matters
+  // on a from-empty import (see scripts/reset-data.cjs); an upsert onto a populated
+  // database happened to work either way.
+  await importSingle('content_releases', {});
+
   await importLessons();
   await importWords();
-  
+
   await importByLessonId('grammar_points', { explanation: 'explanation_vi', tips: 'tips_vi' });
   await importByLessonId('exercises', { prompt: 'prompt_vi', options: 'options_vi', correct_text: 'correct_text_vi', answer_explanation: 'answer_explanation_vi' });
   await importByLessonId('dialogues', { title_en: 'title_vi' });
@@ -323,7 +328,6 @@ async function main() {
   await importChunked('grammar_library', { title: 'title_vi', summary: 'summary_vi' });
   await importDailyPhrases(); 
 
-  await importSingle('content_releases', {});
   await importSingle('placement_questions', {
     prompt: 'prompt_vi', options: 'options_vi', correct_text: 'correct_text_vi', explanation: 'explanation_vi'
   });
@@ -339,4 +343,9 @@ async function main() {
   await client.end();
 }
 
-main().catch(console.error);
+// Exit non-zero on failure: without this the open pg client keeps the event loop
+// alive and a failed import looks like a hang instead of an error.
+main().catch(err => {
+  console.error(err);
+  client.end().finally(() => process.exit(1));
+});

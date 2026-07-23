@@ -617,7 +617,9 @@ function buildLessonMistakePayload(
     lesson.newWords.find((word) =>
       word.simplified === exercise.promptHanzi ||
       word.simplified === exercise.correctText ||
-      exercise.prompt.includes(word.simplified),
+      // Must match against the Chinese stem: `prompt` is locale-swapped and holds
+      // the translated instruction for vi users, which never contains hanzi.
+      (exercise.promptZh || exercise.prompt).includes(word.simplified),
     );
   const selectedOption =
     selectedOptionIdx === null ? undefined : exercise.options?.[selectedOptionIdx];

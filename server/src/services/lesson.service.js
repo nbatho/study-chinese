@@ -360,7 +360,7 @@ export const getLessonDetails = async (lessonId, localeInput = 'en') => {
         SELECT *
         FROM reading_passages
         WHERE lesson_id = $1 AND is_active = true
-        ORDER BY created_at, id
+        ORDER BY order_num, created_at, id
       `,
       [lessonId]
     )

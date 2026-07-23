@@ -5,6 +5,7 @@ import { useAchievementsQuery, useLessonsQuery } from "../../api";
 import type { Achievement } from "../../api/achievements";
 import { useUserProfileQuery, useUserStatsQuery } from "../../api/users/queries";
 import LoginPromptCard from "../../components/LoginPromptCard";
+import { Avatar } from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 import { CircularProgress } from "../../components/ui/circular-progress";
 import { Progress } from "../../components/ui/progress";
@@ -197,7 +198,12 @@ export default function Profile() {
   return (
     <div className="app-page">
       <section className="app-page-header mb-5 flex items-center gap-4">
-        <div className="text-5xl sm:text-[3.2rem]">{profile?.avatar || "学"}</div>
+        <Avatar
+          avatar={profile?.avatar}
+          name={profile?.name}
+          fallback="学"
+          className="size-14 rounded-2xl bg-transparent text-5xl sm:size-16 sm:text-[3.2rem]"
+        />
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-xl font-extrabold sm:text-[1.35rem]">{profile?.name || t("common.learner")}</h2>
           <span className="text-[0.8rem] font-bold text-primary">

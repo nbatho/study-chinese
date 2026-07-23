@@ -66,7 +66,7 @@ export function useStudyReminder({ studiedToday, title, body, href = "/learn" }:
 
       toast(notifTitle, {
         description: notifBody,
-        action: { label: "▶", onClick: () => navigate(target) },
+        action: { label: "▶️", onClick: () => navigate(target) },
         duration: 10_000,
       });
     };
