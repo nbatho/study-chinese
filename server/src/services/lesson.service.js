@@ -36,6 +36,15 @@ const mapLessonSummary = (row, locale = 'en') => ({
   estimatedMinutes: Number(row.estimated_minutes),
   xpReward: Number(row.xp_reward),
   grammarCount: Number(row.grammar_count || 0),
+  contentCounts: row.content_counts && typeof row.content_counts === 'object'
+    ? {
+        vocab: Number(row.content_counts.vocab || 0),
+        grammar: Number(row.content_counts.grammar || 0),
+        dialogueLines: Number(row.content_counts.dialogue_lines || 0),
+        readingPassages: Number(row.content_counts.reading_passages || 0),
+        exercises: Number(row.content_counts.exercises || 0)
+      }
+    : null,
   completedAt: row.completed_at,
   bestAccuracy: Number(row.best_accuracy || 0),
   attempts: Number(row.attempts || 0)

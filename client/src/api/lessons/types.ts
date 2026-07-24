@@ -2,6 +2,14 @@ import type { Achievement } from '../achievements';
 import type { CefrLevel, UserStreak, UserWallet } from '../users';
 import type { Word } from '../vocabulary';
 
+export interface LessonContentCounts {
+    vocab: number;
+    grammar: number;
+    dialogueLines: number;
+    readingPassages: number;
+    exercises: number;
+}
+
 export interface LessonSummary {
     id: string;
     title: string;
@@ -17,6 +25,7 @@ export interface LessonSummary {
     estimatedMinutes: number;
     xpReward: number;
     grammarCount: number;
+    contentCounts?: LessonContentCounts | null;
     completedAt: string | null;
     bestAccuracy: number;
     attempts: number;

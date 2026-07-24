@@ -263,9 +263,12 @@ const run = async () => {
     }
   }
 
+  // HSK0 stays at the 13-lesson pronunciation track; HSK1-6 were extended with the
+  // restored topics at orders 14-17 (see data/plan.md deviation note), so they carry 17.
   for (const [level, ids] of [...byLevel.entries()].sort((a, b) => a[0] - b[0])) {
-    if (ids.length !== 13) add('STRUCTURE', `HSK${level}: ${ids.length} lessons (expected 12 topics + 1 review)`);
-    if (!ids.some((id) => id.endsWith('review'))) add('STRUCTURE', `HSK${level}: no l13 review lesson`);
+    const expected = level === 0 ? 13 : 17;
+    if (ids.length !== expected) add('STRUCTURE', `HSK${level}: ${ids.length} lessons (expected ${expected})`);
+    if (!ids.some((id) => id.endsWith('review'))) add('STRUCTURE', `HSK${level}: no review lesson`);
   }
 
   if (process.argv.includes('--json')) {

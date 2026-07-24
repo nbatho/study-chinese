@@ -1,4 +1,5 @@
-import { CheckCircle2, ChevronRight, Clock3, FileText, Headphones, Lock, MessageCircle, PenLine, PlayCircle, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, CheckCircle2, ChevronDown, ChevronRight, Clock3, FileText, Headphones, ListChecks, Lock, MessageCircle, PenLine, PlayCircle, Sparkles } from "lucide-react";
 import type { LessonSummary } from "../../../api/lessons";
 import { useI18n } from "../../../i18n";
 import type { TranslationKey } from "../../../i18n";
@@ -41,6 +42,17 @@ export default function LessonPath({
   onLockedClick?: () => void;
 }) {
   const { t } = useI18n();
+  // Topics start collapsed to a compact, name-only list so a long roadmap stays
+  // scannable; tracking the expanded set (empty by default) keeps every topic —
+  // including ones from a newly selected level — collapsed until opened.
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(() => new Set());
+  const toggleTopic = (topicId: string) =>
+    setExpandedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(topicId)) next.delete(topicId);
+      else next.add(topicId);
+      return next;
+    });
   const lessonsByOrder = new Map(lessons.map((lesson) => [lesson.order, lesson]));
   const flatEntries: CurriculumLessonEntry[] = [
     ...curriculum.topics.flatMap((topic) =>
@@ -58,9 +70,6 @@ export default function LessonPath({
     (entry) => entry.serverLesson && !entry.serverLesson.completedAt && !isLessonLocked?.(entry.serverLesson),
   );
   const entryIndexByOrder = new Map(flatEntries.map((entry, index) => [entry.curriculumLesson.order, index]));
-  const completedCount = flatEntries.filter((entry) => entry.serverLesson?.completedAt).length;
-  const availableCount = flatEntries.filter((entry) => entry.serverLesson).length;
-  const progressPercent = Math.round(flatEntries.length ? (completedCount / flatEntries.length) * 100 : 0);
 
   if (!flatEntries.length) {
     return (
@@ -70,7 +79,7 @@ export default function LessonPath({
     );
   }
 
-  const renderLesson = (entry: CurriculumLessonEntry, index: number) => {
+  const renderLesson = (entry: CurriculumLessonEntry, index: number, compact = false) => {
     const { curriculumLesson, serverLesson } = entry;
     const title = formatLessonTitle(t, {
       order: curriculumLesson.order,
@@ -96,12 +105,24 @@ export default function LessonPath({
     const SkillIcon = SKILL_ICON[curriculumLesson.skill];
     const NodeIcon = isCompleted ? CheckCircle2 : isLocked ? Lock : PlayCircle;
     const statusText = isMissingContent && !isLockedByLevel ? "Soon" : t(statusKey);
+    const counts = serverLesson?.contentCounts;
+    const contentBadges = (counts
+      ? [
+          { icon: Sparkles, count: counts.vocab, key: "learn.content.vocab" as TranslationKey },
+          { icon: FileText, count: counts.grammar, key: "learn.content.grammar" as TranslationKey },
+          { icon: MessageCircle, count: counts.dialogueLines, key: "learn.content.dialogue" as TranslationKey },
+          { icon: BookOpen, count: counts.readingPassages, key: "learn.content.reading" as TranslationKey },
+          { icon: ListChecks, count: counts.exercises, key: "learn.content.exercises" as TranslationKey },
+        ]
+      : []
+    ).filter((badge) => badge.count > 0);
 
     return (
       <div key={curriculumLesson.order} className="relative pl-13">
         <div
           className={cn(
-            "absolute left-0 top-4 z-10 flex size-9 items-center justify-center rounded-xl border bg-card shadow-sm",
+            "absolute left-0 z-10 flex size-9 items-center justify-center rounded-xl border bg-card shadow-sm",
+            compact ? "top-2.5" : "top-4",
             isCompleted && "border-jade/35 bg-jade text-white",
             isCurrent && !isCompleted && "border-primary bg-primary text-primary-foreground",
             isLocked && "border-dashed bg-muted text-muted-foreground",
@@ -120,7 +141,8 @@ export default function LessonPath({
             if (serverLesson) onSelectLesson(serverLesson.id);
           }}
           className={cn(
-            "group flex w-full flex-col gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition sm:p-5",
+            "group flex w-full flex-col gap-3 rounded-xl border bg-card text-left shadow-sm transition",
+            compact ? "p-3" : "p-4 sm:p-5",
             isCompleted && "border-jade/40 bg-jade/5",
             isCurrent && !isCompleted && "border-primary/50 bg-primary/5 ring-2 ring-primary/10 hover:-translate-y-0.5 hover:shadow-md",
             isLocked && !(guestMode && onLockedClick) && "cursor-not-allowed border-dashed bg-secondary/70 opacity-75",
@@ -134,7 +156,7 @@ export default function LessonPath({
                 <SkillIcon size={14} />
                 {curriculumLesson.skill}
               </span>
-              <h4 className="mt-1 line-clamp-2 text-[1.05rem] font-extrabold">{title}</h4>
+              <h4 className={cn("mt-1 text-[1.05rem] font-extrabold", compact ? "line-clamp-1" : "line-clamp-2")}>{title}</h4>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span
@@ -150,6 +172,8 @@ export default function LessonPath({
               {!isLocked && <ChevronRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
             </div>
           </div>
+          {!compact && (
+            <>
           <p className="mt-2 line-clamp-2 text-[0.84rem] text-muted-foreground">{objective}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-bold text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -160,6 +184,27 @@ export default function LessonPath({
             <span>Level {serverLesson?.cefrLevel ?? curriculum.cefrLevel}</span>
             {isCompleted && <span className="text-jade">{Math.round(serverLesson.bestAccuracy)}% Acc</span>}
           </div>
+          {contentBadges.length > 0 && (
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {contentBadges.map((badge) => {
+                const BadgeIcon = badge.icon;
+                return (
+                  <span
+                    key={badge.key}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[0.7rem] font-bold",
+                      isLocked ? "bg-muted text-muted-foreground" : "bg-secondary text-muted-foreground",
+                    )}
+                  >
+                    <BadgeIcon size={12} />
+                    {t(badge.key, { count: badge.count })}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+            </>
+          )}
         </button>
       </div>
     );
@@ -167,49 +212,44 @@ export default function LessonPath({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="text-sm font-extrabold text-primary">HSK {curriculum.hskLevel} - CEFR {curriculum.cefrLevel}</div>
-            <h3 className="mt-1 text-2xl font-extrabold">{curriculum.focus}</h3>
-            <p className="mt-2 max-w-2xl text-sm font-semibold text-muted-foreground">
-              {t("learn.path.summary", { completed: completedCount, total: flatEntries.length, available: availableCount })}
-            </p>
-          </div>
-          <div className="min-w-[180px] rounded-xl bg-secondary p-3">
-            <div className="mb-2 flex items-center justify-between text-xs font-extrabold text-muted-foreground">
-              <span>{t("learn.path.progress")}</span>
-              <span>{progressPercent}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-background">
-              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {curriculum.topics.map((topic, topicIndex) => (
+      {curriculum.topics.map((topic, topicIndex) => {
+        const isCollapsed = !expandedTopics.has(topic.id);
+        return (
         <section key={topic.id} className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
-          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <span className="text-sm font-bold text-primary">{t("learn.path.topic", { index: topicIndex + 1 })}</span>
-              <h3 className="mt-1 text-xl font-extrabold">{topic.title}</h3>
+          <button
+            type="button"
+            onClick={() => toggleTopic(topic.id)}
+            aria-expanded={!isCollapsed}
+            aria-label={isCollapsed ? t("learn.path.expand") : t("learn.path.collapse")}
+            className={cn(
+              "group flex w-full items-center justify-between gap-3 text-left transition",
+              isCollapsed ? "mb-0" : "mb-5",
+            )}
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground transition group-hover:text-primary">
+                <ChevronDown className={cn("size-4 transition-transform", isCollapsed && "-rotate-90")} />
+              </span>
+              <div className="min-w-0">
+                <span className="text-sm font-bold text-primary">{t("learn.path.topic", { index: topicIndex + 1 })}</span>
+                <h3 className="mt-0.5 truncate text-xl font-extrabold">{topic.title}</h3>
+              </div>
             </div>
-            <span className="text-xs font-bold text-muted-foreground">{t("learn.path.lessonsCount", { count: topic.lessons.length })}</span>
-          </div>
-          <div className="relative grid gap-3">
-            <div className="absolute bottom-5 left-4 top-5 w-px bg-border" />
+            <span className="shrink-0 text-xs font-bold text-muted-foreground">{t("learn.path.lessonsCount", { count: topic.lessons.length })}</span>
+          </button>
+          <div className={cn("relative grid gap-3", isCollapsed && "gap-2")}>
+            {!isCollapsed && <div className="absolute bottom-5 left-4 top-5 w-px bg-border" />}
             {topic.lessons.map((curriculumLesson) => {
               const entry = {
                 curriculumLesson,
                 serverLesson: lessonsByOrder.get(curriculumLesson.order),
               };
-              return renderLesson(entry, entryIndexByOrder.get(curriculumLesson.order) ?? 0);
+              return renderLesson(entry, entryIndexByOrder.get(curriculumLesson.order) ?? 0, isCollapsed);
             })}
           </div>
         </section>
-      ))}
+        );
+      })}
 
       <section className="rounded-2xl border bg-card p-4 text-left shadow-sm sm:p-5">
         <div className="mb-5">
